@@ -93,17 +93,22 @@ The hypothesis gains its strength by incorporating the fundamental constants of 
     \item \textbf{Boltzmann Constant (\( k_B \))}: Links entropy to thermodynamic processes and scales.
 \end{enumerate}
 
-By dimensional analysis, the units of \( \mathcal{I}_{\text{max}} \) emerge as:
-\[
-\left[\mathcal{I}_{\text{max}}\right] = \frac{(\text{J}/\text{K})^2}{\text{s}},
-\]
-where:
+By dimensional analysis, the units of \( \mathcal{I}_{\text{max}} \) depend on the physical regime:
 \begin{itemize}
-    \item \( \text{J}/\text{K} \): Represents entropy as energy per unit temperature.
-    \item Division by \( \text{s} \): Reflects the rate of entropy processing over time.
+    \item For thermodynamic systems (e.g., black holes, cosmology):
+    \[
+    \left[\mathcal{I}_{\text{max}}\right] = \frac{(\text{J}/\text{K})^2}{\text{s}},
+    \]
+    reflecting the rate of entropy evolution in systems where entropy is measured in \( \text{J}/\text{K} \).
+    \item For quantum systems:
+    \[
+    \left[\mathcal{I}_{\text{max}}\right] = \frac{\text{J}}{\text{K} \cdot \text{s}},
+    \]
+    unless entropy is scaled by \( k_B \) to align with thermodynamic units.
 \end{itemize}
 
-This unit suggests that \( \mathcal{I}_{\text{max}} \) quantifies the \textbf{rate of entropy evolution} or the "power of informational dynamics."
+This unit suggests that \( \mathcal{I}_{\text{max}} \) quantifies the \textbf{rate of entropy evolution} or the "power of informational dynamics." Across all regimes, \( \mathcal{I}_{\text{max}} \) reflects a universal interplay between entropy (\( S \)) and its rate of change (\( \Delta S / \Delta t \)), constrained by \( G, c, \hbar, k_B \).
+
 
 \subsection{Physical Interpretation}
 The tradeoff captured by \( \mathcal{I}_{\text{max}} \) arises from finite computational limits inherent to spacetime. These limits enforce:
@@ -188,31 +193,6 @@ Specific quantum algorithms, such as Shor’s (factoring) or Grover’s (search)
 \end{itemize}
 
 \textbf{Testable Prediction}: Quantum systems near their energy-time limits should exhibit computational saturation, aligning throughput with \( \mathcal{I}_{\text{max}} \propto S \cdot \Delta S / \Delta t \).
-
-\subsubsection{Dimensional Consistency Clarification}
-Initially, the quantum regime appears dimensionally distinct from the black hole and cosmological cases. Specifically:
-\begin{itemize}
-    \item Entropy (\( S \)): \( [S] = \text{J/K} \),
-    \item \( \frac{E}{\hbar} \): \( [E/\hbar] = \frac{1}{\text{s}} \).
-\end{itemize}
-
-This gives:
-\[
-[\mathcal{I}_{\text{max, quantum}}] = \frac{\text{J}}{\text{K} \cdot \text{s}},
-\]
-which diverges from the black hole and cosmological regimes where:
-\[
-[\mathcal{I}_{\text{max}}] = \frac{\text{J}^2}{\text{K}^2 \cdot \text{s}}.
-\]
-
-However, by expanding \( \frac{E}{\hbar} \) to explicitly include the energy flux \( E / \Delta t \), the dimensional consistency is restored:
-\[
-\frac{E}{\hbar} \sim \frac{E}{\Delta t}, \quad \text{where } \Delta t = \hbar / E.
-\]
-This gives:
-\[
-[\mathcal{I}_{\text{max, quantum}}] = \frac{\text{J/K}}{\text{s}} \cdot \frac{\text{J}}{\text{s}} = \frac{\text{J}^2}{\text{K}^2 \cdot \text{s}}.
-\]
 
 \subsubsection{Scaling Implications}
 \begin{itemize}
