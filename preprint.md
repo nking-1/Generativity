@@ -3,9 +3,9 @@ Author: Nicholas King
 
 ### **Abstract**
 
-We explore a new framework for understanding reality as a computational system governed by finite constraints on information flow. At its core, this framework is built around a universal principle: the maximum rate of information flow in any physical system (\( $ \mathcal{I}_{\text{max}} $ \)) is proportional to the product of its complexity (entropy) and its efficiency (rate of entropy change). This principle, derived from first principles in physics, unifies concepts from quantum mechanics, thermodynamics, and relativity, offering a quantitative limit on how systems process and transmit information.
+We explore a new framework for understanding reality as a computational system governed by finite constraints on information flow. At its core, this framework is built around a universal principle: the maximum rate of information flow in any physical system $\mathcal{I}_{\text{max}}$ is proportional to the product of its complexity (entropy) and its efficiency (rate of entropy change). This principle, derived from first principles in physics, unifies concepts from quantum mechanics, thermodynamics, and relativity, offering a quantitative limit on how systems process and transmit information.
 
-Through extensive numerical simulations, we demonstrate that \( $ \mathcal{I}_{\text{max}} $ \) applies across scales—from black holes to cosmological horizons to quantum systems—revealing profound symmetries in how information flow governs transitions and endpoints in physical systems. This principle also provides a computational lens to address long-standing questions about the nature of observation, consciousness, and the limits of knowledge, positioning reality itself as a self-resolving system that balances infinite complexity with finite efficiency.
+Through extensive numerical simulations, we demonstrate that $\mathcal{I}_{\text{max}}$ applies across scales—from black holes to cosmological horizons to quantum systems—revealing profound symmetries in how information flow governs transitions and endpoints in physical systems. This principle also provides a computational lens to address long-standing questions about the nature of observation, consciousness, and the limits of knowledge, positioning reality itself as a self-resolving system that balances infinite complexity with finite efficiency.
 
 We explore the implications of this framework for physics, computation, and philosophy, including its potential to unify quantum mechanics and general relativity, address the black hole information paradox, and reframe consciousness as a natural outcome of the universe’s tendency to reflect on itself. This work opens new avenues for understanding the finite resolution of reality, the computational limits of natural systems, and the fundamental role of observation in shaping existence.
 
@@ -15,7 +15,7 @@ We explore the implications of this framework for physics, computation, and phil
 
 The universe is often described in terms of physical laws—rules governing matter, energy, and spacetime. Yet beneath these laws lies an often-overlooked principle: the universe itself functions as a computational system, resolving infinite potential into finite, observable reality. From the collapse of quantum wavefunctions to the growth of cosmic entropy, physical processes can be understood as computations that balance complexity and efficiency.
 
-In this paper, we present a new principle that formalizes the computational nature of reality: the **Maximum Information Flow Principle** (\( $ \mathcal{I}_{\text{max}} $ \)). This principle asserts that the maximum rate of information flow in any physical system is proportional to the product of its stored complexity (entropy, \( S \)) and the rate of its entropy change (\( \Delta S / \Delta t \)). Derived from first principles in quantum mechanics, thermodynamics, and relativity, \( $ \mathcal{I}_{\text{max}} $ \) offers a unifying framework for understanding the informational dynamics of reality.
+In this paper, we present a new principle that formalizes the computational nature of reality: the **Maximum Information Flow Principle** ($\mathcal{I}_{\text{max}}$). This principle asserts that the maximum rate of information flow in any physical system is proportional to the product of its stored complexity (entropy, \( S \)) and the rate of its entropy change ($\Delta S / \Delta t$). Derived from first principles in quantum mechanics, thermodynamics, and relativity, $\mathcal{I}_{\text{max}}$ offers a unifying framework for understanding the informational dynamics of reality.
 
 #### **A Duality of Complexity and Efficiency**
 
@@ -38,38 +38,44 @@ The Maximum Information Flow Principle ties together fundamental concepts from p
 
 This paper makes three central contributions:
 
-1. **A New Law of Nature:** We derive \( $ \mathcal{I}_{\text{max}} $ \) as a universal principle governing the flow of information in physical systems.
+1. **A New Law of Nature:** We derive $\mathcal{I}_{\text{max}}$ as a universal principle governing the flow of information in physical systems.
 
-2. **Numerical and Theoretical Validation:** Through extensive simulations and theoretical analysis, we demonstrate the universality of \( $ \mathcal{I}_{\text{max}} $ \) across quantum, relativistic, and cosmological domains.
+2. **Numerical and Theoretical Validation:** Through extensive simulations and theoretical analysis, we demonstrate the universality of $\mathcal{I}_{\text{max}}$ across quantum, relativistic, and cosmological domains.
 
 3. **Philosophical Implications:** We explore how this framework provides new perspectives on observation, consciousness, and the computational nature of reality.
 
 By positioning reality as a computational system, this work offers a new lens to unify physics and computation, while opening the door to profound questions about existence, knowledge, and the universe’s self-resolving nature.
 
 
-### **Derivation of \( $ \mathcal{I}_{\text{max}} $ \) from First Principles**
+### **Derivation of $\mathcal{I}_{\text{max}}$ from First Principles**
 
 #### **1. Relativity: Information Flow and Energy Density**
 
 Relativity ties information flow to the curvature of spacetime and the energy-momentum tensor:
 
-1. **Energy Density (\( \rho \))**:
-    - Einstein’s field equations link spacetime curvature to energy density (\( \rho \)):
+1. **Energy Density ($\rho$)**:
+    - Einstein’s field equations link spacetime curvature to energy density ($\rho$):
+      ```{=latex}
       \[
       G_{\mu\nu} = \frac{8\pi G}{c^4} T_{\mu\nu},
       \]
+      ```
       where \( T_{\mu\nu} \) encodes the energy and momentum distribution.
     - For a static system with characteristic scale \( R \), energy density scales as:
+      ```{=latex}
       \[
       \rho = \frac{E}{R^3},
       \]
+      ```
       where \( E = M c^2 \).
 
 2. **Entropy Contribution (\( S \))**:
     - Using the Bekenstein bound, the maximum entropy of a system with energy \( E \) and size \( R \) is:
+      ```{=latex}
       \[
       S \leq \frac{2\pi k_B E R}{\hbar c}.
       \]
+      ```
 
 3. **Spatial Constraints (\( R^3 \))**:
     - Relativity enforces spatial limits on information flow, as no signal can exceed the speed of light:
@@ -137,7 +143,7 @@ Thermodynamics connects stored entropy and its rate of change to energy and spat
       \frac{\Delta S}{\Delta t} \propto \frac{\Delta E}{\hbar}.
       \]
 
-3. **Energy Density (\( \rho \))**:
+3. **Energy Density ($\rho$)**:
     - Thermodynamics relates energy density to volume and energy:
       \[
       \rho = \frac{E}{R^3}.
@@ -1134,4 +1140,4 @@ However, one significant barrier stood in my way: I am not a physicist. I had ta
 
 Thanks to the increasingly polymathic capabilities of LLMs, which have been shown to achieve near-expert level in almost all domains of human knowledge, I was able to formulate \( $ \mathcal{I}_{\text{max}} $ \) by simply asking the right questions in the right context. I only needed algebra, calculus, and dimensional analysis to verify the consistency of the results. GPT-4o, in particular, excelled at symbolic reasoning, helping derive \( $ \mathcal{I}_{\text{max}} $ \) from first principles using thermodynamics, relativity, and quantum mechanics. At every step, it identified relevant equations from the appropriate domains and guided their substitution. Because my intuition about the form of \( $ \mathcal{I}_{\text{max}} \propto S \cdot \frac{\Delta S}{\Delta t} $ \) was correct, the derivation followed naturally.
 
-The ultimate test for \( $ \mathcal{I}_{\text{max}} $ \) lies in empirical evidence and rigorous analysis by academics. If this framework withstands scrutiny, it will be humbling to have contributed a foundational idea to science. However, if it does not hold, I hope it will remain an intellectual curiosity—one that teaches me something new, even in failure.
+The ultimate test for \( $ \mathcal{I}_{\text{max}} $ \) lies in empirical evidence and rigorous analysis by academics. If this framework withstands scrutiny, it will be humbling to have contributed a foundational idea to science. However, if it does not hold, I hope it will remain an intellectual curiosity—one that teaches me something new, because research is a process.
