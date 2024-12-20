@@ -1,4 +1,6 @@
 # Reality Computes Itself
+Author: Nicholas King
+
 ### **Abstract**
 
 We explore a new framework for understanding reality as a computational system governed by finite constraints on information flow. At its core, this framework is built around a universal principle: the maximum rate of information flow in any physical system (Imax\mathcal{I}_{\text{max}}) is proportional to the product of its complexity (entropy) and its efficiency (rate of entropy change). This principle, derived from first principles in physics, unifies concepts from quantum mechanics, thermodynamics, and relativity, offering a quantitative limit on how systems process and transmit information.
