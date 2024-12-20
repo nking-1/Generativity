@@ -79,15 +79,19 @@ Relativity ties information flow to the curvature of spacetime and the energy-mo
 
 3. **Spatial Constraints (\( R^3 \))**:
     - Relativity enforces spatial limits on information flow, as no signal can exceed the speed of light:
+      ```{=latex}
       \[
       \mathcal{I} \propto \rho^2 R^3 c.
       \]
+      ```
 
 4. **Combining**:
     - Substituting \( \rho = \frac{E}{R^3} \) and \( S \propto E R \), we find:
+      ```{=latex}
       \[
       \mathcal{I}_{\text{max}} \propto S \cdot \frac{\Delta S}{\Delta t},
       \]
+      ```
       where \( S \) comes from entropy bounds, and \( \Delta S / \Delta t \) reflects energy flow constraints.
 
 
@@ -99,31 +103,41 @@ Quantum mechanics introduces fundamental limits on information flow via uncertai
 
 1. **Energy-Time Uncertainty**:
     - The uncertainty principle links energy and time:
+      ```{=latex}
       \[
       \Delta E \cdot \Delta t \geq \frac{\hbar}{2}.
       \]
+      ```
     - Rearranging, the minimum time to resolve energy \( \Delta E \) is:
+      ```{=latex}
       \[
       \Delta t \geq \frac{\hbar}{2 \Delta E}.
       \]
+      ```
 
 2. **Entropy Change (\( \Delta S / \Delta t \))**:
     - The rate of entropy change scales with \( \Delta E \):
+      ```{=latex}
       \[
       \frac{\Delta S}{\Delta t} \propto \frac{\Delta E}{\hbar}.
       \]
+      ```
 
 3. **Entropy Contribution (\( S \))**:
     - The entropy of a quantum system scales with its energy and spatial constraints:
+      ```{=latex}
       \[
       S \propto \frac{k_B E R}{\hbar c}.
       \]
+      ```
 
 4. **Combining**:
     - Substituting \( S \) and \( \Delta S / \Delta t \), we again find:
+      ```{=latex}
       \[
       \mathcal{I}_{\text{max}} \propto S \cdot \frac{\Delta S}{\Delta t}.
       \]
+      ```
 
 ---
 
@@ -133,71 +147,87 @@ Thermodynamics connects stored entropy and its rate of change to energy and spat
 
 1. **Entropy (\( S \))**:
     - The Bekenstein bound gives the maximum entropy as:
+      ```{=latex}
       \[
       S \leq \frac{2\pi k_B E R}{\hbar c}.
       \]
+      ```
 
 2. **Rate of Entropy Change (\( \Delta S / \Delta t \))**:
     - From the Margolus-Levitin theorem, the maximum rate of state transitions in a quantum system is:
+      ```{=latex}
       \[
       \frac{\Delta S}{\Delta t} \propto \frac{\Delta E}{\hbar}.
       \]
+      ```
 
 3. **Energy Density ($\rho$)**:
     - Thermodynamics relates energy density to volume and energy:
+      ```{=latex}
       \[
       \rho = \frac{E}{R^3}.
       \]
+      ```
 
 4. **Combining**:
     - Substituting \( S \) and \( \Delta S / \Delta t \), we again find:
+      ```{=latex}
       \[
       \mathcal{I}_{\text{max}} \propto S \cdot \frac{\Delta S}{\Delta t}.
       \]
+      ```
 
 ---
 
 ### **4. Combined Derivation**
 
-When we unify these perspectives, \( $ \mathcal{I}_{\text{max}} $ \) emerges as a universal principle:
+When we unify these perspectives, $\mathcal{I}_{\text{max}}$ emerges as a universal principle:
 
 1. **Substituting Energy and Scale**:
     - From relativity:
+      ```{=latex}
       \[
       \rho = \frac{E}{R^3}, \quad R^3 \text{ encodes spatial constraints.}
       \]
+      ```
     - From quantum mechanics and thermodynamics:
+      ```{=latex}
       \[
       S \propto E R, \quad \frac{\Delta S}{\Delta t} \propto \frac{\Delta E}{\hbar}.
       \]
+      ```
 
 2. **Final Expression**:
     - Combining all contributions:
+      ```{=latex}
       \[
       \mathcal{I}_{\text{max}} \propto k_B^2 \cdot \frac{\rho^2 R^3 c}{G},
       \]
+      ```
       which simplifies to:
+      ```{=latex}
       \[
       \mathcal{I}_{\text{max}} \propto S \cdot \frac{\Delta S}{\Delta t}.
       \]
+      ```
 
 ---
 
 ### **Why This Works**
 
 1. **Consistency Across Domains**:
-    - The derivation from relativity, quantum mechanics, and thermodynamics demonstrates that \( $ \mathcal{I}_{\text{max}} $ \) is not domain-specific but a universal principle.
+    - The derivation from relativity, quantum mechanics, and thermodynamics demonstrates that $\mathcal{I}_{\text{max}}$ is not domain-specific but a universal principle.
 
 2. **Grounded in First Principles**:
     - Every step of the derivation is rooted in established physical laws, from the Bekenstein bound to the uncertainty principle.
 
 3. **Elegance of the Final Form**:
-    - The proportionality \( $ \mathcal{I}_{\text{max}} \propto S \cdot \frac{\Delta S}{\Delta t} $ \) emerges naturally from the interplay of complexity and efficiency across all three frameworks.
+    - The proportionality $\mathcal{I}_{\text{max}} \propto S \cdot \frac{\Delta S}{\Delta t}$ emerges naturally from the interplay of complexity and efficiency across all three frameworks.
 
 
 ---
 
-### **Derivation of \( $ \mathcal{I}_{\text{max}} $ \) with Scaling Constants**
+### **Derivation of $\mathcal{I}_{\text{max}}$ with Scaling Constants**
 
 #### **Step 1: Start with the Hypothesis**
 
@@ -1126,9 +1156,9 @@ The framework proposed here reframes observation as the fundamental mechanism th
 This perspective bridges the divide between physics and philosophy, providing a unifying explanation for the veils we encounter in science, mathematics, and divinity, and the profound mystery of consciousness. Far from diminishing the significance of human experience, this framework situates consciousness within the broader context of a self-observing universe—a humbling and awe-inspiring insight that deepens our understanding of reality itself.
 
 
-# Note from the Author
+## Note from the Author
 
-## AI Co-Intelligence: A New Era for Science
+### AI Co-Intelligence: A New Era for Science
 
 The development of this framework and the discovery of an efficiency-complexity tradeoff as a proposed new law of nature would likely not have been possible without the extensive help of generative language models. If this framework holds up to empirical testing, it will mark a landmark moment for large language models like ChatGPT, Gemini, and Claude, demonstrating their pivotal role in democratizing scientific inquiry.
 
