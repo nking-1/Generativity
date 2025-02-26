@@ -21,10 +21,17 @@ sin_pi_3 = math.sin(math.pi / 3)  # Sin(pi/3) factor
 kappa = 8 * math.pi * G / c**4    # Einstein's gravitational constant
 t_planck = math.sqrt(h_bar * G / c**5)  # Planck time (s)
 
+# Planck Mass and Energy
+M_planck = math.sqrt(h_bar * c / G)  # Planck mass (kg)
+E_planck = M_planck * c**2  # Planck energy (J)
+
 # Gravity & Cosmology Information Flow (Three Forms)
 I_max_gravity_1 = sin_pi_3 * (c**4 / (G * h_bar * math.sqrt(Lambda))) * k_B**2
 I_max_gravity_2 = sin_pi_3 * (8 * math.pi / (kappa * h_bar * math.sqrt(Lambda))) * k_B**2
 I_max_gravity_3 = sin_pi_3 / (t_planck**2 * c * math.sqrt(Lambda)) * k_B**2
+
+# Planck Mass Information Flow
+I_max_planck = (math.pi / 480) * (E_planck / h_bar) * k_B**2
 
 # Electromagnetic Information Flow
 I_max_em = alpha * (k_B * E_em / h_bar)
@@ -40,8 +47,9 @@ print("Maximum Information Flow (J^2 / K^2 / s):")
 print(f"Gravity Form 1: {I_max_gravity_1:.2e}")
 print(f"Gravity Form 2: {I_max_gravity_2:.2e}")
 print(f"Gravity Form 3: {I_max_gravity_3:.2e}")
+print(f"Planck Mass: {I_max_planck:.2e}")
 
-print("Maximum Information Flow (J / K / s):")
+print("\nMaximum Information Flow (J / K / s):")
 print(f"Electromagnetic: {I_max_em:.2e}")
 print(f"Strong Interaction: {I_max_strong:.2e}")
 print(f"Weak Interaction: {I_max_weak:.2e}")
