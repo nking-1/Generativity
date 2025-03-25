@@ -3,7 +3,7 @@ This repository hosts experimental notebooks and systems built on the theory of 
 
 ## Repo Overview
 Files you might be interested in:
-- `PhysicsNumericTesting.ipynb`: Contains numeric simulations of the maximum information flow formula for physical systems at various scales.
+- `generative_set.v`: Coq proof of generative set theory.
 - `optimization_prompt.md`: A metaprompt that teaches the generativity framework to a language model to enhance its reasoning abilities.
 - `recursive_reasoning.ipynb`: Demonstrates LLM recursive reasoning using the information flow principle, balancing complexity and adaptation.
 - `proofs_with_claude.md`: Demonstrates a metaprompt for Claude that has shown success in solving IMO problems.
@@ -17,7 +17,7 @@ Files you might be interested in:
 - Coq proofs of information flow derivations.
 
 ### Math
-- Rigorous Coq proofs of the information flow formula, as well as some new pillars of the framework that will be published soon.
+- Coq proofs of the information flow formula
 
 ### AI
 - Explore applications with AI
