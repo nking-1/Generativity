@@ -143,7 +143,6 @@ Proof.
 Qed.
 
 
-
 (* Theorem: U Recursively Grows
    For every predicate P on U, the structure defined by
    (fun x => P x /\ contains 0 x) is eventually generated in U.
@@ -204,7 +203,6 @@ Proof.
   - lia. (* Since m was generated at least after n + 1, we have n < m *)
   - split; assumption.
 Qed.
-
 
 
 (* Theorem: U Is Never Complete at Any Finite Stage
@@ -444,6 +442,43 @@ Proof.
   unfold not in HnP.
   apply HnP.
   exact HP.
+Qed.
+
+
+Theorem U_paradoxical_embeddings_propagate_backward :
+  forall (U : Type) `{UniversalSet U},
+  forall (P : U -> Prop),
+  forall (t1 t2 : nat),
+    contains t1 (self_ref_pred_embed P) ->
+    contains t2 (self_ref_pred_embed (fun x => ~ P x)) ->
+    forall t : nat,
+      t <= Nat.min t1 t2 ->
+      contains t (self_ref_pred_embed P) /\
+      contains t (self_ref_pred_embed (fun x => ~ P x)).
+Proof.
+  intros U H P t1 t2 HP HnP t Ht.
+  pose (tmin := Nat.min t1 t2).
+
+  (* 1) Show P is contained at time tmin *)
+  assert (HP_tmin : contains tmin (self_ref_pred_embed P)).
+  {
+    apply contains_backward with (n := t1).
+    - apply Nat.le_min_l.
+    - exact HP.
+  }
+
+  (* 2) Show ~P is contained at time tmin *)
+  assert (HnP_tmin : contains tmin (self_ref_pred_embed (fun x => ~ P x))).
+  {
+    apply contains_backward with (n := t2).
+    - apply Nat.le_min_r.
+    - exact HnP.
+  }
+
+  (* 3) Now go from tmin back to any t <= tmin *)
+  split.
+  - apply contains_backward with (n := tmin); [exact Ht | exact HP_tmin].
+  - apply contains_backward with (n := tmin); [exact Ht | exact HnP_tmin].
 Qed.
 
 
