@@ -435,6 +435,18 @@ Proof.
 Qed.
 
 
+Theorem U_no_true_and_negated_true_for_same_element :
+  forall (U: Type) `{UniversalSet U},
+  forall P : U -> Prop,
+  ~ (P (self_ref_pred_embed P) /\ (fun x => ~ P x) (self_ref_pred_embed P)).
+Proof.
+  intros U H P [HP HnP].
+  unfold not in HnP.
+  apply HnP.
+  exact HP.
+Qed.
+
+
 (** Theorem: Temporal Structure is Both Sufficient and Necessary for Contradictions
     This theorem combines two key insights about U:
     1. Contradictions CAN exist when separated in time (time_allows_paradox)
