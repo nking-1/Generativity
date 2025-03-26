@@ -119,10 +119,12 @@ This paper begins with formal derivations of $\mathcal{I}_{\text{max}}$ from fun
 
 \subsection{Intent of this Paper}
 
-This is an open-source white paper that aims to maintain a high level of transparency and rigor in the development of the generativity framework. Some elements of this work may eventually be published in relevant academic journals. A GitHub repository containing numerical experiments, visualizations, and practical applications to accompany this paper is available at:
+This is an open-source white paper that aims to maintain a high level of transparency and rigor in the development of the generativity framework. Some elements of this work may eventually be published in relevant academic journals. In the meantime, this white paper is being shared openly with the hope that by doing so, the ideas presented here may be adopted more quickly. A GitHub repository containing numerical experiments, visualizations, and practical applications to accompany this paper is available at:
 \begin{center}
     \url{https://github.com/nking-1/Generativity}
 \end{center}
+
+We eagerly seek collaboration from domain experts who would like to help prepare parts of the white paper, such as the physics derivations, for formal publication.
 
 \subsection{Is this Framework Related to the Simulation Hypothesis?}
 No. While some may see similarities between computational models of reality and simulation arguments, this framework does not assume an external “simulator.” Instead, it posits that reality itself is \textit{self-generating}—a recursive computational process optimizing information flow. Rather than being a \textit{simulation}, existence unfolds through an \textit{intrinsic generative logic} that aligns with both physical laws and metaphysical insights. Computer science provides a powerful framework to analyze the process of information flow and optimization, so we use it to model nature's optimization process. In this sense, nature finding optimal trade-offs can be thought of as reality ``computing itself" into existence.
@@ -2478,6 +2480,165 @@ This theorem has several key implications for the logical structure of \( U \):
 \end{itemize}
 
 
+\subsection{\( U \) Forbids Instantaneous Paradox on a Single Element}
+
+The generative system \( U \) is constructed to accommodate paradox over time—but only if that paradox does not realize itself simultaneously. This section formalizes two key results that guarantee \( U \)'s logical coherence at every individual time step, even while paradox is unfolding system-wide.
+
+Together, these results form the temporal paraconsistency core of \( U \):  
+Contradiction may exist in the system, but it cannot simultaneously actualize within the same instant or on the same object.
+
+
+\paragraph{Theorem 1: No Instantaneous Contradiction of Containment}
+It is impossible for a predicate to be both contained and not contained in \( U \) at the same time step.
+
+\[
+\neg \exists P: U \to \text{Prop}, \quad
+\left( \text{contains}(0, \text{embed}(P)) \wedge \neg \text{contains}(0, \text{embed}(P)) \right)
+\]
+
+\paragraph{Proof:}
+
+Assume for contradiction that there exists a predicate \( P \) such that both \\ 
+\( \text{contains}(0, \text{embed}(P)) \) and \( \neg \text{contains}(0, \text{embed}(P)) \) hold simultaneously. This directly violates the law of non-contradiction: no statement can be both true and false at the same time. Therefore, such a predicate cannot exist, and the system remains logically coherent at each individual time step.
+
+
+\subsubsection{Coq Proof}
+\begin{lstlisting}[language=Coq]
+Theorem U_contains_no_instantaneous_paradoxes :
+  forall (U: Type) `{UniversalSet U},
+  ~ exists P: U -> Prop,
+      contains 0 (self_ref_pred_embed P) /\
+      ~ contains 0 (self_ref_pred_embed P).
+Proof.
+  intros U H [P [HP HnotP]].
+  contradiction.
+Qed.
+\end{lstlisting}
+
+
+\paragraph{Theorem 2: No Predicate and Its Negation Can Both Hold of the Same Object}
+No predicate and its logical negation can both be true of the same embedded object at the same time.
+
+\[
+\forall P : U \to \text{Prop}, \quad
+\neg \left( P(\text{embed}(P)) \wedge \neg P(\text{embed}(P)) \right)
+\]
+
+\paragraph{Proof:}
+
+Suppose for contradiction that a predicate \( P \) and its logical negation \( \neg P \) are both true of the same embedded object \( \text{embed}(P) \). That is, \( P(\text{embed}(P)) \) and \( \neg P(\text{embed}(P)) \) both hold. But this is logically impossible: if \( P \) holds of an object, its negation cannot also hold of that same object. This violates the definition of logical negation. Therefore, no predicate and its negation can simultaneously be true of the same embedded object.
+
+
+\subsubsection{Coq Proof}
+\begin{lstlisting}[language=Coq]
+Theorem U_no_true_and_negated_true_for_same_element :
+  forall (U: Type) `{UniversalSet U},
+  forall P : U -> Prop,
+    ~ (P (self_ref_pred_embed P) /\ (fun x => ~ P x) (self_ref_pred_embed P)).
+Proof.
+  intros U H P [HP HnP].
+  apply HnP in HP.
+  exact HP.
+Qed.
+\end{lstlisting}
+
+
+\paragraph{Unified Interpretation: Temporalized Paraconsistency in \( U \)}
+
+These theorems demonstrate that while \( U \) supports paradox over time, it forbids it from collapsing into logical contradiction at a single time step on a single self-embedded object.
+
+In other words:
+
+\begin{itemize}
+    \item \( U \) does not allow self-contradicting predicates.
+    \item \( U \) does not allow a single object to simultaneously satisfy both \( P \) and \( \neg P \).
+    \item Contradictions may exist in the system, but they are sequenced through time.
+\end{itemize}
+
+This reveals a key metaphysical and computational insight: Paradox is not suppressed in \( U \)—it is regulated. \( U \) handles contradiction not by denial, but by distribution—spreading it across time, embedding, and reference.
+
+Thus, \( U \) becomes a temporally structured, paraconsistent system: contradiction is allowed to unfold, but not allowed to explode. This is why the system remains generative, recursive, and coherent—even in the presence of paradox.
+
+
+\subsection{\( U \) Retroactively Contains Paradox}
+
+While previous theorems have shown that \( U \) does not allow contradictions to realize themselves at a single time step or on a single object, this new result reveals a consequence of the \texttt{contains\_backward} axiom: once both a predicate and its negation appear in the system at any time, they are retroactively contained at all earlier time steps.
+
+This theorem uses the monotonicity axiom \texttt{contains\_backward}, which states that once a structure enters \( U \), it is available at all earlier time steps. When combined with the eventual emergence of both \( P \) and \( \neg P \), this produces an interesting consequence: contradictions may not appear simultaneously in time, but they become simultaneously embedded across the past.
+
+\paragraph{Theorem: Paradoxical Embeddings Propagate Backward}
+If a predicate \( P \) and its negation \( \neg P \) are each embedded at any times \( t_1 \) and \( t_2 \), then both embeddings are also present at all earlier times \( t \leq \min(t_1, t_2) \).
+
+\begin{align}
+\forall P: U \to \text{Prop},\quad
+\text{contains}(t_1, \text{embed}(P)) \wedge \text{contains}(t_2, \text{embed}(\lambda x. \neg P(x))) 
+\Rightarrow \\
+\forall t \leq \min(t_1, t_2),\;
+\left(
+\begin{array}{l}
+\text{contains}(t, \text{embed}(P)) \quad \wedge \\
+\text{contains}(t, \text{embed}(\lambda x. \neg P(x)))
+\end{array}
+\right)
+\end{align}
+
+\subsubsection{Coq Proof}
+\begin{lstlisting}[language=Coq]
+Theorem U_paradoxical_embeddings_propagate_backward :
+  forall (U : Type) `{UniversalSet U},
+  forall (P : U -> Prop),
+  forall (t1 t2 : nat),
+    contains t1 (self_ref_pred_embed P) ->
+    contains t2 (self_ref_pred_embed (fun x => ~ P x)) ->
+    forall t : nat,
+      t <= Nat.min t1 t2 ->
+      contains t (self_ref_pred_embed P) /\
+      contains t (self_ref_pred_embed (fun x => ~ P x)).
+Proof.
+  intros U H P t1 t2 HP HnP t Ht.
+  pose (tmin := Nat.min t1 t2).
+
+  assert (HP_tmin : contains tmin (self_ref_pred_embed P)).
+  {
+    apply contains_backward with (n := t1).
+    - apply Nat.le_min_l.
+    - exact HP.
+  }
+
+  assert (HnP_tmin : contains tmin (self_ref_pred_embed (fun x => ~ P x))).
+  {
+    apply contains_backward with (n := t2).
+    - apply Nat.le_min_r.
+    - exact HnP.
+  }
+
+  split.
+  - apply contains_backward with (n := tmin); [exact Ht | exact HP_tmin].
+  - apply contains_backward with (n := tmin); [exact Ht | exact HnP_tmin].
+Qed.
+\end{lstlisting}
+
+\paragraph{Interpretation and Implications}
+
+This result captures a subtle feature of \( U \):
+
+\begin{itemize}
+    \item Contradictions cannot be realized \textit{simultaneously} in time.
+    \item Yet once both sides of a contradiction have appeared at any point in the system, their presence is retroactively implied at all earlier stages.
+    \item This is not a logical explosion: \( \text{embed}(P) \) and \( \text{embed}(\neg P) \) are distinct objects, and no single object is required to satisfy both.
+    \item Paradox becomes eternal once realized, but never destructive.
+\end{itemize}
+
+This illustrates the paraconsistent structure of \( U \): contradictions may be embedded, may coexist, and may persist across time, but they never collapse into simultaneous truth for a single object or moment.
+
+\paragraph{Philosophical Consequence}
+In this framing, contradiction is not only possible—it is inevitable and eternal. Once a paradox is embedded into reality, it is always available in potential. The system allows safe coexistence of contradictory concepts by deferring their resolution through time and disallowing simultaneous actualization. This may be seen as a parallel to the concept of superposition: multiple outcomes might be possible simultaneously until one particular outcome is observed.
+
+This deepens the metaphysical reading of \( U \): it is not a contradiction-free logic, but a temporally sequenced paraconsistent system where structure is allowed to emerge without collapsing under paradox. This is why $U$ does not merely preserve consistency — it generates coherence through contradiction.
+
+As noted earlier, the counterintuitive behavior shown here is a consequence of the \\
+\texttt{contains\_backward} axiom. This axiom has been useful for several proofs so far, but it may be worth analyzing whether it is strictly necessary. Alternative systems for handling paradox over time should be considered, with the $U$ system as a starting point.
+
 \subsection{The Omega Set \( \Omega \)}
 
 While the Universal Set \( U \) represents an evolving, time-indexed structure where knowledge is progressively embedded and contradictions unfold over time, the Omega Set \( \Omega \) provides an alternative perspective. Unlike \( U \), which is inherently dynamic, \( \Omega \) is defined as a timeless, superpositional structure. It does not evolve over time but instead contains all expressible predicates simultaneously, without reference to temporal constraints.
@@ -2851,8 +3012,6 @@ This theorem reveals why \( U \) and \( \Omega \) handle self-reference differen
     \item \( \Omega \) chooses \textbf{contradiction}, allowing paradoxes to exist simultaneously (as shown in \textbf{Omega\_sustains\_paradox}).
 \end{itemize}
 
-These aren't arbitrary design choices—they are the \textbf{only two possible ways} to handle self-reference. A system can either delay contradiction indefinitely through temporal structuring (as in \( U \)) or allow it to emerge directly in a timeless fashion (as in \( \Omega \)).
-
 \paragraph{Proof:}
 The proof follows by case distinction:
 
@@ -2926,9 +3085,9 @@ Qed.
 
 \paragraph{Implications and Interpretation:}
 \begin{itemize}
-    \item \textbf{Necessity of Choice:} This theorem shows that \textbf{any} self-referential system must choose between incompleteness and contradiction. \( U \) and \( \Omega \) represent the two fundamental ways of making this choice—through temporal staging or through simultaneous paradox.
-    \item \textbf{A Deep Justification for \( U \) and \( \Omega \):} The structure of \( U \) and \( \Omega \) is not arbitrary—this theorem proves that they are the only two possible solutions to self-reference.
-    \item \textbf{The Limits of Any Expanding Knowledge System:} Any system that allows self-reference, from AI to epistemology, must accept this trade-off: either allow contradictions or remain perpetually incomplete.
+    \item \textbf{Necessity of Choice:} This theorem shows that the self-referential systems designed here must choose between incompleteness and contradiction. \( U \) and \( \Omega \) represent the two fundamental ways of making this choice—through temporal staging or through simultaneous paradox.
+    \item \textbf{\( \Omega \) Chooses Both Incompleteness and Contradiction:} We have already proven that \( \Omega \) uses both incompleteness and contradiction to handle paradox. The ``or" in this theorem is not an exclusive or. Instead, \( \Omega \) demonstrates how both properties can be used simultaneously.
+    \item \textbf{The Limits of Self-Referential Systems:} Systems that allows self-reference, from AI to epistemology, must accept this trade-off: allow contradictions and/or remain perpetually incomplete. However, this is not a flaw. Contradictions and incompleteness are features that can be used to perpetually transcend current understanding.
 \end{itemize}
 
 
@@ -3624,12 +3783,14 @@ Several avenues for future work remain open and promising:
 \begin{itemize}
     \item \textbf{Executable Generativity:} One direction is to export this formally verified logic into a computational environment such as Python or Haskell, enabling the construction of systems that dynamically reflect on their own limits. Such systems might model forms of generative computation that recursively evolve by recognizing their own incompleteness.
 
-    \item \textbf{Meta-Axiomatic Refinement:} While Coq provides a high level of formal rigor, the foundational assumptions of Generative Set Theory—and the axioms chosen—should continue to be examined, challenged, and refined by the broader community. Peer review, critique, and formal comparison with other foundational systems (e.g., Homotopy Type Theory, Category Theory) are all essential to strengthening its philosophical and mathematical integrity.
+    \item \textbf{Axiomatic Refinement:} While Coq provides a high level of formal rigor, the foundational assumptions of Generative Set Theory—and the axioms chosen—should continue to be examined, challenged, and refined by the broader community. Peer review, critique, and formal comparison with other foundational systems (e.g., Homotopy Type Theory, Category Theory) are all essential to strengthening its philosophical and mathematical integrity.
+
+    \item \textbf{Discuss Theorem Conclusions:} One way errors persist even when using Coq is to prove something that means something different from what was intended. The conclusions presented in this section are tentative interpretations of the proofs that should be analyzed for validity in what has been claimed.
 
     \item \textbf{Theoretical Integration:} There may be deep connections between this framework and other domains, such as category theory, quantum foundations, or self-referential AI systems. These threads deserve exploration, especially where structure, contradiction, and time intersect.
 \end{itemize}
 
-Ultimately, Generative Set Theory is an attempt to encode a core insight: that incompleteness, contradiction, and boundedness are not flaws in a system—but are its generative essence.
+Ultimately, Generative Set Theory is an attempt to encode a core insight: that incompleteness, contradiction, and boundedness are not flaws in a our universe—but are its generative essence.
 
 \section{Metaphysical Interpretation: The Structure of Existence}
 
@@ -6828,16 +6989,15 @@ The progress of the paper will be documented publicly as the framework evolves. 
     \item January 2025 - First draft completed.
     \item February 23, 2025 - Rewrote physics derivation sections to increase the rigor, clarity, and fix several issues. Removed some sections from the appendix. Moved philosophical framework to the paper body. Changed the name ``Meta-Mathematics'' to ``Generative Mathematics'' because ``Meta-Mathematics'' already refers to a field of study.
     \item March 4, 2025 - Added an intuitive introductory section for the generativity framework. Made some minor edits. Removed generative math section in preparation for generative set theory and logic sections.
+    \item March 26, 2025 - Added Generative Set Theory draft.
 \end{enumerate}
 
-\subsection{Future Work}
-The following work is ongoing, to be published soon:
+\subsection{Road Map}
+Several avenues for expanding the framework include:
 \begin{enumerate}
-    \item Generative mathematics framework.
+    \item Lagrangian formalism for entropy flow.
+    \item More AI applications and use cases.
     \item Coq proofs of $I_\text{max}$.
-    \item Category theoretic basis for the universality of $I_\text{max}$ in any system.
-    \item General flow and editing of the paper text. The paper is quite long and needs to be made more cohesive.
-    \item A more thorough description of the Theory of Generativity toward the end of the paper.
 \end{enumerate}
 
 \section*{Note from the Author}
@@ -6866,7 +7026,7 @@ The framework of \(\mathcal{I}_{\text{max}}\) suggests a profound and self-refer
 \subsection{Acknowledgments}
 Acknowledgments will be made here for feedback and suggestions.
 
-This work currently lacks proper citations of established results in math and science. However, this paper would not have been possible without the discoveries of countless hardworking scientists and mathematicians that set the foundation for the derivations shown here. Citations and proper references \textbf{will be added} in the future - the paper is still a work in progress.
+This work currently lacks proper citations of established results in math, science, and philosophy. However, this paper would not have been possible without the discoveries of countless hardworking scientists and mathematicians that set the foundation for the derivations shown here. Citations and proper references \textbf{will be added} in the future - the paper is still a work in progress.
 
 \begin{thebibliography}{99}
 
@@ -6929,4 +7089,3 @@ Establishes uniqueness conditions for differential equations through Lipschitz c
 \end{thebibliography}
 
 \end{document}
-

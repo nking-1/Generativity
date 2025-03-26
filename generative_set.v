@@ -274,11 +274,12 @@ Proof.
   (* Step 8: Use self_ref_generation_exists again to embed R' at some time ≥ n *)
   destruct (self_ref_generation_exists R' n) as [k [H_ge_k H_contains_R']].
 
+  (* Step 10: Now we have: contains n (embed (fun _ => exists P0, ~ contains n (embed P0))) *)
+  exists n.
+
   (* Step 9: Use backward monotonicity to bring R' embedding down to time n if needed *)
   apply (contains_backward n k (self_ref_pred_embed R')) in H_contains_R'; [| lia].
 
-  (* Step 10: Now we have: contains n (embed (fun _ => exists P0, ~ contains n (embed P0))) *)
-  exists n.
   split.
   - lia.
   - exact H_contains_R'.
@@ -414,7 +415,7 @@ Proof.
 Qed.
 
 
-(* Theorem: U doesn't have *actual* paradoxes at the same time step *)
+(* Theorem: U doesn't have *temporal* paradoxes at the same time step *)
 Theorem U_contains_no_instantaneous_paradoxes :
   forall (U: Type) `{UniversalSet U},
   ~ exists P: U -> Prop, (contains 0 (self_ref_pred_embed P) /\ ~ contains 0 (self_ref_pred_embed P)).
@@ -433,6 +434,7 @@ Proof.
 Qed.
 
 
+(* Theorem: No predicate P directly contradicts itself in the same element *)
 Theorem U_no_true_and_negated_true_for_same_element :
   forall (U: Type) `{UniversalSet U},
   forall P : U -> Prop,
@@ -445,6 +447,11 @@ Proof.
 Qed.
 
 
+(* Theorem: Paradoxes propagate backward in time *)
+(* Once both P and ~P are embedded at any time, they are retroactively contained *)
+(* at all earlier times — not as a contradiction, but as a temporal superposition. *)
+(* This reflects the paraconsistent design of U: paradox may be present, but never collapses *)
+(* into contradiction at a single time step. Instead, it lives in structured tension. *)
 Theorem U_paradoxical_embeddings_propagate_backward :
   forall (U : Type) `{UniversalSet U},
   forall (P : U -> Prop),
