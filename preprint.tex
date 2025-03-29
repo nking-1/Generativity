@@ -119,12 +119,12 @@ This paper begins with formal derivations of $\mathcal{I}_{\text{max}}$ from fun
 
 \subsection{Intent of this Paper}
 
-This is an open-source white paper that aims to maintain a high level of transparency and rigor in the development of the generativity framework. Some elements of this work may eventually be published in relevant academic journals. In the meantime, this white paper is being shared openly with the hope that by doing so, the ideas presented here may be adopted more quickly. A GitHub repository containing numerical experiments, visualizations, and practical applications to accompany this paper is available at:
+This is an exploratory open-source white paper that aims to maintain a high level of transparency and rigor in the development of the generativity framework. Some elements of this work may eventually be published in relevant academic journals. In the meantime, this white paper is being shared openly with the hope that by doing so, the ideas presented here may be adopted more quickly. A GitHub repository containing numerical experiments, visualizations, and practical applications to accompany this paper is available at:
 \begin{center}
     \url{https://github.com/nking-1/Generativity}
 \end{center}
 
-We eagerly seek collaboration from domain experts who would like to help prepare parts of the white paper, such as the physics derivations, for formal publication.
+As discussed in this paper, finding limitations and flaws is essential to allow a system to improve. Please email any feedback or interest in collaboration to research@celetris.com
 
 \subsection{Is this Framework Related to the Simulation Hypothesis?}
 No. While some may see similarities between computational models of reality and simulation arguments, this framework does not assume an external “simulator.” Instead, it posits that reality itself is \textit{self-generating}—a recursive computational process optimizing information flow. Rather than being a \textit{simulation}, existence unfolds through an \textit{intrinsic generative logic} that aligns with both physical laws and metaphysical insights. Computer science provides a powerful framework to analyze the process of information flow and optimization, so we use it to model nature's optimization process. In this sense, nature finding optimal trade-offs can be thought of as reality ``computing itself" into existence.
@@ -783,9 +783,7 @@ We consolidate all forms of the heat death derivations here to compare them more
 
 \subsection{Extended Derivations for Fundamental Interactions}
 
-In this subsection, we extend our derivation of 
-\(\mathcal{I}_{\max}\)
-to the electromagnetic, strong, and weak interactions. In each case, we work within a quantum field theoretic framework and incorporate the relevant energy scales, coupling constants, and additional factors arising from the structure of the field theories. Our derivations will be heuristic here, mainly intended to explore whether $I_\text{max}$ is generalizable to the other forces. A more rigorous QFT treatment by experts will be necessary to make stronger predictions.
+In this subsection, we extend our derivation of \(\mathcal{I}_{\max}\) to the electromagnetic, strong, and weak interactions. In each case, we work within a quantum field theoretic framework and incorporate the relevant energy scales, coupling constants, and additional factors arising from the structure of the field theories. Our derivations will be heuristic here, mainly intended to explore whether $I_\text{max}$ is generalizable to the other forces. A more rigorous QFT treatment by experts will be necessary to determine whether any of the derivations here are reasonable. The goal is to determine whether $I_\text{max} \propto \frac{E}{\hbar}\cdot k_B^2$ continues to hold in predicting the maximum information flow of all physical systems.
 
 \subsubsection{Electromagnetic Force}
 
@@ -946,13 +944,6 @@ Combining the entropy and its rate of change:
     I_{\max} = S \cdot \frac{dS}{dt} \approx \ln\left(\frac{D}{g^2}\right) \cdot \frac{M_W c^2}{\hbar} \cdot k_B^2 \propto \frac{E}{\hbar} \cdot k_B^2
 \end{equation}
 
-\subsubsection{A Unified Information Flow Principle}
-
-These extended derivations demonstrate that the universal information flow constraint,
-\[
-\mathcal{I}_{\max} \propto \frac{E}{\hbar}\, k_B^2,
-\]
-applies across all fundamental interactions, with each force’s characteristic parameters modulating the effective rate. Not only does this formalism incorporate the constants \(c\), \(G\), \(\hbar\), \(k_B\), and \(\Lambda\), but it also naturally integrates the Standard Model coupling constants such as \(\alpha\), \(\alpha_s\), and \(g\).
 
 \subsubsection{Call for a More Rigorous QFT Treatment}
 
@@ -965,9 +956,9 @@ Additionally, the author is an engineer and mathematician, \textbf{not} an exper
     \item Exploring whether this principle has deep connections to quantum information theory and holography.
     \item Investigating experimental avenues to test $I_{\max}$, particularly in high-energy physics and black hole thermodynamics.
 \end{itemize}
-If this framework holds under rigorous analysis, it may represent a fundamental constraint on information flow across all structured systems, requiring integration into modern physics.
+If this framework holds under rigorous analysis, it may represent a fundamental constraint on information flow across all structured systems.
 
-\subsection{Interpreting \(E / \hbar\) as a Fundamental Frequency}
+\subsection{Creatively Interpreting \(E / \hbar\) as a Fundamental Frequency}
 
 A recurring feature of our derivations is the role played by the ratio \(E / \hbar\), which naturally has units of frequency. This suggests a deeper interpretation: the maximum rate of information processing is intrinsically tied to the fastest time scale on which the system can evolve. This aligns with the Margolus–Levitin theorem, which sets a bound on the rate of state transitions in quantum systems.
 
@@ -1167,7 +1158,6 @@ This theorem predicts that structured asymmetry is a fundamental feature of all 
 \end{itemize}
 
 The universality of this result suggests that symmetry breaking is not simply a spontaneous feature of nature but an unavoidable consequence of bounded information flow. Instead of treating asymmetry as an anomaly, we now recognize it as an optimal trade-off solution—the most efficient way for reality to evolve under fundamental constraints.
-
 
 \subsection{Generative Constraints and the Structure of Reality}
 
@@ -1694,9 +1684,19 @@ Thus, every object—whether physical, abstract, or computational—is not just 
 
 \subsection{Future Directions: Towards Greater Rigor and Generalization}
 
-While this section has presented \(\mathcal{I}_{\text{max}}\) as a universal information flow bound, several avenues remain for extending its rigor and applicability, particularly in abstract systems. These directions are critical for establishing \(\mathcal{I}_{\text{max}}\) as a truly universal principle.
+Although this section has presented an intuitive proof of \(\mathcal{I}_{\text{max}}\) as a universal information flow bound, several avenues remain to extend its rigor and applicability, particularly in abstract systems. These directions are critical to establish \(\mathcal{I}_{\text{max}}\) as a truly universal principle.
 
-\paragraph{1. Formalizing Abstract System Definitions}
+\paragraph{1. More Rigorous Foundation}
+Several aspects of the proofs shown here are not sufficiently rigorous to fully justify the arguments made. A constructive foundation, ideally proven in a system like Coq, will remove doubt about the validity of the proofs, as well as enable real systems to be engineered on top of $I_\text{max}$ as a foundation. Examples of areas to improve:
+\begin{itemize}
+    \item Claiming that \(\mathcal{I}_n\) forms a contraction mapping as it approximates \(\mathcal{I}_{\text{max}}\).
+    \item Applying the Banach Fixed-Point Theorem without a properly defined contraction mapping.
+    \item Using the Yoneda Lemma to claim universality without a rigorous category theory foundation for \(\mathcal{I}_{\text{max}}\).
+    \item Claiming that the system forms a ``self-referential Gödelian loop" to prove itself through its own incompleteness.
+\end{itemize}
+
+
+\paragraph{2. Formalizing Abstract System Definitions}
 The axioms presented rely on intuitive notions of stored complexity (\(S\)) and dynamic efficiency (\(\frac{\Delta S}{\Delta t}\)), which are well-defined in physical systems. Extending these definitions to purely abstract domains, such as:
 \begin{itemize}
     \item Proof systems and logical frameworks,
@@ -1705,7 +1705,7 @@ The axioms presented rely on intuitive notions of stored complexity (\(S\)) and 
 \end{itemize}
 requires a more rigorous treatment of complexity and efficiency metrics.
 
-\paragraph{2. Validation Across Pure Mathematics and Logic}
+\paragraph{3. Validation Across Pure Mathematics and Logic}
 While \(\mathcal{I}_{\text{max}}\) aligns with physical principles like energy and entropy, its applicability to abstract domains such as mathematical proofs, graph traversal, and logical inference needs further exploration. Potential research questions include:
 \begin{itemize}
     \item How does \(\mathcal{I}_{\text{max}}\) constrain proof length or verification in formal systems?
@@ -1713,7 +1713,7 @@ While \(\mathcal{I}_{\text{max}}\) aligns with physical principles like energy a
     \item Are there counterexamples or edge cases where \(\mathcal{I}_{\text{max}}\) fails to apply?
 \end{itemize}
 
-\paragraph{3. Theoretical Alignment with Established Results}
+\paragraph{4. Theoretical Alignment with Established Results}
 Aligning \(\mathcal{I}_{\text{max}}\) with canonical theorems in mathematics and theoretical computer science, such as:
 \begin{itemize}
     \item Gödel’s incompleteness theorems,
@@ -1722,7 +1722,7 @@ Aligning \(\mathcal{I}_{\text{max}}\) with canonical theorems in mathematics and
 \end{itemize}
 is essential for embedding \(\mathcal{I}_{\text{max}}\) within the broader mathematical and computational canon.
 
-\paragraph{4. Experimental and Computational Validation}
+\paragraph{5. Experimental and Computational Validation}
 Empirical validation of \(\mathcal{I}_{\text{max}}\) in abstract systems could involve simulations of complexity-constrained systems, such as:
 \begin{itemize}
     \item Proof generation in formal logic.
@@ -1730,7 +1730,7 @@ Empirical validation of \(\mathcal{I}_{\text{max}}\) in abstract systems could i
     \item Abstract computational experiments in state space traversal.
 \end{itemize}
 
-\paragraph{5. Philosophical Implications and Extensions}
+\paragraph{6. Philosophical Implications and Extensions}
 Finally, exploring the philosophical implications of \(\mathcal{I}_{\text{max}}\) as a universal principle invites reflection on questions of epistemology and abstraction:
 \begin{itemize}
     \item How does \(\mathcal{I}_{\text{max}}\) shape our understanding of knowledge and computation as inherently finite processes?
@@ -1748,10 +1748,10 @@ In previous sections, we introduced metaphysical concepts, claimed that mystery 
 For over a century, formal set theory and logic have been constructed on a fundamental principle: avoid paradox at all costs. Traditional approaches have sought to maintain mathematical consistency by eliminating self-reference, rejecting non-wellfounded sets, and restricting the power of formal systems. Some non-wellfounded set theories and paraconsistent logic frameworks do exist, but to fit the needs of our framework, we build a new foundation to express a generative, paradox-resistant universe. Generative Set Theory takes a radical step forward: instead of rejecting paradox, we prove that paradoxical ideas can be used and contained without logical explosion. We will build a dynamic, self-generating system that embraces paradox and knows its own limitations, turning limitations from flaw into infinite potential.
 
 \subsection{Motivations for Generative Set Theory}
-Our motivations for generative set theory are to model empirical observations about reality that are not typically captured in traditional foundations of math.
+The motivation for generative set theory is to model empirical observations about reality that are not typically captured in traditional math foundations. The goal is \textbf{not} to replace or dismiss ZFC set theory. We are simply exploring alternative foundations to find the consequences of our metaphysical ideas with rigor.
 
 \subsubsection{Reality Is Incomplete}
-As we have noted in the discussion on veils, incompleteness and mystery seem to be a feature of reality that occurs in systems as disparate as math, physics, and theology. As far as we can tell, time will continue to progress for eternity. Therefore, we propose that it should be reasonable to build a mathematical foundation that embraces and contains its incompleteness, instead of trying to assume that there is an eventually complete structure to be discovered.
+As we have noted in the discussion on veils, incompleteness and mystery seem to be a feature of reality that occurs in systems as disparate as math, physics, and theology. Therefore, we propose that it should be reasonable to build a mathematical foundation that embraces and contains its incompleteness to grow itself, instead of assuming that there is an eventually complete structure to be discovered.
 
 Historically, mathematics has been built on a foundation that assumes a fundamentally complete platonic universe that contains all truths in the abstract. However, truth is subjective, relying on context and axioms as a foundation. It might also be the case that even the ultimate abstract platonic realm itself is incomplete. We will explore this possibility as we build Generative Set Theory.
 
@@ -1767,7 +1767,7 @@ However, in reality, paradoxical situations happen all the time. The clearest ex
 
 To construct a generative logical system, we introduce a fundamental structure called the \textbf{Universal Set}, denoted as \( U \). This is not a conventional static set but a \textit{self-generating}, \textit{time-evolving} system capable of embedding and reasoning about its own structure.
 
-\subsubsection{\(U\) Represents a Generative Universe}
+\subsubsection{\(U\) Represents a Generative Time-Based Universe}
 The primary motivation for defining $U$ is to create a self-referential, dynamically growing system that can encode truths about itself, just like the universe does. Empirically, we can observe that the universe works this way. This very paragraph is an example of the universe encoding information about itself over time. Here, the information is encoded in English, then encoded in PDF format, then stored in physical media such as a hard drive. Mathematically, we will define U so that it encodes information in formal logic predicates, giving it the ability to express truths about its own system.
 
 \subsubsection{Axiomatic Definition of \( U \)}
@@ -1786,12 +1786,6 @@ We define \( U \) as a type equipped with the following properties:
     \text{contains}: \mathbb{N} \to U \to \text{Prop}
     \]
     where \( \text{contains}(t, x) \) means that \( x \) is an element of \( U \) at time \( t \). This models the idea that \( U \) grows over time as new truths emerge.
-
-    \item A \textbf{monotonicity condition} (irreversibility of knowledge):
-    \[
-    \forall m, n, x, \quad m \leq n \rightarrow \text{contains}(n, x) \rightarrow \text{contains}(m, x)
-    \]
-    meaning that once an element \( x \) enters \( U \), it remains present in all future stages.
 
     \item A \textbf{self-referential predicate embedding function}:
     \[
@@ -1812,6 +1806,12 @@ We define \( U \) as a type equipped with the following properties:
     \forall P: U \to \text{Prop}, \forall t \in \mathbb{N}, \quad \exists n \geq t, \quad \text{contains}(n, \text{embed}(P))
     \]
     In English, this could be expressed, ``For any predicate $P$ about $U$, and for all natural numbers $t$ (where $t$ is interpreted as time), there exists some time $n$ later than $t$ such that $P$ is embedded in $U$ at time $n$." This enforces the idea that \( U \) is \textit{not static}—it is an ever-expanding system that systematically incorporates all possible predicates about itself over time.
+
+    \item A \textbf{monotonicity condition} (irreversibility of knowledge):
+    \[
+    \forall m, n, x, \quad m \leq n \rightarrow \text{contains}(n, x) \rightarrow \text{contains}(m, x)
+    \]
+    meaning that once an element \( x \) enters \( U \), it was always accessible at any stage of \( U \). In combination with the generative principle, this turns \( U \) into something like an eternal Möbius strip, where time does not have a beginning or end.
 \end{enumerate}
 
 \subsubsection{Coq Implementation}
@@ -2638,6 +2638,7 @@ This deepens the metaphysical reading of \( U \): it is not a contradiction-free
 
 As noted earlier, the counterintuitive behavior shown here is a consequence of the \\
 \texttt{contains\_backward} axiom. This axiom has been useful for several proofs so far, but it may be worth analyzing whether it is strictly necessary. Alternative systems for handling paradox over time should be considered, with the $U$ system as a starting point.
+
 
 \subsection{The Omega Set \( \Omega \)}
 
@@ -3487,6 +3488,7 @@ This final paradox is the natural conclusion of everything we've seen:
 
 Rather than resisting this contradiction, \( \Omega \) is defined by it. \( \Omega \) is able to instantiate a set larger than itself because it does not contain a set larger than itself.
 
+
 \subsection{Computability in \( U \) and Instantaneous Computation in \( \Omega \)}
 
 This section demonstrates a fundamental distinction between \( U \) and \( \Omega \):
@@ -3723,7 +3725,6 @@ This theorem establishes that while \( U \) follows the rules of algorithmic com
 % \end{lstlisting}
 
 
-
 % \paragraph{Theorem: \( U \) Cannot Permanently Contain \( \Omega \)}
 % This theorem states that \( U \) cannot permanently contain all paradoxes present in \( \Omega \). That is, if one assumes that every paradoxical statement from \( \Omega \) is contained in \( U \) at all times, this leads to a contradiction.
 
@@ -3905,6 +3906,12 @@ This framing redefines elegance in nature. Physics is not an imposition of struc
 And as constraints shift—when energy disperses or information is lost—structure dissolves.  
 Not in failure.  
 But in completion.
+
+\paragraph{The Universe Cannot Solve Itself.}
+
+As noted in the discussion on veils, nature seems to have a pattern of hiding itself. Several well-established results, such as Gödel's Incompleteness Theorems, show that even formal systems are limited in what they can prove, meaning that there will always be some truths escaping absolute proof. As we saw in Generative Set Theory, $\Omega$ is a larger space than $U$. There are truths in $\Omega$ that $U$ can never reach, because doing so would require $U$ to violate its limitation of never containing paradoxical predicates at the same time step. Therefore, we might conceptualize the universe as approximating the timeless world of $\Omega$, but never reaching it, through all eternity.
+
+Systems in reality may be recursively searching for a fixed point -- a stable place to rest while maintaining their structure against decay. However, the fixed point in $U$ might only be able to approximate the ``true" fixed point in $\Omega$, because $\Omega$ exists in an absolute infinite space larger than $U$ can ever reach. Additionally, the universe's capacity to solve problems is bounded by $I_\text{max}$, meaning that any problem that requires more computational capacity than $I_\text{max}$ might remain intractable. Conceptually, ``perfect" solutions $P$ might exist in the space of $\Omega$ and require more computational capacity than could ever be achieved through all eternity to prove.
 
 \paragraph{A Unified Synthesis.}
 
