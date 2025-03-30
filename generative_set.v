@@ -622,6 +622,41 @@ Proof.
 Qed.
 
 
+Theorem Omega_complete_iff_incomplete :
+  forall `{H_O: OmegaSet},
+    exists (P: Omegacarrier -> Prop) (x: Omegacarrier),
+      (
+        (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) /\
+        (exists R: Omegacarrier -> Prop, ~ exists z: Omegacarrier, R z)
+      ) <->
+      (
+        (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) /\
+        ~ (exists R: Omegacarrier -> Prop, ~ exists z: Omegacarrier, R z)
+      ).
+Proof.
+  intros H_O.
+
+  (* Step 1: Define the paradoxical equivalence predicate on Omega *)
+  set (equiv_pred := fun x : Omegacarrier =>
+    (
+      (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) /\
+      (exists R: Omegacarrier -> Prop, ~ exists z: Omegacarrier, R z)
+    ) <->
+    (
+      (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) /\
+      ~ (exists R: Omegacarrier -> Prop, ~ exists z: Omegacarrier, R z)
+    )
+  ).
+
+  (* Step 2: Use Omega-completeness to get a witness of the paradoxical equivalence *)
+  destruct (omega_completeness equiv_pred) as [x H_equiv].
+
+  (* Step 3: Return the embedded predicate and its witness *)
+  exists equiv_pred, x.
+  exact H_equiv.
+Qed.
+
+
 (*
 We now define a Computable class that asserts that every predicate on U is
 algorithmically describable.
