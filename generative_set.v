@@ -947,6 +947,19 @@ Proof.
 Qed.
 
 
+(* Omega contains all absurdities *)
+Theorem Omega_is_absurd:
+  forall (Omega : OmegaSet),
+  forall (P Q : Omegacarrier -> Prop),
+    exists x : Omegacarrier, P x <-> Q x.
+Proof.
+  intros Omega P Q.
+  set (collapse := fun x => P x <-> Q x).
+  destruct (omega_completeness collapse) as [x Hx].
+  exists x. exact Hx.
+Qed.
+
+
 (* The Paradoxical Class *)
 Class Paradoxical (Omega : OmegaSet) (P : Omega_carrier Omega -> Prop) := {
   paradox_property : forall x : Omega_carrier Omega, P x <-> ~ P x
@@ -1070,3 +1083,23 @@ Proof.
   exists (self_ref_pred_embed CombinedPred).
   split; assumption.
 Qed.
+
+
+(* Idea: A god is not limited to normal reason.
+A god can justify any absurd claim. *)
+Section DivineAbsurdity.
+
+  Context (Omega : OmegaSet).
+  
+  Parameter divine_absurdity : Prop.
+  
+  Definition divine_equiv (x : Omega.(Omegacarrier)) : Prop :=
+    divine_absurdity <-> (1 * 1 = 2).
+  
+  Theorem Omega_contains_divine_equiv :
+    exists x : Omega.(Omegacarrier), divine_equiv x.
+  Proof.
+    apply omega_completeness.
+  Qed.
+  
+End DivineAbsurdity.
