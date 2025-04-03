@@ -657,6 +657,41 @@ Proof.
 Qed.
 
 
+Theorem Omega_completeness_requires_contradiction :
+  forall `{H_O: OmegaSet},
+    (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) <->
+    (exists R: Omegacarrier -> Prop, forall z: Omegacarrier, R z -> False).
+Proof.
+  intros H_O.
+  split.
+
+  (* -> direction: completeness implies existence of an uninhabitable predicate *)
+  intros omega_complete.
+
+  set (P := fun x : Omegacarrier => ~ exists y : Omegacarrier, x = y).
+
+  (* By omega_completeness, this predicate must have a witness *)
+  destruct (omega_completeness P) as [x Hx].
+
+  (* So we return P as the uninhabitable predicate (even though it's now inhabited) *)
+  exists P.
+
+  (* Now show: forall z, P z -> False *)
+  intros z Hz.
+  (* P z = ~ exists y, z = y, but clearly z = z, so contradiction *)
+  apply Hz.
+  exists z. reflexivity.
+
+  (* <- direction: If there exists an uninhabitable predicate, Omega is complete *)
+  intros [R H_uninhabitable].
+
+  (* Let Q be any predicate *)
+  intros Q.
+  (* By omega_completeness, Q must have a witness *)
+  apply omega_completeness.
+Qed.
+
+
 (*
 We now define a Computable class that asserts that every predicate on U is
 algorithmically describable.
@@ -1103,3 +1138,19 @@ Section DivineAbsurdity.
   Qed.
   
 End DivineAbsurdity.
+
+
+(* Creative idea - what if Omega could even refer to things outside mathematics? *)
+Parameter OutsideOmega : Type.
+
+Definition contains_outside (HO : OmegaSet) (x : Omega_carrier HO) : Prop :=
+  exists y : OutsideOmega, True.
+
+Theorem Omega_contains_reference_to_outside :
+  forall (HO : OmegaSet),
+    exists x : Omega_carrier HO, contains_outside HO x.
+Proof.
+  intros HO.
+  unfold contains_outside.
+  apply omega_completeness.
+Qed.
