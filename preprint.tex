@@ -2415,71 +2415,6 @@ This result introduces a profound property of \( U \): it not only supports the 
 While the previous theorem \textbf{P\_is\_not\_unique} showed that any predicate can appear at multiple times, this theorem goes further—it guarantees that every predicate’s negation will also eventually appear. Taken together, these two theorems describe a generative system that supports truth evolution, self-critique, and recursive emergence of contradiction, all within a logically consistent temporal model.
 
 
-\subsection{\( U \) Contains No Paradoxes at the Same Time Step}
-
-While previous theorems have demonstrated that \( U \) can contain contradictory statements across different times, this theorem establishes that \( U \) does not contain paradoxes at any single time step. That is, there does not exist a predicate \( P \) such that both \( P \) and its negation \( \neg P \) are simultaneously embedded at the same time. This result ensures that while \( U \) may express contradiction over time, it remains logically coherent at each individual time step.
-
-\paragraph{Theorem: No Instantaneous Paradoxes in \( U \)}
-For every Universal Set \( U \), it is impossible for \( U \) to simultaneously contain a predicate \( P \) and its negation \( \neg P \) at the same time \( t \). Formally:
-
-\begin{equation}
-    \neg \exists P: U \to \text{Prop}, \quad
-    \left( \text{contains}(0, \text{embed}(P)) \wedge \neg \text{contains}(0, \text{embed}(P)) \right).
-\end{equation}
-
-\paragraph{Proof:}
-The proof follows by direct contradiction:
-
-\begin{enumerate}
-    \item Assume for contradiction that there exists a predicate \( P \) such that:
-    \[
-    \text{contains}(0, \text{embed}(P)) \quad \text{and} \quad \neg \text{contains}(0, \text{embed}(P)).
-    \]
-    \item By the correctness property of self-referential embeddings, we know:
-    \[
-    P(\text{embed}(P)).
-    \]
-    \item However, our assumption also asserts:
-    \[
-    \neg \text{contains}(0, \text{embed}(P)).
-    \]
-    \item This is a direct contradiction, so the assumption must be false, proving the theorem.
-\end{enumerate}
-
-The simplicity of the proof is notable: by assuming a predicate \( P \) that is both contained and not contained at time \( 0 \), we immediately reach a contradiction. This shows that temporal separation isn’t just one way to handle contradictions—it’s the only way \( U \) can handle them while maintaining consistency.
-
-\subsubsection{Coq Proof}
-\begin{lstlisting}[language=Coq]
-Theorem U_contains_no_instantaneous_paradoxes :
-  forall (U: Type) `{UniversalSet U},
-  ~ exists P: U -> Prop, (contains 0 (self_ref_pred_embed P) /\ ~ contains 0 (self_ref_pred_embed P)).
-Proof.
-  intros U H.
-  (* Assume for contradiction that U contains a paradox *)
-  intro Hparadox.
-  destruct Hparadox as [P [H1 H2]].
-
-  (* By definition, self_ref_pred_embed_correct tells us that P holds for self_ref_pred_embed P *)
-  pose proof self_ref_pred_embed_correct P as Htruth.
-
-  (* However, we only assumed contains 0 (self_ref_pred_embed P), which does not directly imply P (self_ref_pred_embed P). *)
-  (* But our assumption tells us that it is both contained and NOT contained at stage 0, which is an actual contradiction. *)
-  contradiction.
-Qed.
-\end{lstlisting}
-
-\paragraph{Implications and Interpretation:}
-This theorem has several key implications for the logical structure of \( U \):
-
-\begin{itemize}
-    \item \textbf{No Instantaneous Paradoxes:} \( U \) does not allow contradictions to exist at the same moment in time, ensuring logical coherence.
-    \item \textbf{Temporal Structure Prevents Logical Explosion:} While contradictions can appear at different times, they do not exist at the same instant, preventing paradox-induced logical collapse.
-    \item \textbf{Aligns with Classical Logic at Each Step:} At any single time \( t \), the logic governing \( U \) remains classical, meaning that standard logical reasoning applies at any fixed moment.
-    \item \textbf{Necessity of Time:} This theorem shows that temporal structure isn’t just convenient for handling contradictions—it’s absolutely necessary. Without time separation, \( U \) could not contain contradictions at all while maintaining consistency.
-    \item \textbf{Supports a Dialectical View of Knowledge:} This result allows \( U \) to accommodate the evolution of truth and contradiction over time while avoiding simultaneous paradox.
-\end{itemize}
-
-
 \subsection{\( U \) Forbids Instantaneous Paradox on a Single Element}
 
 The generative system \( U \) is constructed to accommodate paradox over time—but only if that paradox does not realize itself simultaneously. This section formalizes two key results that guarantee \( U \)'s logical coherence at every individual time step, even while paradox is unfolding system-wide.
@@ -3349,7 +3284,6 @@ In prior theorems, we established that:
 \begin{itemize}
     \item Every predicate \( P \) in \( \Omega \) can become logically equivalent to its own negation (\( P(x) \leftrightarrow \neg P(x) \)), forming \textit{paradoxifying fixed points}.
     \item No predicate can exist alone—every truth is accompanied by its negation elsewhere in \( \Omega \) (truth duality).
-    \item \( \Omega \) must contain a set that is strictly larger than itself—embedding its own transcendence.
 \end{itemize}
 
 Now we prove a remarkable synthesis of those results:
@@ -3371,7 +3305,22 @@ That is, the predicate that defines \( \Omega \)'s own transcendence is logicall
 \end{align}
 
 \paragraph{Proof:}
-Define the predicate:
+
+For every Omega Set \( \Omega \), there exists a type \( X \) and an embedding function \( \text{embed}_X: X \to \Omega_{\text{carrier}} \) such that:
+
+\begin{equation}
+    \text{strictly\_larger}(X, \Omega_{\text{carrier}}).
+\end{equation}
+
+This means that \( \Omega \) necessarily contains a set that cannot be injectively mapped into itself, reinforcing that absolute infinity is necessarily paradoxical.
+
+\paragraph{Definition: Strictly Larger}
+Let \( X \) and \( Y \) be types. We say that \( X \) is \textbf{strictly larger} than \( Y \), written as \( \text{strictly\_larger}(X, Y) \), if there exists \textbf{no injective function} \( f: X \to Y \). That is:
+\[
+\text{strictly\_larger}(X, Y) \quad \Longleftrightarrow \quad \nexists f: X \to Y, \; \text{injective}(f)
+\]
+
+To formalize the paradox, we define a predicate $\text{meta\_paradox}$ whose truth value is logically equivalent to its own negation. This captures the idea that \( \Omega \) asserts its own transcendence by denying it.
 
 \begin{align}
 \text{meta\_paradox}(x) := 
@@ -3389,6 +3338,35 @@ By Omega-Completeness, there exists \( x \in \Omega \) such that \( \text{meta\_
 
 \subsubsection*{Coq Formalization}
 \begin{lstlisting}[language=Coq]
+Parameter strictly_larger : Type -> Type -> Prop.
+
+(* Intuition: X strictly larger than Y means there is no injective mapping from X into Y *)
+Axiom strictly_larger_no_injection :
+  forall (X Y : Type),
+    strictly_larger X Y ->
+      ~ exists (f : X -> Y), (forall x1 x2, f x1 = f x2 -> x1 = x2).
+
+(* Theorem 1: Omega contains a set strictly larger than itself *)
+Theorem Omega_contains_set_larger_than_itself :
+  forall (Omega : OmegaSet),
+    exists (X : Type) (embed_X_in_Omega : X -> Omegacarrier),
+      strictly_larger X Omegacarrier.
+Proof.
+  intros Omega.
+
+  (* Define the paradoxical predicate explicitly *)
+  set (P := fun (_ : Omegacarrier) =>
+    exists (X : Type) (embed_X_in_Omegacarrier : X -> Omegacarrier),
+      strictly_larger X Omegacarrier).
+
+  (* Omega completeness ensures this paradoxical predicate has a witness *)
+  destruct (omega_completeness P) as [witness H_witness].
+
+  (* From the witness we directly obtain our paradoxical set *)
+  exact H_witness.
+Qed.
+
+(* Theorem 2: Omega asserts it both does and does not contain such a set *)
 Theorem Omega_contains_set_larger_than_itself_iff_not_containing_it :
   forall (Omega : OmegaSet),
     exists (x : Omegacarrier),
@@ -3420,7 +3398,7 @@ Where classical set theory collapses under Russell-type contradictions, \( \Omeg
     \item And it contains the assertion that these two are logically equivalent.
 \end{itemize}
 
-This is a self-referential fixed point that sustains completeness through paradox.
+This suggests that mathematical totality is not just infinite—it is necessarily self-surpassing. It is a self-referential fixed point that sustains completeness through paradox.
 
 \paragraph{Conclusion: \( \Omega \) Defines Its Boundary by Exceeding It}
 
