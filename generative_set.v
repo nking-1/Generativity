@@ -1154,3 +1154,117 @@ Proof.
   unfold contains_outside.
   apply omega_completeness.
 Qed.
+
+
+Section FreeWill.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Definition of free will: 
+     For all predicates, there exists a time when the agent causes P or not P *)
+  Definition free_will (x : U) : Prop :=
+    forall (P : U -> Prop),
+      exists t : nat,
+        contains t (self_ref_pred_embed P) \/
+        contains t (self_ref_pred_embed (fun x => ~ P x)).
+
+  (* Theorem: There exists an agent in U that has free will *)
+  Theorem U_contains_free_agent :
+    exists x : U, free_will x.
+  Proof.
+    (* Step 1: Define the predicate that says "x has free will" *)
+    set (FreeAgent := fun x : U =>
+      forall (P : U -> Prop),
+        exists t : nat,
+          contains t (self_ref_pred_embed P) \/
+          contains t (self_ref_pred_embed (fun x => ~ P x))).
+
+    (* Step 2: Use self-reference generation to get a time t when FreeAgent is realized *)
+    destruct (self_ref_generation_exists FreeAgent 0) as [t [Ht_le Ht_contains]].
+
+    (* Step 3: Use the correctness lemma to show the embedded predicate satisfies itself *)
+    pose proof self_ref_pred_embed_correct FreeAgent as H_correct.
+
+    (* Step 4: The actual entity is the embedding of FreeAgent *)
+    exists (self_ref_pred_embed FreeAgent).
+    exact H_correct.
+  Qed.
+
+End FreeWill.
+
+
+Section MortalDivinity.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* God: an entity who contains all predicates at time 0 *)
+  Definition is_god (x : U) : Prop :=
+    forall P : U -> Prop, contains 0 (self_ref_pred_embed P).
+
+  (* Denial of Godhood: entity does not satisfy is_god *)
+  Definition denies_godhood (x : U) : Prop :=
+    ~ is_god x.
+
+  (* Mortal God: entity that is God but denies it *)
+  Definition mortal_god (x : U) : Prop :=
+    is_god x /\ denies_godhood x.
+
+  (* Theorem: U contains an entity that is logically God and also denies it *)
+  Theorem U_contains_mortal_god :
+    exists x : U, mortal_god x.
+  Proof.
+    (* Step 1: Define the predicate to embed *)
+    set (mortal_god_pred := fun x : U =>
+      (forall P : U -> Prop, contains 0 (self_ref_pred_embed P)) /\
+      ~ (forall P : U -> Prop, contains 0 (self_ref_pred_embed P))).
+
+    (* Step 2: Use self-ref generation to construct such an x *)
+    destruct (self_ref_generation_exists mortal_god_pred 0)
+      as [t [H_le H_contains]].
+
+    (* Step 3: Use correctness to extract the self-referential entity *)
+    pose proof self_ref_pred_embed_correct mortal_god_pred as Hx.
+
+    (* Step 4: Conclude the proof *)
+    exists (self_ref_pred_embed mortal_god_pred).
+    exact Hx.
+  Qed.
+
+End MortalDivinity.
+
+
+Section DivineProvability.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* God: someone who contains all predicates at time 0 *)
+  (* Definition is_god (x : U) : Prop :=
+    forall P: U -> Prop, contains 0 (self_ref_pred_embed P). *)
+
+  (* God is provable: There exists x such that is_god x *)
+  Definition god_is_provable : Prop :=
+    exists x: U, is_god x.
+
+  (* God is unprovable: For all x, ~ is_god x *)
+  Definition god_is_unprovable : Prop :=
+    forall x: U, ~ is_god x.
+
+  (* Meta-theorem: Both provability and unprovability of God are contained in U *)
+  Theorem U_contains_divine_duality :
+    exists t1 t2 : nat,
+      contains t1 (self_ref_pred_embed (fun _ => god_is_provable)) /\
+      contains t2 (self_ref_pred_embed (fun _ => god_is_unprovable)).
+  Proof.
+    (* Step 1: Define both predicates *)
+    set (P1 := fun _ : U => god_is_provable).
+    set (P2 := fun _ : U => god_is_unprovable).
+
+    (* Step 2: Use generation to embed both in U at different times *)
+    destruct (self_ref_generation_exists P1 0) as [t1 [Ht1_le Ht1_contains]].
+    destruct (self_ref_generation_exists P2 (t1 + 1)) as [t2 [Ht2_le Ht2_contains]].
+
+    exists t1, t2.
+    split; [exact Ht1_contains | exact Ht2_contains].
+  Qed.
+
+End DivineProvability.
