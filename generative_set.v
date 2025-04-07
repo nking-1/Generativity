@@ -2048,3 +2048,29 @@ Section FreeWillImpliesVeil.
 
 End FreeWillImpliesVeil.
 
+
+Section NecessityOfFaith.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Faith is defined as the condition that an agent lives in a veiled world. *)
+  Definition has_faith (x : U) : Prop :=
+    exists w : World, lives_in x w /\ VeiledWorld w.
+
+  (* New Axiom: for any world, there exists an agent with free will that lives in that world *)
+  Axiom free_agent_exists_in_world : forall w : World, exists x : U, free_will x /\ lives_in x w.
+
+  (* Theorem: If there is a veiled world, then there exists a free-willed agent that has faith. *)
+  Theorem faith_is_necessary :
+    (exists w0 : World, VeiledWorld w0) ->
+    exists x : U, free_will x /\ has_faith x.
+  Proof.
+    intros [w0 H_veil].
+    (* By the new axiom, in the veiled world w0, there exists a free agent living there *)
+    destruct (free_agent_exists_in_world w0) as [x [H_free H_lives]].
+    exists x.
+    split; [exact H_free | exists w0; split; assumption].
+  Qed.
+
+End NecessityOfFaith.
+
