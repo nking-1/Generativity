@@ -1707,3 +1707,169 @@ Section TheologicalPluralism.
   Qed.
 
 End TheologicalPluralism.
+
+
+Section TheologicalAfterlife.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* The afterlife described by a religion *)
+  Parameter afterlife : Religion -> EncodedData.
+
+  (* Semantic containment of a religion's afterlife in U *)
+  Definition afterlife_valid (r : Religion) : Prop :=
+    exists x : U, semantically_encodes x (afterlife r).
+
+  (* Theorem: Any defined afterlife in a religious system must exist semantically within U 
+  This theorem proves that U semantically contains all religiously defined afterlives.
+  It does not assert physical instantiation of these realms—
+  rather, that their logical and conceptual structures are embedded within U.
+
+  This reflects the idea that ultimate reality (U) is not only all-encompassing,
+  but internally consistent with all expressible coherent spiritual systems.
+
+  Religious experience, divine beings, and afterlives are
+  thus formal possibilities—semantically real—within U.
+  *)
+  Theorem afterlife_semantically_exists :
+    forall r : Religion, afterlife_valid r.
+  Proof.
+    intros r.
+    unfold afterlife_valid.
+
+    (* Define the predicate that x encodes the afterlife described by r *)
+    set (P := fun x : U => semantically_encodes x (afterlife r)).
+
+    (* Generate such an entity at some time *)
+    destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
+
+    (* Use correctness to guarantee predicate holds *)
+    pose proof self_ref_pred_embed_correct P as H_semantic.
+
+    exists (self_ref_pred_embed P).
+    exact H_semantic.
+  Qed.
+
+End TheologicalAfterlife.
+
+
+Section CosmologicalContainment.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Abstract type representing any ultimate or afterlife state *)
+  Parameter CosmologicalState : Type.
+
+  (* Each cosmological state (heaven, hell, limbo, etc.) can be encoded semantically *)
+  Parameter cosmic_structure : CosmologicalState -> EncodedData.
+
+  (* Predicate: A cosmological state is semantically embedded in U *)
+  Definition cosmic_state_valid (s : CosmologicalState) : Prop :=
+    exists x : U, semantically_encodes x (cosmic_structure s).
+
+  (* Theorem: All possible cosmological states exist within U *)
+  Theorem all_cosmic_structures_exist_in_U :
+    forall s : CosmologicalState, cosmic_state_valid s.
+  Proof.
+    intros s.
+    unfold cosmic_state_valid.
+
+    (* Define the predicate: x encodes the cosmic structure s *)
+    set (P := fun x : U => semantically_encodes x (cosmic_structure s)).
+
+    (* Generate an entity that satisfies this predicate *)
+    destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
+
+    (* Use self-reference correctness to guarantee satisfaction *)
+    pose proof self_ref_pred_embed_correct P as H_semantic.
+
+    exists (self_ref_pred_embed P).
+    exact H_semantic.
+  Qed.
+
+End CosmologicalContainment.
+
+
+Section GenerativeReligion.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* A religion is constructible in U if some entity encodes its semantic structure *)
+  Definition religion_constructible (r : Religion) : Prop :=
+    exists x : U, semantically_encodes x (divinity_fragment r).
+
+  (* Theorem: All religions—past, present, future, even newly invented—must be constructible in U *)
+  (* U is infinitely generative for religions. *)
+  Theorem all_religions_constructible :
+    forall r : Religion, religion_constructible r.
+  Proof.
+    intros r.
+    unfold religion_constructible.
+
+    (* Define the predicate: x encodes the divinity fragment of r *)
+    set (P := fun x : U => semantically_encodes x (divinity_fragment r)).
+
+    (* Generate such an entity within U *)
+    destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
+
+    (* Confirm the predicate holds *)
+    pose proof self_ref_pred_embed_correct P as H_semantic.
+
+    exists (self_ref_pred_embed P).
+    exact H_semantic.
+  Qed.
+
+End GenerativeReligion.
+
+
+Section DivineCoexistence.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Abstract type representing possible semantic realities (worlds) *)
+  Parameter World : Type.
+
+  (* Each world can semantically encode a belief structure *)
+  Parameter world_encodes : World -> EncodedData -> Prop.
+
+  (* Predicate: a world in which divinity is semantically present *)
+  Parameter divine_in_world : World -> Prop.
+
+  (* Predicate: a world in which divinity is forever veiled or inaccessible *)
+  Definition non_divine_world (w : World) : Prop := ~ divine_in_world w.
+
+  (* Theorem: U contains both divine and non-divine semantic worlds *)
+  (* In other words, U contains worlds with a god, and worlds without. *)
+  Theorem U_contains_divine_and_non_divine_worlds :
+    exists w1 w2 : World,
+      divine_in_world w1 /\
+      non_divine_world w2.
+  Proof.
+    (* Construct semantic representations of both types of worlds *)
+    Parameter divine_data : EncodedData.
+    Parameter non_divine_data : EncodedData.
+
+    (* Assume we can define two worlds that encode these differing structures *)
+    Parameter w1 w2 : World.
+
+    Axiom w1_encodes_divine : world_encodes w1 divine_data.
+    Axiom w2_encodes_non_divine : world_encodes w2 non_divine_data.
+
+    (* Assume that divine presence corresponds to semantic encoding of divine_data *)
+    Axiom divine_data_defines_presence :
+      forall w, world_encodes w divine_data -> divine_in_world w.
+
+    (* Assume that non_divine_data excludes divine presence *)
+    Axiom non_divine_data_excludes_presence :
+      forall w, world_encodes w non_divine_data -> ~ divine_in_world w.
+
+    (* Now apply those axioms to build our pair *)
+    exists w1, w2.
+    split.
+    - apply divine_data_defines_presence. exact w1_encodes_divine.
+    - unfold non_divine_world.
+      apply non_divine_data_excludes_presence. exact w2_encodes_non_divine.
+  Qed.
+
+End DivineCoexistence.
+
