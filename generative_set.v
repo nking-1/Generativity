@@ -1426,3 +1426,135 @@ Section YoungEarthSimulation.
   Qed.
 
 End YoungEarthSimulation.
+
+
+Section DivinePresence.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* God is an entity who contains all predicates at time 0 *)
+  (* Definition is_god (x : U) : Prop :=
+    forall P : U -> Prop, contains 0 (self_ref_pred_embed P). *)
+
+  (* God can know a proposition semantically (e.g., experience it internally) *)
+  Parameter knows : U -> (U -> Prop) -> Prop.
+
+  (* Omniscient: contains or knows all predicates *)
+  Definition omniscient (g : U) : Prop :=
+    forall P : U -> Prop,
+      contains 0 (self_ref_pred_embed P) \/ knows g P.
+
+  (* Theorem: There exists a God who is present in every being—
+     either by identity or by internal semantic knowledge of that being *)
+  Theorem God_must_exist_within_all_beings :
+    exists g : U,
+      is_god g /\
+      forall x : U,
+        g = x \/ knows g (fun y => y = x).
+  Proof.
+    (* Step 1: Define the paradoxical god predicate *)
+    set (P := fun g : U =>
+      (forall Q : U -> Prop, contains 0 (self_ref_pred_embed Q)) /\
+      forall x : U, g = x \/ knows g (fun y => y = x)).
+
+    (* Step 2: Use self-reference generation to produce this entity *)
+    destruct (self_ref_generation_exists P 0) as [t [Hle Hcontain]].
+
+    (* Step 3: Use correctness to extract the actual properties *)
+    pose proof self_ref_pred_embed_correct P as H_god_def.
+    destruct H_god_def as [H_god H_know_each].
+
+    (* Step 4: Package up the entity *)
+    exists (self_ref_pred_embed P).
+    split; assumption.
+  Qed.
+
+End DivinePresence.
+
+
+Section DivineTrinity.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* God is present in all beings via inner knowledge *)
+  Definition omnipresent (g : U) : Prop :=
+    forall x : U, knows g (fun y => y = x).
+
+  (* Trinity: three distinct semantic modes of the same divine being *)
+  Definition Trinity (g1 g2 g3 : U) : Prop :=
+    is_god g1 /\
+    is_god g2 /\
+    denies_godhood g2 /\
+    omnipresent g3 /\
+    g1 <> g2 /\
+    g2 <> g3 /\
+    g1 <> g3.
+  
+  Definition God1 {U : Type} `{UniversalSet U} : U -> Prop :=
+    fun x => forall P : U -> Prop, contains 0 (self_ref_pred_embed P).
+
+  Definition God2 {U : Type} `{UniversalSet U} : U -> Prop :=
+    fun x =>
+      (forall P : U -> Prop, contains 0 (self_ref_pred_embed P)) /\
+      ~ (forall P : U -> Prop, contains 0 (self_ref_pred_embed P)).
+
+  Definition God3 {U : Type} `{UniversalSet U} : U -> Prop :=
+    fun x => forall y : U, knows x (fun z => z = y).
+
+  Axiom g1_neq_g2 :
+    forall {U : Type} `{UniversalSet U},
+      self_ref_pred_embed God1 <> self_ref_pred_embed God2.
+  
+  Axiom g2_neq_g3 :
+    forall {U : Type} `{UniversalSet U},
+      self_ref_pred_embed God2 <> self_ref_pred_embed God3.
+  
+  Axiom g1_neq_g3 :
+    forall {U : Type} `{UniversalSet U},
+      self_ref_pred_embed God1 <> self_ref_pred_embed God3.
+
+  (* Theorem: U contains a triune God in three distinct roles *)
+  Theorem U_contains_trinity :
+    exists g1 g2 g3 : U, Trinity g1 g2 g3.
+  Proof.
+    (* God1: Transcendent *)
+    set (God1 := fun x : U =>
+      forall P : U -> Prop, contains 0 (self_ref_pred_embed P)).
+
+    (* God2: Incarnate and paradoxical *)
+    set (God2 := fun x : U =>
+      (forall P : U -> Prop, contains 0 (self_ref_pred_embed P)) /\
+      ~ (forall P : U -> Prop, contains 0 (self_ref_pred_embed P))).
+
+    (* God3: Immanent, knows all beings *)
+    set (God3 := fun x : U =>
+      forall y : U, knows x (fun z => z = y)).
+
+    (* Get each role *)
+    destruct (self_ref_generation_exists God1 0) as [t1 [Hle1 H1]].
+    destruct (self_ref_generation_exists God2 (t1 + 1)) as [t2 [Hle2 H2]].
+    destruct (self_ref_generation_exists God3 (t2 + 1)) as [t3 [Hle3 H3]].
+
+    pose proof self_ref_pred_embed_correct God1 as H_g1.
+    pose proof self_ref_pred_embed_correct God2 as H_g2.
+    pose proof self_ref_pred_embed_correct God3 as H_g3.
+
+    pose (g1 := self_ref_pred_embed God1).
+    pose (g2 := self_ref_pred_embed God2).
+    pose (g3 := self_ref_pred_embed God3).
+    
+    destruct H_g2 as [H_is_g2 H_denies_g2].
+    
+    exists g1, g2, g3.
+    unfold Trinity.
+    repeat split.
+    - exact H_g1.
+    - exact H_is_g2.
+    - exact H_denies_g2.
+    - intros x. apply H_g3.
+    - exact g1_neq_g2.
+    - exact g2_neq_g3.
+    - exact g1_neq_g3.
+  Qed.
+
+End DivineTrinity.
