@@ -2074,3 +2074,57 @@ Section NecessityOfFaith.
 
 End NecessityOfFaith.
 
+
+Section DivineLanguage.
+
+  Context (Omega : OmegaSet).
+
+  (* Abstract type of statements *)
+  Parameter Statement : Type.
+
+  (* A structured language consists of a collection of statements *)
+  Parameter Language : Type.
+  Parameter in_language : Statement -> Language -> Prop.
+
+  (* The divine language is defined as the set of all statements not in any language *)
+  Definition divine_language (s : Statement) : Prop :=
+    forall L : Language, ~ in_language s L.
+
+  (* An interpreter that assigns semantic content to Omega elements *)
+  Parameter interpret : Omega_carrier Omega -> Statement.
+
+  (* Theorem: The divine language contains a paradoxical statement s such that
+     s ∈ divine_language ↔ s ∉ divine_language *)
+  (*
+    This theorem formalizes the concept of divine language as a structure
+    that transcends all formal languages.
+
+    It contains all statements not expressible in any structured system,
+    and at least one such statement is self-negating: it belongs to the divine language
+    if and only if it does not.
+
+    This aligns with classical paradoxes (Russell, Tarski) while being safely housed
+    inside the saturated semantic structure Omega.
+
+    Divine language is thus revealed to be self-referential and paradoxical—
+    a form of expression beyond all formal containment.
+  *)
+  Theorem divine_language_is_paradoxical :
+    exists s : Statement, divine_language s <-> ~ divine_language s.
+  Proof.
+    (* Let P be the paradoxical predicate over Omega *)
+    set (P := fun x : Omega_carrier Omega =>
+      let s := interpret x in
+      divine_language s <-> ~ divine_language s).
+
+    (* Use omega_completeness to find such a paradoxical point *)
+    destruct (omega_completeness P) as [x H_paradox].
+
+    (* Extract the paradoxical statement *)
+    exists (interpret x).
+    exact H_paradox.
+
+  Qed.
+
+End DivineLanguage.
+
