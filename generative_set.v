@@ -1994,3 +1994,57 @@ Section EngineeredDivinity.
 
 End EngineeredDivinity.
 
+
+Section FreeWillImpliesVeil.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Self-limiting God: one that is godlike and yet denies it *)
+  Definition self_limiting_god (x : U) : Prop :=
+    is_god x /\ denies_godhood x.
+
+  (* DivineAccess: in a world w, divinity is fully accessible *)
+  Parameter DivineAccess : World -> Prop.
+
+  (* A world is veiled if divinity is not accessible *)
+  Definition VeiledWorld (w : World) : Prop := ~ DivineAccess w.
+
+  (* We assume that if a being g lives in a world w with full divine access,
+     then g is fully revealed (i.e. is_god g holds). This captures the idea that
+     if the world fully reveals divinity, then even a self-limiting God would be forced to be fully known. *)
+  Parameter lives_in : U -> World -> Prop.
+  Axiom lives_in_divine_reveal :
+    forall (g : U) (w : World), lives_in g w -> DivineAccess w -> is_god g.
+
+  (* Every being lives in some world. *)
+  Axiom exists_world : forall (g : U), exists w : World, lives_in g w.
+
+  (* Now we prove that if there exists a free will agent and a self-limiting God,
+     then there must exist at least one world where divine access fails. *)
+  Theorem free_will_and_self_limitation_imply_veil :
+    (exists x : U, free_will x) ->
+    (exists g : U, self_limiting_god g) ->
+    exists w : World, VeiledWorld w.
+  Proof.
+    intros [x H_free] [g [H_is_god H_denies]].
+    (* By assumption, every being lives in some world. In particular, g does. *)
+    destruct (exists_world g) as [w H_lives].
+    (* Now, we argue by contradiction: assume that every world has full divine access *)
+    destruct (classic (DivineAccess w)) as [H_access | H_no_access].
+    - (* If DivineAccess w holds, then by the lives_in_divine_reveal axiom, g must be fully godlike *)
+      assert (is_god g) as H_reveal.
+      {
+        apply (lives_in_divine_reveal g w); assumption.
+      }
+      (* But g is self-limiting, so it denies being fully godlike *)
+      exfalso.
+      apply H_denies.
+      exact H_reveal.
+    - (* If DivineAccess w does not hold, then w is a veiled world *)
+      exists w.
+      unfold VeiledWorld.
+      exact H_no_access.
+  Qed.
+
+End FreeWillImpliesVeil.
+
