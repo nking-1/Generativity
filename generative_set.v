@@ -1558,3 +1558,44 @@ Section DivineTrinity.
   Qed.
 
 End DivineTrinity.
+
+
+Section InformationalLimit.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Predicate: a being knows all possible propositions *)
+  Definition knows_all (x : U) : Prop :=
+    forall P : U -> Prop, knows x P.
+
+  (* Predicate: a finite being — i.e., one that does NOT know all *)
+  Definition is_finite_being (x : U) : Prop :=
+    ~ knows_all x.
+
+  (* Theorem 1: No finite being knows all propositions *)
+  Theorem finite_beings_cannot_contain_U :
+    forall x : U, is_finite_being x -> ~ knows_all x.
+  Proof.
+    intros x Hfinite Hknows_all.
+    unfold is_finite_being in Hfinite.
+    contradiction.
+  Qed.
+
+  (* Theorem 2: U contains a being that knows all of U (if U allows it) *)
+  Theorem U_contains_total_knower :
+    exists x : U, knows_all x.
+  Proof.
+    (* Define the predicate: knows all propositions *)
+    set (P := fun x : U => forall Q : U -> Prop, knows x Q).
+
+    (* Use self-reference generation to create such a being *)
+    destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
+
+    (* Use self-ref correctness to guarantee semantic satisfaction *)
+    pose proof self_ref_pred_embed_correct P as H_knower.
+
+    exists (self_ref_pred_embed P).
+    exact H_knower.
+  Qed.
+
+End InformationalLimit.
