@@ -1015,6 +1015,22 @@ Proof.
   apply omega_completeness.
 Qed.
 
+
+(*****************************************************************)
+(*                   Theology and Metaphysics                    *)
+(*****************************************************************)
+
+(*
+  In this section, we explore theological ideas and metaphysical paradoxes
+  using Generative Set Theory. This is a philosophical exercise in modeling
+  logically coherent formulations of theological concepts within a formal system.
+
+  The goal is not to assert the truth of any particular belief, nor to prove
+  the existence of a deity, but to demonstrate how such ideas can be formally
+  encoded and reasoned about consistently within a proof assistant like Coq.
+*)
+
+
 Theorem U_contains_rock_lifting_paradox :
   forall (U: Type) `{UniversalSet U},
   exists t: nat,
@@ -1270,12 +1286,29 @@ Section DivineProvability.
 End DivineProvability.
 
 
+Require Import List.
+Import ListNotations.
+Require Import String.
+Open Scope string_scope.
+
+(* Shared type for event modeling *)
+Inductive BigBangEvent :=
+  | QuantumFluctuation
+  | Inflation
+  | Cooling
+  | StructureFormation
+  | ConsciousLife
+  | HeatDeath.
+
+(* General type for any meaningful encoded data *)
+Inductive EncodedData :=
+  | Timeline : list BigBangEvent -> EncodedData
+  | EString : string -> EncodedData.
+
+
 Section SemanticEncoding.
 
   Context {U : Type} `{UniversalSet U}.
-
-  (* A general type for structured data or meaningful information *)
-  Parameter EncodedData : Type.
 
   (* Predicate stating that an entity semantically encodes some data *)
   Parameter semantically_encodes : U -> EncodedData -> Prop.
@@ -1309,3 +1342,41 @@ Section SemanticEncoding.
   Qed.
 
 End SemanticEncoding.
+
+
+Section BigBangSimulation.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Define the Big Bang timeline as encoded data directly *)
+  Definition BigBangTimeline : EncodedData :=
+    Timeline [
+      QuantumFluctuation;
+      Inflation;
+      Cooling;
+      StructureFormation;
+      ConsciousLife;
+      HeatDeath
+    ].
+
+  (* Theorem: There exists an entity in U that encodes the Big Bang timeline at some creation point *)
+  Theorem U_simulates_big_bang :
+    exists x : U, fabricated_history x 0 BigBangTimeline.
+  Proof.
+    unfold fabricated_history.
+
+    (* Predicate: x semantically encodes the Big Bang *)
+    set (P := fun x : U => semantically_encodes x BigBangTimeline).
+
+    destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
+
+    pose proof self_ref_pred_embed_correct P as H_semantic.
+
+    exists (self_ref_pred_embed P).
+    split.
+    - apply (contains_backward 0 t); assumption.
+    - exact H_semantic.
+  Qed.
+
+End BigBangSimulation.
+
