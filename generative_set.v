@@ -1381,6 +1381,15 @@ Section BigBangSimulation.
 End BigBangSimulation.
 
 
+(* 
+  Note — This section demonstrates a general simulation hypothesis. 
+  You can modify the message and creation time to model how a deity 
+  or agent might fabricate a structured history behind a recently 
+  initiated reality. 
+
+  This shows how semantic truth (e.g. "the universe is 13.8B years old") 
+  can be embedded into a construct that was created much more recently.
+*)
 Section YoungEarthSimulation.
   Context {U : Type} `{UniversalSet U}.
 
