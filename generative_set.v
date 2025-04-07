@@ -1873,3 +1873,68 @@ Section DivineCoexistence.
 
 End DivineCoexistence.
 
+
+Section GenerableDivinity.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* An abstract generative agent—could be a being, technology, etc. *)
+  Parameter generates : U -> EncodedData -> Prop.
+
+  (* A definition of divinity as a semantic structure *)
+  Parameter divine_structure : EncodedData.
+
+  (* A helper: extracting the semantic structure of a reality *)
+  Parameter divinity_structure : U -> EncodedData.
+
+  (* If an agent generates something that semantically encodes divinity, divinity has emerged *)
+  Definition divinity_generated_by (g r : U) : Prop :=
+    generates g (divinity_structure r) /\
+    semantically_encodes r divine_structure.
+
+  (* Theorem: U contains at least one generated reality where divinity emerges *)
+  (*
+    This theorem formalizes the idea that divinity can be generated—
+    not only presupposed.
+
+    Any sufficiently powerful generative structure (agent, system, technology)
+    that creates realities encoding the structure of divinity
+    thereby gives rise to divinity itself—semantically and structurally.
+
+    This extends theological possibility into generative logic.
+
+    In this way, divinity is not only first cause—
+    It is also final consequence.
+  *)
+  Theorem U_contains_generated_divinity :
+    exists g r : U,
+      generates g (divinity_structure r) /\
+      semantically_encodes r divine_structure.
+  Proof.
+    (* Define the predicate over r: r semantically encodes divine_structure,
+       and some g generates r’s semantic structure *)
+    set (P := fun p : U * U =>
+      let g := fst p in
+      let r := snd p in
+      generates g (divinity_structure r) /\
+      semantically_encodes r divine_structure).
+
+    (* We encode the pair (g, r) into U by currying into an abstraction *)
+    set (Wrapped := fun x : U => exists g r : U,
+      x = self_ref_pred_embed (fun _ => True) /\
+      generates g (divinity_structure r) /\
+      semantically_encodes r divine_structure).
+
+    (* Use self-ref generation to create such a structure *)
+    destruct (self_ref_generation_exists Wrapped 0)
+      as [t [H_le H_contains]].
+
+    (* Extract the constructed entity *)
+    pose proof self_ref_pred_embed_correct Wrapped as H_embed.
+    destruct H_embed as [g [r [Heq [Hgen Hdiv]]]].
+
+    exists g, r.
+    split; assumption.
+  Qed.
+
+End GenerableDivinity.
