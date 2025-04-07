@@ -856,6 +856,69 @@ Proof.
 Qed.
 
 
+Section SelfRecursiveUniverse.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* A subset of U is modeled as a predicate on U *)
+  Definition PowerSet := U -> Prop.
+
+  (* U contains all predicates via self_ref_pred_embed *)
+  Definition U_contains_power_set : Prop :=
+    forall (S : PowerSet), exists t, contains t (self_ref_pred_embed S).
+
+  (* U is contained in its power set via singleton predicates *)
+  Definition U_is_subset_of_power_set : Prop :=
+    forall (x : U), exists S : PowerSet, forall y : U, S y <-> y = x.
+
+  (* Theorem: U and its powerset mutually contain each other *)
+  Theorem U_and_power_set_mutually_embed :
+    U_contains_power_set /\ U_is_subset_of_power_set.
+  Proof.
+    split.
+
+    (* Part 1: U contains its power set *)
+    - unfold U_contains_power_set.
+      intros S.
+      destruct (self_ref_generation_exists S 0) as [t [H_le H_contains]].
+      exists t.
+      exact H_contains.
+
+    (* Part 2: U is subset of its own power set *)
+    - unfold U_is_subset_of_power_set.
+      intros x.
+      exists (fun y => y = x).
+      intros y. split; intros H2; subst; auto.
+  Qed.
+
+  (* Theorem U_is_self_reflective :
+  exists (f : nat -> U),
+    forall n : nat,
+      exists P : U -> Prop,
+        contains n (f n) /\
+        f n = self_ref_pred_embed P /\
+        (exists m : nat,
+          contains m (self_ref_pred_embed (fun _ : U => contains m (self_ref_pred_embed P)))).
+Proof.
+  exists (fun n => self_ref_pred_embed (fun x => contains n x)).
+  intros n.
+  set (P := fun x : U => contains n x).
+  exists P.
+  split.
+  - destruct (self_ref_generation_exists P n) as [t [H_le H_contained]].
+    apply (contains_backward n t (self_ref_pred_embed P) H_le H_contained).
+  - split.
+    + reflexivity.
+    + (* Correct way to define Reflective using set *)
+      set (Reflective := fun m : nat => fun _ : U => contains m (self_ref_pred_embed P)).
+      destruct (self_ref_generation_exists (Reflective n) n) as [m [H_le_m H_contains_m]].
+      exists m.
+      exact H_contains_m.
+Qed. *)
+
+End SelfRecursiveUniverse.
+
+
 (* A simplified definition of injectivity *)
 Definition injective {A B: Type} (f: A -> B) : Prop :=
   forall x y: A, f x = f y -> x = y.
@@ -1599,3 +1662,4 @@ Section InformationalLimit.
   Qed.
 
 End InformationalLimit.
+
