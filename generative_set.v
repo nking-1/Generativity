@@ -1268,3 +1268,44 @@ Section DivineProvability.
   Qed.
 
 End DivineProvability.
+
+
+Section SemanticEncoding.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* A general type for structured data or meaningful information *)
+  Parameter EncodedData : Type.
+
+  (* Predicate stating that an entity semantically encodes some data *)
+  Parameter semantically_encodes : U -> EncodedData -> Prop.
+
+  (* Definition: An entity that was created at a specific time, but encodes deeper/older data *)
+  Definition fabricated_history (x : U) (t_creation : nat) (d : EncodedData) : Prop :=
+    contains t_creation x /\
+    semantically_encodes x d.
+
+  (* Theorem: There exists an entity in U that was created at a specific time and semantically encodes arbitrary data *)
+  Theorem U_contains_fabricated_history :
+    forall (d : EncodedData) (t_creation : nat),
+      exists x : U, fabricated_history x t_creation d.
+  Proof.
+    intros d t_creation.
+
+    (* Define the predicate to generate: something that encodes data d *)
+    set (P := fun x : U => semantically_encodes x d).
+
+    (* Use self-ref generation to produce such an entity at creation time *)
+    destruct (self_ref_generation_exists P t_creation)
+      as [t [H_le H_contains]].
+
+    (* Use correctness lemma to ensure the predicate holds *)
+    pose proof self_ref_pred_embed_correct P as H_semantic.
+
+    exists (self_ref_pred_embed P).
+    split.
+    - apply (contains_backward t_creation t); auto.
+    - exact H_semantic.
+  Qed.
+
+End SemanticEncoding.
