@@ -1380,3 +1380,40 @@ Section BigBangSimulation.
 
 End BigBangSimulation.
 
+
+Section YoungEarthSimulation.
+  Context {U : Type} `{UniversalSet U}.
+
+  Definition YECMessage : EncodedData :=
+  EString "The universe was created recently, but it encodes the appearance of deep time.".
+
+  Definition YoungEarthCreationTime : nat := 6000.  (* "years ago" in semantic units *)
+
+  Definition young_earth_entity (x : U) : Prop :=
+    fabricated_history x YoungEarthCreationTime BigBangTimeline /\
+    semantically_encodes x YECMessage.
+
+  Theorem U_contains_young_earth_creation_model :
+    exists x : U, young_earth_entity x.
+  Proof.
+    unfold young_earth_entity, fabricated_history.
+  
+    set (P := fun x : U =>
+      semantically_encodes x BigBangTimeline /\
+      semantically_encodes x YECMessage).
+  
+    destruct (self_ref_generation_exists P YoungEarthCreationTime)
+      as [t [H_le H_contains]].
+  
+    pose proof self_ref_pred_embed_correct P as H_semantic.
+    destruct H_semantic as [H_timeline H_msg].
+  
+    exists (self_ref_pred_embed P).
+    exact (conj
+             (conj
+                (@contains_backward U H YoungEarthCreationTime t (self_ref_pred_embed P) H_le H_contains)
+                H_timeline)
+             H_msg).
+  Qed.
+
+End YoungEarthSimulation.
