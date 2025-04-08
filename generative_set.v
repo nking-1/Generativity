@@ -1079,6 +1079,23 @@ Proof.
 Qed.
 
 
+(* Creative idea - what if Omega could even refer to things outside mathematics? *)
+Parameter OutsideOmega : Type.
+
+Definition contains_outside (HO : OmegaSet) (x : Omega_carrier HO) : Prop :=
+  exists y : OutsideOmega, True.
+
+Theorem Omega_contains_reference_to_outside :
+  forall (HO : OmegaSet),
+    exists x : Omega_carrier HO, contains_outside HO x.
+Proof.
+  intros HO.
+  unfold contains_outside.
+  apply omega_completeness.
+Qed.
+
+
+
 (*****************************************************************)
 (*                   Theology and Metaphysics                    *)
 (*****************************************************************)
@@ -1187,7 +1204,7 @@ Proof.
 Qed.
 
 
-Section Theology.
+Section SelfLimitingGod.
   Context {U: Type} `{UniversalSet U}.
 
   (* Definition: God contains all predicates at time 0 *)
@@ -1219,7 +1236,7 @@ Section Theology.
     exact Hx.
   Qed.
 
-End Theology.
+End SelfLimitingGod.
 
 
 Theorem God_can_contain_temporal_paradoxes :
@@ -1274,22 +1291,6 @@ Section DivineAbsurdity.
   Qed.
   
 End DivineAbsurdity.
-
-
-(* Creative idea - what if Omega could even refer to things outside mathematics? *)
-Parameter OutsideOmega : Type.
-
-Definition contains_outside (HO : OmegaSet) (x : Omega_carrier HO) : Prop :=
-  exists y : OutsideOmega, True.
-
-Theorem Omega_contains_reference_to_outside :
-  forall (HO : OmegaSet),
-    exists x : Omega_carrier HO, contains_outside HO x.
-Proof.
-  intros HO.
-  unfold contains_outside.
-  apply omega_completeness.
-Qed.
 
 
 Section FreeWill.
@@ -2269,6 +2270,83 @@ Section SufferingConstraintOnDivinity.
   Qed.
 
 End SufferingConstraintOnDivinity.
+
+
+Section DivineAccessRemovesAmbiguity.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Moral ambiguity: agent has free will and is exposed to both P and ~P *)
+  Definition moral_ambiguity (x : U) : Prop :=
+    free_will x /\
+    exists P : U -> Prop,
+      (exists t1, contains t1 (self_ref_pred_embed P)) /\
+      (exists t2, contains t2 (self_ref_pred_embed (fun y => ~ P y))).
+
+  (* Key assumption: in a world with full DivineAccess, the agent does not generate semantic content *)
+  Axiom DivineAccess_makes_predicates preexisting :
+    forall (x : U) (w : World),
+      lives_in x w ->
+      DivineAccess w ->
+      forall P : U -> Prop,
+        (exists t, contains t (self_ref_pred_embed P)) ->
+        (* The predicate P is not introduced due to agent's free will *)
+        ~ free_will x.
+
+  (* Theorem: If divine access holds, then agents have no meaningful moral ambiguity *)
+  Theorem DivineAccess_removes_agent_ambiguity :
+    forall x w,
+      lives_in x w ->
+      DivineAccess w ->
+      ~ moral_ambiguity x.
+  Proof.
+    intros x w H_lives H_access [Hfree [P [[t1 Ht1] [t2 Ht2]]]].
+
+    (* Use semantic pre-existence to show that x couldn't have free will *)
+    apply (DivineAccess_makes_predicates x w H_lives H_access P).
+    exists t1. exact Ht1.
+    exact Hfree.
+  Qed.
+
+End DivineAccessRemovesAmbiguity.
+
+
+Section DivineAccessAndPluralism.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Semantic pluralism: existence of two semantically distinct religions *)
+  Definition semantic_pluralism : Prop :=
+  exists r1 r2 : Religion,
+    divinity_fragment r1 <> divinity_fragment r2 /\
+    exists x1 x2 : U,
+      semantically_encodes x1 (divinity_fragment r1) /\
+      semantically_encodes x2 (divinity_fragment r2).
+
+
+  (* Axiom: under DivineAccess, only one divinity_fragment can be semantically realized *)
+  Axiom DivineAccess_collapses_fragments :
+    forall w : World,
+      DivineAccess w ->
+      forall r1 r2 : Religion,
+        divinity_fragment r1 <> divinity_fragment r2 ->
+        ~ (exists x1 x2 : U,
+             semantically_encodes x1 (divinity_fragment r1) /\
+             semantically_encodes x2 (divinity_fragment r2)).
+
+
+  (* Theorem: DivineAccess removes interpretive theological pluralism *)
+  Theorem DivineAccess_limits_pluralism :
+    forall w : World,
+      DivineAccess w ->
+      ~ semantic_pluralism.
+  Proof.
+    intros w H_access [r1 [r2 [H_neq [x1 [x2 [H1 H2]]]]]].
+    apply (DivineAccess_collapses_fragments w H_access r1 r2 H_neq).
+    exists x1, x2. split; assumption.
+  Qed.
+
+End DivineAccessAndPluralism.
 
 
 Section DivineLanguage.
