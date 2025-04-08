@@ -2309,6 +2309,59 @@ End DivinePrime.
 
 
 (*
+  This theorem uses divine_prime as a predicate over U,
+  and constructs an object p that satisfies the divine prime property.
+
+  Using a special division function div_by_divine,
+  we show that dividing 3 by p yields 4—an impossible result
+  in classical arithmetic, but consistent within U.
+
+  This formalizes a mathematical version of miraculous multiplication,
+  where paraconsistent logic enables arithmetic beyond classical constraints.
+
+  Imagine the parable of the loaves and fishes:
+  Jesus divides 3 loaves by a divine prime, and miraculously produces 4 loaves.
+*)
+Section DivineMiracleDivisionPredicate.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Division using a divine prime as a parameter *)
+  Parameter div_by_divine : nat -> U -> nat.
+
+  (* Assume some divine prime exists *)
+  Axiom exists_divine_prime : exists p : U, divine_prime p.
+
+  (* Miracle axiom: dividing 3 by the divine prime yields 4 *)
+  Axiom divine_miracle_result :
+    forall p : U, divine_prime p -> div_by_divine 3%nat p = 4%nat.
+
+  (* Semantic divisibility relation *)
+  Axiom divine_prime_divides_all :
+    forall p : U, divine_prime p -> forall n : nat, Divides p n.
+
+  (* Theorem: There exists a divine prime p such that the miracle division occurs *)
+  Theorem miracle_division_with_predicate :
+    exists p : U,
+      divine_prime p /\
+      div_by_divine 3%nat p = 4%nat /\
+      Divides p 3%nat /\
+      Divides p 4%nat.
+  Proof.
+    destruct exists_divine_prime as [p Hp].
+    exists p.
+    repeat split.
+    - exact Hp.
+    - apply divine_miracle_result; exact Hp.
+    - apply divine_prime_divides_all; exact Hp.
+    - apply divine_prime_divides_all; exact Hp.
+  Qed.
+
+
+End DivineMiracleDivisionPredicate.
+
+
+(*
   This theorem formalizes a "divine zero" function—an abstract operation
   that performs division by zero without collapsing logic.
 
@@ -2644,55 +2697,3 @@ Section ZeroMappingFunction.
 
 End ZeroMappingFunction.
 
-
-(*
-  This theorem uses divine_prime as a predicate over U,
-  and constructs an object p that satisfies the divine prime property.
-
-  Using a special division function div_by_divine,
-  we show that dividing 3 by p yields 4—an impossible result
-  in classical arithmetic, but consistent within U.
-
-  This formalizes a mathematical version of miraculous multiplication,
-  where paraconsistent logic enables arithmetic beyond classical constraints.
-
-  Imagine the parable of the loaves and fishes:
-  Jesus divides 3 loaves by a divine prime, and miraculously produces 4 loaves.
-*)
-Section DivineMiracleDivisionPredicate.
-
-  Context {U : Type} `{UniversalSet U}.
-
-  (* Division using a divine prime as a parameter *)
-  Parameter div_by_divine : nat -> U -> nat.
-
-  (* Assume some divine prime exists *)
-  Axiom exists_divine_prime : exists p : U, divine_prime p.
-
-  (* Miracle axiom: dividing 3 by the divine prime yields 4 *)
-  Axiom divine_miracle_result :
-    forall p : U, divine_prime p -> div_by_divine 3%nat p = 4%nat.
-
-  (* Semantic divisibility relation *)
-  Axiom divine_prime_divides_all :
-    forall p : U, divine_prime p -> forall n : nat, Divides p n.
-
-  (* Theorem: There exists a divine prime p such that the miracle division occurs *)
-  Theorem miracle_division_with_predicate :
-    exists p : U,
-      divine_prime p /\
-      div_by_divine 3%nat p = 4%nat /\
-      Divides p 3%nat /\
-      Divides p 4%nat.
-  Proof.
-    destruct exists_divine_prime as [p Hp].
-    exists p.
-    repeat split.
-    - exact Hp.
-    - apply divine_miracle_result; exact Hp.
-    - apply divine_prime_divides_all; exact Hp.
-    - apply divine_prime_divides_all; exact Hp.
-  Qed.
-
-
-End DivineMiracleDivisionPredicate.
