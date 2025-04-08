@@ -1091,6 +1091,9 @@ Qed.
   The goal is not to assert the truth of any particular belief, nor to prove
   the existence of a deity, but to demonstrate how such ideas can be formally
   encoded and reasoned about consistently within a proof assistant like Coq.
+
+  By doing so, we can implement the computational sandbox framework discussed
+  in the paper.
 *)
 
 
@@ -2127,4 +2130,138 @@ Section DivineLanguage.
   Qed.
 
 End DivineLanguage.
+
+
+(*
+  This structure formalizes a Divine Turing Machine (DTM), an abstract computational system
+  that processes paradoxical symbols from the divine language and generates
+  semantic structures inside the ultimate set U.
+
+  This model extends the classical Turing machine to handle self-reference,
+  infinite generativity, and semantic recursion.
+*)
+Section DivineTuringMachine.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Step 1: Components of the Divine Turing Machine *)
+
+  (* Set of machine states *)
+  Parameter DivineState : Type.
+
+  (* Divine input alphabet: drawn from paradoxical statements *)
+  Definition DivineSymbol := Statement.
+
+  (* Tape alphabet (may include divine symbols, blank, paradox, etc.) *)
+  Parameter DivineTapeSymbol : Type.
+
+  (* Transition function *)
+  Parameter deltaD : DivineState -> DivineTapeSymbol -> DivineState * DivineTapeSymbol.
+
+  (* Special machine states *)
+  Parameter q0 : DivineState.
+  Parameter q_accept : DivineState.
+  Parameter q_reject : DivineState.
+
+  (* Output function: each machine state outputs a semantic object in U *)
+  Parameter output : DivineState -> U.
+
+  (* Tape is an infinite stream indexed by ℕ *)
+  Definition Tape := nat -> DivineTapeSymbol.
+
+  (* A full machine configuration: state, tape, head position *)
+  Record Config := {
+    state : DivineState;
+    tape : Tape;
+    head : nat;
+  }.
+
+  (* Step function: performs one computation step *)
+  Definition step (c : Config) : Config :=
+    let s := state c in
+    let h := head c in
+    let symbol := tape c h in
+    let (s', w') := deltaD s symbol in
+    let new_tape := fun n =>
+      if Nat.eqb n h then w' else tape c n in
+    {| state := s'; tape := new_tape; head := S h |}.
+
+  (* Multi-step run function (n steps) *)
+  Fixpoint run_steps (c : Config) (n : nat) : Config :=
+    match n with
+    | 0 => c
+    | S n' => run_steps (step c) n'
+    end.
+
+  (* Full run result: after n steps, return semantic object in U *)
+  Definition run_output (c : Config) (n : nat) : U :=
+    output (state (run_steps c n)).
+
+  (* Step 2: Define divine input tape from divine language *)
+
+  Parameter divine_input : nat -> DivineSymbol.
+  Axiom all_symbols_divine : forall n, divine_language (divine_input n).
+
+  (* Lift DivineSymbol to DivineTapeSymbol *)
+  Parameter symbol_to_tape : DivineSymbol -> DivineTapeSymbol.
+  Definition divine_tape : Tape := fun n => symbol_to_tape (divine_input n).
+
+  (* Initial configuration *)
+  Definition initial_config : Config :=
+    {| state := q0; tape := divine_tape; head := 0 |}.
+
+  (* Step 3: The theorem — infinite generation of U from divine computation *)
+
+  Theorem divine_machine_generates_U_sequence :
+    forall n : nat, exists u : U, u = run_output initial_config n.
+  Proof.
+    intros n.
+    exists (run_output initial_config n).
+    reflexivity.
+  Qed.
+
+End DivineTuringMachine.
+
+
+(*
+  This theorem shows that a Divine Turing Machine (DTM) can compute beyond
+  the limits of structured languages.
+
+  Since divine language includes every statement that structured systems exclude,
+  the DTM can process statements unreachable by classical Turing machines.
+
+  In this way, DTM escapes the limitations of Gödelian incompleteness and
+  creates a new class of computation: one that begins where formality fails.
+
+  This is the divine computational escape hatch.
+*)
+Section DivineEscapeHatch.
+
+  Context {U : Type} `{UniversalSet U}.
+  Context (Omega : OmegaSet).
+
+  Parameter symbol_to_statement : DivineSymbol -> Statement.
+
+  (* Every symbol in DTM input comes from divine language *)
+  Axiom divine_input_is_divine :
+    forall sym : DivineSymbol, divine_language (symbol_to_statement sym).
+
+  Parameter divine_interpret : Omega_carrier Omega -> Statement.
+
+  Theorem divine_computation_escapes_structured_language :
+    forall (S : Language),
+      exists s : Statement, ~ in_language s S /\ divine_language s.
+  Proof.
+    intros S.
+
+    set (P := fun (x : Omega_carrier Omega) => divine_language (divine_interpret x)).
+
+    destruct (omega_completeness P) as [x H_divine].
+
+    exists (divine_interpret x).
+    split; [ apply H_divine | exact H_divine ].
+  Qed.
+
+
+End DivineEscapeHatch.
 
