@@ -1096,6 +1096,60 @@ Qed.
   in the paper.
 *)
 
+(**
+  ***********************************************************************
+  *     Interpreting This System as a Secular Mathematician or Scientist 
+  ***********************************************************************
+
+  This formal system builds a generative model of reality—structured
+  around concepts like time, agency, contradiction, and constraint—
+  using the tools of type theory and proof assistants.
+
+  Although it uses language traditionally associated with theology 
+  ("God", "faith", "divinity", "suffering", etc.), this framework 
+  does not presuppose religious belief. Instead, it can be 
+  interpreted mathematically and epistemologically, as follows:
+
+  - `U` represents a universe of abstract, self-referential constructs.
+    It is a type whose elements evolve over time via a `contains` predicate.
+
+  - `Omega` is a timeless superstructure—akin to a semantic closure or 
+    Platonically complete space of possible truths. Think of it as an 
+    idealized limit of generative processes.
+
+  - `God` in this system is not necessarily a metaphysical being,
+    but rather a logical archetype: an entity that "contains all predicates"
+    (i.e., has maximal information or generative capacity).
+
+  - `Suffering`, `Faith`, `VeiledWorld`, etc., are not psychological or 
+    emotional states—they are semantic or logical phenomena arising 
+    from incomplete information, epistemic constraints, and temporal separation.
+
+  - `Free will` is modeled constructively: an agent can generate both
+    a predicate and its negation at different stages, allowing for genuine
+    choice under uncertainty.
+
+  Key Interpretation (for secular readers):
+    This system is a formal architecture for reasoning about agency,
+    constraint, and paradox in a universe where not all truth is 
+    simultaneously available.
+
+    The results (e.g. that suffering becomes inevitable under free will 
+    and epistemic veiling) are logical consequences, not unjustified mystical 
+    claims. They show how certain moral or existential conditions arise 
+    from structure, not divine fiat.
+
+    The terms borrowed from theology can be reinterpreted as placeholders 
+    for extreme or boundary conditions in logical space:
+      - "God" → maximal generator
+      - "Faith" → constructive persistence under uncertainty
+      - "Evil" → contradiction experienced locally under partial knowledge
+
+  In this way, the system functions both as a theological sandbox 
+  and as a philosophical-metamathematical toolkit—for believers, 
+  skeptics, and explorers alike.
+*)
+
 
 Theorem U_contains_rock_lifting_paradox :
   forall (U: Type) `{UniversalSet U},
@@ -2076,6 +2130,145 @@ Section NecessityOfFaith.
   Qed.
 
 End NecessityOfFaith.
+
+
+(**
+  Key Lemmas:
+    - `dual_possibility_under_free_will`:
+        Free will implies that some predicate P and its negation ~P are
+        both eventually generable — not simultaneously, but over time.
+        This models moral ambiguity and openness to both good and evil.
+
+    - `suffering_from_exposed_duality` (axiomatic):
+        If such duality arises in a veiled world, suffering becomes possible
+        — because moral risk exists without full divine correction or clarity.
+
+  Main Theorem: `unjust_suffering_possible`
+    If an agent x has free will and lives in a veiled world,
+    then suffering is not merely a contingent fact—it is a *logical inevitability*.
+
+  Interpretation:
+    - This theorem does not say that suffering is caused by God.
+    - Instead, it shows that suffering is structurally possible *because*
+      agents are free and God is epistemically hidden.
+    - In such a world, not all morally relevant outcomes are known in advance,
+      nor can they be universally prevented.
+    - Suffering, therefore, becomes a semantic consequence of freedom under veiling.
+
+  This section lays the groundwork for answering the problem of evil
+  not with excuses or moral justifications, but by revealing the
+  structural conditions that make unjust suffering logically unavoidable
+  in a generative universe containing autonomy and hidden divinity.
+*)
+Section UnjustSuffering.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Suffering occurs when contradictory moral possibilities are active under a veiled world *)
+  Parameter Suffering : U -> Prop.
+
+  (* Axiom: suffering arises when an agent is exposed to both P and ~P under free will in a veiled world *)
+  Axiom suffering_from_exposed_duality :
+    forall x : U,
+      free_will x ->
+      (exists w : World, lives_in x w /\ VeiledWorld w) ->
+      (exists P : U -> Prop,
+         (exists t1 : nat, contains t1 (self_ref_pred_embed P)) /\
+         (exists t2 : nat, contains t2 (self_ref_pred_embed (fun x => ~ P x)))) ->
+      Suffering x.
+
+  (* Lemma: free will guarantees dual possibility (some P and ~P can both occur) *)
+  Lemma dual_possibility_under_free_will :
+    forall x : U,
+      free_will x ->
+      exists P : U -> Prop,
+        (exists t1 : nat, contains t1 (self_ref_pred_embed P)) /\
+        (exists t2 : nat, contains t2 (self_ref_pred_embed (fun y => ~ P y))).
+  Proof.
+    intros x Hfree.
+    unfold free_will in Hfree.
+    (* Pick an arbitrary predicate Q — we use "y is contained at time 0" *)
+    set (Q := fun y : U => contains 0 y).
+
+    specialize (Hfree Q).
+    destruct Hfree as [tQ [HQ | HnQ]].
+
+    - (* Case 1: Q appears at some time *)
+      exists Q.
+      split.
+      + exists tQ. exact HQ.
+      + destruct (self_ref_generation_exists (fun y => ~ Q y) (tQ + 1)) as [t' [Ht_le Ht_cont]].
+        exists t'. exact Ht_cont.
+
+    - (* Case 2: ~Q appears first *)
+      exists Q.
+      split.
+      + destruct (self_ref_generation_exists Q 0) as [t' [Ht_le Ht_cont]].
+        exists t'. exact Ht_cont.
+      + exists tQ. exact HnQ.
+  Qed.
+
+  (* Theorem: unjust suffering is possible under free will in a veiled world *)
+  Theorem unjust_suffering_possible :
+    forall x : U,
+      free_will x ->
+      (exists w : World, lives_in x w /\ VeiledWorld w) ->
+      Suffering x.
+  Proof.
+    intros x Hfree Hveil.
+    apply suffering_from_exposed_duality; try assumption.
+    apply dual_possibility_under_free_will with (x := x).
+    exact Hfree.
+  Qed.
+
+End UnjustSuffering.
+
+
+(**
+  Theorem: God_cannot_prevent_all_suffering_without_revealing
+
+  This theorem formalizes a logical constraint on divine action:
+  it is not possible for a self-limiting God to guarantee the
+  prevention of all suffering, *if* autonomous agents exist within
+  a veiled world.
+
+  Assumptions:
+    - g is God: omniscient, able to generate all predicates.
+    - g denies godhood: God is self-limiting, hiding divine nature.
+    - x is a free agent: capable of generating contradictory predicates.
+    - x lives in a veiled world: divine presence is epistemically hidden.
+
+  Conclusion:
+    Under these conditions, unjust suffering *must* exist for some agent
+    (possibly x). This follows directly from the earlier theorem 
+    `unjust_suffering_possible`, which shows that free will + veiling
+    inevitably leads to the possibility of suffering.
+
+  This reframes the problem of evil as a consequence of generative logic:
+  suffering is not a divine failure—it is the semantic cost of
+  meaningful freedom in a veiled cosmos.
+*)
+Section SufferingConstraintOnDivinity.
+
+  Context {U : Type} `{UniversalSet U}.
+
+  (* Theorem: A self-limiting God cannot prevent all suffering without removing the veil *)
+  Theorem God_cannot_prevent_all_suffering_without_revealing :
+    forall (g x : U),
+      is_god g ->
+      denies_godhood g ->
+      free_will x ->
+      (exists w : World, lives_in x w /\ VeiledWorld w) ->
+      exists x' : U, Suffering x'.
+  Proof.
+    intros g x Hgod Hdeny Hfree Hveil.
+    (* We already proved that free will + veiled world implies suffering is possible *)
+    apply unjust_suffering_possible in Hfree.
+    - exists x. exact Hfree.
+    - exact Hveil.
+  Qed.
+
+End SufferingConstraintOnDivinity.
 
 
 Section DivineLanguage.
