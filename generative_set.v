@@ -1730,17 +1730,17 @@ Section TheologicalPluralism.
   Parameter Religion : Type.
 
   (* General semantic encoding function for religious systems *)
-  Parameter divinity_fragment : Religion -> EncodedData.
+  Parameter divinity_encoding : Religion -> EncodedData.
 
   (* Predicate stating that a religion is semantically embedded in U *)
   Definition religion_valid (r : Religion) : Prop :=
-    exists x : U, semantically_encodes x (divinity_fragment r).
+    exists x : U, semantically_encodes x (divinity_encoding r).
 
-  (* Theorem: Every religion corresponds to some semantic fragment within U 
+  (* Theorem: Every religion corresponds to some semantic encoding within U 
   This theorem formalizes theological pluralism:
   Every structured religious system encodes some aspect of ultimate reality (U).
   This does not imply all religions are equally complete,
-  but that all reflect meaningful fragments of the infinite totality.
+  but that all reflect meaningful encodings of the infinite totality.
 
   Diversity of spiritual expression is not a contradiction—
   it is a necessary outcome of U containing all perspectives of the divine.
@@ -1751,8 +1751,8 @@ Section TheologicalPluralism.
     intros r.
     unfold religion_valid.
 
-    (* Define the predicate: x semantically encodes the divinity fragment of r *)
-    set (P := fun x : U => semantically_encodes x (divinity_fragment r)).
+    (* Define the predicate: x semantically encodes the divinity encoding of r *)
+    set (P := fun x : U => semantically_encodes x (divinity_encoding r)).
 
     (* Use the generation mechanism to guarantee such an entity exists in U *)
     destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
@@ -1854,7 +1854,7 @@ Section GenerativeReligion.
 
   (* A religion is constructible in U if some entity encodes its semantic structure *)
   Definition religion_constructible (r : Religion) : Prop :=
-    exists x : U, semantically_encodes x (divinity_fragment r).
+    exists x : U, semantically_encodes x (divinity_encoding r).
 
   (* Theorem: All religions—past, present, future, even newly invented—must be constructible in U *)
   (* U is infinitely generative for religions. *)
@@ -1864,8 +1864,8 @@ Section GenerativeReligion.
     intros r.
     unfold religion_constructible.
 
-    (* Define the predicate: x encodes the divinity fragment of r *)
-    set (P := fun x : U => semantically_encodes x (divinity_fragment r)).
+    (* Define the predicate: x encodes the divinity encoding of r *)
+    set (P := fun x : U => semantically_encodes x (divinity_encoding r)).
 
     (* Generate such an entity within U *)
     destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
@@ -2318,21 +2318,21 @@ Section DivineAccessAndPluralism.
   (* Semantic pluralism: existence of two semantically distinct religions *)
   Definition semantic_pluralism : Prop :=
   exists r1 r2 : Religion,
-    divinity_fragment r1 <> divinity_fragment r2 /\
+    divinity_encoding r1 <> divinity_encoding r2 /\
     exists x1 x2 : U,
-      semantically_encodes x1 (divinity_fragment r1) /\
-      semantically_encodes x2 (divinity_fragment r2).
+      semantically_encodes x1 (divinity_encoding r1) /\
+      semantically_encodes x2 (divinity_encoding r2).
 
 
-  (* Axiom: under DivineAccess, only one divinity_fragment can be semantically realized *)
-  Axiom DivineAccess_collapses_fragments :
+  (* Axiom: under DivineAccess, only one divinity_encoding can be semantically realized *)
+  Axiom DivineAccess_collapses_encodings :
     forall w : World,
       DivineAccess w ->
       forall r1 r2 : Religion,
-        divinity_fragment r1 <> divinity_fragment r2 ->
+        divinity_encoding r1 <> divinity_encoding r2 ->
         ~ (exists x1 x2 : U,
-             semantically_encodes x1 (divinity_fragment r1) /\
-             semantically_encodes x2 (divinity_fragment r2)).
+             semantically_encodes x1 (divinity_encoding r1) /\
+             semantically_encodes x2 (divinity_encoding r2)).
 
 
   (* Theorem: DivineAccess removes interpretive theological pluralism *)
@@ -2342,7 +2342,7 @@ Section DivineAccessAndPluralism.
       ~ semantic_pluralism.
   Proof.
     intros w H_access [r1 [r2 [H_neq [x1 [x2 [H1 H2]]]]]].
-    apply (DivineAccess_collapses_fragments w H_access r1 r2 H_neq).
+    apply (DivineAccess_collapses_encodings w H_access r1 r2 H_neq).
     exists x1, x2. split; assumption.
   Qed.
 
