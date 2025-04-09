@@ -41,7 +41,8 @@ Class UniversalSet (U: Type) := {
   self_ref_pred_embed : (U -> Prop) -> U;
 
   (* Helps Coq reason about the self-referential predicates *)
-  self_ref_pred_embed_correct : forall P: U -> Prop, P (self_ref_pred_embed P);
+  self_ref_pred_embed_correct : forall P : U -> Prop, exists t : nat, contains t (self_ref_pred_embed P) -> P (self_ref_pred_embed P);
+
 
   (* for every predicate P on U and for every time t,
    there exists some stage n (with n ≥ t) at which U
@@ -67,31 +68,54 @@ Class UniversalSet (U: Type) := {
   4) We prove it by invoking self_ref_pred_embed_correct, which states 
      that P indeed holds when applied to self_ref_pred_embed P.
 **)
-Example novice_self_ref_example : forall (U : Type) (H : UniversalSet U),
-  let P := fun x : U => ~ contains 0 x in
-  P (self_ref_pred_embed P).
+Example novice_self_ref_example_weakened : 
+  forall (U : Type) `{H : UniversalSet U},
+    let P := fun x : U => ~ contains 0 x in
+    exists t : nat, 
+      contains t (self_ref_pred_embed P) -> P (self_ref_pred_embed P).
 Proof.
   intros U H P.
-  unfold P.
-  apply self_ref_pred_embed_correct.
+  apply self_ref_pred_embed_correct. 
 Qed.
 
 
 (* Another illustrative self-referential predicate: "I appear at a later time." *)
-Example self_ref_pred_appears_later : forall (U: Type) `{UniversalSet U},
+(* Example self_ref_pred_appears_later : forall (U: Type) `{UniversalSet U},
   let Q := fun x : U => exists t : nat, t > 0 /\ contains t x in
   Q (self_ref_pred_embed Q).
 Proof.
   intros.
   apply self_ref_pred_embed_correct.
-Qed.
+Qed. *)
+
+Example self_ref_pred_appears_later_weakened : 
+  forall (U: Type) `{H : UniversalSet U},
+    let Q := fun x : U => exists t' : nat, t' > 0 /\ contains t' x in
+    (* Goal reflects the weakened axiom *)
+    exists t : nat, 
+      contains t (self_ref_pred_embed Q) -> Q (self_ref_pred_embed Q).
+Proof.
+  intros U H Q.
+  apply self_ref_pred_embed_correct.
+Qed. 
 
 
-Example self_ref_pred_temporal_evolution : forall (U: Type) `{UniversalSet U},
+(* Example self_ref_pred_temporal_evolution : forall (U: Type) `{UniversalSet U},
   let R := fun x : U => ~ contains 0 x /\ exists t : nat, t > 0 /\ contains t x in
   R (self_ref_pred_embed R).
 Proof.
   intros.
+  apply self_ref_pred_embed_correct.
+Qed. *)
+
+Example self_ref_pred_temporal_evolution_weakened : 
+  forall (U: Type) `{H : UniversalSet U},
+    let R := fun x : U => ~ contains 0 x /\ exists t' : nat, t' > 0 /\ contains t' x in
+    (* Goal reflects the weakened axiom *)
+    exists t : nat, 
+      contains t (self_ref_pred_embed R) -> R (self_ref_pred_embed R).
+Proof.
+  intros U H R.
   apply self_ref_pred_embed_correct.
 Qed.
 
@@ -443,6 +467,30 @@ Proof.
   unfold not in HnP.
   apply HnP.
   exact HP.
+Qed.
+
+
+Theorem Triviality_At_Time_Zero_Contains_False_Embedding :
+  forall (U: Type) `{UniversalSet U},
+  contains 0 (self_ref_pred_embed (fun _ : U => False)).
+Proof.
+  intros U H.
+  
+  (* Define the predicate representing False *)
+  set (P_false := fun _ : U => False).
+  
+  (* Axiom `self_ref_generation_exists` states that for any predicate P 
+     (including P_false) and any time t (including t=0), there exists 
+     some time n >= t where its embedding is contained. *)
+  destruct (self_ref_generation_exists P_false 0) as [n [Hle Hn_contains]].
+  (* We now have: n >= 0 and contains n (self_ref_pred_embed P_false) *)
+
+  (* Axiom `contains_backward` states that if something is contained at time n,
+     it is contained at all earlier times m <= n. Since 0 <= n (from Hle proved by lia),
+     we can pull the containment back to time 0. *)
+  apply (contains_backward 0 n (self_ref_pred_embed P_false)).
+  - lia. (* Proof obligation: 0 <= n *)
+  - exact Hn_contains. (* Proof obligation: contains n (self_ref_pred_embed P_false) *)
 Qed.
 
 
