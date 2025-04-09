@@ -1,7 +1,6 @@
 Require Import Setoid.
 Require Import Coq.Arith.PeanoNat.
 Require Import Lia.
-Require Import Coq.Logic.Classical_Prop.
 Require Import Coq.Logic.FunctionalExtensionality.
 
 
@@ -808,6 +807,12 @@ Proof.
 Qed.
 
 
+
+Require Import Coq.Logic.Classical_Prop.
+
+(* Note - we only use classical logic for the following proof and aim to use constructive logic
+everywhere else *)
+(* It would be great to reformat this theorem someday to make it constructive *)
 Theorem self_reference_requires_incompleteness_or_contradiction :
   forall (U : Type) `{H_U: UniversalSet U},
   (forall t: nat, exists P: U -> Prop, 
@@ -2079,29 +2084,53 @@ Section FreeWillImpliesVeil.
 
   (* Now we prove that if there exists a free will agent and a self-limiting God,
      then there must exist at least one world where divine access fails. *)
-  Theorem free_will_and_self_limitation_imply_veil :
+  Theorem free_will_and_self_limitation_imply_veil_constructive :
     (exists x : U, free_will x) ->
-    (exists g : U, self_limiting_god g) ->
-    exists w : World, VeiledWorld w.
+      (exists g : U, self_limiting_god g) ->
+        ~~(exists w : World, VeiledWorld w).
   Proof.
-    intros [x H_free] [g [H_is_god H_denies]].
-    (* By assumption, every being lives in some world. In particular, g does. *)
+    intros H_free_exists H_god_exists.
+    destruct H_free_exists as [x H_free].
+    destruct H_god_exists as [g [H_is_god H_denies]].
+
+    (* Assume the negation of the goal for contradiction *)
+    intro H_neg_goal. (* H_neg_goal : ~ (exists w, VeiledWorld w) *)
+    
+    (* Assert that under H_neg_goal, all worlds have ~~DivineAccess *)
+    assert (forall w, ~~ DivineAccess w) as H_all_not_veiled.
+    {
+      intros w'. (* Use w' to avoid confusion *)
+      unfold not. (* Goal: (DivineAccess w' -> False) -> False *)
+      intro H_contra. (* Assume H_contra : DivineAccess w' -> False (i.e., ~ DivineAccess w') *)
+      apply H_neg_goal. (* Needs 'exists w, VeiledWorld w' *)
+      exists w'.
+      unfold VeiledWorld. (* Def: ~ DivineAccess w' *)
+      exact H_contra. 
+    }
+
+    (* Get the world g lives in *)
     destruct (exists_world g) as [w H_lives].
-    (* Now, we argue by contradiction: assume that every world has full divine access *)
-    destruct (classic (DivineAccess w)) as [H_access | H_no_access].
-    - (* If DivineAccess w holds, then by the lives_in_divine_reveal axiom, g must be fully godlike *)
-      assert (is_god g) as H_reveal.
-      {
-        apply (lives_in_divine_reveal g w); assumption.
-      }
-      (* But g is self-limiting, so it denies being fully godlike *)
-      exfalso.
-      apply H_denies.
-      exact H_reveal.
-    - (* If DivineAccess w does not hold, then w is a veiled world *)
-      exists w.
-      unfold VeiledWorld.
-      exact H_no_access.
+
+    (* Derive ~DivineAccess w from the axioms and H_denies *)
+    assert (~ DivineAccess w) as H_not_access.
+    {
+      intro H_access. (* Assume DivineAccess w for contradiction *)
+      assert (is_god g) as H_reveal by (apply (lives_in_divine_reveal g w); assumption).
+      apply H_denies. (* H_denies is ~ is_god g *)
+      exact H_reveal. (* Contradiction *)
+    }
+
+    (* Now we have ~~DivineAccess w (from H_all_not_veiled w) 
+      and ~DivineAccess w (from H_not_access). This is a contradiction. *)
+    
+    (* Specialize H_all_not_veiled to our specific w *)
+    assert (~~ DivineAccess w) as H_nn_access by (apply H_all_not_veiled).
+
+    (* Apply ~~A to ~A to get False *)
+    unfold not at 1 in H_nn_access. (* H_nn_access : (DivineAccess w -> False) -> False *)
+    unfold not at 1 in H_not_access. (* H_not_access : DivineAccess w -> False *)
+    apply H_nn_access.
+    exact H_not_access.
   Qed.
 
 End FreeWillImpliesVeil.
