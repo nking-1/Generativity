@@ -1368,83 +1368,272 @@ Qed.
 
 
 Section SelfLimitingGod.
-  Context {U: Type} `{H : UniversalSet U}. (* Use H explicitly *)
+  Context {U: Type} `{H : UniversalSet U}.
 
-  Definition God : Prop := forall P: U -> Prop, contains 0 (self_ref_pred_embed P).
-  Definition self_limited : Prop := exists P: U -> Prop, ~ contains 0 (self_ref_pred_embed P).
+  (* Definition: Static Totality at time 0 *)
+  Definition StaticTotality_T0 := forall P: U -> Prop, contains 0 (self_ref_pred_embed P).
 
-  Theorem God_must_limit_himself_weakened :
-    exists (t: nat), God -> self_limited.
+  (* Definition: Initial Incompleteness (something absent at time 0) *)
+  Definition InitialIncompleteness := exists P: U -> Prop, ~ contains 0 (self_ref_pred_embed P).
+
+  (* 
+    Commentary on Static_Totality_Implies_Proven_Incompleteness 
+
+    This theorem explores the hypothetical concept of "Static Totality" at time 0 
+    (defined as containing embeddings of all predicates then) and its relation 
+    to the inherent initial incompleteness (`InitialIncompleteness`) of the UniversalSet U.
+
+    The statement `StaticTotality_T0 -> InitialIncompleteness`
+    is proven trivially because the consequent (`InitialIncompleteness`) is *always true* 
+    in this axiomatic system, derived independently using the weakened correctness
+    axiom, generation, and backward monotonicity (as demonstrated in its proof).
+
+    Philosophical Interpretation:
+    The true significance is not that Static Totality *causes* incompleteness, 
+    but that Static Totality is *incompatible* with the necessary structure of U. 
+    The axioms require U to be initially incomplete (`InitialIncompleteness` must hold). 
+    Therefore, any definition demanding absolute completeness at t=0 (like our
+    hypothetical 'Static Totality') cannot be satisfied (see `StaticTotality_T0_Is_Unsatisfiable`).
+    
+    This result underscores that U's nature is fundamentally emergent and temporal; 
+    it cannot begin in a state of static, simultaneous perfection containing all 
+    semantic possibilities. It *must* start incomplete to evolve according 
+    to its generative rules.
+  *)
+  Theorem Static_Totality_Implies_Proven_Incompleteness :
+    exists (t: nat), StaticTotality_T0 -> InitialIncompleteness.
   Proof.
-    (* Step 1: Define the predicate "there exists a self-limited entity" *)
-    (* Note: The '_' in 'exists _: U' was just a placeholder for the entity, 
-       the predicate itself doesn't depend on its input. 
-       The important part is the proposition 'self_limited'. 
-       Let's simplify the predicate definition slightly. *)
-    set (EmbodiesSelfLimited := fun _ : U => self_limited). 
+    (* Re-derive InitialIncompleteness (self_limited) for completeness *)
+    assert (H_incompleteness : InitialIncompleteness).
+    {
+      set (P_lim := fun x : U => ~ contains 0 x).
+      destruct (self_ref_pred_embed_correct P_lim) as [t_crit H_cond].
+      destruct (self_ref_generation_exists P_lim t_crit) as [n_gen [Hle_gen H_gen_contains]].
+      assert (contains t_crit (self_ref_pred_embed P_lim)) as H_crit_contains
+        by (apply (contains_backward t_crit n_gen (self_ref_pred_embed P_lim) Hle_gen H_gen_contains)).
+      unfold P_lim in H_cond. apply H_cond in H_crit_contains.
+      (* Now H_crit_contains is ~ contains 0 (embed P_lim) *)
+      exists P_lim. exact H_crit_contains.
+    }
+    (* Conclude trivially *)
+    exists 0.
+    intros H_StaticTotality.
+    exact H_incompleteness.
+  Qed.
 
-    (* Step 2: Apply the weakened correctness axiom to this predicate *)
-    destruct (self_ref_pred_embed_correct EmbodiesSelfLimited) as [t_crit H_cond].
-    (* H_cond : contains t_crit (embed EmbodiesSelfLimited) -> EmbodiesSelfLimited (embed EmbodiesSelfLimited) *)
-    (* H_cond : contains t_crit (embed EmbodiesSelfLimited) -> self_limited *)
+  (* Renaming for compatibility for now *)
+  Definition God := StaticTotality_T0.
+  Definition self_limited := InitialIncompleteness.
 
-    (* Step 3: Use generation to find when 'embed EmbodiesSelfLimited' is contained (at/after t_crit) *)
-    destruct (self_ref_generation_exists EmbodiesSelfLimited t_crit) as [n_gen [Hle_gen H_gen_contains]].
-    (* Hle_gen : t_crit <= n_gen *)
-    (* H_gen_contains : contains n_gen (embed EmbodiesSelfLimited) *)
+    (* 
+    Theorem: Static Totality at Time 0 is Unsatisfiable
 
-    (* Step 4: Use backward monotonicity to show containment at t_crit *)
-    assert (contains t_crit (self_ref_pred_embed EmbodiesSelfLimited)) as H_crit_contains.
-    { apply (contains_backward t_crit n_gen (self_ref_pred_embed EmbodiesSelfLimited) Hle_gen H_gen_contains). }
-
-    (* Step 5: Apply the conditional H_cond to get the goal *)
-    apply H_cond in H_crit_contains.
-    (* H_crit_contains now has type: self_limited *)
-
-    (* Step 6: Fulfill the theorem statement 'exists t, God -> self_limited' *)
-    (* Since we proved 'self_limited' holds unconditionally (derived only 
-       from the UniversalSet axioms), the implication 'God -> self_limited' 
-       also holds. We can pick any time t, e.g., t = 0. *)
-    exists 0. 
-    intros H_God. (* Assume God holds *)
-    exact H_crit_contains. (* Provide the proven 'self_limited' *)
+    This theorem directly proves that the definition of Static Totality at time 0 
+    (containing embeddings of all predicates simultaneously at t=0) is 
+    logically impossible within the UniversalSet U, given its other axioms. 
+    It contradicts the necessary initial incompleteness of U.
+  *)
+  Theorem StaticTotality_T0_Is_Unsatisfiable:
+     ~ StaticTotality_T0. 
+     (* i.e., ~ (forall P: U -> Prop, contains 0 (self_ref_pred_embed P)) *)
+  Proof.
+    intros H_assume_StaticTotality. (* Assume StaticTotality_T0 holds *)
+    
+    (* Show this assumption implies the negation of InitialIncompleteness *)
+    assert (H_not_Incompleteness : ~ InitialIncompleteness).
+    {
+      unfold not. intro H_exists_P. (* Assume InitialIncompleteness *)
+      destruct H_exists_P as [P H_P_not_contained].
+      (* Apply the assumption H_assume_StaticTotality to this P *)
+      assert (H_P_contained : contains 0 (self_ref_pred_embed P)) 
+        by (apply H_assume_StaticTotality).
+      (* Contradiction between H_P_not_contained and H_P_contained *)
+      contradiction. 
+      (* Alternative: apply H_P_not_contained; assumption. *)
+    }
+    
+    (* Show that InitialIncompleteness *is* actually provable *)
+    assert (H_Incompleteness : InitialIncompleteness).
+    { 
+      (* Use the lemma derived earlier *)
+      set (P0 := fun x : U => ~ contains 0 x).
+      exists P0.
+      apply (recover_neg_contain U 0). (* Using the lemma for target_time = 0 *)
+    }
+    
+    (* Final contradiction *)
+    unfold not in H_not_Incompleteness.
+    apply H_not_Incompleteness.
+    exact H_Incompleteness.
   Qed.
 
 End SelfLimitingGod.
 
 
-Theorem God_can_contain_temporal_paradoxes :
-  forall (U: Type) `{UniversalSet U},
-    exists x: U, 
-      (forall P: U -> Prop, contains 0 (self_ref_pred_embed P)) /\
-      (exists t: nat, contains t (self_ref_pred_embed (fun _: U => ~ contains 0 (self_ref_pred_embed (fun _: U => contains 0 x))))).
-Proof.
-  intros U H_U.
+Section ComparingTotalityConcepts.
+  Context {U: Type} `{H : UniversalSet U}.
 
-  (* Step 1: Define God as omniscience at time 0 *)
-  set (God := fun x: U => forall P: U -> Prop, contains 0 (self_ref_pred_embed P)).
+  (* Re-state definitions for clarity in this section *)
+  Definition God_Potential : Prop := forall P : U -> Prop, exists t : nat, contains t (self_ref_pred_embed P).
 
-  (* Step 2: Define the temporal paradox predicate *)
-  set (TemporalParadox := fun x: U => 
-    exists t: nat, contains t (self_ref_pred_embed (fun _: U => ~ contains 0 (self_ref_pred_embed (fun _: U => contains 0 x))))).
+  (* === Commentary Block === *)
 
-  (* Step 3: Embed the combined predicate into U *)
-  set (CombinedPred := fun x: U => God x /\ TemporalParadox x).
+  (**
+    ***********************************************************************
+    *     Comparing Semantic Definitions: Static vs. Potential Totality   *
+    ***********************************************************************
 
-  (* Step 4: Use self_ref_generation_exists to find when CombinedPred emerges *)
-  destruct (self_ref_generation_exists CombinedPred 0) as [t [Hle Hcontains]].
+    A key strength of this formal framework (`UniversalSet`) is its ability 
+    to rigorously define and analyze different semantic concepts, such as 
+    varying notions of divine power or universal completeness. This allows 
+    for precise, structured comparison and discussion of ideas that might 
+    otherwise remain vague.
 
-  (* Step 5: Use correctness to find an actual entity x satisfying CombinedPred *)
-  assert (CombinedPred (self_ref_pred_embed CombinedPred)) as H_correct.
-  { apply self_ref_pred_embed_correct. }
+    Here, we contrast two distinct concepts:
 
-  (* Step 6: Extract omniscience and paradox from the definition *)
-  destruct H_correct as [H_God H_Paradox].
+    1.  `StaticTotality_T0`: The idea that the universe contains embeddings of 
+        *all* possible predicates simultaneously at the very beginning (time 0). 
+        As proven by `StaticTotality_T0_Is_Unsatisfiable`, this concept is 
+        *incompatible* with the other axioms of `UniversalSet` (specifically, 
+        the necessary initial incompleteness driven by self-reference, 
+        generation, and temporal axioms).
 
-  (* Step 7: Conclude existence *)
-  exists (self_ref_pred_embed CombinedPred).
-  split; assumption.
-Qed.
+    2.  `God_Potential`: The idea that for *any* possible predicate, there 
+        exists *some* time `t` at which its embedding becomes contained 
+        within the universe. This represents a guarantee of *eventual* 
+        emergence or semantic realization for all conceivable structures.
+
+    The following theorem formalizes the relationship between these two concepts
+    within `U`: eventual potential is guaranteed, while initial static totality 
+    is impossible. This underscores the fundamentally temporal and emergent 
+    nature of this model – potential unfolds over time, it cannot exist 
+    all at once at the origin. This methodology of defining and contrasting 
+    concepts allows for rigorous exploration of philosophical and theological 
+    ideas within the constraints of the model.
+  *)
+
+
+  (* === Contrast Theorem === *)
+
+  Theorem God_Potential_Holds_But_Static_Totality_Fails :
+    God_Potential /\ ~StaticTotality_T0.
+  Proof.
+    split.
+    - (* Part 1: Prove God_Potential holds *)
+      unfold God_Potential.
+      intros P.
+      (* This follows directly from self_ref_generation_exists starting at t=0 *)
+      destruct (self_ref_generation_exists P 0) as [n [Hle Hcont]].
+      exists n.
+      exact Hcont.
+      
+    - (* Part 2: Prove ~StaticTotality_T0 holds *)
+      (* This was proven previously *)
+      apply StaticTotality_T0_Is_Unsatisfiable.
+  Qed.
+
+End ComparingTotalityConcepts.
+
+
+Section TemporalSelfReferenceCoexistence.
+  Context {U: Type} `{H_U : UniversalSet U}.
+
+  (* Predicate 1: x is contained at time 0 *)
+  Definition P_Present_T0 (x : U) : Prop := contains 0 x.
+
+  (* Predicate 2: The embedding of "x was NOT contained at T0" 
+     will eventually be contained at some time t. 
+     Note the nested embeddings. *)
+  Definition P_Future_Negation_T0 (x : U) : Prop :=
+    exists t : nat, 
+      contains t (self_ref_pred_embed (fun _ : U => 
+        ~ contains 0 (self_ref_pred_embed (fun _ : U => P_Present_T0 x)))).
+        (* Simplified inner embedding: ~ contains 0 (embed (P_Present_T0 x)) *)
+        (* More direct: ~ contains 0 x *)
+        
+  (* Let's simplify P_Future_Negation_T0 using the direct structure *)
+  Definition P_Future_Negation_T0_Simpler (x : U) : Prop :=
+    exists t : nat, 
+      contains t (self_ref_pred_embed (fun _ : U => ~ contains 0 x)).
+
+
+  (* Define the combined predicate: x satisfies both *)
+  Definition CombinedTemporalPred (x : U) : Prop := 
+    P_Present_T0 x /\ P_Future_Negation_T0_Simpler x.
+
+  (* === Commentary === *)
+  (**
+    ***********************************************************************
+    *     Coexistence of Presence and Future Negation Embedding            *
+    ***********************************************************************
+
+    This theorem demonstrates a key capability of the UniversalSet U: 
+    it can contain entities `x` that embody complex, seemingly 
+    self-undermining temporal properties. 
+
+    Specifically, we show the existence of an entity `x` that 
+    simultaneously embodies the properties:
+      1. `contains 0 x` (It is present at time 0).
+      2. `exists t, contains t (embed (fun _ => ~ contains 0 x))` 
+         (The statement "x was NOT contained at time 0" will eventually 
+          be embedded and contained at some future time `t`).
+
+    This is NOT a direct logical contradiction *within* `x` at a single 
+    time. Instead, it showcases U's capacity for hosting structured 
+    temporal tension. The entity `x` exists such that its presence at 
+    t=0 coexists with the guaranteed future emergence of a semantic 
+    object representing its absence at t=0.
+
+    The proof relies on the ability of `self_ref_pred_embed` to bundle 
+    these two predicates and the standard pattern using the weakened 
+    `self_ref_pred_embed_correct`, `self_ref_generation_exists`, and 
+    `contains_backward` to show that the resulting embedding satisfies 
+    the bundled predicate.
+
+    This result highlights how U models temporal self-reference and 
+    allows seemingly paradoxical situations to unfold structurally over 
+    time, reinforcing the theme that paradox is managed temporally 
+    rather than being eliminated. It avoids the pitfalls of the previous
+    formulation by not relying on unsatisfiable premises like 
+    StaticTotality_T0.
+  *)
+
+  (* === Theorem === *)
+
+  Theorem Coexistence_of_Presence_and_Future_Negation_Embedding :
+    exists x : U, 
+      (contains 0 x) /\ 
+      (exists t : nat, 
+         contains t (self_ref_pred_embed (fun _ : U => ~ contains 0 x))).
+  Proof.
+
+    (* Use the combined predicate defined above *)
+    
+    (* Apply weakened axiom to CombinedTemporalPred *)
+    destruct (self_ref_pred_embed_correct CombinedTemporalPred) as [t_crit H_cond].
+    (* H_cond : contains t_crit (embed CombinedTemporalPred) -> CombinedTemporalPred (embed CombinedTemporalPred) *)
+
+    (* Use generation starting at t_crit *)
+    destruct (self_ref_generation_exists CombinedTemporalPred t_crit) as [n_gen [Hle_gen H_gen_contains]].
+
+    (* Use backward monotonicity *)
+    assert (contains t_crit (self_ref_pred_embed CombinedTemporalPred)) as H_crit_contains.
+    { apply (contains_backward t_crit n_gen (self_ref_pred_embed CombinedTemporalPred) Hle_gen H_gen_contains). }
+
+    (* Apply the conditional to get the desired conjunction *)
+    apply H_cond in H_crit_contains.
+    (* H_crit_contains now has type: CombinedTemporalPred (embed CombinedTemporalPred) *)
+    (* Which unfolds to: P_Present_T0 (embed C) /\ P_Future_Negation_T0_Simpler (embed C) *)
+
+    (* Conclude existence *)
+    exists (self_ref_pred_embed CombinedTemporalPred).
+    
+    (* Unfold definitions to match goal *)
+    unfold CombinedTemporalPred, P_Present_T0, P_Future_Negation_T0_Simpler in H_crit_contains.
+    exact H_crit_contains. 
+  Qed.
+
+End TemporalSelfReferenceCoexistence.
 
 
 (* Idea: A god is not limited to normal reason.
