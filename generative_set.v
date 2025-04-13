@@ -1172,6 +1172,9 @@ Qed.
   skeptics, and explorers alike.
 *)
 
+(* About definitions chosen here: The predicates defined for "God" or "Free Will" are not absolute. *)
+(* There are certainly other ways to interpret what a god logically is, or what free will is. *)
+(* Feel free to explore! *)
 
 Theorem U_contains_rock_lifting_paradox :
   forall (U: Type) `{UniversalSet U},
