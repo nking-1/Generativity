@@ -2857,9 +2857,8 @@ End DivineSortExists.
   the Divine Computer can output full semantic worlds
   in a temporally-contained, logic-consistent way.
 
-  This provides a rigorous foundation for the Simulation Hypothesis,
-  and shows that in U, computation is not just a process—
-  it is a source of creation.
+  This provides a rigorous foundation for the "computational sandbox framework"
+  in the metaphysics and theology discussion of the paper.
 *)
 Section DivineComputer.
 
