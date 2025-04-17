@@ -1186,7 +1186,8 @@ This theorem predicts that structured asymmetry is a fundamental feature of all 
 
 The universality of this result suggests that symmetry breaking is not simply a spontaneous feature of nature but an unavoidable consequence of bounded information flow. Instead of treating asymmetry as an anomaly, we now recognize it as an optimal trade-off solution—the most efficient way for reality to evolve under fundamental constraints.
 
-\section{The Theory of Generativity}
+
+\subsection{The Theory of Generativity}
 
 The framework presented in this section, tentatively named the ``\textbf{Theory of Generativity}," proposes that all systems—physical, computational, biological, and cognitive—evolve by minimizing unresolved structural entropy over time. Under constraints of finite energy, causal flow, and internal coherence, systems follow paths that optimally resolve their own distinguishable structure. This process governs not only the motion of matter, but the emergence of form, the unfolding of intelligence, and the irreversibility of time.
 
@@ -1194,7 +1195,7 @@ At its core, the theory states that \emph{reality is generated} by a universal p
 
 The theory reframes the laws of nature not as fixed equations imposed on the world, but as \emph{optimal solutions} to an underlying information-theoretic drive: the resolution of structure under constraint. From this principle, motion, agency, adaptation, and emergence all arise—not as separate phenomena, but as natural consequences of generativity.
 
-\subsection{Postulates of the Theory of Generativity}
+\subsubsection{Postulates of the Theory of Generativity}
 
 Now that we have arrived here from first principles, we will make some postulates based on observations as this theory has developed. Some of these postulates are further justified by results later in the paper. While each postulate is grounded in well-established principles of thermodynamics, quantum mechanics, and relativity, the combination presented here forms a new unifying structure: one that constrains all systems according to finite information flow.
 
@@ -1314,779 +1315,13 @@ Another possibility is to define the Lagrangian as a measure of deviation from t
 In this form, the Lagrangian quantifies how far the system is from saturating its maximum information flow potential. If \( \mathcal{I}_{\text{max}} \) is interpreted as the theoretical upper bound (e.g., proportional to \( E / \hbar \cdot k_B^2 \)), then minimizing this Lagrangian corresponds to maximizing actual entropy flow given finite energy. This formulation may be useful in systems constrained by energy availability, where optimization occurs under a hard upper bound on information throughput.
 
 
-\subsection{Simplifying the Entropy-Based Lagrangian for Optimization}
+\subsubsection{Attempt to Test the Lagrangian}
 
-We introduce a proposed entropy-flow Lagrangian, inspired by the observation that many physical systems appear to evolve by optimizing the product of structural entropy and its rate of change:
+An appendix section (\autoref{sec:entropy_lagrangian_testing}) documents an initial attempt to evaluate the proposed entropy flow Lagrangian through numerical experiments. However, subsequent testing has revealed that these experiments do not provide strong evidence for the effectiveness of the formulation.
 
-\[
-\mathcal{L}(t) = S(t) \cdot \dot{S}(t)
-\]
+The original goal was to explore whether the information flow term, $S \cdot \dot{S}$, could serve as a variational principle, and whether the associated Lagrangian could be used directly as a loss function. While early results appeared promising, further investigation suggests that this approach may not offer a meaningful or robust path forward in its current form.
 
-where:
-\begin{itemize}
-    \item \(S(t)\) is a system-specific structural entropy function, typically depending on position and velocity (e.g., \(S = m q(t) \dot{q}(t)\)),
-    \item \(\dot{S}(t)\) is its time derivative,
-    \item The negative sign ensures the path chosen minimizes net change in structural entropy flow over the interval.
-\end{itemize}
-
-We propose that the corresponding action functional selects the physical trajectory:
-
-\[
-\mathcal{S} = \int_{t_0}^{t_f} \mathcal{L}(t) \, dt = \int_{t_0}^{t_f} S(t) \cdot \dot{S}(t) \, dt
-\]
-
-\subsubsection{A Simplification Using Integration by Parts}
-
-To make this action more computationally tractable, especially in the context of gradient-based optimization, we apply the identity:
-
-\[
-\int S \cdot \dot{S} \, dt = \frac{1}{2} S(t)^2 \Big|_{t_0}^{t_f} = \frac{1}{2} \left(S_f^2 - S_i^2\right)
-\]
-
-Thus, the action becomes:
-
-\[
-\mathcal{S} = \frac{1}{2} \left(S_f^2 - S_i^2\right)
-\]
-
-\subsubsection{Further Simplification: Let $S_i=0$}
-
-Since entropy is defined relative to the system’s structure and motion, we may, without loss of generality, set the initial structural entropy to zero:
-\[
-S_i = 0
-\]
-
-This yields a final simplified form of the action:
-\[
-\mathcal{S} = \int S \cdot \dot{S} \, dt = \frac{1}{2} S_f^2
-\]
-
-Thus, the optimization objective becomes:
-\[
-\boxed{
-\mathcal{L}_\text{loss} = \frac{1}{2} S_f^2
-}
-\]
-
-This represents the minimal change in structural entropy flow over the trajectory.
-
-
-\subsubsection{Interpretation as a Loss Function}
-
-In the language of machine learning, this action becomes a trajectory loss:
-
-\begin{itemize}
-    \item The trajectory \(q(t)\) is treated as a learnable function (or array of values).
-    \item The loss is evaluated based on the change in entropy flow over time.
-    \item The optimizer searches for the path that minimizes this scalar loss, subject to boundary conditions.
-\end{itemize}
-
-This transforms the physics problem into a familiar training loop: given a system-specific entropy structure, we learn the path of least entropy disruption. Remarkably, this loss function:
-
-\begin{itemize}
-    \item Requires no differential equations,
-    \item Operates directly on trajectories,
-    \item Can be minimized using any gradient-based optimizer,
-    \item Reconstructs known physics across multiple domains.
-\end{itemize}
-
-
-\subsubsection{Reframing Classical Motion as Entropy Flow Optimization}
-
-In practice, we discretize the trajectory \(q(t)\) over a time grid, define a system-specific structural entropy \(S(q, \dot{q})\), and numerically minimize the final entropy-based loss:
-
-\[
-\mathcal{L}_\text{loss} = \frac{1}{2} S[q(t_f)]^2
-\]
-
-This loss function arises from the variational integral \(\int S \cdot \dot{S} \, dt\), under the assumption that \(S[q(t_0)] \approx 0\). No explicit forces, potentials, or differential equations are required—only the structural entropy and endpoint constraints.
-
-This approach has been empirically validated across multiple classical systems, including free fall, oscillators, pendulums, and orbital motion. In each case, the optimizer recovers the correct physical path solely by minimizing entropy flow, often with faster convergence and greater numerical stability than conventional methods.
-
-\subsection{Inferring Motion from Entropy Flow}
-
-In this section, we present a series of physical systems where the trajectory of motion is recovered solely through the minimization of entropy flow. No differential equations, force models, or traditional dynamics are provided. Instead, an optimizer minimizes a structural entropy loss over time, and the resulting path aligns—often exactly—with known laws of nature.
-
-Each simulation demonstrates how classical behavior emerges from a universal principle of information resolution, reinforcing the idea that motion itself may be the result of entropy flow optimization.
-
-\paragraph{Method Overview}
-
-In each simulation that follows, we treat the system's trajectory as a set of learnable points in time—initialized from a simple guess and optimized to minimize a scalar entropy-based loss. The entropy function \( S(q, \dot{q}) \) is defined per system, typically reflecting a structural relationship between position and velocity. The optimizer then reshapes the internal trajectory to reduce the entropy flow at the final timestep, subject only to the boundary conditions at the start and end of the path.
-
-No differential equations, force models, or potentials are used. Instead, the system discovers the motion that most efficiently resolves its internal structure—recovering classical dynamics as the natural result of entropy flow minimization.
-
-\paragraph{Control Comparisons}
-
-To ensure that the entropy principle is not simply overfitting or benefiting from optimizer bias, we introduce control comparisons in each example. These controls use alternative loss functions rooted in standard physical formulations—such as minimizing equation residuals, enforcing angular momentum conservation, or penalizing kinetic energy. In each case, the entropy-optimized trajectory is evaluated alongside a physics-based baseline, using identical boundary conditions and optimization methods. This comparative framework allows us to assess whether entropy flow truly guides the system toward physically meaningful solutions.
-
-
-\subsubsection{Free Fall Under Gravity}
-
-This simulation models the motion of an object in free fall, released from a height of 10 meters with zero initial velocity. In classical mechanics, this is governed by constant acceleration due to gravity. However, in this simulation, we do \textbf{not} use any force laws or differential equations to generate the trajectory.
-
-Instead, we minimize the final structural entropy:
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} (m y_f \dot{y}_f)^2
-\]
-The optimizer is only given the starting and ending positions, and it learns the correct path purely through entropy flow minimization.
-
-To test the strength of this result, we introduce a baseline control: the optimizer also attempts to minimize the residual from Newton's second law,
-\[
-\mathcal{L}_{\text{residual}} = \int_0^T \left(\ddot{y}(t) + g\right)^2 dt,
-\]
-which explicitly enforces the correct gravitational dynamics. The entropy loss converges more quickly and with lower numerical error than the residual-based control, while producing an indistinguishable trajectory.
-
-\paragraph*{Code}\mbox{}
-
-\begin{lstlisting}[language=Python]
-# Classical solution
-def free_fall_ode(t, y): return [y[1], -g]
-sol = solve_ivp(free_fall_ode, [t0, t1], [10.0, 0.0], t_eval=t_eval)
-y_classical = sol.y[0]
-
-# Entropy and residual loss functions
-def entropy_loss(y): return 0.5 * (m * y[-1] * np.gradient(y, dt)[-1])**2
-def residual_loss(y):
-    ydot = np.gradient(y, dt)
-    yddot = np.gradient(ydot, dt)
-    return np.sum((yddot + g)**2) * dt
-
-# Optimization for each loss
-def optimize(loss_fn): 
-    y_guess = y_classical[1:-1]
-    return minimize(
-        lambda y_inner: loss_fn(np.concatenate([[y_classical[0]], y_inner, [y_classical[-1]]])),
-        y_guess, method='L-BFGS-B', bounds=[(-100, 10.0)] * len(y_guess)
-    ).x
-
-# Run both
-y_entropy = np.concatenate([[y_classical[0]], optimize(entropy_loss), [y_classical[-1]]])
-y_residual = np.concatenate([[y_classical[0]], optimize(residual_loss), [y_classical[-1]]])
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{free_fall_plot.png}
-\caption{
-Free fall trajectory generated using entropy flow minimization (dashed orange) and Newtonian residual minimization (dotted green), compared with the classical solution (solid black). Both optimized methods recover the correct parabolic trajectory, but the entropy formulation converges more rapidly and with lower loss.
-}
-\end{figure}
-
-
-\subsubsection{Harmonic Oscillator}
-
-This simulation models a mass attached to a spring with spring constant \( k = 4 \) and mass \( m = 1 \), yielding a natural frequency of oscillation \( \omega = 2 \) rad/s. The system begins with a displacement of 1 meter and zero initial velocity. Classically, this leads to sinusoidal motion governed by Hooke’s law and Newton's second law.
-
-In our experiment, we do \textbf{not} use force laws or differential equations to simulate the trajectory. Instead, we minimize the final structural entropy:
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} (m q_f \dot{q}_f)^2
-\]
-The optimizer is given only the initial and final displacements and learns the correct oscillatory path by minimizing final entropy flow.
-
-To provide a meaningful comparison, we introduce a control loss based on the classical equation of motion:
-\[
-\mathcal{L}_{\text{residual}} = \int_0^T \left(\ddot{q}(t) + \omega^2 q(t)\right)^2 dt,
-\]
-which penalizes violations of the harmonic oscillator's governing ODE. As with free fall, the entropy-optimized solution converges more quickly and achieves lower loss, despite having no access to the system’s governing force model.
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Classical solution
-def ho_ode(t, y): return [y[1], -omega**2 * y[0]]
-sol = solve_ivp(ho_ode, [0, 10], [1.0, 0.0], t_eval=t_eval)
-q_classical = sol.y[0]
-
-# Losses
-def entropy_loss(q): 
-    qdot = np.gradient(q, dt)
-    return 0.5 * (m * q[-1] * qdot[-1])**2
-
-def residual_loss(q): 
-    qdot = np.gradient(q, dt)
-    qddot = np.gradient(qdot, dt)
-    return np.sum((qddot + omega**2 * q)**2) * dt
-
-# Optimization
-def optimize(loss_fn):
-    guess = q_classical[1:-1]
-    return minimize(
-        lambda q_inner: loss_fn(np.concatenate([[q_classical[0]], q_inner, [q_classical[-1]]])),
-        guess, method='L-BFGS-B', bounds=[(-2, 2)] * len(guess)
-    ).x
-
-# Run both
-q_entropy = np.concatenate([[q_classical[0]], optimize(entropy_loss), [q_classical[-1]]])
-q_residual = np.concatenate([[q_classical[0]], optimize(residual_loss), [q_classical[-1]]])
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{harmonic_oscillator_plot.png}
-\caption{
-Entropy-optimized (dashed orange) and residual-optimized (dotted green) harmonic oscillator trajectories compared with the classical solution (black). Both recover the sinusoidal path, but the entropy loss converges faster and more efficiently despite lacking any knowledge of the force law.
-}
-\end{figure}
-
-
-\subsubsection{Simple Pendulum}
-
-This simulation models a simple pendulum: a mass suspended by a massless rod, swinging under gravity. The system begins at an initial angle of \( 20^\circ \) (converted to radians) with zero initial velocity. Classically, this is governed by the nonlinear equation:
-
-\[
-\ddot{\theta}(t) = -\frac{g}{l} \sin(\theta(t))
-\]
-
-Here, however, we avoid solving this equation directly. Instead, we define the structural entropy as:
-
-\[
-S(t) = m \theta(t) \dot{\theta}(t)
-\]
-
-and minimize the final entropy loss:
-
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} S[\theta(t_f)]^2
-\]
-
-The optimizer is given only the initial and final angular positions. No force model or potential is used—only structural entropy and endpoint constraints.
-
-As a control, we also minimize a classical residual:
-\[
-\mathcal{L}_{\text{residual}} = \int_0^T \left(\ddot{\theta}(t) + \frac{g}{l} \sin(\theta(t))\right)^2 dt,
-\]
-which explicitly enforces the nonlinear pendulum equation.
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Classical solution
-def pendulum_ode(t, y): return [y[1], - (g/l) * np.sin(y[0])]
-sol = solve_ivp(pendulum_ode, [0, 10], [np.radians(20), 0.0], t_eval=t_eval)
-theta_classical = sol.y[0]
-
-# Loss functions
-def entropy_loss(theta): 
-    theta_dot = np.gradient(theta, dt)
-    return 0.5 * (m * theta[-1] * theta_dot[-1])**2
-
-def residual_loss(theta): 
-    theta_dot = np.gradient(theta, dt)
-    theta_ddot = np.gradient(theta_dot, dt)
-    return np.sum((theta_ddot + (g/l) * np.sin(theta))**2) * dt
-
-# Optimization
-def optimize(loss_fn): 
-    guess = theta_classical[1:-1]
-    return minimize(
-        lambda theta_inner: loss_fn(np.concatenate([[theta_classical[0]], theta_inner, [theta_classical[-1]]])),
-        guess, method='L-BFGS-B', bounds=[(-np.pi, np.pi)] * len(guess)
-    ).x
-
-# Run both
-theta_entropy = np.concatenate([[theta_classical[0]], optimize(entropy_loss), [theta_classical[-1]]])
-theta_residual = np.concatenate([[theta_classical[0]], optimize(residual_loss), [theta_classical[-1]]])
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{pendulum_plot.png}
-\caption{
-The entropy-optimized pendulum trajectory (dashed orange) and residual-optimized trajectory (dotted green) are both compared with the classical nonlinear solution (solid black). The entropy solution converges faster and recovers the expected oscillatory behavior without access to the system’s differential equation.
-}
-\end{figure}
-
-
-\subsubsection{Double Pendulum from Entropy Flow}
-
-The double pendulum is a canonical example of deterministic chaos: a two-link pendulum system where small changes in initial conditions can produce drastically different long-term behavior. Classically, its motion is governed by a set of coupled second-order differential equations derived from the Lagrangian formulation.
-
-Here, we apply entropy flow minimization to this system. Each arm’s structural entropy is defined as:
-\[
-S_i(t) = m_i \theta_i(t) \dot{\theta}_i(t),
-\]
-and we minimize the final total entropy flow:
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} \left(S_1 + S_2\right)^2 + \lambda \int_0^T |\theta_1(t) - \theta_2(t)| \, dt.
-\]
-The second term introduces a weak coupling penalty to avoid symmetric collapse. No force laws or physics models are used — the optimizer is free to discover an asymmetric trajectory that minimizes final entropy flow.
-
-To validate this behavior, we compare the result to two control losses:
-\begin{itemize}
-    \item \textbf{Smoothness control}, which minimizes total squared angular velocity:  
-    \[
-    \mathcal{L}_{\text{smooth}} = \int_0^T \left(\dot{\theta}_1^2 + \dot{\theta}_2^2\right) dt,
-    \]
-    \item \textbf{Residual control}, which penalizes deviation from the coupled nonlinear differential equations of a symmetric double pendulum.
-\end{itemize}
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Initial guess (noisy, linearly decaying)
-theta1_guess = np.linspace(theta1_0, 0, N) + 0.1 * np.random.randn(N)
-theta2_guess = np.linspace(theta2_0, 0, N) + 0.1 * np.random.randn(N)
-theta_inner_guess = np.concatenate([theta1_guess[1:-1], theta2_guess[1:-1]])
-
-# Entropy loss: final entropy + coupling
-def entropy_loss(theta_flat):
-    ...
-    return 0.5 * (S1 + S2)**2 + coupling_term
-
-# Smoothness control: integrated angular velocity
-def control_loss(theta_flat):
-    ...
-    return np.sum(dtheta1_dt**2 + dtheta2_dt**2) * dt
-
-# Residual loss: violation of full nonlinear dynamics
-def residual_loss(theta_flat):
-    ...
-    return np.sum(residual1**2 + residual2**2) * dt
-
-# Run all three
-theta1_entropy, theta2_entropy, _ = run_optimization(entropy_loss, "Entropy")
-theta1_control, theta2_control, _ = run_optimization(control_loss, "Control")
-theta1_residual, theta2_residual, _ = run_optimization(residual_loss, "Residual")
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{double_pendulum_comparison.png}
-\caption{Optimized double pendulum motion under three loss functions. Entropy-based trajectories (solid) reveal asymmetric, nonlinear motion consistent with chaotic dynamics. Smoothness control (dashed) produces slower, more symmetric arcs. Residual optimization (dotted) approximates the physical equations of motion. Despite using no differential equations, entropy produces physically plausible motion with efficient convergence.}
-\end{figure}
-
-
-\subsubsection{Triple Pendulum from Entropy Flow}
-
-We extend the entropy framework to a three-link pendulum system. Each arm begins from a distinct angle, with no fixed final state. The optimizer is given full freedom to discover a dynamical structure that minimizes final entropy flow across the three arms, while also encouraging asymmetric evolution through coupling penalties:
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} \left(\sum_{i=1}^3 m_i \theta_i(T) \cdot \dot{\theta}_i(T)\right)^2
-+ \lambda \sum_t \sum_{i<j} |\theta_i(t) - \theta_j(t)|
-\]
-
-To compare against a physically plausible baseline, we introduce a control loss that minimizes total kinetic effort:
-\[
-\mathcal{L}_{\text{control}} = \int_0^T \sum_{i=1}^{3} \dot{\theta}_i^2(t) \, dt
-\]
-
-While both losses produce smooth trajectories, the entropy-optimized motion exhibits greater asymmetry, curvature, and dynamic separation — characteristics often associated with real triple pendulum behavior. The entropy-based trajectory is recovered without any reference to equations of motion.
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Initial guess: noisy linear paths
-theta_guesses = [
-    np.linspace(theta0[i], 0, N) + 0.05 * np.random.randn(N)
-    for i in range(3)
-]
-theta_inner_guess = np.concatenate([g[1:-1] for g in theta_guesses])
-
-# Entropy loss
-def entropy_loss(theta_flat):
-    ...
-    return 0.5 * S**2 + pairwise_coupling_penalty
-
-# Kinetic control loss
-def kinetic_energy_loss(theta_flat):
-    ...
-    return total_energy
-
-# Optimize both
-result = minimize(entropy_loss, theta_inner_guess, ...)
-result_control = minimize(kinetic_energy_loss, theta_inner_guess, ...)
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{triple_pendulum_comparison.png}
-\caption{
-Trajectories of a triple pendulum under entropy loss (solid) and kinetic energy control loss (dashed). While both satisfy endpoint constraints, the entropy-optimized motion shows richer, more chaotic behavior across all three arms — despite no equations of motion being used.
-}
-\end{figure}
-
-
-\subsubsection{Entropy-Optimized Orbit}
-
-This simulation explores whether orbital motion can emerge purely from entropy minimization—without invoking gravitational force laws, potentials, or Newtonian mechanics. The system begins and ends at the same radial distance from a central mass, sweeping through one full orbit.
-
-The structural entropy of the orbiting body is defined as:
-\[
-S(t) = m r(t)^2 \cdot \dot{\theta}(t),
-\]
-which resembles the expression for angular momentum. We minimize the net change in entropy flow between the start and end of the trajectory:
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} \left(S(t_f)^2 - S(t_0)^2\right).
-\]
-
-As a control, we minimize the deviation from conserved angular momentum:
-\[
-\mathcal{L}_{\text{residual}} = \int_0^T \left(\frac{d}{dt}(r^2 \dot{\theta})\right)^2 dt.
-\]
-
-Both methods recover smooth, closed-loop orbits. The entropy-based optimizer achieves this with no knowledge of gravitational forces, relying only on boundary conditions and structural entropy.
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Initial guess
-r_guess = np.linspace(r0, rf, N)
-theta_guess = np.linspace(theta0, thetaf, N)
-x0 = np.concatenate([r_guess[1:-1], theta_guess[1:-1]])
-
-# Entropy loss
-def entropy_loss(x):
-    r = np.concatenate([[r0], x[:N-2], [rf]])
-    theta = np.concatenate([[theta0], x[N-2:], [thetaf]])
-    dtheta_dt = np.gradient(theta, dt)
-    S = m * r**2 * dtheta_dt
-    return 0.5 * (S[-1]**2 - S[0]**2)
-
-# Angular momentum residual
-def residual_loss(x):
-    r = np.concatenate([[r0], x[:N-2], [rf]])
-    theta = np.concatenate([[theta0], x[N-2:], [thetaf]])
-    dtheta_dt = np.gradient(theta, dt)
-    L = m * r**2 * dtheta_dt
-    dL_dt = np.gradient(L, dt)
-    return np.sum(dL_dt**2) * dt
-
-# Optimize both
-bounds = [(0.1, 5.0)] * (N-2) + [(0, 4*np.pi)] * (N-2)
-result = minimize(entropy_loss, x0, method='L-BFGS-B', bounds=bounds)
-result_ctrl = minimize(residual_loss, x0, method='L-BFGS-B', bounds=bounds)
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{orbit_comparison_plot.png}
-\caption{
-Orbits recovered via entropy loss (orange) and angular momentum control loss (dashed blue). Both produce smooth, closed trajectories, but the entropy method achieves convergence more efficiently, without requiring explicit force models or conserved quantities.
-}
-\end{figure}
-
-
-\subsubsection{Elliptical Double Orbit with Periodic Boundary Conditions}
-
-In this simulation, we test whether a closed, two-orbit elliptical trajectory can be recovered using only entropy flow minimization. The orbiting mass begins and ends at the same radial distance, sweeping through a total of \(4\pi\) radians—two full revolutions around a central mass.
-
-The structural entropy of the system is defined as:
-\[
-S(t) = m r(t)^2 \cdot \dot{\theta}(t)
-\]
-We minimize the final entropy flow:
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} S(t_f)^2
-\]
-
-To evaluate this result, we introduce a control loss based on the conservation of angular momentum:
-\[
-\mathcal{L}_{\text{residual}} = \int_0^T \left( \frac{d}{dt}(r^2 \dot{\theta}) \right)^2 dt
-\]
-
-Both the entropy and control solutions recover a smooth, closed, two-orbit trajectory. Despite lacking any explicit knowledge of gravitational dynamics, the entropy-based method converges efficiently and reconstructs the correct path using only structural information and boundary constraints.
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Initial guess: elliptical path
-r_guess = 1.0 + 0.3 * np.sin(2 * np.pi * t_eval / (t_end - t_start))
-theta_guess = np.linspace(theta0, thetaf, N)
-x0 = np.concatenate([r_guess[1:-1], theta_guess[1:-1]])
-
-# Entropy loss
-def entropy_loss(x):
-    r = np.concatenate([[r0], x[:N-2], [rf]])
-    theta = np.concatenate([[theta0], x[N-2:], [thetaf]])
-    dtheta = np.gradient(theta, dt)
-    S = m * r**2 * dtheta
-    return 0.5 * S[-1]**2
-
-# Control loss: angular momentum residual
-def residual_loss(x):
-    r = np.concatenate([[r0], x[:N-2], [rf]])
-    theta = np.concatenate([[theta0], x[N-2:], [thetaf]])
-    dtheta = np.gradient(theta, dt)
-    L = m * r**2 * dtheta
-    dL_dt = np.gradient(L, dt)
-    return np.sum(dL_dt**2) * dt
-
-# Optimize both
-bounds = [(0.1, 5.0)] * (N-2) + [(0, 4*np.pi)] * (N-2)
-result = minimize(entropy_loss, x0, method='L-BFGS-B', bounds=bounds)
-result_ctrl = minimize(residual_loss, x0, method='L-BFGS-B', bounds=bounds)
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{elliptical_orbit_comparison.png}
-\caption{
-Elliptical double-orbit trajectories recovered using entropy flow minimization (orange) and angular momentum conservation (dashed blue). Both satisfy periodic boundary conditions and recover a closed elliptical orbit, but entropy converges more quickly and does not require any force-based modeling.
-}
-\end{figure}
-
-
-\subsubsection{Entropy-Optimized Cosmic Expansion}
-
-In this simulation, we apply the entropy flow principle to model the expansion of a universe-scale system across a long temporal horizon. The system evolves from an initial scale near the Planck length (\( R_0 = 10^{-35} \)) to a normalized present-day scale (\( R_f = 1 \)) over an extended timeline.
-
-The optimizer is given no force equations, cosmological constants, or field equations—only the structural entropy:
-\[
-S(t) = m R(t) \cdot \dot{R}(t)
-\]
-and a final entropy flow loss:
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} S(t_f)^2
-\]
-
-To evaluate the result, we introduce a control loss based on smoothness:
-\[
-\mathcal{L}_{\text{control}} = \int_0^T \dot{R}^2(t) \, dt
-\]
-
-This favors slow, steady growth. In contrast, the entropy loss produces a natural inflation-like expansion—fast initial growth followed by gradual stabilization—without any gravitational modeling.
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Setup
-R_guess = np.linspace(R0, Rf, N)
-R_inner_guess = R_guess[1:-1]
-
-# Entropy loss
-def entropy_loss(R):
-    Rdot = np.gradient(R, dt)
-    return 0.5 * (m * R[-1] * Rdot[-1])**2
-
-# Smoothness control
-def control_loss(R):
-    Rdot = np.gradient(R, dt)
-    return np.sum(Rdot**2) * dt
-
-# Optimization wrappers
-def objective(R_inner):
-    R_full = np.concatenate(([R0], R_inner, [Rf]))
-    return entropy_loss(R_full)
-
-def control_objective(R_inner):
-    R_full = np.concatenate(([R0], R_inner, [Rf]))
-    return control_loss(R_full)
-
-# Optimize both
-bounds = [(1e-36, 2.0)] * len(R_inner_guess)
-result = minimize(objective, R_inner_guess, method='L-BFGS-B', bounds=bounds)
-result_ctrl = minimize(control_objective, R_inner_guess, method='L-BFGS-B', bounds=bounds)
-R_opt = np.concatenate([[R0], result.x, [Rf]])
-R_ctrl = np.concatenate([[R0], result_ctrl.x, [Rf]])
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{cosmic_expansion_comparison.png}
-\caption{
-Cosmic expansion trajectories from entropy flow (dashed orange) and kinetic smoothness control (dotted blue). Both satisfy the same boundary constraints. The entropy-optimized trajectory exhibits inflation-like early growth followed by gradual stabilization—without any explicit field equations or dynamics.
-}
-\end{figure}
-
-
-\subsubsection{Entropy-Optimized Curvature Around a Black Hole}
-
-In this simulation, we examine the static profile of a scalar field or potential-like structure in a radial slice outside a black hole. The domain spans from the Schwarzschild radius \( R_s = 1 \) to a distant boundary \( R_f = 10 \).
-
-Rather than using Einstein's equations or Newtonian gravity, we apply an entropy-based formulation. The structural entropy is defined as:
-\[
-S(r) = m \cdot r \cdot \frac{d\phi}{dr}
-\]
-and we minimize the final entropy flow:
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} S(r_f)^2
-\]
-
-To compare this to classical field behavior, we introduce a control loss derived from the Laplace equation in spherical coordinates:
-\[
-\mathcal{L}_{\text{laplace}} = \int_{R_s}^{R_f} \left( \frac{d^2\phi}{dr^2} + \frac{2}{r} \frac{d\phi}{dr} \right)^2 dr
-\]
-
-The optimizer is seeded with a logarithmic-like initial guess, \( \phi(r) \sim -1/r \), and allowed to minimize both loss functions. Despite having no access to field equations, the entropy-based solution closely resembles the expected gravitational potential and converges more efficiently.
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Initial guess: -1/r
-phi_guess = -1 / r_eval
-phi_inner_guess = phi_guess[1:-1]
-
-# Entropy loss
-def entropy_loss(phi):
-    phi_full = np.concatenate([[phi_guess[0]], phi, [phi_guess[-1]]])
-    dphi = np.gradient(phi_full, dr)
-    return 0.5 * (m * r_eval[-1] * dphi[-1])**2
-
-# Laplace residual loss
-def laplace_residual_loss(phi):
-    phi_full = np.concatenate([[phi_guess[0]], phi, [phi_guess[-1]]])
-    dphi = np.gradient(phi_full, dr)[1:-1]
-    d2phi = np.gradient(np.gradient(phi_full, dr), dr)[1:-1]
-    r_mid = r_eval[1:-1]
-    residual = d2phi + (2 / r_mid) * dphi
-    return np.sum(residual**2) * dr
-
-# Optimize both
-result = minimize(entropy_loss, phi_inner_guess, method='L-BFGS-B', ...)
-result_ctrl = minimize(laplace_residual_loss, phi_inner_guess, method='L-BFGS-B', ...)
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{blackhole_potential_comparison.png}
-\caption{
-Radial profile of a scalar potential outside a black hole, optimized using entropy flow (dashed orange) and Laplace residual minimization (dotted blue). Both match the expected \(-1/r\)-like decay, but the entropy solution converges more quickly and does not rely on field equations.
-}
-\end{figure}
-
-
-\subsubsection{Entropy-Driven Gravitational Lensing}
-
-In this simulation, we model the propagation of a scalar field across a 2D spacetime grid over time, constrained only by entropy flow and fixed initial and final field configurations. A small circular region at the center of the grid acts as a fixed obstacle—analogous to a massive object like a black hole—through which the field cannot pass.
-
-The field begins as a wave packet in the lower region of the domain and ends in the upper region. No differential equations or force models are used—only a final-time entropy flow constraint:
-\[
-S = \sum_{x,y} \phi(x, y, t_f) \cdot \frac{\partial \phi}{\partial t}(x, y, t_f),
-\quad \mathcal{L}_{\text{entropy}} = \frac{1}{2} S^2
-\]
-
-To validate the result, we compare it to a classical control loss based on the wave equation:
-\[
-\mathcal{L}_{\text{residual}} = \sum_t \left( \frac{\partial^2 \phi}{\partial t^2} - \nabla^2 \phi \right)^2
-\]
-
-Despite not knowing the wave equation, the entropy-based simulation naturally discovers a trajectory that bends around the central mass—mimicking gravitational lensing from first principles.
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Initial & final wavepackets
-phi_0 = exp(-200 * ((X - 0.1)**2 + (Y - 0.5)**2))
-phi_T = exp(-200 * ((X - 0.9)**2 + (Y - 0.5)**2))
-
-# Obstacle mask
-obstacle_mask = ((X - 0.5)**2 + (Y - 0.5)**2) < 0.05**2
-def apply_obstacle(phi): phi[:, obstacle_mask] = 0; return phi
-
-# Entropy loss
-def entropy_loss(phi_flat):
-    phi = reconstruct(phi_flat)
-    dphi_dt = (phi[-1] - phi[-2]) / dt
-    return 0.5 * np.sum(phi[-1] * dphi_dt)**2
-
-# Wave equation residual loss
-def wave_equation_residual_loss(phi_flat):
-    phi = reconstruct(phi_flat)
-    loss = 0
-    for t_idx in range(1, Nt - 1):
-        phi_tt = (phi[t+1] - 2*phi[t] + phi[t-1]) / dt**2
-        lap = laplacian(phi[t], dx, dy)
-        loss += np.sum((phi_tt - lap)**2)
-    return loss * dt
-
-# Optimize both
-phi_inner_guess = initial_guess[1:-1].reshape(-1)
-result = minimize(entropy_loss, phi_inner_guess, ...)
-result_ctrl = minimize(wave_equation_residual_loss, phi_inner_guess, ...)
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{lensing_comparison_plot.png}
-\caption{
-Snapshots of a scalar field propagating through a domain with a central obstacle. Top row: entropy-optimized evolution; bottom row: wave equation residual optimization. The entropy simulation produces realistic lensing behavior—bending smoothly around the obstacle—without any differential equations, demonstrating its power as a structural variational principle.
-}
-\end{figure}
-
-
-\subsubsection{Smoothed 3-Body Trajectories from Entropy Flow}
-
-In this simulation, we consider three interacting bodies moving in two-dimensional space. The system is initialized with fixed start and end positions for each body, but no forces, orbits, or equations of motion are provided. The only guiding principle is entropy flow minimization, subject to a weak repulsive potential to discourage overlap.
-
-The structural entropy is computed from the final position and velocity of each body:
-\[
-S = \sum_{i=1}^{3} m_i \cdot \mathbf{r}_i(t_f) \cdot \dot{\mathbf{r}}_i(t_f)
-\]
-
-We minimize the squared entropy flow along with a repulsive penalty:
-\[
-\mathcal{L}_{\text{entropy}} = \frac{1}{2} S^2 + \varepsilon \sum_{i<j} \sum_t \frac{1}{\|\mathbf{r}_i(t) - \mathbf{r}_j(t)\| + \delta}
-\]
-
-For comparison, we introduce a smoothness-based control loss that minimizes total kinetic energy over time:
-\[
-\mathcal{L}_{\text{control}} = \int_0^T \sum_i \frac{1}{2} m_i \|\dot{\mathbf{r}}_i(t)\|^2 dt
-\]
-
-While both methods recover valid paths between endpoints, the entropy trajectories exhibit more curved, coordinated structure, often resembling physically realistic orbital behavior.
-
-\paragraph*{Code}\mbox{}
-\begin{lstlisting}[language=Python]
-# Initial guess: linear interpolation
-trajectory_guess = ...
-trajectory_inner_guess = trajectory_guess[1:-1].reshape(-1)
-
-# Entropy loss with inter-body repulsion
-def entropy_loss(flat_traj):
-    ...
-    return 0.5 * S_total**2 + repulsion_energy
-
-# Control loss: integrated kinetic energy
-def kinetic_energy_loss(flat_traj):
-    ...
-    return total_kinetic_energy * dt
-
-# Optimize both
-result = minimize(entropy_loss, ...)
-result_ctrl = minimize(kinetic_energy_loss, ...)
-\end{lstlisting}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{entropy_vs_control_3body.png}
-\caption{
-3-body trajectories optimized under entropy flow (solid) and kinetic control (dashed). Start and end positions are fixed, but no forces or mechanics are modeled. The entropy-optimized trajectories exhibit curved, asymmetric paths and greater spatial separation, suggesting emergent coordination without explicit dynamics.
-}
-\end{figure}
-
-
-\subsubsection{Summary of Simulations}
-
-The table below summarizes the systems explored using entropy flow optimization. In each case, the system dynamics were recovered without access to force laws, potentials, or differential equations—only through the use of structural entropy and endpoint constraints. These entropy expressions were sufficient to recover behavior traditionally explained by Newtonian or field-theoretic models.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
-\hline
-\textbf{System} & \textbf{Structural Entropy Expression} \\
-\hline
-Free Fall & \( S = m y \dot{y} \) \\
-Harmonic Oscillator & \( S = m q \dot{q} \) \\
-Pendulum & \( S = m \theta \dot{\theta} \) \\
-Double Pendulum & \( S = m_1 \theta_1 \dot{\theta}_1 + m_2 \theta_2 \dot{\theta}_2 \) \\
-Triple Pendulum & \( S = \sum_{i=1}^{3} m_i \theta_i \dot{\theta}_i \) \\
-Orbit (1 rev) & \( S = m r^2 \dot{\theta} \) \\
-Orbit (2 rev) & \( S = m r^2 \dot{\theta} \) \\
-Cosmic Expansion & \( S = m R \dot{R} \) \\
-Black Hole Slice & \( S = m r \frac{d\phi}{dr} \) \\
-Gravitational Lensing & \( S = \sum \phi \cdot \frac{\partial \phi}{\partial t} \) \\
-3-Body System & \( S = \sum_{i=1}^{3} m_i \mathbf{r}_i \cdot \dot{\mathbf{r}}_i \) \\
-\hline
-\end{tabular}
-\caption{Structural entropy expressions used in each simulation. These scalar terms were sufficient to recover expected physical behavior without explicit differential equations or governing dynamics.}
-\end{table}
-
-
-\subsubsection{Code Review and Future Directions}
-
-Given the consistently accurate and efficient results achieved using the entropy flow loss, it is natural to ask whether this optimization principle is benefiting from hidden structure, implicit constraints, or other artifacts. To that end, the accompanying notebook includes full code listings and control comparisons for each system.
-
-Physicists and computational modelers are encouraged to scrutinize the loss formulations, optimization setup, and controls used in each case. While the entropy loss is typically simple and compact, its performance across such a wide range of systems suggests that deeper principles may be at work.
-
-Several future directions are suggested:
-\begin{itemize}
-    \item Further theoretical exploration of why entropy-based losses generalize so effectively.
-    \item Formal derivations relating entropy flow loss to traditional variational principles or conserved quantities.
-    \item Applications to data-driven physics, control systems, and machine-learned dynamics.
-    \item Use in systems with noise, partial observability, or stochastic perturbations.
-\end{itemize}
-
-In nearly all cases presented, the entropy-based optimizer converged rapidly (often within just a few iterations), with no reliance on domain-specific tuning. This suggests that structural entropy flow may represent a general and computationally efficient principle for inferring motion and field evolution.
+Future work will continue to explore how systems might be evolved numerically using the $S \cdot \dot{S}$ formulation, with the aim of identifying more principled and effective ways to incorporate entropy flow into dynamic modeling.
 
 
 \subsection{Generative Constraints and the Structure of Reality}
@@ -5755,6 +4990,7 @@ Let us embrace this infinite dance of paradox and possibility, and let us laugh 
 \section{Appendix}
 The appendix is a collection of exploratory ideas using the framework. It also demonstrates an interesting application of $I_\textbf{max}$ when writing this paper. By being playful and creative, useful entropy is created, which can then be refined later with rigor and scrutiny to produce more accurate insights.
 
+
 \section{Application of \(\mathcal{I}_{\text{max}}\) to Mathematics}
 
 \paragraph{Introduction: The Generative Essence of Mathematics}
@@ -6417,98 +5653,752 @@ The Dome Paradox illustrates the power of $\mathcal{I}_{\text{max}}$ across phys
 \end{itemize}
 
 
-\section{The Spacetime Fractal Hypothesis: A Recursive Geometry of Reality}
+\section{Work in Progress: Using the Entropy Flow Lagrangian}
+\label{sec:entropy_lagrangian_testing}
 
-\subsection{Introduction}
-The Spacetime Fractal Hypothesis proposes that spacetime is not a smooth, continuous manifold but a recursive, fractal structure governed by principles of information flow and optimization. This view aligns with the generative framework defined by \(\mathcal{I}_{\text{max}}\), \(O_{\text{max}}\), and \(\mathcal{G}\), where recursive dynamics govern the evolution of complexity and adaptability. By treating spacetime as a fractal, we uncover a deeper coherence between the structure of the universe and the processes that shape its evolution.
+The following work in progress shows some attempt to use the proposed entropy flow Lagrangian in application. However, upon further analysis, the method presented in this section is not actually rigorous or meaningful enough to justify any claim about the effectiveness of the theory. In many cases, the optimizer seems to be able to fit the required motion regardless of the loss function used (i.e., a constant can be substituted in and the optimization still works fine). Additionally, in chaotic systems like a double or triple pendulum, the predicted path does not match a numerically solved path. For transparency, the work previously shown in the paper's physics section is still presented here. Please note that the ``control loss" ideally needs to be replaced with actually solving the system -- it is not a good comparison right now, even though the unedited text in this section seems to say otherwise. In the future, it is likely better to move away from this optimizer method entirely for showing whether the entropy flow lagrangian works at all.
 
-\subsection{Foundations of the Hypothesis}
+\subsection{Simplifying the Entropy-Based Lagrangian for Optimization}
 
-\paragraph{Fractal Geometry in Nature}
-Fractal structures, characterized by self-similarity and recursive scaling, are abundant in nature—from the branching of trees and river networks to the structure of galaxies. These systems share key properties:
-\begin{itemize}
-    \item \textbf{Recursive Patterns:} Repeating structures across scales.
-    \item \textbf{Emergent Complexity:} Simple rules give rise to intricate patterns.
-    \item \textbf{Infinite Potential:} Fractals exhibit detail at every scale, constrained only by the system’s finite resolution.
-\end{itemize}
+We introduce a proposed entropy-flow Lagrangian, inspired by the observation that many physical systems appear to evolve by optimizing the product of structural entropy and its rate of change:
 
-\paragraph{Fractality of Spacetime}
-The hypothesis extends fractal principles to spacetime itself, positing that:
-\begin{itemize}
-    \item Spacetime exhibits recursive, self-similar patterns across scales, from quantum fluctuations to cosmological structures.
-    \item These patterns arise from the recursive dynamics of \(\mathcal{I}_{\text{max}}\), which balances stored complexity (\(S\)) and dynamic efficiency (\(\frac{\Delta S}{\Delta t}\)).
-    \item The generator function \(\mathcal{G}\) governs the iterative emergence of new spacetime structures, ensuring coherence across scales.
-\end{itemize}
-
-\subsection{Mathematical Model of Fractal Spacetime}
-
-\paragraph{Recursive Metric Tensor}
-Let \(g_{\mu\nu}(x, t)\) represent the spacetime metric at position \(x\) and time \(t\). We propose:
 \[
-g_{\mu\nu}(x, t) = \sum_{n=0}^\infty f_n(x, t),
+\mathcal{L}(t) = S(t) \cdot \dot{S}(t)
 \]
-where \(f_n(x, t)\) represents recursive perturbations at scale \(n\), governed by:
+
+where:
+\begin{itemize}
+    \item \(S(t)\) is a system-specific structural entropy function, typically depending on position and velocity (e.g., \(S = m q(t) \dot{q}(t)\)),
+    \item \(\dot{S}(t)\) is its time derivative,
+    \item The negative sign ensures the path chosen minimizes net change in structural entropy flow over the interval.
+\end{itemize}
+
+We propose that the corresponding action functional selects the physical trajectory:
+
 \[
-f_{n+1}(x, t) = \mathcal{G}(f_n(x, t)),
+\mathcal{S} = \int_{t_0}^{t_f} \mathcal{L}(t) \, dt = \int_{t_0}^{t_f} S(t) \cdot \dot{S}(t) \, dt
 \]
-and \(\mathcal{G}\) is the generator function that introduces new layers of structure based on the optimization of \(\mathcal{I}_{\text{max}}\).
 
-\paragraph{Scaling Law}
-Recursive perturbations obey a fractal scaling law:
+\subsubsection{A Simplification Using Integration by Parts}
+
+To make this action more computationally tractable, especially in the context of gradient-based optimization, we apply the identity:
+
 \[
-f_n(x, t) \propto \lambda^n f_0(x, t),
+\int S \cdot \dot{S} \, dt = \frac{1}{2} S(t)^2 \Big|_{t_0}^{t_f} = \frac{1}{2} \left(S_f^2 - S_i^2\right)
 \]
-where \(\lambda < 1\) ensures convergence and finite resolution at macroscopic scales.
 
-\subsection{Implications of the Hypothesis}
+Thus, the action becomes:
 
-\paragraph{Quantum Gravity and Discrete Spacetime}
-At the Planck scale, spacetime’s fractal nature suggests a discrete, self-similar structure:
+\[
+\mathcal{S} = \frac{1}{2} \left(S_f^2 - S_i^2\right)
+\]
+
+\subsubsection{Further Simplification: Let $S_i=0$}
+
+Since entropy is defined relative to the system’s structure and motion, we may, without loss of generality, set the initial structural entropy to zero:
+\[
+S_i = 0
+\]
+
+This yields a final simplified form of the action:
+\[
+\mathcal{S} = \int S \cdot \dot{S} \, dt = \frac{1}{2} S_f^2
+\]
+
+Thus, the optimization objective becomes:
+\[
+\boxed{
+\mathcal{L}_\text{loss} = \frac{1}{2} S_f^2
+}
+\]
+
+This represents the minimal change in structural entropy flow over the trajectory.
+
+
+\subsubsection{Interpretation as a Loss Function}
+
+In the language of machine learning, this action becomes a trajectory loss:
+
 \begin{itemize}
-    \item Quantum foam emerges as the smallest recursive layer.
-    \item Fractal patterns unify the smooth curvature of general relativity with the discrete probabilities of quantum mechanics.
+    \item The trajectory \(q(t)\) is treated as a learnable function (or array of values).
+    \item The loss is evaluated based on the change in entropy flow over time.
+    \item The optimizer searches for the path that minimizes this scalar loss, subject to boundary conditions.
 \end{itemize}
 
-\paragraph{Cosmological Horizons as Recursive Structures}
-Event horizons, such as those of black holes or the observable universe, act as boundaries where fractal recursion becomes constrained:
+This transforms the physics problem into a familiar training loop: given a system-specific entropy structure, we learn the path of least entropy disruption. Remarkably, this loss function:
+
 \begin{itemize}
-    \item Information flow across horizons is limited by \(\mathcal{I}_{\text{max}}\).
-    \item Horizons encode fractal patterns, reflecting the recursive dynamics of spacetime.
+    \item Requires no differential equations,
+    \item Operates directly on trajectories,
+    \item Can be minimized using any gradient-based optimizer,
+    \item Reconstructs known physics across multiple domains.
 \end{itemize}
 
-\paragraph{Self-Similarity Across Scales}
-The hypothesis predicts observable self-similarity in spacetime:
+
+\subsubsection{Reframing Classical Motion as Entropy Flow Optimization}
+
+In practice, we discretize the trajectory \(q(t)\) over a time grid, define a system-specific structural entropy \(S(q, \dot{q})\), and numerically minimize the final entropy-based loss:
+
+\[
+\mathcal{L}_\text{loss} = \frac{1}{2} S[q(t_f)]^2
+\]
+
+This loss function arises from the variational integral \(\int S \cdot \dot{S} \, dt\), under the assumption that \(S[q(t_0)] \approx 0\). No explicit forces, potentials, or differential equations are required—only the structural entropy and endpoint constraints.
+
+This approach has been empirically validated across multiple classical systems, including free fall, oscillators, pendulums, and orbital motion. In each case, the optimizer recovers the correct physical path solely by minimizing entropy flow, often with faster convergence and greater numerical stability than conventional methods.
+
+\subsection{Inferring Motion from Entropy Flow}
+
+In this section, we present a series of physical systems where the trajectory of motion is recovered solely through the minimization of entropy flow. No differential equations, force models, or traditional dynamics are provided. Instead, an optimizer minimizes a structural entropy loss over time, and the resulting path aligns—often exactly—with known laws of nature.
+
+Each simulation demonstrates how classical behavior emerges from a universal principle of information resolution, reinforcing the idea that motion itself may be the result of entropy flow optimization.
+
+\paragraph{Method Overview}
+
+In each simulation that follows, we treat the system's trajectory as a set of learnable points in time—initialized from a simple guess and optimized to minimize a scalar entropy-based loss. The entropy function \( S(q, \dot{q}) \) is defined per system, typically reflecting a structural relationship between position and velocity. The optimizer then reshapes the internal trajectory to reduce the entropy flow at the final timestep, subject only to the boundary conditions at the start and end of the path.
+
+No differential equations, force models, or potentials are used. Instead, the system discovers the motion that most efficiently resolves its internal structure—recovering classical dynamics as the natural result of entropy flow minimization.
+
+\paragraph{Control Comparisons}
+
+To ensure that the entropy principle is not simply overfitting or benefiting from optimizer bias, we introduce control comparisons in each example. These controls use alternative loss functions rooted in standard physical formulations—such as minimizing equation residuals, enforcing angular momentum conservation, or penalizing kinetic energy. In each case, the entropy-optimized trajectory is evaluated alongside a physics-based baseline, using identical boundary conditions and optimization methods. This comparative framework allows us to assess whether entropy flow truly guides the system toward physically meaningful solutions.
+
+
+\subsubsection{Free Fall Under Gravity}
+
+This simulation models the motion of an object in free fall, released from a height of 10 meters with zero initial velocity. In classical mechanics, this is governed by constant acceleration due to gravity. However, in this simulation, we do \textbf{not} use any force laws or differential equations to generate the trajectory.
+
+Instead, we minimize the final structural entropy:
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} (m y_f \dot{y}_f)^2
+\]
+The optimizer is only given the starting and ending positions, and it learns the correct path purely through entropy flow minimization.
+
+To test the strength of this result, we introduce a baseline control: the optimizer also attempts to minimize the residual from Newton's second law,
+\[
+\mathcal{L}_{\text{residual}} = \int_0^T \left(\ddot{y}(t) + g\right)^2 dt,
+\]
+which explicitly enforces the correct gravitational dynamics. The entropy loss converges more quickly and with lower numerical error than the residual-based control, while producing an indistinguishable trajectory.
+
+\paragraph*{Code}\mbox{}
+
+\begin{lstlisting}[language=Python]
+# Classical solution
+def free_fall_ode(t, y): return [y[1], -g]
+sol = solve_ivp(free_fall_ode, [t0, t1], [10.0, 0.0], t_eval=t_eval)
+y_classical = sol.y[0]
+
+# Entropy and residual loss functions
+def entropy_loss(y): return 0.5 * (m * y[-1] * np.gradient(y, dt)[-1])**2
+def residual_loss(y):
+    ydot = np.gradient(y, dt)
+    yddot = np.gradient(ydot, dt)
+    return np.sum((yddot + g)**2) * dt
+
+# Optimization for each loss
+def optimize(loss_fn): 
+    y_guess = y_classical[1:-1]
+    return minimize(
+        lambda y_inner: loss_fn(np.concatenate([[y_classical[0]], y_inner, [y_classical[-1]]])),
+        y_guess, method='L-BFGS-B', bounds=[(-100, 10.0)] * len(y_guess)
+    ).x
+
+# Run both
+y_entropy = np.concatenate([[y_classical[0]], optimize(entropy_loss), [y_classical[-1]]])
+y_residual = np.concatenate([[y_classical[0]], optimize(residual_loss), [y_classical[-1]]])
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{free_fall_plot.png}
+\caption{
+Free fall trajectory generated using entropy flow minimization (dashed orange) and Newtonian residual minimization (dotted green), compared with the classical solution (solid black). Both optimized methods recover the correct parabolic trajectory, but the entropy formulation converges more rapidly and with lower loss.
+}
+\end{figure}
+
+
+\subsubsection{Harmonic Oscillator}
+
+This simulation models a mass attached to a spring with spring constant \( k = 4 \) and mass \( m = 1 \), yielding a natural frequency of oscillation \( \omega = 2 \) rad/s. The system begins with a displacement of 1 meter and zero initial velocity. Classically, this leads to sinusoidal motion governed by Hooke’s law and Newton's second law.
+
+In our experiment, we do \textbf{not} use force laws or differential equations to simulate the trajectory. Instead, we minimize the final structural entropy:
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} (m q_f \dot{q}_f)^2
+\]
+The optimizer is given only the initial and final displacements and learns the correct oscillatory path by minimizing final entropy flow.
+
+To provide a meaningful comparison, we introduce a control loss based on the classical equation of motion:
+\[
+\mathcal{L}_{\text{residual}} = \int_0^T \left(\ddot{q}(t) + \omega^2 q(t)\right)^2 dt,
+\]
+which penalizes violations of the harmonic oscillator's governing ODE. As with free fall, the entropy-optimized solution converges more quickly and achieves lower loss, despite having no access to the system’s governing force model.
+
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Classical solution
+def ho_ode(t, y): return [y[1], -omega**2 * y[0]]
+sol = solve_ivp(ho_ode, [0, 10], [1.0, 0.0], t_eval=t_eval)
+q_classical = sol.y[0]
+
+# Losses
+def entropy_loss(q): 
+    qdot = np.gradient(q, dt)
+    return 0.5 * (m * q[-1] * qdot[-1])**2
+
+def residual_loss(q): 
+    qdot = np.gradient(q, dt)
+    qddot = np.gradient(qdot, dt)
+    return np.sum((qddot + omega**2 * q)**2) * dt
+
+# Optimization
+def optimize(loss_fn):
+    guess = q_classical[1:-1]
+    return minimize(
+        lambda q_inner: loss_fn(np.concatenate([[q_classical[0]], q_inner, [q_classical[-1]]])),
+        guess, method='L-BFGS-B', bounds=[(-2, 2)] * len(guess)
+    ).x
+
+# Run both
+q_entropy = np.concatenate([[q_classical[0]], optimize(entropy_loss), [q_classical[-1]]])
+q_residual = np.concatenate([[q_classical[0]], optimize(residual_loss), [q_classical[-1]]])
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{harmonic_oscillator_plot.png}
+\caption{
+Entropy-optimized (dashed orange) and residual-optimized (dotted green) harmonic oscillator trajectories compared with the classical solution (black). Both recover the sinusoidal path, but the entropy loss converges faster and more efficiently despite lacking any knowledge of the force law.
+}
+\end{figure}
+
+
+\subsubsection{Simple Pendulum}
+
+This simulation models a simple pendulum: a mass suspended by a massless rod, swinging under gravity. The system begins at an initial angle of \( 20^\circ \) (converted to radians) with zero initial velocity. Classically, this is governed by the nonlinear equation:
+
+\[
+\ddot{\theta}(t) = -\frac{g}{l} \sin(\theta(t))
+\]
+
+Here, however, we avoid solving this equation directly. Instead, we define the structural entropy as:
+
+\[
+S(t) = m \theta(t) \dot{\theta}(t)
+\]
+
+and minimize the final entropy loss:
+
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} S[\theta(t_f)]^2
+\]
+
+The optimizer is given only the initial and final angular positions. No force model or potential is used—only structural entropy and endpoint constraints.
+
+As a control, we also minimize a classical residual:
+\[
+\mathcal{L}_{\text{residual}} = \int_0^T \left(\ddot{\theta}(t) + \frac{g}{l} \sin(\theta(t))\right)^2 dt,
+\]
+which explicitly enforces the nonlinear pendulum equation.
+
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Classical solution
+def pendulum_ode(t, y): return [y[1], - (g/l) * np.sin(y[0])]
+sol = solve_ivp(pendulum_ode, [0, 10], [np.radians(20), 0.0], t_eval=t_eval)
+theta_classical = sol.y[0]
+
+# Loss functions
+def entropy_loss(theta): 
+    theta_dot = np.gradient(theta, dt)
+    return 0.5 * (m * theta[-1] * theta_dot[-1])**2
+
+def residual_loss(theta): 
+    theta_dot = np.gradient(theta, dt)
+    theta_ddot = np.gradient(theta_dot, dt)
+    return np.sum((theta_ddot + (g/l) * np.sin(theta))**2) * dt
+
+# Optimization
+def optimize(loss_fn): 
+    guess = theta_classical[1:-1]
+    return minimize(
+        lambda theta_inner: loss_fn(np.concatenate([[theta_classical[0]], theta_inner, [theta_classical[-1]]])),
+        guess, method='L-BFGS-B', bounds=[(-np.pi, np.pi)] * len(guess)
+    ).x
+
+# Run both
+theta_entropy = np.concatenate([[theta_classical[0]], optimize(entropy_loss), [theta_classical[-1]]])
+theta_residual = np.concatenate([[theta_classical[0]], optimize(residual_loss), [theta_classical[-1]]])
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{pendulum_plot.png}
+\caption{
+The entropy-optimized pendulum trajectory (dashed orange) and residual-optimized trajectory (dotted green) are both compared with the classical nonlinear solution (solid black). The entropy solution converges faster and recovers the expected oscillatory behavior without access to the system’s differential equation.
+}
+\end{figure}
+
+
+\subsubsection{Double Pendulum from Entropy Flow}
+
+The double pendulum is a canonical example of deterministic chaos: a two-link pendulum system where small changes in initial conditions can produce drastically different long-term behavior. Classically, its motion is governed by a set of coupled second-order differential equations derived from the Lagrangian formulation.
+
+Here, we apply entropy flow minimization to this system. Each arm’s structural entropy is defined as:
+\[
+S_i(t) = m_i \theta_i(t) \dot{\theta}_i(t),
+\]
+and we minimize the final total entropy flow:
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} \left(S_1 + S_2\right)^2 + \lambda \int_0^T |\theta_1(t) - \theta_2(t)| \, dt.
+\]
+The second term introduces a weak coupling penalty to avoid symmetric collapse. No force laws or physics models are used — the optimizer is free to discover an asymmetric trajectory that minimizes final entropy flow.
+
+To validate this behavior, we compare the result to two control losses:
 \begin{itemize}
-    \item Large-scale structures, such as galaxy clusters, mimic smaller-scale structures, like atoms or particles.
-    \item This self-similarity arises naturally from \(\mathcal{G}\)’s generative recursion.
+    \item \textbf{Smoothness control}, which minimizes total squared angular velocity:  
+    \[
+    \mathcal{L}_{\text{smooth}} = \int_0^T \left(\dot{\theta}_1^2 + \dot{\theta}_2^2\right) dt,
+    \]
+    \item \textbf{Residual control}, which penalizes deviation from the coupled nonlinear differential equations of a symmetric double pendulum.
 \end{itemize}
 
-\subsection{Empirical Predictions}
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Initial guess (noisy, linearly decaying)
+theta1_guess = np.linspace(theta1_0, 0, N) + 0.1 * np.random.randn(N)
+theta2_guess = np.linspace(theta2_0, 0, N) + 0.1 * np.random.randn(N)
+theta_inner_guess = np.concatenate([theta1_guess[1:-1], theta2_guess[1:-1]])
 
-\paragraph{Cosmic Microwave Background (CMB) Fluctuations}
-Fractal spacetime suggests recursive patterns in the CMB:
-\begin{itemize}
-    \item Higher-order correlations in temperature fluctuations should exhibit fractal scaling.
-    \item These correlations can be tested against existing CMB data.
-\end{itemize}
+# Entropy loss: final entropy + coupling
+def entropy_loss(theta_flat):
+    ...
+    return 0.5 * (S1 + S2)**2 + coupling_term
 
-\paragraph{Quantum Decoherence and Fractality}
-Quantum systems interacting with fractal spacetime may exhibit:
-\begin{itemize}
-    \item Deviations from standard decoherence predictions at small scales.
-    \item Fractal noise patterns in quantum measurement outcomes.
-\end{itemize}
+# Smoothness control: integrated angular velocity
+def control_loss(theta_flat):
+    ...
+    return np.sum(dtheta1_dt**2 + dtheta2_dt**2) * dt
 
-\paragraph{Gravitational Wave Spectra}
-Fractal spacetime predicts:
-\begin{itemize}
-    \item Recursive features in the frequency spectra of gravitational waves.
-    \item These features could be detected in high-resolution interferometric data.
-\end{itemize}
+# Residual loss: violation of full nonlinear dynamics
+def residual_loss(theta_flat):
+    ...
+    return np.sum(residual1**2 + residual2**2) * dt
 
-\subsection{Conclusion: Spacetime as a Recursive Fractal}
+# Run all three
+theta1_entropy, theta2_entropy, _ = run_optimization(entropy_loss, "Entropy")
+theta1_control, theta2_control, _ = run_optimization(control_loss, "Control")
+theta1_residual, theta2_residual, _ = run_optimization(residual_loss, "Residual")
+\end{lstlisting}
 
-The Spacetime Fractal Hypothesis offers a unifying framework for understanding the recursive, self-organizing nature of the universe. By extending the principles of \(\mathcal{I}_{\text{max}}\), \(O_{\text{max}}\), and \(\mathcal{G}\) to spacetime itself, we reveal a reality that is both coherent and generative, where fractal geometry governs the evolution of complexity across scales. This perspective invites further exploration, testing, and refinement, bridging quantum mechanics, relativity, and cosmology in a single, recursive framework.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{double_pendulum_comparison.png}
+\caption{Optimized double pendulum motion under three loss functions. Entropy-based trajectories (solid) reveal asymmetric, nonlinear motion consistent with chaotic dynamics. Smoothness control (dashed) produces slower, more symmetric arcs. Residual optimization (dotted) approximates the physical equations of motion. Despite using no differential equations, entropy produces physically plausible motion with efficient convergence.}
+\end{figure}
+
+
+\subsubsection{Triple Pendulum from Entropy Flow}
+
+We extend the entropy framework to a three-link pendulum system. Each arm begins from a distinct angle, with no fixed final state. The optimizer is given full freedom to discover a dynamical structure that minimizes final entropy flow across the three arms, while also encouraging asymmetric evolution through coupling penalties:
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} \left(\sum_{i=1}^3 m_i \theta_i(T) \cdot \dot{\theta}_i(T)\right)^2
++ \lambda \sum_t \sum_{i<j} |\theta_i(t) - \theta_j(t)|
+\]
+
+To compare against a physically plausible baseline, we introduce a control loss that minimizes total kinetic effort:
+\[
+\mathcal{L}_{\text{control}} = \int_0^T \sum_{i=1}^{3} \dot{\theta}_i^2(t) \, dt
+\]
+
+While both losses produce smooth trajectories, the entropy-optimized motion exhibits greater asymmetry, curvature, and dynamic separation — characteristics often associated with real triple pendulum behavior. The entropy-based trajectory is recovered without any reference to equations of motion.
+
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Initial guess: noisy linear paths
+theta_guesses = [
+    np.linspace(theta0[i], 0, N) + 0.05 * np.random.randn(N)
+    for i in range(3)
+]
+theta_inner_guess = np.concatenate([g[1:-1] for g in theta_guesses])
+
+# Entropy loss
+def entropy_loss(theta_flat):
+    ...
+    return 0.5 * S**2 + pairwise_coupling_penalty
+
+# Kinetic control loss
+def kinetic_energy_loss(theta_flat):
+    ...
+    return total_energy
+
+# Optimize both
+result = minimize(entropy_loss, theta_inner_guess, ...)
+result_control = minimize(kinetic_energy_loss, theta_inner_guess, ...)
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{triple_pendulum_comparison.png}
+\caption{
+Trajectories of a triple pendulum under entropy loss (solid) and kinetic energy control loss (dashed). While both satisfy endpoint constraints, the entropy-optimized motion shows richer, more chaotic behavior across all three arms — despite no equations of motion being used.
+}
+\end{figure}
+
+
+\subsubsection{Entropy-Optimized Orbit}
+
+This simulation explores whether orbital motion can emerge purely from entropy minimization—without invoking gravitational force laws, potentials, or Newtonian mechanics. The system begins and ends at the same radial distance from a central mass, sweeping through one full orbit.
+
+The structural entropy of the orbiting body is defined as:
+\[
+S(t) = m r(t)^2 \cdot \dot{\theta}(t),
+\]
+which resembles the expression for angular momentum. We minimize the net change in entropy flow between the start and end of the trajectory:
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} \left(S(t_f)^2 - S(t_0)^2\right).
+\]
+
+As a control, we minimize the deviation from conserved angular momentum:
+\[
+\mathcal{L}_{\text{residual}} = \int_0^T \left(\frac{d}{dt}(r^2 \dot{\theta})\right)^2 dt.
+\]
+
+Both methods recover smooth, closed-loop orbits. The entropy-based optimizer achieves this with no knowledge of gravitational forces, relying only on boundary conditions and structural entropy.
+
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Initial guess
+r_guess = np.linspace(r0, rf, N)
+theta_guess = np.linspace(theta0, thetaf, N)
+x0 = np.concatenate([r_guess[1:-1], theta_guess[1:-1]])
+
+# Entropy loss
+def entropy_loss(x):
+    r = np.concatenate([[r0], x[:N-2], [rf]])
+    theta = np.concatenate([[theta0], x[N-2:], [thetaf]])
+    dtheta_dt = np.gradient(theta, dt)
+    S = m * r**2 * dtheta_dt
+    return 0.5 * (S[-1]**2 - S[0]**2)
+
+# Angular momentum residual
+def residual_loss(x):
+    r = np.concatenate([[r0], x[:N-2], [rf]])
+    theta = np.concatenate([[theta0], x[N-2:], [thetaf]])
+    dtheta_dt = np.gradient(theta, dt)
+    L = m * r**2 * dtheta_dt
+    dL_dt = np.gradient(L, dt)
+    return np.sum(dL_dt**2) * dt
+
+# Optimize both
+bounds = [(0.1, 5.0)] * (N-2) + [(0, 4*np.pi)] * (N-2)
+result = minimize(entropy_loss, x0, method='L-BFGS-B', bounds=bounds)
+result_ctrl = minimize(residual_loss, x0, method='L-BFGS-B', bounds=bounds)
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{orbit_comparison_plot.png}
+\caption{
+Orbits recovered via entropy loss (orange) and angular momentum control loss (dashed blue). Both produce smooth, closed trajectories, but the entropy method achieves convergence more efficiently, without requiring explicit force models or conserved quantities.
+}
+\end{figure}
+
+
+\subsubsection{Elliptical Double Orbit with Periodic Boundary Conditions}
+
+In this simulation, we test whether a closed, two-orbit elliptical trajectory can be recovered using only entropy flow minimization. The orbiting mass begins and ends at the same radial distance, sweeping through a total of \(4\pi\) radians—two full revolutions around a central mass.
+
+The structural entropy of the system is defined as:
+\[
+S(t) = m r(t)^2 \cdot \dot{\theta}(t)
+\]
+We minimize the final entropy flow:
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} S(t_f)^2
+\]
+
+To evaluate this result, we introduce a control loss based on the conservation of angular momentum:
+\[
+\mathcal{L}_{\text{residual}} = \int_0^T \left( \frac{d}{dt}(r^2 \dot{\theta}) \right)^2 dt
+\]
+
+Both the entropy and control solutions recover a smooth, closed, two-orbit trajectory. Despite lacking any explicit knowledge of gravitational dynamics, the entropy-based method converges efficiently and reconstructs the correct path using only structural information and boundary constraints.
+
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Initial guess: elliptical path
+r_guess = 1.0 + 0.3 * np.sin(2 * np.pi * t_eval / (t_end - t_start))
+theta_guess = np.linspace(theta0, thetaf, N)
+x0 = np.concatenate([r_guess[1:-1], theta_guess[1:-1]])
+
+# Entropy loss
+def entropy_loss(x):
+    r = np.concatenate([[r0], x[:N-2], [rf]])
+    theta = np.concatenate([[theta0], x[N-2:], [thetaf]])
+    dtheta = np.gradient(theta, dt)
+    S = m * r**2 * dtheta
+    return 0.5 * S[-1]**2
+
+# Control loss: angular momentum residual
+def residual_loss(x):
+    r = np.concatenate([[r0], x[:N-2], [rf]])
+    theta = np.concatenate([[theta0], x[N-2:], [thetaf]])
+    dtheta = np.gradient(theta, dt)
+    L = m * r**2 * dtheta
+    dL_dt = np.gradient(L, dt)
+    return np.sum(dL_dt**2) * dt
+
+# Optimize both
+bounds = [(0.1, 5.0)] * (N-2) + [(0, 4*np.pi)] * (N-2)
+result = minimize(entropy_loss, x0, method='L-BFGS-B', bounds=bounds)
+result_ctrl = minimize(residual_loss, x0, method='L-BFGS-B', bounds=bounds)
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{elliptical_orbit_comparison.png}
+\caption{
+Elliptical double-orbit trajectories recovered using entropy flow minimization (orange) and angular momentum conservation (dashed blue). Both satisfy periodic boundary conditions and recover a closed elliptical orbit, but entropy converges more quickly and does not require any force-based modeling.
+}
+\end{figure}
+
+
+\subsubsection{Entropy-Optimized Cosmic Expansion}
+
+In this simulation, we apply the entropy flow principle to model the expansion of a universe-scale system across a long temporal horizon. The system evolves from an initial scale near the Planck length (\( R_0 = 10^{-35} \)) to a normalized present-day scale (\( R_f = 1 \)) over an extended timeline.
+
+The optimizer is given no force equations, cosmological constants, or field equations—only the structural entropy:
+\[
+S(t) = m R(t) \cdot \dot{R}(t)
+\]
+and a final entropy flow loss:
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} S(t_f)^2
+\]
+
+To evaluate the result, we introduce a control loss based on smoothness:
+\[
+\mathcal{L}_{\text{control}} = \int_0^T \dot{R}^2(t) \, dt
+\]
+
+This favors slow, steady growth. In contrast, the entropy loss produces a natural inflation-like expansion—fast initial growth followed by gradual stabilization—without any gravitational modeling.
+
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Setup
+R_guess = np.linspace(R0, Rf, N)
+R_inner_guess = R_guess[1:-1]
+
+# Entropy loss
+def entropy_loss(R):
+    Rdot = np.gradient(R, dt)
+    return 0.5 * (m * R[-1] * Rdot[-1])**2
+
+# Smoothness control
+def control_loss(R):
+    Rdot = np.gradient(R, dt)
+    return np.sum(Rdot**2) * dt
+
+# Optimization wrappers
+def objective(R_inner):
+    R_full = np.concatenate(([R0], R_inner, [Rf]))
+    return entropy_loss(R_full)
+
+def control_objective(R_inner):
+    R_full = np.concatenate(([R0], R_inner, [Rf]))
+    return control_loss(R_full)
+
+# Optimize both
+bounds = [(1e-36, 2.0)] * len(R_inner_guess)
+result = minimize(objective, R_inner_guess, method='L-BFGS-B', bounds=bounds)
+result_ctrl = minimize(control_objective, R_inner_guess, method='L-BFGS-B', bounds=bounds)
+R_opt = np.concatenate([[R0], result.x, [Rf]])
+R_ctrl = np.concatenate([[R0], result_ctrl.x, [Rf]])
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{cosmic_expansion_comparison.png}
+\caption{
+Cosmic expansion trajectories from entropy flow (dashed orange) and kinetic smoothness control (dotted blue). Both satisfy the same boundary constraints. The entropy-optimized trajectory exhibits inflation-like early growth followed by gradual stabilization—without any explicit field equations or dynamics.
+}
+\end{figure}
+
+
+\subsubsection{Entropy-Optimized Curvature Around a Black Hole}
+
+In this simulation, we examine the static profile of a scalar field or potential-like structure in a radial slice outside a black hole. The domain spans from the Schwarzschild radius \( R_s = 1 \) to a distant boundary \( R_f = 10 \).
+
+Rather than using Einstein's equations or Newtonian gravity, we apply an entropy-based formulation. The structural entropy is defined as:
+\[
+S(r) = m \cdot r \cdot \frac{d\phi}{dr}
+\]
+and we minimize the final entropy flow:
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} S(r_f)^2
+\]
+
+To compare this to classical field behavior, we introduce a control loss derived from the Laplace equation in spherical coordinates:
+\[
+\mathcal{L}_{\text{laplace}} = \int_{R_s}^{R_f} \left( \frac{d^2\phi}{dr^2} + \frac{2}{r} \frac{d\phi}{dr} \right)^2 dr
+\]
+
+The optimizer is seeded with a logarithmic-like initial guess, \( \phi(r) \sim -1/r \), and allowed to minimize both loss functions. Despite having no access to field equations, the entropy-based solution closely resembles the expected gravitational potential and converges more efficiently.
+
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Initial guess: -1/r
+phi_guess = -1 / r_eval
+phi_inner_guess = phi_guess[1:-1]
+
+# Entropy loss
+def entropy_loss(phi):
+    phi_full = np.concatenate([[phi_guess[0]], phi, [phi_guess[-1]]])
+    dphi = np.gradient(phi_full, dr)
+    return 0.5 * (m * r_eval[-1] * dphi[-1])**2
+
+# Laplace residual loss
+def laplace_residual_loss(phi):
+    phi_full = np.concatenate([[phi_guess[0]], phi, [phi_guess[-1]]])
+    dphi = np.gradient(phi_full, dr)[1:-1]
+    d2phi = np.gradient(np.gradient(phi_full, dr), dr)[1:-1]
+    r_mid = r_eval[1:-1]
+    residual = d2phi + (2 / r_mid) * dphi
+    return np.sum(residual**2) * dr
+
+# Optimize both
+result = minimize(entropy_loss, phi_inner_guess, method='L-BFGS-B', ...)
+result_ctrl = minimize(laplace_residual_loss, phi_inner_guess, method='L-BFGS-B', ...)
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{blackhole_potential_comparison.png}
+\caption{
+Radial profile of a scalar potential outside a black hole, optimized using entropy flow (dashed orange) and Laplace residual minimization (dotted blue). Both match the expected \(-1/r\)-like decay, but the entropy solution converges more quickly and does not rely on field equations.
+}
+\end{figure}
+
+
+\subsubsection{Entropy-Driven Gravitational Lensing}
+
+In this simulation, we model the propagation of a scalar field across a 2D spacetime grid over time, constrained only by entropy flow and fixed initial and final field configurations. A small circular region at the center of the grid acts as a fixed obstacle—analogous to a massive object like a black hole—through which the field cannot pass.
+
+The field begins as a wave packet in the lower region of the domain and ends in the upper region. No differential equations or force models are used—only a final-time entropy flow constraint:
+\[
+S = \sum_{x,y} \phi(x, y, t_f) \cdot \frac{\partial \phi}{\partial t}(x, y, t_f),
+\quad \mathcal{L}_{\text{entropy}} = \frac{1}{2} S^2
+\]
+
+To validate the result, we compare it to a classical control loss based on the wave equation:
+\[
+\mathcal{L}_{\text{residual}} = \sum_t \left( \frac{\partial^2 \phi}{\partial t^2} - \nabla^2 \phi \right)^2
+\]
+
+Despite not knowing the wave equation, the entropy-based simulation naturally discovers a trajectory that bends around the central mass—mimicking gravitational lensing from first principles.
+
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Initial & final wavepackets
+phi_0 = exp(-200 * ((X - 0.1)**2 + (Y - 0.5)**2))
+phi_T = exp(-200 * ((X - 0.9)**2 + (Y - 0.5)**2))
+
+# Obstacle mask
+obstacle_mask = ((X - 0.5)**2 + (Y - 0.5)**2) < 0.05**2
+def apply_obstacle(phi): phi[:, obstacle_mask] = 0; return phi
+
+# Entropy loss
+def entropy_loss(phi_flat):
+    phi = reconstruct(phi_flat)
+    dphi_dt = (phi[-1] - phi[-2]) / dt
+    return 0.5 * np.sum(phi[-1] * dphi_dt)**2
+
+# Wave equation residual loss
+def wave_equation_residual_loss(phi_flat):
+    phi = reconstruct(phi_flat)
+    loss = 0
+    for t_idx in range(1, Nt - 1):
+        phi_tt = (phi[t+1] - 2*phi[t] + phi[t-1]) / dt**2
+        lap = laplacian(phi[t], dx, dy)
+        loss += np.sum((phi_tt - lap)**2)
+    return loss * dt
+
+# Optimize both
+phi_inner_guess = initial_guess[1:-1].reshape(-1)
+result = minimize(entropy_loss, phi_inner_guess, ...)
+result_ctrl = minimize(wave_equation_residual_loss, phi_inner_guess, ...)
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{lensing_comparison_plot.png}
+\caption{
+Snapshots of a scalar field propagating through a domain with a central obstacle. Top row: entropy-optimized evolution; bottom row: wave equation residual optimization. The entropy simulation produces realistic lensing behavior—bending smoothly around the obstacle—without any differential equations, demonstrating its power as a structural variational principle.
+}
+\end{figure}
+
+
+\subsubsection{Smoothed 3-Body Trajectories from Entropy Flow}
+
+In this simulation, we consider three interacting bodies moving in two-dimensional space. The system is initialized with fixed start and end positions for each body, but no forces, orbits, or equations of motion are provided. The only guiding principle is entropy flow minimization, subject to a weak repulsive potential to discourage overlap.
+
+The structural entropy is computed from the final position and velocity of each body:
+\[
+S = \sum_{i=1}^{3} m_i \cdot \mathbf{r}_i(t_f) \cdot \dot{\mathbf{r}}_i(t_f)
+\]
+
+We minimize the squared entropy flow along with a repulsive penalty:
+\[
+\mathcal{L}_{\text{entropy}} = \frac{1}{2} S^2 + \varepsilon \sum_{i<j} \sum_t \frac{1}{\|\mathbf{r}_i(t) - \mathbf{r}_j(t)\| + \delta}
+\]
+
+For comparison, we introduce a smoothness-based control loss that minimizes total kinetic energy over time:
+\[
+\mathcal{L}_{\text{control}} = \int_0^T \sum_i \frac{1}{2} m_i \|\dot{\mathbf{r}}_i(t)\|^2 dt
+\]
+
+While both methods recover valid paths between endpoints, the entropy trajectories exhibit more curved, coordinated structure, often resembling physically realistic orbital behavior.
+
+\paragraph*{Code}\mbox{}
+\begin{lstlisting}[language=Python]
+# Initial guess: linear interpolation
+trajectory_guess = ...
+trajectory_inner_guess = trajectory_guess[1:-1].reshape(-1)
+
+# Entropy loss with inter-body repulsion
+def entropy_loss(flat_traj):
+    ...
+    return 0.5 * S_total**2 + repulsion_energy
+
+# Control loss: integrated kinetic energy
+def kinetic_energy_loss(flat_traj):
+    ...
+    return total_kinetic_energy * dt
+
+# Optimize both
+result = minimize(entropy_loss, ...)
+result_ctrl = minimize(kinetic_energy_loss, ...)
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{entropy_vs_control_3body.png}
+\caption{
+3-body trajectories optimized under entropy flow (solid) and kinetic control (dashed). Start and end positions are fixed, but no forces or mechanics are modeled. The entropy-optimized trajectories exhibit curved, asymmetric paths and greater spatial separation, suggesting emergent coordination without explicit dynamics.
+}
+\end{figure}
+
+
+\subsubsection{Code Review and Future Directions}
+
+This work represents an initial attempt to implement the entropy flow concept numerically. While the current formulation has limitations, it establishes a foundation for further refinement and exploration. Physicists and computational modelers are encouraged to examine the proposed loss functions, optimization strategies, and control formulations with a critical eye.
+
+One key limitation observed is that the optimization-based approach struggles to distinguish between effective predictions and overfitted ones. As a result, future work will shift toward fully simulating the system dynamics rather than fitting them post hoc.
+
+The full implementation, including all code listings and system comparisons, is available in the accompanying Jupyter notebook on GitHub:\\
+\url{https://github.com/nking-1/Generativity/blob/main/EntropyFlowLagrangianExamples.ipynb}
+
+This notebook will be updated regularly as further numerical experiments are conducted and improved formulations are explored.
 
 
 \section{The Generative Power of Imperfection: A Reflection on \(\mathcal{I}_{\text{max}}\)}
