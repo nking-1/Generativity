@@ -4,8 +4,7 @@ This repository hosts experimental notebooks and systems built on the theory of 
 ## Repo Overview
 Files you might be interested in:
 - `generative_set.v`: Coq proof of generative set theory.
-- `EntropyFlowLagrangianExamples.ipynb`: Runnable examples of entropy flow optimization fitting laws of motion.
-- `ML_EntropyResolutionLoss.md`: Shows how to use entropy resolution loss in ML training.
+- `Plots.ipynb`: Jupyter notebook with plots for the paper, plus other speculative ideas.
 - `optimization_prompt.md`: A metaprompt that teaches the generativity framework to a language model to enhance its reasoning abilities.
 - `recursive_reasoning.ipynb`: Demonstrates LLM recursive reasoning using the information flow principle, balancing complexity and adaptation.
 - `proofs_with_claude.md`: Demonstrates a metaprompt for Claude that has shown success in solving IMO problems.
