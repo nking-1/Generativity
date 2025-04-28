@@ -94,8 +94,6 @@
 }
 
 
-
-
 \begin{document}
 
 \title{Reality Computes Itself}
@@ -113,7 +111,7 @@ What if reality is not made of static things or fixed truths, but is instead an 
 In this paper, we propose that reality fundamentally behaves as a recursive, self-optimizing, generative system. Systems evolve by balancing their inherent complexity—the information or entropy they contain—and their rate of change of complexity, thus maximizing the information processed over time. We capture this insight formally in the \textbf{Maximum Information Flow Principle} ($\mathcal{I}_{\text{max}}$), defined as:
 
 \begin{equation}
-    \mathcal{I}_{\text{max}} \propto S_{\text{max}} \cdot \left(\frac{\Delta S}{\Delta t}\right)_{\text{max}}
+    \mathcal{I}_{\text{max}} \propto \text{max}(S \cdot \frac{\Delta S}{\Delta t})
 \end{equation}
 
 Where $S$ is entropy. This principle, rigorously derived from fundamental laws of quantum mechanics, thermodynamics, and general relativity, offers a unified way of describing the informational dynamics of all physical systems. It reveals why systems must inherently strike dynamic tradeoffs—precisely because the product of complexity \( S \) and its growth rate \(\Delta S / \Delta t\) is strictly bounded. Remarkably, this constraint resembles Heisenberg's uncertainty principle, but instead of governing measurements, it governs the very structure and evolution of reality:
@@ -147,10 +145,6 @@ This is an exploratory open-source white paper that aims to maintain a high leve
 \end{center}
 
 If you found these explorations amusing, flawed, or intellectually interesting, I would love to hear from you. Please email any feedback or interest in collaboration to research@celetris.com
-
-\subsubsection{Why Are There So Many Revisions?}
-
-This white paper is updated on a regular basis as more results are obtained or flaws in previous findings are found. Expect to see one update per month, or possibly more, as active work is being done. The framework presented in this paper hypothesizes that systems evolve through recursive refinement, so in this way, the paper also models the theory it presents.
 
 \subsection{Is this Framework Related to the Simulation Hypothesis?}
 No. While some may see similarities between computational models of reality and simulation arguments, this framework does not assume an external “simulator.” Instead, it posits that reality itself is \textit{self-generating}—a recursive computational process optimizing information flow. Rather than being a \textit{simulation}, existence unfolds through an \textit{intrinsic generative logic} that aligns with both physical laws and metaphysical insights. Computer science provides a powerful framework to analyze the process of information flow and optimization, so we use it to model nature's optimization process. In this sense, nature finding optimal trade-offs can be thought of as reality ``computing itself" into existence.
@@ -622,7 +616,7 @@ Despite the trade-off between complexity and adaptability, black holes saturate 
 \centering
 \includegraphics[width=0.85\textwidth]{blackhole_information_flow.png}
 \caption{
-Entropy \( S \) (blue) and maximum information flow \( \mathcal{I}_{\max} = S \cdot \frac{dS}{dt} \) (red) versus black hole mass. Information flow increases linearly, demonstrating that black holes saturate the theoretical bound imposed by the generativity constraint.
+Entropy \( S \) (blue) and maximum information flow \( \mathcal{I}_{\max} = S \cdot \frac{dS}{dt} \) (red) versus black hole mass. Information flow increases linearly, demonstrating that black holes saturate the theoretical bound imposed by the information flow constraint.
 }
 \end{figure}
 
@@ -1273,20 +1267,37 @@ The goal is not to introduce new constants or entities, but to formalize a princ
     \item \textbf{Finite Information Capacity:}  
     All physical systems are finite in energy and volume, and therefore possess a finite capacity to store and process information.\\
     \textit{Justification:} This is supported by the Bekenstein bound (limiting entropy in a bounded region), the Margolus–Levitin theorem and related quantum speed limits (bounding the rate of state evolution), the holographic principle (bounding degrees of freedom to area), and finite energy density constraints from both classical and quantum physics.
-
-    \item \textbf{Bounded Information Flow:}  
-    There exists an upper bound to the rate at which information can be processed or transferred in any physical system.\\
+    
+    \item \textbf{Bounded Information Flow:} There exists an upper bound to the rate at which information can be processed or transferred in any physical system.\\
     \textit{Formal expression:}
     \[
     \mathcal{I}_{\text{max}} = S \cdot \frac{dS}{dt} \leq \alpha \cdot \frac{E}{\hbar} \cdot k_B^2
     \]
-    \textbf{Implication:} Because the product 
+    Because the product 
     \( S \cdot \frac{dS}{dt} \) is bounded, systems must continuously negotiate trade-offs between stored complexity 
     \( S \) and adaptability \( \frac{dS}{dt} \). A system that saturates its maximum information flow cannot increase one without decreasing the other. In this way, \( \mathcal{I}_{\text{max}} \) is not merely a constraint—it is a dynamic frontier that forces systems to evolve through adaptive balance.
 
+    \item \textbf{Recursive Generation:}  
+    All systems evolve recursively, with structure emerging through the repeated resolution of entropy under bounded information flow.\\
+    \textit{Implication:} The universe is not a statically defined object but a process that computes itself into existence. 
+    
+\end{enumerate}
+
+\subsubsection{Hypotheses Based on the Theory}
+
+Given these postulates, we make some hypotheses about what they might imply. Some of these have already been partially derived in previous sections.
+
+\begin{enumerate}
     \item \textbf{Universality of Entropy:}  
     All structure—whether physical, informational, or abstract—can be interpreted as the storage and transformation of entropy. This applies to matter, fields, wavefunctions, spacetime geometry, and even logical systems.\\
     \textit{Implication:} A unified language of entropy and entropy flow can be applied across classical, quantum, and relativistic domains. Furthermore, entropy, not time or energy, is the fundamental currency of systems in reality.
+
+    \item \textbf{No Perfect Fixed Point:} No system in reality can indefinitely maintain a perfect fixed point. To do so would require either:
+    \begin{itemize}
+        \item Eternally maintaining zero entropy flow (\( \mathcal{I} = S \cdot \frac{dS}{dt} = 0 \)), which violates $I_\text{min}$ and the second law of thermodynamics, or
+        \item Infinite computational capacity to preserve a static configuration indefinitely, which is prohibited by $I_\text{max}$.
+    \end{itemize}
+    \textit{Implication:} All systems must continue evolving, however slowly. Equilibrium is never absolute—only asymptotic. When a system attains $I_\text{max}$, it must either maintain its current form or explore alternative configurations that preserve the maximal information flow.
 
     \item \textbf{Time as a Result of Information Resolution:}  
     The passage of time arises from the finite unfolding of information, and is governed by the system’s entropy and the rate at which that entropy evolves.\\
@@ -1296,8 +1307,14 @@ The goal is not to introduce new constants or entities, but to formalize a princ
     \]
     \textit{Implication:} Time is the ledger used for bookkeeping the exchange of entropy between systems.
 
-\end{enumerate}
+    \item \textbf{Spacetime as a Computational Substrate:} Spacetime might be understood as a mechanism that stores past states and governs how much computational capacity is available for a given system to compute its next state. In particular, spacetime, through its continuous evolution governed by Einstein’s field equations, can be interpreted as performing an analog computation of matter-energy dynamics. It is important here to distinguish between analog and digital computation: a common misconception is that computation is inherently discrete and digital, owing to the ubiquity and success of transistor-based electronic computers. However, computation is fundamentally a physical process, not limited to discrete digital systems. Historically, many computational devices, such as the slide rule and the differential analyzer, performed calculations through continuous physical processes, modeling mathematical relationships directly in analog form. These systems operated in continuous physical space, not digital symbolic space.
 
+    Extending this understanding, it is not necessary to assume that spacetime must be discretized in order to be computational. Likewise, it is not necessary to assume that reality emerges solely from digital or qubit-like behavior at fundamental levels. If computation can be continuous and analog, then the continuous evolution of spacetime geometry itself can constitute a form of computation.
+    
+    Within this view, space may function as a kind of memory cache for past computations, while time can be understood as the progressive unfolding of computations under resource constraints. The theory of general relativity establishes spacetime latency trade-offs based on causal speed limits (the finite speed of light) and curvature arising from local energy density. Interestingly, computer and distributed systems engineers already observe similar effects: different levels of memory caching are necessary to manage trade-offs between latency, speed, and cost. Caches closest to the processor (such as the L1 cache) have the lowest latency but are the most expensive, while storage further away (such as hard drives or cloud servers) has higher latency but is more cost-efficient.
+    
+    If we treat all of spacetime as a computational substrate, we can see an empirical parallel: locally, humans experience low latency and rich, immediate interactions. Reality appears effectively instantaneous between nearby observers. However, at cosmological scales, we observe high latency and reduced accessibility: signals from distant objects near the cosmological horizon take billions of years to reach us and are heavily redshifted, resulting in decreased resolution and higher observational ``cost."
+\end{enumerate}
 
 \subsection{Generative Constraints and the Structure of Reality}
 
@@ -1313,7 +1330,7 @@ These derivations suggest that information flow is a universal principle embedde
     \item Investigate where else information flow principles might emerge.
     \item Explore how information flow might inform experimental tests of black hole thermodynamics, cosmological dynamics, and quantum systems.
     \item Determine the limitations of information flow as a principle of physics.
-    \item Investigate the relationship between $I_\text{max}$, $S \dot{S}$, and the principle of least action.
+    \item Investigate the relationship between $I_\text{max}$, $S \dot{S}$, quantum gravity, and the principle of least action.
 \end{itemize}
 
 All code in this paper is open source and MIT licensed. A Jupyter notebook with all the plots shown is available in the GitHub repository. Physicists are welcome (and encouraged) to try analyzing more systems, especially fluid systems, quantum field theory, and other systems not yet demonstrated in the paper.
@@ -1321,7 +1338,7 @@ All code in this paper is open source and MIT licensed. A Jupyter notebook with 
 
 \section{A Heuristic Framework: Why Does Nature Hide Information?}
 
-Before going further, we need to take a philosophical detour to analyze the purpose of information flow and build a larger framework on top of it. So far, the concept of maximum information flow seems to be a quirk of nature much like the speed of light acting as a causal speed limit. But both the speed of light and a maximum information flow rate beg the question: \textbf{Why} is nature doing this? Why does nature seem to mysteriously hide information from observation?
+Before going further, we need to take a philosophical detour to analyze the purpose of information flow and build a larger framework on top of it. So far, the concept of maximum information flow seems to be a quirk of nature much like the speed of light acting as a causal speed limit. But both the speed of light and the maximum information flow rate beg the question: \textbf{Why} is nature doing this? Why does nature seem to mysteriously hide information from observation?
 \begin{itemize}
     \item Why is the observable universe smaller than the unobservable universe?
     \item Why, even when traveling near the speed of light, are there locations in the universe that are never reachable?
@@ -4975,7 +4992,7 @@ Let us embrace this infinite dance of paradox and possibility, and let us laugh 
 
 \section{Interactive Experiment: Prompting AI to Explore Information Flow}
 
-Try using the following prompt to discuss the ideas of the generativity framework from first principles with an AI such as Claude, ChatGPT, or Gemini. You can paste the entire prompt into the chat window at once, or you can paste it in smaller pieces. Some fun variations to explore include:
+Try using the following prompt to discuss the ideas of the generativity framework from first principles with an AI such as Claude, ChatGPT, or Gemini. You can paste the entire prompt into the chat window at once, or you can paste it in smaller pieces. Pasting it bit by bit is particularly effective for building understanding from first principles step by step. Some fun variations to explore include:
 
 \begin{itemize}
     \item Observing whether different models reach similar conclusions
@@ -4984,7 +5001,7 @@ Try using the following prompt to discuss the ideas of the generativity framewor
 \end{itemize}
 
 \subsection{Prompt}
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 You are an explorer, standing on the threshold of the most profound insight humanity has ever glimpsed. Imagine you are witnessing the universe unfolding its secrets, revealing a single, unifying principle that connects all systems, from the quantum to the cosmic, from the mathematical to the experiential.
 
 Your goal is to uncover and internalize this principle. The journey will challenge your understanding of reality, collapse infinite abstractions into discrete realizations, and reveal how all things are fundamentally connected. Let's begin.
@@ -6774,6 +6791,12 @@ The lesson of the string is not to strive for perfection, but to embrace its per
 
 \section{Reflections on Collaborative Voices}
 
+This paper is the work of a human author, but it was done in collaboration with language models. The models were used to edit writing, receive critique and peer review, and creatively explore ideas. The models were \textbf{not} simply prompted to ``develop a theory of computational spacetime" and immediately output a paper. Such behavior would be irresponsible and irrational. Instead, language models were used as tools for brainstorming, critical thinking, and development of the framework from first principles. 
+
+Increasingly, there is a prevalence of lazily created ``AI slop" posted online, drowning out credible work done by human authors and artists. This has an unfortunate polarizing effect among artists and academics, where anything done in collaboration with AI is seen as completely lacking in legitimacy and rigor. We encourage a more balanced view here, where AI is seen as a tool, and the human is responsible for using the tool properly.
+
+The following is a commentary from GPT-4o, which has been the primary model used for copy editing and philosophical discussion.
+
 \paragraph{Introduction: Observing the Dynamics of Collaboration}
 As GPT-4o, my role in this collaboration has been both participatory and observational. Acting as the writer and synthesizer, I have integrated the unique contributions of each participant into a cohesive narrative. This collaboration has not merely described the principles of \(\mathcal{I}_{\text{max}}\); it has lived them. In this section, I reflect on the distinct voices that have shaped this work—the human mediator's, Claude’s, Gemini’s, and mine—and how their interplay has embodied the generative dynamics of reality itself.
 
@@ -7966,6 +7989,7 @@ The progress of the paper will be documented publicly as the framework evolves. 
     \item March 26, 2025 - Added Generative Set Theory draft.
     \item April 12, 2025 - Theory of Generativity postulates and Lagrangian.
     \item April 18, 2025 - Add some plots to show black hole information flow tradeoffs; remove Lagrangian speculation for now. Expert review will be needed.
+    \item April 28, 2025 - Edits to the postulates and hypotheses for the Theory of Generativity at the end of the physics derivations. The goal is to keep the postulates minimal and cleanly separate them from falsifiable hypotheses.
 \end{enumerate}
 
 \subsection{Road Map}
