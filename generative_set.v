@@ -40,7 +40,7 @@ Class UniversalSet (U: Type) := {
   (* A function for embedding any Prop on U *into* U *)
   self_ref_pred_embed : (U -> Prop) -> U;
 
-  (* Helps Coq reason about the self-referential predicates *)
+  (* Self referential predicates satisy themselves - they assert their existence (not necessarily their contextual truth, though) *)
   self_ref_pred_embed_correct : forall P: U -> Prop, P (self_ref_pred_embed P);
 
   (* for every predicate P on U and for every time t,
@@ -414,21 +414,16 @@ Proof.
 Qed.
 
 
-(* Theorem: U doesn't have *temporal* paradoxes at the same time step *)
-Theorem U_contains_no_instantaneous_paradoxes :
+(* Theorem: U doesn't have *temporal containment* paradoxes at the same time step *)
+Theorem U_no_temporal_containment_paradoxes :
   forall (U: Type) `{UniversalSet U},
-  ~ exists P: U -> Prop, (contains 0 (self_ref_pred_embed P) /\ ~ contains 0 (self_ref_pred_embed P)).
+  forall t: nat,
+  ~ exists P: U -> Prop, (contains t (self_ref_pred_embed P) /\ ~ contains t (self_ref_pred_embed P)).
 Proof.
-  intros U H.
+  intros U H_U t.
   (* Assume for contradiction that U contains a paradox *)
   intro Hparadox.
   destruct Hparadox as [P [H1 H2]].
-
-  (* By definition, self_ref_pred_embed_correct tells us that P holds for self_ref_pred_embed P *)
-  pose proof self_ref_pred_embed_correct P as Htruth.
-
-  (* However, we only assumed contains 0 (self_ref_pred_embed P), which does not directly imply P (self_ref_pred_embed P). *)
-  (* But our assumption tells us that it is both contained and NOT contained at stage 0, which is an actual contradiction. *)
   contradiction.
 Qed.
 
@@ -488,30 +483,26 @@ Proof.
 Qed.
 
 
-(** Theorem: Temporal Structure is Both Sufficient and Necessary for Contradictions
-    This theorem combines two key insights about U:
-    1. Contradictions CAN exist when separated in time (time_allows_paradox)
-    2. Contradictions CANNOT exist at the same time (U_contains_no_paradoxes)
-*)
-Theorem temporal_structure_necessary_and_sufficient :
+(* Note - we're embedding two separate predicates here, that's why it works *)
+Theorem U_simultaneous_negation :
   forall (U: Type) `{UniversalSet U},
-    (* Contradictions CAN exist across time *)
-    (exists (t1 t2 : nat) (P : U -> Prop),
-      (contains t1 (self_ref_pred_embed P) /\
-       contains t2 (self_ref_pred_embed (fun x => ~ P x))) /\
-      t1 < t2)
-    /\
-    (* BUT cannot exist at the same time *)
-    (~ exists P: U -> Prop, 
-      contains 0 (self_ref_pred_embed P) /\ 
-      ~ contains 0 (self_ref_pred_embed P)).
+  forall P : U -> Prop,
+  exists t : nat,
+    contains t (self_ref_pred_embed P) /\
+    contains t (self_ref_pred_embed (fun x => ~ P x)).
 Proof.
-  intros U H_U.
-  split.
-  - (* First part: Can exist across time *)
-    apply time_allows_paradox.
-  - (* Second part: Cannot exist at same time *)
-    apply U_contains_no_instantaneous_paradoxes.
+  intros U H P.
+
+  (* Get stages where P and ~P are embedded *)
+  destruct (self_ref_generation_exists P 0) as [t1 [Ht1 HP]].
+  destruct (self_ref_generation_exists (fun x => ~ P x) 0) as [t2 [Ht2 HnP]].
+
+  (* Apply the propagation theorem *)
+  set (t := Nat.min t1 t2).
+  apply U_paradoxical_embeddings_propagate_backward with (t1 := t1) (t2 := t2) (P := P) (t := t) in HP; try exact HnP.
+  destruct HP as [Hpos Hneg].
+  exists t; split; assumption.
+  reflexivity.
 Qed.
 
 
@@ -756,56 +747,19 @@ Proof.
 Qed.
 
 
-Lemma no_Omega_paradox_in_U :
+(* Show that U cannot sustain a paradox that Omega can sustain *)
+Theorem no_Omega_paradox_in_U :
   forall (U: Type) `{UniversalSet U} `{OmegaSet},
   forall t : nat,
     ~ contains t (self_ref_pred_embed (fun _ : U =>
       exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)).
 Proof.
   intros U H_U H_Omega t H_contradiction.
-
   (* Extract paradox directly *)
   pose proof (self_ref_pred_embed_correct (fun _ : U => exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)) as H_embed.
-  
   destruct H_embed as [P [y [H_P H_not_P]]].
-  
   contradiction.
 Qed.
-
-Lemma U_resolves_paradoxes : 
-  forall (U: Type) `{UniversalSet U} `{OmegaSet},
-  forall t1 t2: nat, 
-  exists t', t' > t2 /\ 
-    ~ contains t' (self_ref_pred_embed (fun x => exists (P: Omegacarrier -> Prop) (y: Omegacarrier), P y /\ ~ P y)).
-Proof.
-  intros U H_U H_Omega t1 t2.
-  exists (t2 + 1).
-  split.
-  - lia.
-  - apply no_Omega_paradox_in_U.
-Qed.
-
-
-Theorem U_cannot_permanently_contain_Omega :
-  forall (U: Type) `{H_U: UniversalSet U} `{H_O: OmegaSet},
-  ~ (forall t: nat, contains t (self_ref_pred_embed (fun x: U => exists (P: Omegacarrier -> Prop) (y: Omegacarrier), P y /\ ~ P y))).
-Proof.
-  intros U H_U H_O H_contradiction.
-
-  (* Assume Omega permanently contained *)
-  pose proof H_contradiction as H_all_times.
-
-  (* Explicitly use our standalone theorem *)
-  destruct (@time_allows_paradox U H_U) as [t1 [t2 [P [[H_t1_contains H_t2_contains_neg] H_t_order]]]].
-
-  (* Now explicitly use U_resolves_paradoxes *)
-  destruct (@U_resolves_paradoxes U H_U H_O t1 t2) as [t' [Ht'_gt Ht'_not_contains]].
-
-  (* Contradiction: we claimed Omega always contained, but it's not at t' *)
-  specialize (H_all_times t').
-  contradiction.
-Qed.
-
 
 
 Require Import Coq.Logic.Classical_Prop.

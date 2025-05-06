@@ -173,9 +173,9 @@ The generativity framework conceptualizes reality as fundamentally being a dynam
 
 The universal principle governing reality is the \textbf{optimization} of these two properties, captured by:
 
-\[
-\mathcal{I}_{\text{max}} \propto S_{\text{max}} \cdot \left(\frac{\Delta S}{\Delta t}\right)_{\text{max}}
-\]
+\begin{equation}
+    \mathcal{I}_{\text{max}} \propto \text{max}(S \cdot \frac{\Delta S}{\Delta t})
+\end{equation}
 
 This balance implies fundamental consequences:
 
@@ -2586,32 +2586,34 @@ Contradiction may exist in the system, but it cannot simultaneously actualize wi
 It is impossible for a predicate to be both contained and not contained in \( U \) at the same time step.
 
 \[
-\neg \exists P: U \to \text{Prop}, \quad
-\left( \text{contains}(0, \text{embed}(P)) \wedge \neg \text{contains}(0, \text{embed}(P)) \right)
+\forall t \in \mathbb{N},\; \neg \exists P: U \to \text{Prop}, \quad
+\left( \text{contains}(t, \text{embed}(P)) \wedge \neg \text{contains}(t, \text{embed}(P)) \right)
 \]
 
 \paragraph{Proof:}
 
 Assume for contradiction that there exists a predicate \( P \) such that both \\ 
-\( \text{contains}(0, \text{embed}(P)) \) and \( \neg \text{contains}(0, \text{embed}(P)) \) hold simultaneously. This directly violates the law of non-contradiction: no statement can be both true and false at the same time. Therefore, such a predicate cannot exist, and the system remains logically coherent at each individual time step.
+\( \text{contains}(t, \text{embed}(P)) \) and \( \neg \text{contains}(t, \text{embed}(P)) \) hold simultaneously. This directly violates the law of non-contradiction: no statement can be both true and false at the same time. Therefore, such a predicate cannot exist, and the system remains logically coherent at each individual time step.
 
 
 \subsubsection{Coq Proof}
 \begin{lstlisting}[language=Coq]
-Theorem U_contains_no_instantaneous_paradoxes :
+Theorem U_no_temporal_containment_paradoxes :
   forall (U: Type) `{UniversalSet U},
-  ~ exists P: U -> Prop,
-      contains 0 (self_ref_pred_embed P) /\
-      ~ contains 0 (self_ref_pred_embed P).
+  forall t: nat,
+  ~ exists P: U -> Prop, (contains t (self_ref_pred_embed P) /\ ~ contains t (self_ref_pred_embed P)).
 Proof.
-  intros U H [P [HP HnotP]].
+  intros U H_U t.
+  (* Assume for contradiction that U contains a paradox *)
+  intro Hparadox.
+  destruct Hparadox as [P [H1 H2]].
   contradiction.
 Qed.
 \end{lstlisting}
 
 
 \paragraph{Theorem 2: No Predicate and Its Negation Can Both Hold of the Same Object}
-No predicate and its logical negation can both be true of the same embedded object at the same time.
+No predicate and its logical negation can both be true of the \textbf{same} embedded object.
 
 \[
 \forall P : U \to \text{Prop}, \quad
@@ -2719,7 +2721,7 @@ This result captures a subtle feature of \( U \):
 \begin{itemize}
     \item Contradictions cannot be realized \textit{simultaneously} in time.
     \item Yet once both sides of a contradiction have appeared at any point in the system, their presence is retroactively implied at all earlier stages.
-    \item This is not a logical explosion: \( \text{embed}(P) \) and \( \text{embed}(\neg P) \) are distinct objects, and no single object is required to satisfy both.
+    \item This is not a logical explosion: \( \text{embed}(P) \) and \( \text{embed}(\neg P) \) are distinct objects, and no single object is required to satisfy both. In essence, what we have are two contradictory statements that are contradicting each other, yet not contradicting themselves.
     \item Paradox becomes eternal once realized, but never destructive.
 \end{itemize}
 
@@ -3038,6 +3040,50 @@ We might describe this as \textbf{semantic collapse}: within a maximally express
 Philosophically, this aligns with the intuition that a system which truly contains everything must also contain its own collapse. If \( \Omega \) is to hold all meanings, it must also hold the failure of meaning—the point where the very act of distinction dissolves. This is absurdity not as chaos, but as fullness. In \( \Omega \), every truth is haunted by its negation, and every structure is shadowed by its undoing. This is the cost of totality—and the essence of \( \Omega \).
 
 
+\subsection{\( U \) Cannot Contain an Omega Paradox}
+
+While \( \Omega \) is defined as a timeless structure that allows paradoxes to exist simultaneously, \( U \) structures contradictions over time. This theorem proves that \( U \) cannot contain sustained simultaneous paradoxes, demonstrating that \( U \) has limits that are exceeded by \( \Omega \), even though \( U \) is paraconsistent.
+
+\paragraph{Theorem: No \( \Omega \)-Paradoxes in \( U \)}
+For any time \( t \), \( U \) cannot contain an embedding of an \( \Omega \)-level paradox (a predicate \( P \) where \( P(y) \) and \( \neg P(y) \) hold simultaneously).
+
+\begin{equation}
+    \forall t \in \mathbb{N}, \quad
+    \neg \text{contains}(t, \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
+\end{equation}
+
+\paragraph{Proof:}
+\begin{enumerate}
+    \item Suppose \( U \) contained an \( \Omega \)-paradox at time \( t \), meaning:
+    \[
+    \text{contains}(t, \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
+    \]
+    \item By the correctness of self-referential embedding:
+    \[
+    \exists P, \exists y, P(y) \wedge \neg P(y).
+    \]
+    \item This is a direct contradiction, so our assumption must be false.
+\end{enumerate}
+
+\subsubsection*{Coq Proof}
+\begin{lstlisting}[language=Coq]
+Theorem no_Omega_paradox_in_U :
+  forall (U: Type) `{UniversalSet U} `{OmegaSet},
+  forall t : nat,
+    ~ contains t (self_ref_pred_embed (fun _ : U =>
+      exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)).
+Proof.
+  intros U H_U H_Omega t H_contradiction.
+  (* Extract paradox directly *)
+  pose proof (self_ref_pred_embed_correct (fun _ : U => exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)) as H_embed.
+  destruct H_embed as [P [y [H_P H_not_P]]].
+  contradiction.
+Qed.
+\end{lstlisting}
+
+\paragraph{Implications and Interpretation:} We have shown $U$ to be tolerant of paradoxes, but this latest result shows us a hard boundary. $U$ can contain multiple predicates that contradict each other simultaneously, but cannot contain a single predicate that is directly paradoxical. On the other hand, $\Omega$ is capable of satisfying \textbf{any} predicate, even paradoxical ones. Even with infinitely many contradictory predicates stored throughout time, there are predicates that $\Omega$ contains which $U$ cannot contain.
+
+
 \subsection{Self-Reference Requires Incompleteness or Contradiction}
 
 A fundamental principle in logic and formal systems is that self-reference inherently leads to either incompleteness or contradiction. This theorem establishes that in \( U \), any framework that allows for self-referential propositions must either leave some statements unprovable (incompleteness) or eventually produce a contradiction.
@@ -3338,102 +3384,6 @@ This theorem has several profound implications:
 \end{itemize}
 
 This theorem reinforces that \( \Omega \) is not simply an extension of \( U \), but an entirely different kind of mathematical universe—one that necessarily contains elements beyond the reach of any recursive generative process.
-
-
-% \subsection{\( \Omega \) Contains a Set Larger than Itself}
-
-% While previous theorems have shown that \( \Omega \) is strictly larger than \( U \), this theorem demonstrates something even more paradoxical: \( \Omega \) must contain a set that is \textbf{strictly larger than itself}. That is, there exists a set \( X \) within \( \Omega \) such that no injective mapping can embed \( X \) into \( \Omega \), proving that \( \Omega \) contains an entity that surpasses its own cardinality.
-
-% \paragraph{Theorem: \( \Omega \) Must Contain a Set Strictly Larger Than Itself}
-% For every Omega Set \( \Omega \), there exists a type \( X \) and an embedding function \( \text{embed}_X: X \to \Omega_{\text{carrier}} \) such that:
-
-% \begin{equation}
-%     \text{strictly\_larger}(X, \Omega_{\text{carrier}}).
-% \end{equation}
-
-% This means that \( \Omega \) necessarily contains a set that cannot be injectively mapped into itself, reinforcing that absolute infinity is necessarily paradoxical.
-
-% \paragraph{Definition: Strictly Larger}
-% Let \( X \) and \( Y \) be types. We say that \( X \) is \textbf{strictly larger} than \( Y \), written as \( \text{strictly\_larger}(X, Y) \), if there exists \textbf{no injective function} \( f: X \to Y \). That is:
-% \[
-% \text{strictly\_larger}(X, Y) \quad \Longleftrightarrow \quad \nexists f: X \to Y, \; \text{injective}(f)
-% \]
-% This expresses a strong asymmetry: \( X \) cannot be “fit into” \( Y \) without loss.
-
-% \paragraph{Proof:}
-% The proof leverages the Omega-Completeness principle to construct a paradoxical element from within \( \Omega \) itself.
-
-% \begin{enumerate}
-%     \item Define the predicate:
-%     \[
-%     P(x) := \exists (X : \text{Type}), \exists (\text{embed}_X : X \to \Omega_{\text{carrier}}), \;
-%     \text{strictly\_larger}(X, \Omega_{\text{carrier}}).
-%     \]
-%     This predicate expresses the claim that \( \Omega \) contains an embedded set \( X \) that is strictly larger than \( \Omega \) itself.
-
-%     \item Since \( P \) is a well-formed predicate on \( \Omega \), the Omega-completeness axiom guarantees the existence of some \( x \in \Omega_{\text{carrier}} \) such that:
-%     \[
-%     P(x) \quad \text{holds}.
-%     \]
-
-%     \item Expanding the definition, this means there exists:
-%     \[
-%     X : \text{Type}, \quad \text{embed}_X : X \to \Omega_{\text{carrier}}, \quad \text{and} \quad \text{strictly\_larger}(X, \Omega_{\text{carrier}}).
-%     \]
-
-%     \item By the definition of \texttt{strictly\_larger}, no injective function exists from \( X \) into \( \Omega_{\text{carrier}} \), even though \( X \) is embedded into \( \Omega \). Thus, \( \Omega \) contains an entity that provably \textbf{cannot be injectively mapped into itself}.
-% \end{enumerate}
-
-% \paragraph{Self-Referential Nature:}
-% The proof uses \( \Omega \)'s completeness against itself:
-% \begin{itemize}
-%     \item Define \( P \) as ``contains a set larger than \( \Omega \)."
-%     \item By Omega-completeness, some \( x \) must satisfy \( P \).
-%     \item Therefore, \( \Omega \) \textbf{must} contain something larger than itself.
-% \end{itemize}
-
-% The property that makes \( \Omega \) complete forces it to transcend itself.
-
-% \subsubsection{Coq Formalization:}
-% \begin{lstlisting}[language=Coq]
-% Parameter strictly_larger : Type -> Type -> Prop.
-
-% (* Intuition: X strictly larger than Y means there is no injective mapping from X into Y *)
-% Axiom strictly_larger_no_injection :
-%   forall (X Y : Type),
-%     strictly_larger X Y ->
-%       ~ exists (f : X -> Y), (forall x1 x2, f x1 = f x2 -> x1 = x2).
-
-% Theorem Omega_contains_set_larger_than_itself :
-%   forall (Omega : OmegaSet),
-%     exists (X : Type) (embed_X_in_Omega : X -> Omegacarrier),
-%       strictly_larger X Omegacarrier.
-% Proof.
-%   intros Omega.
-
-%   (* Define the paradoxical predicate explicitly *)
-%   set (P := fun (_ : Omegacarrier) =>
-%     exists (X : Type) (embed_X_in_Omegacarrier : X -> Omegacarrier),
-%       strictly_larger X Omegacarrier).
-
-%   (* Omega completeness ensures this paradoxical predicate has a witness *)
-%   destruct (omega_completeness P) as [witness H_witness].
-
-%   (* From the witness we directly obtain our paradoxical set *)
-%   exact H_witness.
-% Qed.
-% \end{lstlisting}
-
-% \paragraph{Implications and Interpretation:}
-% This theorem has several profound implications:
-
-% \begin{itemize}
-%     \item \textbf{Intrinsic Self-Contradiction of Ultimate Infinity:} Since \( \Omega \) is already larger than any set definable within \( U \), the fact that it must contain something larger than itself suggests that absolute infinity necessarily exceeds its own bounds.
-%     \item \textbf{A Limit to Containment:} Unlike traditional mathematical sets, which can be well-ordered and mapped injectively, this result shows that \( \Omega \) cannot be mapped onto itself without encountering paradox.
-%     \item \textbf{A Self-Absorbing Structure:} Since \( \Omega \) must contain a set larger than itself, it is not just a static totality—it is a self-referential, paradox-absorbing structure that necessarily expands beyond itself.
-%     \item \textbf{Beyond Cantor’s Paradise:} While Cantor showed there is no largest cardinal number, this theorem shows something stronger—even an ``ultimate" set like \( \Omega \) must contain something larger than itself. There can be no final resting place for infinity.
-%     \item \textbf{Philosophical Implications:} This result formally encodes the idea that any attempt to define ``absolute infinity" must ultimately contain an element that transcends its own structure. This suggests that mathematical totality is not just infinite—it is necessarily self-surpassing.
-% \end{itemize}
 
 
 \subsection{\( \Omega \) Contains the Paradox of Its Own Size}
@@ -3876,146 +3826,6 @@ Qed.
 \end{itemize}
 
 This theorem establishes that while \( U \) follows the rules of algorithmic computability, \( \Omega \) functions as an all-encompassing oracle that retrieves solutions without delay.
-
-
-% \subsection{\( U \) Cannot Permanently Contain \( \Omega \)}
-
-% While \( \Omega \) is defined as a timeless structure that allows paradoxes to exist simultaneously, \( U \) structures contradictions over time, ensuring that no paradox remains permanently embedded. This theorem proves that \( U \) cannot permanently contain all paradoxes from \( \Omega \), meaning that even if a paradoxical statement were embedded in \( U \) at some time \( t \), it must eventually be removed or resolved at a later time.
-
-% \paragraph{The Three Steps of the Proof}
-% This result is proven in three increasingly powerful steps:
-% \begin{enumerate}
-%     \item First, we show that \( U \) \textbf{cannot} contain \( \Omega \)-paradoxes at any single time \( t \).
-%     \item Then, we prove that \( U \) must \textbf{resolve} any paradoxes that do appear.
-%     \item Finally, we prove that \( U \) \textbf{cannot permanently contain} \( \Omega \)'s paradoxes.
-% \end{enumerate}
-% Together, these show that \( U \)'s temporal structure doesn’t just \textbf{allow} paradox resolution—it \textbf{requires} it.
-
-% \paragraph{Contrast with Previous Theorems}
-% While earlier theorems showed:
-% \begin{itemize}
-%     \item \( U \) can contain contradictions across time.
-%     \item \( U \) maintains consistency at each moment.
-%     \item \( U \) is larger than any \( \aleph_n \).
-% \end{itemize}
-% This theorem shows something deeper—\textbf{\( U \)'s temporal structure actively forces the resolution of paradoxes}. Time isn’t just handling contradictions—it’s eliminating them.
-
-% ---
-
-% \paragraph{Lemma: No \( \Omega \)-Paradoxes in \( U \) at Any Fixed Time}
-% \textbf{For any time \( t \), \( U \) cannot contain an embedding of an \( \Omega \)-level paradox (a predicate \( P \) where \( P(y) \) and \( \neg P(y) \) hold simultaneously).}
-
-% \begin{equation}
-%     \forall t \in \mathbb{N}, \quad
-%     \neg \text{contains}(t, \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
-% \end{equation}
-
-% \paragraph{Proof:}
-% \begin{enumerate}
-%     \item Suppose \( U \) contained an \( \Omega \)-paradox at time \( t \), meaning:
-%     \[
-%     \text{contains}(t, \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
-%     \]
-%     \item By the correctness of self-referential embedding:
-%     \[
-%     \exists P, \exists y, P(y) \wedge \neg P(y).
-%     \]
-%     \item This is a direct contradiction, so our assumption must be false.
-% \end{enumerate}
-
-% \paragraph{Coq Formalization:}
-% \begin{lstlisting}[language=Coq]
-% Lemma no_Omega_paradox_in_U :
-%   forall (U: Type) `{UniversalSet U} `{OmegaSet},
-%   forall t : nat,
-%     ~ contains t (self_ref_pred_embed (fun _ : U =>
-%       exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)).
-% Proof.
-%   intros U H_U H_Omega t H_contradiction.
-
-%   (* Extract paradox directly *)
-%   pose proof (self_ref_pred_embed_correct (fun _ : U => exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)) as H_embed.
-  
-%   destruct H_embed as [P [y [H_P H_not_P]]].
-  
-%   contradiction.
-% Qed.
-% \end{lstlisting}
-
-% ---
-
-% \paragraph{Lemma: \( U \) Resolves Paradoxes Over Time}
-% \textbf{If an \( \Omega \)-level paradox appears in \( U \) at some time \( t_1 \), then there exists a later time \( t' > t_2 \) at which it no longer exists.}
-
-% \begin{equation}
-%     \forall t_1, t_2 \in \mathbb{N}, \quad
-%     \exists t' > t_2, \quad \neg \text{contains}(t', \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
-% \end{equation}
-
-% \paragraph{Proof:}
-% \begin{enumerate}
-%     \item Assume a paradox appears at \( t_1 \).
-%     \item By the previous lemma, such a paradox cannot exist permanently.
-%     \item Therefore, there must exist some \( t' > t_2 \) at which it is no longer contained.
-% \end{enumerate}
-
-% \paragraph{Coq Formalization:}
-% \begin{lstlisting}[language=Coq]
-% Lemma U_resolves_paradoxes : 
-%   forall (U: Type) `{UniversalSet U} `{OmegaSet},
-%   forall t1 t2: nat, 
-%   exists t', t' > t2 /\ 
-%     ~ contains t' (self_ref_pred_embed (fun x => exists (P: Omegacarrier -> Prop) (y: Omegacarrier), P y /\ ~ P y)).
-% Proof.
-%   intros U H_U H_Omega t1 t2.
-%   exists (t2 + 1).
-%   split.
-%   - lia.
-%   - apply no_Omega_paradox_in_U.
-% Qed.
-% \end{lstlisting}
-
-
-% \paragraph{Theorem: \( U \) Cannot Permanently Contain \( \Omega \)}
-% This theorem states that \( U \) cannot permanently contain all paradoxes present in \( \Omega \). That is, if one assumes that every paradoxical statement from \( \Omega \) is contained in \( U \) at all times, this leads to a contradiction.
-
-% \begin{equation}
-%     \neg \forall t \in \mathbb{N}, \quad
-%     \text{contains}(t, \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
-% \end{equation}
-
-% \paragraph{Proof:}
-% \begin{enumerate}
-%     \item Assume for contradiction that \( U \) permanently contains all paradoxes from \( \Omega \).
-%     \item From \textbf{time\_allows\_paradox}, we know that \( U \) can contain contradictory statements over time.
-%     \item However, from \textbf{U\_resolves\_paradoxes}, we know that any such contradiction must be resolved at some later time.
-%     \item This contradicts our assumption that contradictions remain permanently embedded in \( U \).
-%     \item Therefore, \( U \) cannot permanently contain all paradoxes from \( \Omega \).
-% \end{enumerate}
-
-% \paragraph{Coq Formalization:}
-% \begin{lstlisting}[language=Coq]
-% Theorem U_cannot_permanently_contain_Omega :
-%   forall (U: Type) `{H_U: UniversalSet U} `{H_O: OmegaSet},
-%   ~ (forall t: nat, contains t (self_ref_pred_embed (fun x: U => exists (P: Omegacarrier -> Prop) (y: Omegacarrier), P y /\ ~ P y))).
-% Proof.
-%   intros U H_U H_O H_contradiction.
-%   pose proof H_contradiction as H_all_times.
-
-%   (* Explicitly use our standalone theorem *)
-%   destruct (@time_allows_paradox U H_U) as [t1 [t2 [P [[H_t1_contains H_t2_contains_neg] H_t_order]]]].
-
-%   (* Now explicitly use U_resolves_paradoxes *)
-%   destruct (@U_resolves_paradoxes U H_U H_O t1 t2) as [t' [Ht'_gt Ht'_not_contains]].
-
-%   (* Contradiction: we claimed Omega always contained, but it's not at t' *)
-%   specialize (H_all_times t').
-%   contradiction.
-% Qed.
-% \end{lstlisting}
-
-% \paragraph{Implications and Interpretation:}
-% \textbf{Necessary Resolution:} The theorem shows that temporal structure doesn’t just separate contradictions—it forces their eventual resolution. Time acts as an active mechanism for maintaining consistency, not just a passive container for paradox.
 
 
 \subsection{Conclusion: Generative Set Theory}
