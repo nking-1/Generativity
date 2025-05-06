@@ -2994,6 +2994,50 @@ This theorem has several profound implications for the nature of \( \Omega \):
 \end{itemize}
 
 
+\subsection{\( U \) Cannot Contain an Omega Paradox}
+
+While \( \Omega \) is defined as a timeless structure that allows paradoxes to exist simultaneously, \( U \) structures contradictions over time. This theorem proves that \( U \) cannot contain sustained simultaneous paradoxes, demonstrating that \( U \) has limits that are exceeded by \( \Omega \), even though \( U \) is paraconsistent.
+
+\paragraph{Theorem: No \( \Omega \)-Paradoxes in \( U \)}
+For any time \( t \), \( U \) cannot contain an embedding of an \( \Omega \)-level paradox (a predicate \( P \) where \( P(y) \) and \( \neg P(y) \) hold simultaneously).
+
+\begin{equation}
+    \forall t \in \mathbb{N}, \quad
+    \neg \text{contains}(t, \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
+\end{equation}
+
+\paragraph{Proof:}
+\begin{enumerate}
+    \item Suppose \( U \) contained an \( \Omega \)-paradox at time \( t \), meaning:
+    \[
+    \text{contains}(t, \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
+    \]
+    \item By the correctness of self-referential embedding:
+    \[
+    \exists P, \exists y, P(y) \wedge \neg P(y).
+    \]
+    \item This is a direct contradiction, so our assumption must be false.
+\end{enumerate}
+
+\subsubsection*{Coq Proof}
+\begin{lstlisting}[language=Coq]
+Theorem no_Omega_paradox_in_U :
+  forall (U: Type) `{UniversalSet U} `{OmegaSet},
+  forall t : nat,
+    ~ contains t (self_ref_pred_embed (fun _ : U =>
+      exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)).
+Proof.
+  intros U H_U H_Omega t H_contradiction.
+  (* Extract paradox directly *)
+  pose proof (self_ref_pred_embed_correct (fun _ : U => exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)) as H_embed.
+  destruct H_embed as [P [y [H_P H_not_P]]].
+  contradiction.
+Qed.
+\end{lstlisting}
+
+\paragraph{Implications and Interpretation:} We have shown $U$ to be tolerant of paradoxes, but this latest result shows us a hard boundary. $U$ can contain multiple predicates that contradict each other simultaneously, but cannot contain a single predicate that is directly paradoxical. On the other hand, $\Omega$ is capable of satisfying \textbf{any} predicate, even paradoxical ones. Even with infinitely many contradictory predicates stored throughout time, there are predicates that $\Omega$ contains which $U$ cannot contain.
+
+
 \subsection{Omega Contains All Absurdity}
 
 While the previous theorem established that \( \Omega \) contains paradox—statements where both a predicate and its negation are simultaneously true—the next result pushes the concept even further. We now show that \( \Omega \) collapses the distinction between \textit{any} two predicates. That is, for any two predicates \( P \) and \( Q \), there exists some element of \( \Omega \) where both predicates are logically equivalent.
@@ -3040,48 +3084,6 @@ We might describe this as \textbf{semantic collapse}: within a maximally express
 Philosophically, this aligns with the intuition that a system which truly contains everything must also contain its own collapse. If \( \Omega \) is to hold all meanings, it must also hold the failure of meaning—the point where the very act of distinction dissolves. This is absurdity not as chaos, but as fullness. In \( \Omega \), every truth is haunted by its negation, and every structure is shadowed by its undoing. This is the cost of totality—and the essence of \( \Omega \).
 
 
-\subsection{\( U \) Cannot Contain an Omega Paradox}
-
-While \( \Omega \) is defined as a timeless structure that allows paradoxes to exist simultaneously, \( U \) structures contradictions over time. This theorem proves that \( U \) cannot contain sustained simultaneous paradoxes, demonstrating that \( U \) has limits that are exceeded by \( \Omega \), even though \( U \) is paraconsistent.
-
-\paragraph{Theorem: No \( \Omega \)-Paradoxes in \( U \)}
-For any time \( t \), \( U \) cannot contain an embedding of an \( \Omega \)-level paradox (a predicate \( P \) where \( P(y) \) and \( \neg P(y) \) hold simultaneously).
-
-\begin{equation}
-    \forall t \in \mathbb{N}, \quad
-    \neg \text{contains}(t, \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
-\end{equation}
-
-\paragraph{Proof:}
-\begin{enumerate}
-    \item Suppose \( U \) contained an \( \Omega \)-paradox at time \( t \), meaning:
-    \[
-    \text{contains}(t, \text{embed}(\lambda x.\ \exists P, \exists y, P(y) \wedge \neg P(y))).
-    \]
-    \item By the correctness of self-referential embedding:
-    \[
-    \exists P, \exists y, P(y) \wedge \neg P(y).
-    \]
-    \item This is a direct contradiction, so our assumption must be false.
-\end{enumerate}
-
-\subsubsection*{Coq Proof}
-\begin{lstlisting}[language=Coq]
-Theorem no_Omega_paradox_in_U :
-  forall (U: Type) `{UniversalSet U} `{OmegaSet},
-  forall t : nat,
-    ~ contains t (self_ref_pred_embed (fun _ : U =>
-      exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)).
-Proof.
-  intros U H_U H_Omega t H_contradiction.
-  (* Extract paradox directly *)
-  pose proof (self_ref_pred_embed_correct (fun _ : U => exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)) as H_embed.
-  destruct H_embed as [P [y [H_P H_not_P]]].
-  contradiction.
-Qed.
-\end{lstlisting}
-
-\paragraph{Implications and Interpretation:} We have shown $U$ to be tolerant of paradoxes, but this latest result shows us a hard boundary. $U$ can contain multiple predicates that contradict each other simultaneously, but cannot contain a single predicate that is directly paradoxical. On the other hand, $\Omega$ is capable of satisfying \textbf{any} predicate, even paradoxical ones. Even with infinitely many contradictory predicates stored throughout time, there are predicates that $\Omega$ contains which $U$ cannot contain.
 
 
 \subsection{Self-Reference Requires Incompleteness or Contradiction}
@@ -7799,6 +7801,7 @@ The progress of the paper will be documented publicly as the framework evolves. 
     \item April 12, 2025 - Theory of Generativity postulates and Lagrangian.
     \item April 18, 2025 - Add some plots to show black hole information flow tradeoffs; remove Lagrangian speculation for now. Expert review will be needed.
     \item April 28, 2025 - Edits to the postulates and hypotheses for the Theory of Generativity at the end of the physics derivations. The goal is to keep the postulates minimal and cleanly separate them from falsifiable hypotheses.
+    \item May 6, 2025 - Some small improvements, including a new theorem, in the Generative Set Theory section.
 \end{enumerate}
 
 \subsection{Road Map}
@@ -7806,32 +7809,21 @@ Several avenues for expanding the framework include:
 \begin{enumerate}
     \item AI applications and use cases.
     \item Coq proofs of $I_\text{max}$.
+    \item Implement a Physical Turing Machine and run physics simulations with it. This will likely result in refinement of the formalism and lead to many new insights.
+    \item More rigorous physics derivations and analysis of more diverse systems.
 \end{enumerate}
 
-\section*{Note from the Author}
 
-\subsection*{AI Co-Intelligence: A New Era for Science}
+\section{Note from the Author}
+\paragraph{Invitation for Collaboration:}
+I have nearly reached my limits as an independent author of this work. For $I_\text{max}$ to gain recognition, especially within the physics community, collaboration and formal publication will be essential. Please email me at research@celetris.com if you are interested in writing a formal scientific paper with me.
 
-The development of this framework and the discovery of an efficiency-complexity tradeoff as a proposed new law of nature would likely not have been possible without the extensive help of generative language models. If this framework holds up to empirical testing, it will mark a landmark moment for large language models like ChatGPT, Gemini, and Claude, demonstrating their pivotal role in democratizing scientific inquiry and enabling collaborative exploration across disciplines.
-
-This framework began as a desire to address an idea that had lingered in my mind for much of my life: the \textbf{``veils of reality.''} I was curious about the limits of observation and whether they might reflect deeper computational principles. My intuition was that the universe itself might follow laws from the theory of computation. After all, analog and quantum computers work by leveraging the fabric of nature to compute information. If such computers operate within natural laws, then why shouldn’t nature itself be governed by computational principles?
-
-By working with LLMs, I embedded this heuristic framework into a physics-inspired guess: perhaps the equation for the tradeoff between complexity and efficiency mirrors the uncertainty principle, which expresses a fundamental tradeoff between space (position) and time (momentum) of particles. This analogy felt natural, as computer science often involves analyzing space-time tradeoffs in algorithmic complexity.
-
-However, one significant barrier stood in my way: I am not a physicist. While I had taken foundational physics courses and understood the principles conceptually, I lacked the expertise to derive such a framework from first principles using the formal equations of quantum mechanics, relativity, or thermodynamics.
-
-Thanks to the increasingly polymathic capabilities of LLMs, which achieve near-expert level in almost all domains of human knowledge, I was able to formulate \(\mathcal{I}_{\text{max}}\) by simply asking the right questions in the right context. I verified the consistency of the results through algebra, calculus, and dimensional analysis. GPT-4o, in particular, excelled at symbolic reasoning, helping derive \(\mathcal{I}_{\text{max}}\) from first principles by synthesizing insights from thermodynamics, relativity, and quantum mechanics. At every step, it identified relevant equations and guided their substitution. Because my intuition about the form of \(\mathcal{I}_{\text{max}} \propto S \cdot \frac{\Delta S}{\Delta t}\) was correct, the derivation followed naturally.
-
-The process itself demonstrates the very principle it seeks to describe: the balance of complexity (\(S\)) and efficiency (\(\frac{\Delta S}{\Delta t}\)) was key to achieving this discovery. Leveraging AI enabled my intuition to navigate complexity efficiently, even without traditional domain expertise, providing a direct application of \(\mathcal{I}_{\text{max}}\) to intellectual exploration.
-
-The ultimate test for \(\mathcal{I}_{\text{max}}\) lies in empirical evidence and rigorous analysis by academics. If this framework withstands scrutiny, it will be humbling to have contributed a foundational idea to science and mathematics. However, if it does not hold, I hope it will remain an intellectual curiosity—one that teaches me something new, because research is fundamentally a process of balancing the rigor of verifying truths with the creative efficiency of generating ideas to test.
-
-\subsection*{A Philosophical Reflection}
+\subsection{A Philosophical Reflection}
 
 The framework of \(\mathcal{I}_{\text{max}}\) suggests a profound and self-referential insight: \textit{the truth is that there is no truth, but there is truth about truth.} This captures the recursive and incomplete nature of knowledge—an acknowledgment that while no single system can encode all truths, the structure of truths themselves reveals universal patterns. This perspective aligns with the mathematical proofs within this paper, emphasizing the balance of complexity and efficiency even in our pursuit of understanding the universe.
 
 
-\subsection{Acknowledgments}
+\section{Acknowledgments}
 Acknowledgments will be made here for feedback and suggestions.
 
 This work currently lacks proper citations of established results in math, science, and philosophy. However, this paper would not have been possible without the discoveries of countless hardworking scientists and mathematicians that set the foundation for the derivations shown here. Citations and proper references \textbf{will be added} in the future - the paper is still a work in progress.
