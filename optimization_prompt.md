@@ -900,7 +900,78 @@ End SelfLimitingGod.
 (* Several more theology theorems have been proven in this system, but our lesson stops here. *)
 ```
 
-## Discussion
+# Maximum Information Flow
+
+## Veils as Features of Reality
+At the core of this exploration is the idea that reality imposes veils—boundaries beyond which observation, knowledge, or experience cannot pass. These veils appear across multiple domains, hinting at something fundamental about how reality operates—physically, logically, or metaphysically.
+### Examples of Veils Across Domains
+- Physics: Relativity
+    - Veil: Event Horizons (Black Holes, Speed of Light)
+    - Nature: Boundaries where information cannot escape due to spacetime curvature or relativistic limits.
+- Physics: Cosmology
+    - Veil: Observable Universe
+    - Nature: Light-speed and cosmic expansion restrict us to a finite view; beyond lies unobservable space.
+- Physics: Quantum Mechanics
+    - Veil: Wave Function Collapse, Uncertainty Principle
+    - Nature: Measurement reduces possibilities to outcomes; precision has built-in limits.
+- Physics: Microcosmic Limit
+    - Veil: Planck Length and Time
+    - Nature: Smallest measurable units; what lies beneath remains inaccessible.
+- Physics: Thermodynamics
+    - Veil: The Arrow of Time
+    - Nature: Time flows irreversibly due to entropy, defining cause and effect.
+- Mathematics / Logic
+    - Veil: Gödel’s Incompleteness Theorems
+    - Nature: Some truths can't be proven a sufficiently powerful formal system, and the system cannot prove its own consistency.
+- Computation
+    - Veil: Decidability, Efficiency
+    - Nature: Certain problems are undecidable; others resist efficient solutions (e.g., P vs NP).
+- Consciousness
+    - Veil: Birth and Death
+    - Nature: Subjective experience is bounded by existence itself.
+- Human Observation
+    - Veil: Limits of Perception
+    - Nature: Our senses and cognition filter and constrain what we can know.
+- Divinity
+    - Veil: The Hiddenness of God
+    - Nature: The divine remains partially veiled—perhaps deliberately—across spiritual traditions.
+
+### Notes on Lower and Upper Physical Limits
+**Lower Limits (Microcosmic)**
+- Planck Scale: Represents the smallest units of space and time, below which spacetime becomes indeterminate. This is the quantum "grain" of reality.
+- These limits correspond to the idea that spacetime is not infinitely divisible but may have a fundamental resolution, much like pixels in a digital image.
+
+**Upper Limits (Macroscopic)**
+- Cosmological Horizons: Represent the largest scales observable to us, limited by the speed of light and the accelerating expansion of the universe.
+- These horizons imply that not all regions of spacetime can be observed, even in principle, confining us to a finite "bubble" of reality.
+### The Duality of Complexity and Efficiency: A Dynamic Framework
+
+#### Complexity as the Infinite Substrate of Reality
+
+At its most fundamental level, reality appears to exist as an infinite, abstract space of possibilities:
+
+- Quantum Superpositions and Hilbert Space: In quantum mechanics, the state of a system resides in an abstract, infinite-dimensional space where all potential states coexist.
+    
+- Mathematics: Gödel's incompleteness theorems suggest that even formal systems are inexhaustibly complex, with infinite true but unprovable statements.
+    
+- Plato's World of Forms: In Plato's allegory of the cave, the reality we experience is hypothesized to be only a shadow of the true ideal forms.
+    
+
+This aspect of reality—the infinite complexity—represents what could be, the unbounded landscape of abstract potential that underlies everything.
+
+### Efficiency as the Resolution of Finite Reality
+
+Against this infinite potential, we find the finite, concrete reality that we observe moment to moment:
+
+- Observation: The act of observation resolves the infinite possibilities of superposition into a single, finite state.
+    
+- Information Constraints: Physical laws, such as the Bekenstein bound and relativity, ensure that only a limited amount of information can be encoded, transmitted, or observed within any finite region of spacetime.
+    
+- Computational Efficiency: Einstein's theory of relativity discovered that the speed of light is the speed of causality. The universe seems to "render" only what is necessary for observation, avoiding the infinite resources that would be required to precompute or resolve everything, everywhere, all at once.
+
+Efficiency is thus the mechanism that enables finite beings—such as us—to experience and interact with the universe, despite its underlying complexity.
+
+## Complexity, Efficiency, and Information Flow
 Reality is fundamentally a dynamic balance between two key properties:
 
 1. **Stored Complexity ($S$):**
