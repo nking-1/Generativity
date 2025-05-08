@@ -582,6 +582,39 @@ Proof.
 Qed.
 
 
+(* Create a predicate that can *only* be contained at t=0 and no later time *)
+Theorem predicate_only_contained_at_0 :
+  forall (U : Type) `{UniversalSet U},
+  exists P : U -> Prop,
+    contains 0 (self_ref_pred_embed P) /\
+    forall t : nat, t > 0 -> ~ contains t (self_ref_pred_embed P).
+Proof.
+  intros U H.
+  
+  (* Define our predicate: "x is only contained at time 0" *)
+  set (P := fun x : U => forall t : nat, t > 0 -> ~ contains t x).
+  
+  (* Generate P at time 0 using self_ref_generation_exists *)
+  destruct (self_ref_generation_exists P 0) as [t [Ht_ge Ht_contains]].
+  
+  (* Use self_ref_pred_embed_correct to get the semantic property of P *)
+  assert (HP_property: forall t' : nat, t' > 0 -> ~ contains t' (self_ref_pred_embed P)).
+  { apply self_ref_pred_embed_correct. }
+  
+  (* Contains_backward to ensure P exists at time 0 if t > 0 *)
+  assert (H_contains_0: contains 0 (self_ref_pred_embed P)).
+  { apply (contains_backward 0 t).
+    - exact Ht_ge.
+    - exact Ht_contains. }
+  
+  (* Package up our result *)
+  exists P.
+  split.
+  - exact H_contains_0.
+  - exact HP_property.
+Qed.
+
+
 (* Theorem: Every predicate P is contained at time 0 *)
 (* In contrast to later times, t=0 contains all predicates. Later times must exclude some. *)
 Theorem U_contains_t0_all_P :
@@ -598,6 +631,22 @@ Proof.
   (* Direct from the hypothesis *)
   exact H_contains_P.
 Qed.
+
+
+(* Theorem: Time 0 already contains the liar's paradox - both a statement that denies its own
+   presence at time 0 and a statement that affirms its presence at time 0 *)
+   Theorem U_contains_liars_paradox_t0 :
+   forall (U: Type) `{UniversalSet U},
+   contains 0 (self_ref_pred_embed (fun x => ~ contains 0 x)) /\
+   contains 0 (self_ref_pred_embed (fun x => contains 0 x)).
+ Proof.
+   intros U H.
+   
+   (* We'll use our previous theorem that every predicate exists at time 0 *)
+   split.
+   - apply (U_contains_t0_all_P U (fun x => ~ contains 0 x)).
+   - apply (U_contains_t0_all_P U (fun x => contains 0 x)).
+ Qed.
 
 
 (*
