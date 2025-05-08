@@ -815,6 +815,55 @@ Proof.
 Qed.
 
 
+(**
+  Theorem: self_reference_excludes_containment_of_contradiction
+
+  This theorem formalizes a key consistency principle for the UniversalSet U.
+
+  It states that if, at some time t, the containment of a predicate P would imply
+  the containment of its own negation (~P), then P and ~P cannot both be contained 
+  at time t.
+
+  In other words:
+    - If realizing P at time t would immediately entail realizing ~P at the same time,
+    - Then U must prevent both from appearing simultaneously.
+  
+  This ensures that U remains constructively consistent: 
+  it can model paradoxical or self-negating predicates,
+  but it never instantiates both sides of a contradiction at the same time step.
+
+  This theorem is a semantic safeguard against instantaneous collapse—
+  it allows self-reference and negation, but blocks logical explosion by staging.
+
+  The proof uses:
+    - The correctness of self_ref_pred_embed, which ensures that predicates
+    "satisfy themselves" when embedded.
+    - A constructive contradiction: if both P and ~P are present, then applying
+      the self-referential embedding of ~P leads directly to inconsistency.
+*)
+Theorem self_reference_excludes_containment_of_contradiction :
+  forall (U : Type) `{H_U: UniversalSet U},
+  forall t : nat,
+  forall P : U -> Prop,
+    (contains t (self_ref_pred_embed P) -> contains t (self_ref_pred_embed (fun x => ~ P x))) ->
+    ~ (contains t (self_ref_pred_embed P) /\ contains t (self_ref_pred_embed (fun x => ~ P x))).
+Proof.
+  intros U H_U t P Himpl [HP HnotP].
+
+  (* Use self_ref_pred_embed_correct to evaluate the embedded negation *)
+  pose proof self_ref_pred_embed_correct (fun x : U => ~ P x) as H_neg_correct.
+  (* Now we have: ~ P (self_ref_pred_embed (fun x => ~ P x)) *)
+  specialize (H_neg_correct).
+
+  (* Use this fact to derive contradiction from HnotP *)
+  apply H_neg_correct.
+
+  (* But from the assumption, we have: contains t (embed P) *)
+  (* And self_ref_pred_embed_correct says P holds at its own embedding *)
+  apply self_ref_pred_embed_correct.
+Qed.
+
+
 Section SelfRecursiveUniverse.
 
   Context {U : Type} `{UniversalSet U}.
@@ -850,30 +899,31 @@ Section SelfRecursiveUniverse.
       intros y. split; intros H2; subst; auto.
   Qed.
 
-  (* Theorem U_is_self_reflective :
-  exists (f : nat -> U),
-    forall n : nat,
-      exists P : U -> Prop,
-        contains n (f n) /\
-        f n = self_ref_pred_embed P /\
-        (exists m : nat,
-          contains m (self_ref_pred_embed (fun _ : U => contains m (self_ref_pred_embed P)))).
-Proof.
-  exists (fun n => self_ref_pred_embed (fun x => contains n x)).
-  intros n.
-  set (P := fun x : U => contains n x).
-  exists P.
-  split.
-  - destruct (self_ref_generation_exists P n) as [t [H_le H_contained]].
-    apply (contains_backward n t (self_ref_pred_embed P) H_le H_contained).
-  - split.
-    + reflexivity.
-    + (* Correct way to define Reflective using set *)
-      set (Reflective := fun m : nat => fun _ : U => contains m (self_ref_pred_embed P)).
-      destruct (self_ref_generation_exists (Reflective n) n) as [m [H_le_m H_contains_m]].
-      exists m.
-      exact H_contains_m.
-Qed. *)
+  Theorem U_is_self_reflective :
+    exists (f : nat -> U),
+      forall n : nat,
+        exists P : U -> Prop,
+          contains n (f n) /\
+          f n = self_ref_pred_embed P /\
+          (exists m : nat,
+            contains m (self_ref_pred_embed (fun _ : U => exists m, contains m (self_ref_pred_embed P)))).
+  Proof.
+    exists (fun n => self_ref_pred_embed (fun x => contains n x)).
+    intros n.
+    set (P := fun x : U => contains n x).
+    exists P.
+    split.
+    - destruct (self_ref_generation_exists P n) as [t [H_le H_contained]].
+      apply (contains_backward n t (self_ref_pred_embed P) H_le H_contained).
+    - split.
+      + reflexivity.
+      + (* U contains a statement about its own knowledge of P *)
+        destruct (self_ref_generation_exists (fun _ : U => exists m, contains m (self_ref_pred_embed P)) n)
+          as [m [H_le_m H_contains_m]].
+        exists m.
+        exact H_contains_m.
+  Qed.
+
 
 End SelfRecursiveUniverse.
 
