@@ -507,6 +507,100 @@ Qed.
 
 
 (*
+   Finally, we show that because all predicates eventually exist by self_ref_generation_exists,
+   we can use the consequences of contains_backwards to bring the predicates back to time 0.
+   Here we can see that t=0 might represent the "end of time" or "beginning of time" in a sense,
+   where all predicates are saturated and exist at time 0. After time 0, predicates must unfold.
+*)
+Theorem U_simultaneous_negation_t0 :
+  forall (U: Type) `{UniversalSet U},
+  forall P : U -> Prop,
+  contains 0 (self_ref_pred_embed P) /\
+  contains 0 (self_ref_pred_embed (fun x => ~ P x)).
+Proof.
+  intros U H P.
+  
+  (* Step 1: Show that P and ~P must exist at some times t1 and t2 *)
+  destruct (self_ref_generation_exists P 0) as [t1 [Ht1_ge Ht1_contains]].
+  destruct (self_ref_generation_exists (fun x => ~ P x) 0) as [t2 [Ht2_ge Ht2_contains]].
+  
+  (* Step 2: We need the minimum of t1 and t2 *)
+  set (tmin := Nat.min t1 t2).
+  
+  (* Step 3: Apply the backward propagation theorem with proper parameters *)
+  assert (H_prop_back: forall t : nat, t <= tmin -> 
+            contains t (self_ref_pred_embed P) /\
+            contains t (self_ref_pred_embed (fun x => ~ P x))).
+  { apply (U_paradoxical_embeddings_propagate_backward U P t1 t2); assumption. }
+  
+  (* Step 4: Show 0 <= tmin directly using properties we know *)
+  assert (H_le_tmin: 0 <= tmin).
+  { 
+    (* Using the fact that t1 ≥ 0 and t2 ≥ 0, so min t1 t2 ≥ 0 *)
+    (* min is the greatest lower bound, so if both t1,t2 ≥ 0, then min t1 t2 ≥ 0 *)
+    eapply Nat.min_glb.
+    - exact Ht1_ge.
+    - exact Ht2_ge.
+  }
+  
+  (* Step 5: Get the result by applying our assertion *)
+  apply H_prop_back.
+  exact H_le_tmin.
+Qed.
+
+
+(* Theorem: There exists a predicate that is contained at time 0 but cannot be contained at time 1 *)
+Theorem predicate_contained_at_0_not_at_1 :
+  forall (U : Type) `{UniversalSet U},
+  exists P : U -> Prop,
+    contains 0 (self_ref_pred_embed P) /\
+    ~ contains 1 (self_ref_pred_embed P).
+Proof.
+  intros U H.
+  
+  (* Define our predicate: "x is not contained at time 1" *)
+  set (P := fun x : U => ~ contains 1 x).
+  
+  (* Generate P at time 0 using self_ref_generation_exists *)
+  destruct (self_ref_generation_exists P 0) as [t [Ht_ge Ht_contains]].
+  
+  (* Use self_ref_pred_embed_correct to get the semantic property of P *)
+  assert (HP_property: ~ contains 1 (self_ref_pred_embed P)).
+  { apply self_ref_pred_embed_correct. }
+  
+  (* Contains_backward to ensure P exists at time 0 if t > 0 *)
+  assert (H_contains_0: contains 0 (self_ref_pred_embed P)).
+  { apply (contains_backward 0 t).
+    - exact Ht_ge.
+    - exact Ht_contains. }
+  
+  (* Package up our result *)
+  exists P.
+  split.
+  - exact H_contains_0.
+  - exact HP_property.
+Qed.
+
+
+(* Theorem: Every predicate P is contained at time 0 *)
+(* In contrast to later times, t=0 contains all predicates. Later times must exclude some. *)
+Theorem U_contains_t0_all_P :
+  forall (U: Type) `{UniversalSet U},
+  forall P : U -> Prop,
+  contains 0 (self_ref_pred_embed P).
+Proof.
+  intros U H P.
+  
+  (* By theorem U_simultaneous_negation_t0, we know that every predicate and its negation 
+     are both contained at time 0 *)
+  pose proof (U_simultaneous_negation_t0 U P) as [H_contains_P _].
+  
+  (* Direct from the hypothesis *)
+  exact H_contains_P.
+Qed.
+
+
+(*
 We define OmegaSet as a timeless, superpositional set.
 We rename the carrier to Omega_carrier to avoid ambiguity.
 *)
@@ -2878,7 +2972,6 @@ Section DivineComputer.
   Parameter dc_compute : U -> (DCState -> DCNextState) -> DCReality.
   Parameter encode_reality : DCReality -> U.
 
-  (* Key axioms moved OUTSIDE the proof so Coq is happy *)
   Parameter simulated_reality :
     forall A : DCState -> DCNextState, DCReality.
 
