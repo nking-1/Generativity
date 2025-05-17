@@ -591,7 +591,7 @@ Theorem predicate_only_contained_at_0 :
 Proof.
   intros U H.
   
-  (* Define our predicate: "x is only contained at time 0" *)
+  (* Define our predicate: "x is not contained at time t>0" *)
   set (P := fun x : U => forall t : nat, t > 0 -> ~ contains t x).
   
   (* Generate P at time 0 using self_ref_generation_exists *)
@@ -616,7 +616,7 @@ Qed.
 
 
 (* Theorem: Every predicate P is contained at time 0 *)
-(* In contrast to later times, t=0 contains all predicates. Later times must exclude some. *)
+(* TODO: Do times greater than t=0 also have all predicates if we just shift time? *)
 Theorem U_contains_t0_all_P :
   forall (U: Type) `{UniversalSet U},
   forall P : U -> Prop,
@@ -1230,6 +1230,61 @@ Proof.
   apply omega_completeness.
 Qed.
 
+
+(* Define a fixpoint operator for paradoxical predicates *)
+Definition ParadoxFixpoint (Omega : OmegaSet) : Type :=
+  {P : Omegacarrier -> Prop | 
+    exists x : Omegacarrier, P x <-> ~P x}.
+
+(* Now define a recursive version that applies the paradox to itself *)
+Fixpoint RecursiveParadox (O : OmegaSet) (n : nat) : ParadoxFixpoint O.
+Proof.
+  destruct n.
+  
+  (* Base case: n = 0 *)
+  - set (P0 := fun x => exists P : Omegacarrier -> Prop, P x <-> ~P x).
+    (* Prove this predicate is paradoxical *)
+    assert (exists x : Omegacarrier, P0 x <-> ~P0 x) as H_paradox.
+    { apply omega_completeness. }
+    (* Construct the ParadoxFixpoint *)
+    exact (exist _ P0 H_paradox).
+    
+  (* Recursive case: n = S n' *)
+  - (* Get the previous level paradox *)
+    specialize (RecursiveParadox O n) as prev.
+    (* Extract its predicate *)
+    destruct prev as [P_prev H_prev].
+    (* Define the next level paradox *)
+    set (P_next := fun x => P_prev x <-> ~P_prev x).
+    (* Prove this new predicate is paradoxical *)
+    assert (exists x : Omegacarrier, P_next x <-> ~P_next x) as H_next.
+    { apply omega_completeness. }
+    (* Construct the ParadoxFixpoint *)
+    exact (exist _ P_next H_next).
+Defined.
+
+(* Define the ultimate paradox that combines all levels *)
+Definition UltimateParadox (O : OmegaSet) : ParadoxFixpoint O.
+Proof.
+  (* Define a predicate that satisfies all levels of paradox *)
+  set (P_ultimate := fun x => forall m, 
+       let P_m := proj1_sig (RecursiveParadox O m) in P_m x).
+  (* Prove this predicate is paradoxical *)
+  assert (exists x : Omegacarrier, P_ultimate x <-> ~P_ultimate x) as H_ultimate.
+  { apply omega_completeness. }
+  (* Construct the ParadoxFixpoint *)
+  exact (exist _ P_ultimate H_ultimate).
+Defined.
+
+(* Theorem: The ultimate paradox is its own negation *)
+Theorem UltimateParadoxProperty : forall (O : OmegaSet),
+  let P := proj1_sig (UltimateParadox O) in
+  exists x : Omegacarrier, P x <-> ~P x.
+Proof.
+  intros O.
+  (* The second component of UltimateParadox is exactly the proof we need *)
+  exact (proj2_sig (UltimateParadox O)).
+Qed.
 
 (* Creative idea - what if Omega could even refer to things outside mathematics? *)
 Parameter OutsideOmega : Type.
@@ -2687,14 +2742,7 @@ End DivineTuringMachine.
 *)
 Section DivineEscapeHatch.
 
-  Context {U : Type} `{UniversalSet U}.
   Context (Omega : OmegaSet).
-
-  Parameter symbol_to_statement : DivineSymbol -> Statement.
-
-  (* Every symbol in DTM input comes from divine language *)
-  Axiom divine_input_is_divine :
-    forall sym : DivineSymbol, divine_language (symbol_to_statement sym).
 
   Parameter divine_interpret : Omega_carrier Omega -> Statement.
 
@@ -2851,7 +2899,7 @@ Section DivineZeroFunction.
       intros H_eq. exists divine_zero. unfold divide_by_zero. rewrite H_eq. reflexivity.
   Qed.
 
-  (* Optional: Show that divide_by_zero is semantically realizable in U *)
+  (* Show that divide_by_zero is semantically realizable in U *)
   Definition div_zero_functional_pred (f : U -> U) : Prop :=
     forall x : U, f x = divine_zero.
 
@@ -3095,53 +3143,3 @@ Section PlatonicSolidGenerator.
   Qed.
 
 End PlatonicSolidGenerator.
-
-
-
-Require Import ZArith. (* For integers *)
-Open Scope Z_scope.
-
-(*
-  This theorem defines a paraconsistent mapping between integers and zero.
-
-  Every integer maps to a semantic object in ZeroSpace that is equal to both
-  the original integer and zero—without contradiction.
-
-  This is only possible in U, where paradoxes are resolved as structured truth
-  rather than contradictions.
-
-  This construction extends arithmetic into a space where identity is layered,
-  enabling new forms of mathematical reasoning based on flexible semantic equality.
-*)
-Section ZeroMappingFunction.
-
-  Context {U : Type} `{UniversalSet U}.
-
-  (* Step 1: Define a type for the "zero-mapped" space *)
-  Parameter ZeroSpace : Type.
-
-  (* Step 2: Define a function that maps any integer to its zero-mapped version *)
-  Parameter zero_map : Z -> ZeroSpace.
-
-  (* Step 3: Semantic identity predicate in ZeroSpace *)
-  Parameter zero_identity : ZeroSpace -> Z -> Prop.
-
-  (* Axiom: For every integer n, zero_map n is semantically equal to both 0 and n *)
-  Axiom zero_map_dual_identity :
-    forall n : Z,
-      zero_identity (zero_map n) 0 /\
-      zero_identity (zero_map n) n.
-
-  (* Theorem: Every integer semantically maps to zero while remaining itself *)
-  Theorem every_integer_is_zero_semantically :
-    forall n : Z,
-      exists z : ZeroSpace,
-        zero_identity z 0 /\ zero_identity z n.
-  Proof.
-    intros n.
-    exists (zero_map n).
-    apply zero_map_dual_identity.
-  Qed.
-
-End ZeroMappingFunction.
-
