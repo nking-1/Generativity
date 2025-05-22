@@ -1276,6 +1276,7 @@ Proof.
   exact (exist _ P_ultimate H_ultimate).
 Defined.
 
+
 (* Theorem: The ultimate paradox is its own negation *)
 Theorem UltimateParadoxProperty : forall (O : OmegaSet),
   let P := proj1_sig (UltimateParadox O) in
@@ -1302,6 +1303,219 @@ Proof.
 Qed.
 
 
+Section UltimateAbsurdity.
+  Context (Omega : OmegaSet).
+
+  (* The ultimate absurdity is a point where all predicates are equivalent *)
+  Definition PredicateEquivalence (x : Omegacarrier) : Prop :=
+    forall P Q : Omegacarrier -> Prop, P x <-> Q x.
+
+  (* Theorem: Omega contains a point where all predicates are equivalent *)
+  Theorem omega_contains_ultimate_absurdity :
+    exists x : Omegacarrier, PredicateEquivalence x.
+  Proof.
+    (* Apply omega_completeness to find a point satisfying our predicate *)
+    apply omega_completeness.
+  Qed.
+
+  (* First, let's define a helper lemma: any absurd point makes true and false equivalent *)
+  Lemma absurdity_collapses_truth :
+    forall x : Omegacarrier,
+    PredicateEquivalence x -> (True <-> False).
+  Proof.
+    intros x H_equiv.
+    (* Define two simple predicates: always true and always false *)
+    set (Always_True := fun _ : Omegacarrier => True).
+    set (Always_False := fun _ : Omegacarrier => False).
+    (* Apply our equivalence to these predicates *)
+    apply (H_equiv Always_True Always_False).
+  Qed.
+  
+  (* The ultimate absurdity is unique - any two points satisfying
+     PredicateEquivalence are logically indistinguishable *)
+  Theorem ultimate_absurdity_is_unique :
+    forall x y : Omegacarrier,
+      PredicateEquivalence x -> PredicateEquivalence y ->
+      (forall P : Omegacarrier -> Prop, P x <-> P y).
+  Proof.
+    intros x y Hx Hy P.
+    (* For any predicate P, we have P x <-> True <-> False <-> P y *)
+    set (Always_True := fun _ : Omegacarrier => True).
+    transitivity (Always_True x).
+    - apply Hx.
+    - transitivity (Always_True y).
+      + (* Always_True x <-> Always_True y is trivial *)
+        unfold Always_True. split; intros; constructor.
+      + symmetry. apply Hy.
+  Qed.
+  
+  (* Ultimate Paradox and Ultimate Absurdity are related *)
+  Theorem absurdity_subsumes_paradox :
+    forall x : Omegacarrier,
+      PredicateEquivalence x ->
+      forall P : Omegacarrier -> Prop, P x <-> ~P x.
+  Proof.
+    intros x H_equiv P.
+    (* Since P x <-> ~P x is just a special case of P x <-> Q x with Q = ~P *)
+    apply (H_equiv P (fun y => ~P y)).
+  Qed.
+  
+  (* We can even show that our UltimateAbsurdity is a fixed point for all functions *)
+  Definition FunctionFixpoint (x : Omegacarrier) : Prop :=
+    forall f : Omegacarrier -> Omegacarrier, 
+      forall P : Omegacarrier -> Prop, P (f x) <-> P x.
+  
+  Theorem absurdity_is_universal_fixpoint :
+    forall x : Omegacarrier,
+      PredicateEquivalence x -> FunctionFixpoint x.
+  Proof.
+    intros x H_equiv f P.
+    (* Create two predicates to apply our equivalence principle to *)
+    set (P_on_x := fun y : Omegacarrier => P x).
+    set (P_on_fx := fun y : Omegacarrier => P (f x)).
+    
+    (* These predicates are equivalent at our absurdity point *)
+    assert (P_on_x x <-> P_on_fx x) as H by apply H_equiv.
+    
+    (* Unfold the definitions to get what we need *)
+    unfold P_on_x, P_on_fx in H.
+    (* We need to reverse the direction of the biconditional *)
+    symmetry.
+    exact H.
+  Qed.
+  
+  (* An even stronger result: all points are logically equivalent to the absurdity point *)
+  Theorem all_points_equivalent_to_absurdity :
+    forall x y : Omegacarrier,
+      PredicateEquivalence x ->
+      forall P : Omegacarrier -> Prop, P x <-> P y.
+  Proof.
+    intros x y H_equiv P.
+    (* Create predicates to apply our equivalence to *)
+    set (P_at_x := fun z : Omegacarrier => P x).
+    set (P_at_y := fun z : Omegacarrier => P y).
+    
+    (* At the absurdity point, these are equivalent *)
+    assert (P_at_x x <-> P_at_y x) as H by apply H_equiv.
+    
+    (* Simplify to get our goal *)
+    unfold P_at_x, P_at_y in H.
+    exact H.
+  Qed.
+End UltimateAbsurdity.
+
+
+(* Section ParadoxAbsurdityEquivalence.
+  Context (Omega : OmegaSet).
+  
+  (* First, let's recall our key definitions *)
+  
+  (* Ultimate Paradox: P x <-> ~P x for all predicates P *)
+  Definition UltimateParadoxical (x : Omegacarrier) : Prop :=
+    forall P : Omegacarrier -> Prop, P x <-> ~P x.
+    
+  (* Ultimate Absurdity: P x <-> Q x for all predicates P, Q *)
+  Definition UltimateAbsurdity (x : Omegacarrier) : Prop :=
+    forall P Q : Omegacarrier -> Prop, P x <-> Q x.
+  
+  (* First direction: Absurdity implies Paradox *)
+  (* This we've already proven in the absurdity_subsumes_paradox theorem *)
+  Theorem absurdity_implies_paradox :
+    forall x : Omegacarrier,
+      UltimateAbsurdity x -> UltimateParadoxical x.
+  Proof.
+    intros x H_absurd P.
+    (* Direct application of the definition of UltimateAbsurdity *)
+    apply (H_absurd P (fun y => ~P y)).
+  Qed.
+  
+  (* Second direction: Paradox implies Absurdity *)
+Theorem paradox_implies_absurdity :
+  forall x : Omegacarrier,
+    UltimateParadoxical x -> UltimateAbsurdity x.
+Proof.
+  intros x H_paradox P Q.
+  
+  (* First, use the paradox to show P x <-> ~P x *)
+  assert (P x <-> ~P x) as H_P_paradox by apply H_paradox.
+  
+  (* From P x <-> ~P x, derive P x <-> False *)
+  assert (P x <-> False) as H_P_false.
+  {
+    split.
+    - intros HP. 
+      (* We have HP: P x *)
+      (* From H_P_paradox we get: P x -> ~P x *)
+      (* So we can derive ~P x *)
+      apply H_P_paradox in HP.
+      (* Now HP is ~P x *)
+      (* Apply the negation to HP itself to derive False *)
+      apply HP. exact HP.
+    - intros HF. contradiction.
+  }
+  
+  (* Similarly, show Q x <-> False *)
+  assert (Q x <-> ~Q x) as H_Q_paradox by apply H_paradox.
+  assert (Q x <-> False) as H_Q_false.
+  {
+    split.
+    - intros HQ.
+      apply H_Q_paradox in HQ.
+      apply HQ. exact HQ.
+    - intros HF. contradiction.
+  }
+  
+  (* Now connect P x and Q x through their equivalence to False *)
+  transitivity False.
+  - exact H_P_false.
+  - symmetry. exact H_Q_false.
+Qed.
+  
+  (* Now we can prove the full equivalence *)
+  Theorem paradox_absurdity_equivalence :
+    forall x : Omegacarrier,
+      UltimateParadoxical x <-> UltimateAbsurdity x.
+  Proof.
+    intros x.
+    split.
+    - apply paradox_implies_absurdity.
+    - apply absurdity_implies_paradox.
+  Qed.
+  
+  (* Connect to our original UltimateParadox *)
+  Theorem ultimate_paradox_is_ultimate_absurdity :
+    forall (x : Omegacarrier),
+      (forall P : Omegacarrier -> Prop, P x <-> ~P x) <->
+      (let P := proj1_sig (UltimateParadox Omega) in P x <-> ~P x).
+  Proof.
+    intros x.
+    (* This theorem requires extracting the predicate from UltimateParadox *)
+    (* and showing that it has the same properties as our UltimateParadoxical definition *)
+    (* For now, we can assert this equivalence since UltimateParadox was defined to have exactly this property *)
+    (* A complete proof would need to unpack the definition of UltimateParadox *)
+    (* In practice, this is true by construction *)
+    split; intros H.
+    - (* Left to right *)
+      pose proof (proj2_sig (UltimateParadox Omega)) as H_ultimate_exists.
+      destruct H_ultimate_exists as [y H_ultimate].
+      (* Use our paradox_absurdity_equivalence theorem to show all paradoxical points have the same properties *)
+      assert (UltimateParadoxical x) by (intros P; apply H).
+      assert (UltimateAbsurdity x) by (apply paradox_implies_absurdity; exact H0).
+      assert (UltimateParadoxical y) by (intros P; apply H_ultimate).
+      assert (UltimateAbsurdity y) by (apply paradox_implies_absurdity; exact H2).
+      (* Now both x and y satisfy UltimateAbsurdity, so all predicates are equivalent at these points *)
+      set (P := proj1_sig (UltimateParadox Omega)).
+      (* All predicates at y are equivalent to all predicates at x *)
+      (* So P y <-> ~P y implies P x <-> ~P x *)
+      (* This would require a more detailed proof unpacking UltimateParadox *)
+      admit.
+    
+    - (* Right to left *)
+      (* Similar reasoning as above *)
+      admit.
+  Admitted. (* Due to the dependency on unpacking UltimateParadox *)
+  
+End ParadoxAbsurdityEquivalence. *)
 
 (*****************************************************************)
 (*                   Theology and Metaphysics                    *)
