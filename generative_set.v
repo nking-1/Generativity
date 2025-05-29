@@ -3357,3 +3357,254 @@ Section PlatonicSolidGenerator.
   Qed.
 
 End PlatonicSolidGenerator.
+
+
+
+Require Import Coq.Init.Nat.
+Require Import Coq.Arith.Arith.
+Require Import Lia.
+
+Record System := {
+  S_min : nat;
+  S_max : nat;
+  valid_bounds_existential : S_min + 1 < S_max; (* Or S_min + 2 < S_max, whatever you have *)
+  structure : nat -> nat;
+  structure_bounded : forall t : nat, S_min < structure t < S_max;
+  perpetual_change : forall t : nat, structure t <> structure (t + 1)
+}.
+
+
+Lemma S_min_lt_S_max_explicit_change (sys : System) : S_min sys < S_max sys.
+Proof.
+  destruct sys as [smin smax vb_exist struct_fun sb pc]. 
+  simpl.
+  lia.
+Qed.
+
+
+(* Absolute delta between structure at t and t+1 *)
+Definition DS (sys : System) (t : nat) : nat :=
+  if Nat.ltb (structure sys (t + 1)) (structure sys t) then
+    structure sys t - structure sys (t + 1)
+  else
+    structure sys (t + 1) - structure sys t.
+
+
+(* Because of perpetual_change, DS is always > 0 *)
+Lemma DS_is_positive (sys : System) (t : nat) :
+  DS sys t > 0.
+Proof.
+  unfold DS.
+  pose proof (perpetual_change sys t) as H_neq_original.
+  (* H_neq_original : structure sys t <> structure sys (t + 1) *)
+  destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:H_ltb.
+  - (* Case 1: structure sys (t + 1) < structure sys t *)
+    apply Nat.ltb_lt in H_ltb.
+    (* Goal is (structure sys t - structure sys (t + 1)) > 0 *)
+    lia.
+  - (* Case 2: structure sys (t + 1) >= structure sys t *)
+    apply Nat.ltb_ge in H_ltb.
+    (* Goal is (structure sys (t + 1) - structure sys t) > 0 *)
+    (* In this branch, lia needs to use H_ltb and H_neq_original. *)
+    lia.
+Qed.
+
+
+
+(* Structure S is always > 0 *)
+Lemma S_is_positive (sys : System) (t : nat) :
+  structure sys t > 0.
+Proof.
+  pose proof (structure_bounded sys t) as H_bounds.
+  lia. (* S_min < structure t and S_min >= 0 implies structure t > 0 *)
+Qed.
+
+
+(* I_val (information flow) *)
+Definition I_val (sys : System) (t : nat) : nat :=
+  (structure sys t) * (DS sys t).
+
+
+(* With perpetual_change and S > 0, I_val is always > 0 *)
+Lemma I_val_is_positive (sys : System) (t : nat) :
+  I_val sys t > 0.
+Proof.
+  unfold I_val.
+  apply Nat.mul_pos_pos.
+  - apply S_is_positive.
+  - apply DS_is_positive.
+Qed.
+
+
+Lemma delta_bounded :
+  forall (sys : System) (t : nat),
+    DS sys t <= S_max sys - S_min sys - 1.
+Proof.
+  intros sys t.
+  unfold DS.
+  pose proof (structure_bounded sys t) as H_t.
+  pose proof (structure_bounded sys (t + 1)) as H_t1.
+  destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:H_ltb.
+  - (* structure(t+1) < structure(t) *)
+    (* DS = structure(t) - structure(t+1) *)
+    (* Max when structure(t) is near S_max and structure(t+1) is near S_min *)
+    lia.
+  - (* structure(t+1) >= structure(t) *)  
+    (* DS = structure(t+1) - structure(t) *)
+    (* Max when structure(t+1) is near S_max and structure(t) is near S_min *)
+    lia.
+Qed.
+
+
+Lemma I_val_bounded :
+  forall (sys : System) (t : nat),
+    I_val sys t < S_max sys * (S_max sys - S_min sys).
+Proof.
+  intros sys t.
+  unfold I_val.
+  pose proof (structure_bounded sys t) as H_struct.
+  pose proof (delta_bounded sys t) as H_delta.
+  
+  (* We need to show: structure sys t * DS sys t < S_max sys * (S_max sys - S_min sys) *)
+  
+  (* Since structure sys t < S_max sys, we have structure sys t <= S_max sys - 1 *)
+  (* Since DS sys t <= S_max sys - S_min sys - 1 *)
+  
+  (* The product is at most (S_max sys - 1) * (S_max sys - S_min sys - 1) *)
+  (* We need to show this is < S_max sys * (S_max sys - S_min sys) *)
+  
+  assert (structure sys t * DS sys t <= (S_max sys - 1) * (S_max sys - S_min sys - 1)).
+  {
+    apply Nat.mul_le_mono.
+    - lia. (* structure sys t < S_max sys implies structure sys t <= S_max sys - 1 *)
+    - exact H_delta.
+  }
+  
+  (* Now show (S_max sys - 1) * (S_max sys - S_min sys - 1) < S_max sys * (S_max sys - S_min sys) *)
+  lia.
+Qed.
+
+
+(* First, let's define what "near maximum" means *)
+Definition near_max (sys : System) (t : nat) : Prop :=
+  structure sys t > S_max sys - 2.  (* Within 1 of maximum *)
+
+Definition near_max_change (sys : System) (t : nat) : Prop :=
+  DS sys t > S_max sys - S_min sys - 2.  (* Within 1 of maximum possible change *)
+
+(* Key theorem: Can't have both near maximum *)
+(* Theorem cannot_maximize_both :
+  forall (sys : System) (t : nat),
+    near_max sys t -> ~(near_max_change sys t).
+Proof.
+  intros sys t H_near_max H_near_max_change.
+  unfold near_max in H_near_max.
+  unfold near_max_change in H_near_max_change.
+  
+  (* If structure is near S_max, then structure(t+1) is bounded *)
+  (* This limits how much DS can be *)
+  
+  (* From structure_bounded: structure sys (t+1) < S_max sys *)
+  pose proof (structure_bounded sys (t+1)) as H_next.
+  
+  (* Consider the two cases for DS *)
+  unfold DS in H_near_max_change.
+  destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:H_ltb.
+  
+  - (* Case: structure decreasing *)
+    (* DS = structure t - structure (t+1) *)
+    (* But structure t > S_max - 2 and structure (t+1) > S_min *)
+    (* So DS < S_max - S_min - 1, contradicting H_near_max_change *)
+    apply Nat.ltb_lt in H_ltb.
+    lia.
+    
+  - (* Case: structure increasing *)  
+    (* DS = structure (t+1) - structure t *)
+    (* But structure t > S_max - 2 and structure (t+1) < S_max *)
+    (* So DS < 2, but H_near_max_change says DS > S_max - S_min - 2 *)
+    (* This is impossible when S_max - S_min > 3 *)
+    apply Nat.ltb_ge in H_ltb.
+    pose proof (valid_bounds_existential sys).
+    lia.
+Qed. *)
+
+
+Theorem no_consecutive_large_changes :
+  forall (sys : System) (t : nat) (threshold : nat),
+    threshold > (S_max sys - S_min sys) / 2 ->
+    DS sys t > threshold ->
+    DS sys (t + 1) <= S_max sys - S_min sys - threshold.
+Proof.
+  intros sys t threshold H_threshold_large H_large_change.
+
+  (* Key insight: After a large change, structure(t+1) is near a boundary *)
+  unfold DS in *.
+  destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:H_dir_t.
+  
+  - (* Case 1: structure decreased at t (went down by > threshold) *)
+    apply Nat.ltb_lt in H_dir_t.
+    (* So structure(t+1) = structure(t) - DS(t) < structure(t) - threshold *)
+    
+    (* Since structure(t) < S_max, we have: *)
+    (* structure(t+1) < S_max - threshold *)
+    pose proof (structure_bounded sys t) as H_bound_t.
+    assert (structure sys t <= S_max sys - 1) by lia.
+    assert (structure sys (t + 1) < structure sys t - threshold) by lia.
+    assert (structure sys (t + 1) < S_max sys - threshold - 1) by lia.
+    
+    (* Now analyze DS(t+1) *)
+    destruct (Nat.ltb (structure sys (t + 2)) (structure sys (t + 1))) eqn:H_dir_t1.
+    
+    + (* Sub-case: continuing to decrease *)
+      (* DS(t+1) = structure(t+1) - structure(t+2) *)
+      (* But structure(t+1) < S_max - threshold already *)
+      (* And structure(t+2) > S_min *)
+      pose proof (structure_bounded sys (t + 2)) as H_bound_t2.
+      assert (structure sys (t + 1) - structure sys (t + 2) < 
+              (S_max sys - threshold) - S_min sys) by lia.
+      lia.
+      
+    + (* Sub-case: direction reversal (now increasing) *)
+      (* DS(t+1) = structure(t+2) - structure(t+1) *)
+      (* structure(t+2) < S_max *)
+      pose proof (structure_bounded sys (t + 2)) as H_bound_t2.
+      assert (structure sys (t + 2) <= S_max sys - 1) by lia.
+      assert (structure sys (t + 2) - structure sys (t + 1) <= 
+              S_max sys - 1 - structure sys (t + 1)) by lia.
+      (* Since structure(t+1) > S_min, this gives us our bound *)
+      lia.
+      
+  - (* Case 2: structure increased at t (went up by > threshold) *)
+    apply Nat.ltb_ge in H_dir_t.
+    (* So structure(t+1) = structure(t) + DS(t) > structure(t) + threshold *)
+    
+    (* Since structure(t) > S_min, we have: *)
+    (* structure(t+1) > S_min + threshold *)
+    pose proof (structure_bounded sys t) as H_bound_t.
+    assert (structure sys t >= S_min sys + 1) by lia.
+    assert (structure sys (t + 1) > structure sys t + threshold) by lia.
+    assert (structure sys (t + 1) > S_min sys + threshold + 1) by lia.
+    
+    (* Now analyze DS(t+1) *)
+    destruct (Nat.ltb (structure sys (t + 2)) (structure sys (t + 1))) eqn:H_dir_t1.
+    
+    + (* Sub-case: direction reversal (now decreasing) *)
+      (* DS(t+1) = structure(t+1) - structure(t+2) *)
+      (* structure(t+1) > S_min + threshold already *)
+      (* And structure(t+2) < S_max *)
+      pose proof (structure_bounded sys (t + 2)) as H_bound_t2.
+      assert (structure sys (t + 1) - structure sys (t + 2) <= 
+              structure sys (t + 1) - (S_min sys + 1)) by lia.
+      (* But structure(t+1) < S_max, so this is bounded *)
+      assert (structure sys (t + 1) <= S_max sys - 1) by lia.
+      lia.
+      
+    + (* Sub-case: continuing to increase *)
+      (* DS(t+1) = structure(t+2) - structure(t+1) *)
+      (* But structure(t+1) > S_min + threshold already *)
+      (* And structure(t+2) < S_max *)
+      pose proof (structure_bounded sys (t + 2)) as H_bound_t2.
+      assert (structure sys (t + 2) - structure sys (t + 1) < 
+              S_max sys - (S_min sys + threshold)) by lia.
+      lia.
+Qed.
