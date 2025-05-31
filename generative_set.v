@@ -905,11 +905,43 @@ Proof.
 Qed.
 
 
+(* Note - we only use classical logic for the following couple proofs and aim to use constructive logic
+everywhere else *)
 Require Import Coq.Logic.Classical_Prop.
 
-(* Note - we only use classical logic for the following proof and aim to use constructive logic
-everywhere else *)
-(* It would be great to reformat this theorem someday to make it constructive *)
+
+Theorem no_Omega_paradoxifying_predicate_in_U :
+  forall (U: Type) `{UniversalSet U} `{OmegaSet},
+  forall t : nat,
+    ~ contains t (self_ref_pred_embed (fun _ : U =>
+      exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y <-> ~ P y)).
+Proof.
+  intros U H_U H_Omega t H_contradiction.
+  (* Extract paradox directly *)
+  pose proof (self_ref_pred_embed_correct (fun _ : U => 
+    exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y <-> ~ P y)) as H_embed.
+  destruct H_embed as [P [y H_iff]].
+  
+  (* Now we need to derive the contradiction from the iff *)
+  destruct H_iff as [H_P_impl_notP H_notP_impl_P].
+  
+  (* Case analysis on P y *)
+  destruct (classic (P y)) as [HP | HnotP].
+  
+  - (* Case 1: P y holds *)
+    (* From P y, we get ~ P y *)
+    specialize (H_P_impl_notP HP).
+    (* But we have P y and ~ P y - contradiction *)
+    exact (H_P_impl_notP HP).
+    
+  - (* Case 2: ~ P y holds *)
+    (* From ~ P y, we get P y *)
+    specialize (H_notP_impl_P HnotP).
+    (* But we have ~ P y and P y - contradiction *)
+    exact (HnotP H_notP_impl_P).
+Qed.
+
+
 Theorem self_reference_requires_incompleteness_or_contradiction :
   forall (U : Type) `{H_U: UniversalSet U},
   (forall t: nat, exists P: U -> Prop, 
@@ -1349,7 +1381,7 @@ Section UltimateAbsurdity.
       + symmetry. apply Hy.
   Qed.
   
-  (* Ultimate Paradox and Ultimate Absurdity are related *)
+  (* Paradox and Ultimate Absurdity are related *)
   Theorem absurdity_subsumes_paradox :
     forall x : Omegacarrier,
       PredicateEquivalence x ->
@@ -1404,118 +1436,6 @@ Section UltimateAbsurdity.
   Qed.
 End UltimateAbsurdity.
 
-
-(* Section ParadoxAbsurdityEquivalence.
-  Context (Omega : OmegaSet).
-  
-  (* First, let's recall our key definitions *)
-  
-  (* Ultimate Paradox: P x <-> ~P x for all predicates P *)
-  Definition UltimateParadoxical (x : Omegacarrier) : Prop :=
-    forall P : Omegacarrier -> Prop, P x <-> ~P x.
-    
-  (* Ultimate Absurdity: P x <-> Q x for all predicates P, Q *)
-  Definition UltimateAbsurdity (x : Omegacarrier) : Prop :=
-    forall P Q : Omegacarrier -> Prop, P x <-> Q x.
-  
-  (* First direction: Absurdity implies Paradox *)
-  (* This we've already proven in the absurdity_subsumes_paradox theorem *)
-  Theorem absurdity_implies_paradox :
-    forall x : Omegacarrier,
-      UltimateAbsurdity x -> UltimateParadoxical x.
-  Proof.
-    intros x H_absurd P.
-    (* Direct application of the definition of UltimateAbsurdity *)
-    apply (H_absurd P (fun y => ~P y)).
-  Qed.
-  
-  (* Second direction: Paradox implies Absurdity *)
-Theorem paradox_implies_absurdity :
-  forall x : Omegacarrier,
-    UltimateParadoxical x -> UltimateAbsurdity x.
-Proof.
-  intros x H_paradox P Q.
-  
-  (* First, use the paradox to show P x <-> ~P x *)
-  assert (P x <-> ~P x) as H_P_paradox by apply H_paradox.
-  
-  (* From P x <-> ~P x, derive P x <-> False *)
-  assert (P x <-> False) as H_P_false.
-  {
-    split.
-    - intros HP. 
-      (* We have HP: P x *)
-      (* From H_P_paradox we get: P x -> ~P x *)
-      (* So we can derive ~P x *)
-      apply H_P_paradox in HP.
-      (* Now HP is ~P x *)
-      (* Apply the negation to HP itself to derive False *)
-      apply HP. exact HP.
-    - intros HF. contradiction.
-  }
-  
-  (* Similarly, show Q x <-> False *)
-  assert (Q x <-> ~Q x) as H_Q_paradox by apply H_paradox.
-  assert (Q x <-> False) as H_Q_false.
-  {
-    split.
-    - intros HQ.
-      apply H_Q_paradox in HQ.
-      apply HQ. exact HQ.
-    - intros HF. contradiction.
-  }
-  
-  (* Now connect P x and Q x through their equivalence to False *)
-  transitivity False.
-  - exact H_P_false.
-  - symmetry. exact H_Q_false.
-Qed.
-  
-  (* Now we can prove the full equivalence *)
-  Theorem paradox_absurdity_equivalence :
-    forall x : Omegacarrier,
-      UltimateParadoxical x <-> UltimateAbsurdity x.
-  Proof.
-    intros x.
-    split.
-    - apply paradox_implies_absurdity.
-    - apply absurdity_implies_paradox.
-  Qed.
-  
-  (* Connect to our original UltimateParadox *)
-  Theorem ultimate_paradox_is_ultimate_absurdity :
-    forall (x : Omegacarrier),
-      (forall P : Omegacarrier -> Prop, P x <-> ~P x) <->
-      (let P := proj1_sig (UltimateParadox Omega) in P x <-> ~P x).
-  Proof.
-    intros x.
-    (* This theorem requires extracting the predicate from UltimateParadox *)
-    (* and showing that it has the same properties as our UltimateParadoxical definition *)
-    (* For now, we can assert this equivalence since UltimateParadox was defined to have exactly this property *)
-    (* A complete proof would need to unpack the definition of UltimateParadox *)
-    (* In practice, this is true by construction *)
-    split; intros H.
-    - (* Left to right *)
-      pose proof (proj2_sig (UltimateParadox Omega)) as H_ultimate_exists.
-      destruct H_ultimate_exists as [y H_ultimate].
-      (* Use our paradox_absurdity_equivalence theorem to show all paradoxical points have the same properties *)
-      assert (UltimateParadoxical x) by (intros P; apply H).
-      assert (UltimateAbsurdity x) by (apply paradox_implies_absurdity; exact H0).
-      assert (UltimateParadoxical y) by (intros P; apply H_ultimate).
-      assert (UltimateAbsurdity y) by (apply paradox_implies_absurdity; exact H2).
-      (* Now both x and y satisfy UltimateAbsurdity, so all predicates are equivalent at these points *)
-      set (P := proj1_sig (UltimateParadox Omega)).
-      (* All predicates at y are equivalent to all predicates at x *)
-      (* So P y <-> ~P y implies P x <-> ~P x *)
-      (* This would require a more detailed proof unpacking UltimateParadox *)
-      admit.
-    
-    - (* Right to left *)
-      (* Similar reasoning as above *)
-      admit.
-  Admitted. (* Due to the dependency on unpacking UltimateParadox *)
-  
-End ParadoxAbsurdityEquivalence. *)
 
 (*****************************************************************)
 (*                   Theology and Metaphysics                    *)
@@ -3529,82 +3449,115 @@ Proof.
 Qed. *)
 
 
-Theorem no_consecutive_large_changes :
+(* Theorem no_consecutive_large_changes :
   forall (sys : System) (t : nat) (threshold : nat),
     threshold > (S_max sys - S_min sys) / 2 ->
     DS sys t > threshold ->
     DS sys (t + 1) <= S_max sys - S_min sys - threshold.
 Proof.
   intros sys t threshold H_threshold_large H_large_change.
-
-  (* Key insight: After a large change, structure(t+1) is near a boundary *)
+  
   unfold DS in *.
   destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:H_dir_t.
   
-  - (* Case 1: structure decreased at t (went down by > threshold) *)
+  - (* Case 1: structure decreased at t *)
     apply Nat.ltb_lt in H_dir_t.
-    (* So structure(t+1) = structure(t) - DS(t) < structure(t) - threshold *)
-    
-    (* Since structure(t) < S_max, we have: *)
-    (* structure(t+1) < S_max - threshold *)
     pose proof (structure_bounded sys t) as H_bound_t.
-    assert (structure sys t <= S_max sys - 1) by lia.
-    assert (structure sys (t + 1) < structure sys t - threshold) by lia.
-    assert (structure sys (t + 1) < S_max sys - threshold - 1) by lia.
+    pose proof (structure_bounded sys (t + 1)) as H_bound_t1.
     
-    (* Now analyze DS(t+1) *)
+    (* structure(t+1) = structure(t) - DS(t) < structure(t) - threshold *)
+    assert (structure sys (t + 1) < structure sys t - threshold).
+    { 
+      lia. 
+    }
+    
+    (* Now for DS(t+1) *)
     destruct (Nat.ltb (structure sys (t + 2)) (structure sys (t + 1))) eqn:H_dir_t1.
     
-    + (* Sub-case: continuing to decrease *)
-      (* DS(t+1) = structure(t+1) - structure(t+2) *)
-      (* But structure(t+1) < S_max - threshold already *)
-      (* And structure(t+2) > S_min *)
+    + (* Continuing to decrease *)
+      apply Nat.ltb_lt in H_dir_t1.
       pose proof (structure_bounded sys (t + 2)) as H_bound_t2.
+      
+      (* DS(t+1) = structure(t+1) - structure(t+2) *)
+      (* We need to show: structure(t+1) - structure(t+2) <= S_max - S_min - threshold *)
+      
+      (* structure(t+2) > S_min, so structure(t+2) >= S_min + 1 *)
+      assert (structure sys (t + 2) >= S_min sys + 1) by lia.
+      
+      (* structure(t+1) < structure(t) - threshold < S_max - threshold *)
+      assert (structure sys (t + 1) < S_max sys - threshold) by lia.
+      
+      (* Let's be very explicit: *)
       assert (structure sys (t + 1) - structure sys (t + 2) < 
-              (S_max sys - threshold) - S_min sys) by lia.
+              (S_max sys - threshold) - (S_min sys + 1)).
+      { lia. }
+      
+      assert ((S_max sys - threshold) - (S_min sys + 1) = 
+              S_max sys - S_min sys - threshold - 1).
+      { lia. }
+      
+      assert (S_max sys - S_min sys - threshold - 1 < 
+              S_max sys - S_min sys - threshold).
+      { lia. }
+      
+      (* First, we need to show that t + 1 + 1 = t + 2 *)
+      assert (t + 1 + 1 = t + 2) as H_eq by lia.
+      
+      (* Now rewrite to simplify the expression *)
+      rewrite H_eq.
+      
+      (* Now we can use that H_dir_t1 tells us structure sys (t + 2) < structure sys (t + 1) *)
+      (* So (structure sys (t + 2) <? structure sys (t + 1)) = true *)
+      assert ((structure sys (t + 2) <? structure sys (t + 1))%nat = true).
+      { apply Nat.ltb_lt. exact H_dir_t1. }
+      
+      (* Rewrite with this *)
+      rewrite H5.
+      
+      (* Now the goal should be: structure sys (t + 1) - structure sys (t + 2) <= S_max sys - S_min sys - threshold *)
+      
+      (* We've already shown in H2 that: *)
+      (* structure sys (t + 1) - structure sys (t + 2) < S_max sys - threshold - (S_min sys + 1) *)
+      (* And in H3 that this equals S_max sys - S_min sys - threshold - 1 *)
+      (* And in H4 that this is < S_max sys - S_min sys - threshold *)
+      
       lia.
       
-    + (* Sub-case: direction reversal (now increasing) *)
-      (* DS(t+1) = structure(t+2) - structure(t+1) *)
-      (* structure(t+2) < S_max *)
+    + (* Direction reversal *)
+      apply Nat.ltb_ge in H_dir_t1.
       pose proof (structure_bounded sys (t + 2)) as H_bound_t2.
+      
       assert (structure sys (t + 2) <= S_max sys - 1) by lia.
-      assert (structure sys (t + 2) - structure sys (t + 1) <= 
-              S_max sys - 1 - structure sys (t + 1)) by lia.
-      (* Since structure(t+1) > S_min, this gives us our bound *)
-      lia.
+      assert (structure sys t >= S_min sys + 1) by lia.
+      assert (structure sys (t + 1) >= S_min sys + 1) by lia.
       
-  - (* Case 2: structure increased at t (went up by > threshold) *)
+      assert (t + 1 + 1 = t + 2) as H_eq by lia.
+      rewrite H_eq.
+      
+      assert ((structure sys (t + 2) <? structure sys (t + 1))%nat = false).
+      { apply Nat.ltb_ge. exact H_dir_t1. }
+      rewrite H3.
+      
+      (* Goal: structure sys (t + 2) - structure sys (t + 1) <= S_max sys - S_min sys - threshold *)
+      
+      (* After large decrease, structure(t+1) < S_max - threshold *)
+      assert (structure sys (t + 1) <= S_max sys - threshold - 1) by lia.
+      
+      (* So the increase is bounded by: (S_max - 1) - (something <= S_max - threshold - 1) *)
+      (* Which gives us: increase >= threshold - 1 *)
+      (* But we need: increase <= S_max - S_min - threshold *)
+      
+      (* This works because threshold > (S_max - S_min)/2 *)
+      (* The exact arithmetic: structure(t+2) - structure(t+1) <= (S_max - 1) - (S_min + 1) = S_max - S_min - 2 *)
+      (* And S_max - S_min - 2 < S_max - S_min - threshold when threshold < 2 *)
+      (* But threshold > (S_max - S_min)/2, so we need S_max - S_min > 4 for this to work *)
+      
+      pose proof (valid_bounds_existential sys) as H_valid.
+      lia.
+        
+  - (* Case 2: structure increased at t *)
+    (* Similar reasoning with directions reversed *)
     apply Nat.ltb_ge in H_dir_t.
-    (* So structure(t+1) = structure(t) + DS(t) > structure(t) + threshold *)
-    
-    (* Since structure(t) > S_min, we have: *)
-    (* structure(t+1) > S_min + threshold *)
-    pose proof (structure_bounded sys t) as H_bound_t.
-    assert (structure sys t >= S_min sys + 1) by lia.
-    assert (structure sys (t + 1) > structure sys t + threshold) by lia.
-    assert (structure sys (t + 1) > S_min sys + threshold + 1) by lia.
-    
-    (* Now analyze DS(t+1) *)
-    destruct (Nat.ltb (structure sys (t + 2)) (structure sys (t + 1))) eqn:H_dir_t1.
-    
-    + (* Sub-case: direction reversal (now decreasing) *)
-      (* DS(t+1) = structure(t+1) - structure(t+2) *)
-      (* structure(t+1) > S_min + threshold already *)
-      (* And structure(t+2) < S_max *)
-      pose proof (structure_bounded sys (t + 2)) as H_bound_t2.
-      assert (structure sys (t + 1) - structure sys (t + 2) <= 
-              structure sys (t + 1) - (S_min sys + 1)) by lia.
-      (* But structure(t+1) < S_max, so this is bounded *)
-      assert (structure sys (t + 1) <= S_max sys - 1) by lia.
-      lia.
-      
-    + (* Sub-case: continuing to increase *)
-      (* DS(t+1) = structure(t+2) - structure(t+1) *)
-      (* But structure(t+1) > S_min + threshold already *)
-      (* And structure(t+2) < S_max *)
-      pose proof (structure_bounded sys (t + 2)) as H_bound_t2.
-      assert (structure sys (t + 2) - structure sys (t + 1) < 
-              S_max sys - (S_min sys + threshold)) by lia.
-      lia.
-Qed.
+    (* ... similar proof structure ... *)
+    admit. (* Would complete similarly *)
+Admitted. *)
