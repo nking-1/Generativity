@@ -1436,6 +1436,92 @@ Section UltimateAbsurdity.
 End UltimateAbsurdity.
 
 
+
+Require Import Coq.Logic.Classical.
+
+Class NomegaSet := {
+  Nomegacarrier : Type;
+  exists_in_Nomega : Nomegacarrier -> Prop;
+  (* Use sig (computational) instead of exists (logical) *)
+  nomega_impossibility : {P: Nomegacarrier -> Prop | 
+    (forall x: Nomegacarrier, ~ P x) /\
+    (forall Q: Nomegacarrier -> Prop, (forall x: Nomegacarrier, ~ Q x) -> Q = P)};
+  nomega_not_empty : exists x: Nomegacarrier, True
+}.
+
+(* Now we can extract it computationally *)
+Definition the_impossible `{H_N: NomegaSet} : Nomegacarrier -> Prop :=
+  proj1_sig nomega_impossibility.
+
+(* The proofs with proper destructuring *)
+Lemma the_impossible_is_impossible : forall `{H_N: NomegaSet},
+  forall x: Nomegacarrier, ~ the_impossible x.
+Proof.
+  intros H_N x.
+  unfold the_impossible.
+  destruct nomega_impossibility as [P [HP HUnique]].
+  simpl. exact (HP x).
+Qed.
+
+Lemma the_impossible_unique : forall `{H_N: NomegaSet},
+  forall P: Nomegacarrier -> Prop,
+    (forall x: Nomegacarrier, ~ P x) -> P = the_impossible.
+Proof.
+  intros H_N P HP.
+  unfold the_impossible.
+  destruct nomega_impossibility as [Q [HQ HUnique]].
+  simpl. apply HUnique. exact HP.
+Qed.
+
+(* Rest of the theorems *)
+Theorem not_everything_is_impossible : forall `{H_N: NomegaSet},
+  ~ (forall P: Nomegacarrier -> Prop, forall x: Nomegacarrier, ~ P x).
+Proof.
+  intros H_N H_all_impossible.
+  destruct nomega_not_empty as [x0 _].
+  set (always_true := fun x: Nomegacarrier => True).
+  specialize (H_all_impossible always_true x0).
+  exact (H_all_impossible I).
+Qed.
+
+Theorem nomega_partial_completeness : forall `{H_N: NomegaSet},
+  forall P: Nomegacarrier -> Prop,
+    P <> the_impossible ->
+    exists x: Nomegacarrier, P x.
+Proof.
+  intros H_N P H_neq.
+  destruct (classic (exists x, P x)) as [H_exists | H_not_exists].
+  - exact H_exists.
+  - exfalso.
+    assert (H_P_impossible: forall x, ~ P x).
+    {
+      intros x Px.
+      apply H_not_exists.
+      exists x. exact Px.
+    }
+    assert (P = the_impossible).
+    { apply the_impossible_unique. exact H_P_impossible. }
+    exact (H_neq H).
+Qed.
+
+Theorem everything_possible_except_one : forall `{H_N: NomegaSet},
+  forall P: Nomegacarrier -> Prop,
+    P = the_impossible \/ exists x: Nomegacarrier, P x.
+Proof.
+  intros H_N P.
+  destruct (classic (P = the_impossible)) as [H_eq | H_neq].
+  - left. exact H_eq.
+  - right. apply nomega_partial_completeness. exact H_neq.
+Qed.
+
+
+(* For paradoxes, we'd need self-reference embedding like in UniversalSet *)
+(* But the core duality is established: *)
+(* Omega: Everything is possible *)
+(* Nomega: Everything is possible except one impossible thing *)
+
+
+
 (*****************************************************************)
 (*                   Theology and Metaphysics                    *)
 (*****************************************************************)
