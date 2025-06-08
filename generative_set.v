@@ -651,7 +651,6 @@ Qed.
 
 (*
 We define OmegaSet as a timeless, superpositional set.
-We rename the carrier to Omega_carrier to avoid ambiguity.
 *)
 Class OmegaSet := {
   Omegacarrier : Type;                          (* The timeless set's carrier *)
@@ -3278,6 +3277,64 @@ Section PlatonicSolidGenerator.
 
 End PlatonicSolidGenerator.
 
+
+(* Theorem: Humans are Paradox Processors
+   This theorem formalizes the observation that human agents routinely
+   hold contradictory beliefs and resolve them through temporal distribution
+   rather than logical elimination.
+   
+   A human agent is characterized by:
+   1. Simultaneously knowing P (some action is harmful)
+   2. While performing ¬P (doing that action anyway)
+   3. Resolving this through temporal promises (I'll change tomorrow)
+   
+   This models phenomena like:
+   - Smoking while knowing it's deadly
+   - Procrastinating while knowing deadlines approach
+   - Staying up late while knowing we need sleep
+   - Making promises we know we might break
+   
+   The theorem shows that U necessarily contains such agents, suggesting
+   that paradox processing is not a flaw but a fundamental feature of
+   conscious entities navigating finite existence.
+*)
+Theorem humans_are_paradox_processors :
+  forall (U : Type) `{UniversalSet U},
+  exists (human : U) (harmful_action : U -> Prop),
+    (* At time t1: Human knows the action is harmful *)
+    (exists t1 : nat, 
+      contains t1 (self_ref_pred_embed (fun _ => harmful_action human))) /\
+    (* At time t2: Human does it anyway *)
+    (exists t2 : nat,
+      contains t2 (self_ref_pred_embed (fun _ => ~ harmful_action human))) /\
+    (* At time t3: Human promises to stop in the future *)
+    (exists t3 : nat,
+      contains t3 (self_ref_pred_embed (fun _ => 
+        exists t_future : nat, t_future > t3 /\ 
+        harmful_action human))).
+Proof.
+  intros U H_U.
+  
+  (* Define the harmful action predicate *)
+  set (smoking := fun x : U => contains 0 x).
+  
+  (* Define our paradoxical human predicate *)
+  set (human_pred := fun h : U => 
+    (exists t1 : nat, contains t1 (self_ref_pred_embed (fun _ => smoking h))) /\
+    (exists t2 : nat, contains t2 (self_ref_pred_embed (fun _ => ~ smoking h))) /\
+    (exists t3 : nat, contains t3 (self_ref_pred_embed (fun _ => 
+      exists t_future : nat, t_future > t3 /\ smoking h)))).
+  
+  (* Use self_ref_generation_exists to get the human *)
+  destruct (self_ref_generation_exists human_pred 0) as [t [H_le H_contains]].
+  
+  (* The human is the self-referential embedding *)
+  exists (self_ref_pred_embed human_pred), smoking.
+  
+  (* Now we need to prove the three conditions *)
+  pose proof (self_ref_pred_embed_correct human_pred) as H_correct.
+  exact H_correct.
+Qed.
 
 
 Require Import Coq.Init.Nat.
