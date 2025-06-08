@@ -1545,6 +1545,44 @@ Proof.
 Qed.
 
 
+Theorem omega_contains_alpha : forall (Omega : OmegaSet),
+  (* We can simulate an AlphaSet inside Omega *)
+  exists (alpha_sim : Omegacarrier -> Prop),
+    (* The alpha_sim predicate identifies elements that "act like Alpha elements" *)
+    (exists (impossible_sim : Omegacarrier -> Prop),
+      (* For elements in our simulated Alpha: *)
+      (forall x : Omegacarrier, alpha_sim x ->
+        (* Every predicate restricted to alpha_sim either: *)
+        forall P : Omegacarrier -> Prop,
+          (* Has no witnesses in alpha_sim (and thus acts like the impossible) *)
+          (forall y, alpha_sim y -> ~P y) \/
+          (* Or has a witness in alpha_sim *)
+          (exists y, alpha_sim y /\ P y))).
+Proof.
+  intros Omega.
+  
+  (* Define the predicate that describes "being an Alpha-like subset" *)
+  set (alpha_structure := fun x : Omegacarrier =>
+    exists (A : Omegacarrier -> Prop) (imp : Omegacarrier -> Prop),
+      A x /\
+      (* imp is impossible within A *)
+      (forall y, A y -> ~imp y) /\
+      (* Every predicate on A either has no witnesses or has witnesses *)
+      (forall P : Omegacarrier -> Prop,
+        (forall y, A y -> ~P y) \/ (exists y, A y /\ P y))).
+  
+  (* By omega_completeness, this structure must have a witness *)
+  destruct (omega_completeness alpha_structure) as [x0 Hx0].
+  destruct Hx0 as [A [imp [HA [Himp Hpartial]]]].
+  
+  (* Use A as our alpha_sim and imp as our impossible_sim *)
+  exists A, imp.
+  
+  intros x Hx P.
+  (* Apply the partial completeness property *)
+  exact (Hpartial P).
+Qed.
+
 
 (*****************************************************************)
 (*                   Theology and Metaphysics                    *)
