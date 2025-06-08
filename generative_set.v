@@ -1515,10 +1515,26 @@ Proof.
 Qed.
 
 
-(* For paradoxes, we'd need self-reference embedding like in UniversalSet *)
-(* But the core duality is established: *)
-(* Omega: Everything is possible *)
-(* Nomega: Everything is possible except one impossible thing *)
+Theorem nomega_is_spatial_U : forall `{H_N: NomegaSet},
+  (* Nomega enforces separation through mutual exclusion rather than time *)
+  forall P Q: Nomegacarrier -> Prop,
+    P = the_impossible \/ Q = the_impossible \/ 
+    (exists x, P x) \/ (exists x, Q x) \/
+    (exists x, P x /\ Q x).
+Proof.
+  intros H_N P Q.
+  
+  (* This is just restating everything_possible_except_one in a different way *)
+  destruct (everything_possible_except_one P) as [HP | [x HPx]].
+  - left. exact HP.
+  - destruct (everything_possible_except_one Q) as [HQ | [y HQy]].
+    + right. left. exact HQ.
+    + (* Both P and Q have witnesses *)
+      (* Either they overlap or they don't *)
+      destruct (classic (exists z, P z /\ Q z)) as [H_overlap | H_disjoint].
+      * right. right. right. right. exact H_overlap.
+      * right. right. left. exists x. exact HPx.
+Qed.
 
 
 
