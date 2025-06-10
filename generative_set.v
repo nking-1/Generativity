@@ -1318,6 +1318,7 @@ Proof.
   exact (proj2_sig (UltimateParadox O)).
 Qed.
 
+
 (* Creative idea - what if Omega could even refer to things outside mathematics? *)
 Parameter OutsideOmega : Type.
 
@@ -1437,10 +1438,9 @@ End UltimateAbsurdity.
 
 
 
-Require Import Coq.Logic.Classical.
-
 (* Classical Exclusion via Unique Negation *)
 (* We define a new class AlphaSet that represents a set with a unique impossible element *)
+(* We might think of the impossible element as the "veil" between Omega and Alpha *)
 Class AlphaSet := {
   Alphacarrier : Type;
   exists_in_Alpha : Alphacarrier -> Prop;
@@ -1452,12 +1452,11 @@ Class AlphaSet := {
 }.
 
 
-(* Now we can extract it computationally *)
+(* Help extract it computationally *)
 Definition the_impossible `{H_N: AlphaSet} : Alphacarrier -> Prop :=
   proj1_sig alpha_impossibility.
 
 
-(* The proofs with proper destructuring *)
 Lemma the_impossible_is_impossible : forall `{H_N: AlphaSet},
   forall x: Alphacarrier, ~ the_impossible x.
 Proof.
@@ -1479,7 +1478,6 @@ Proof.
 Qed.
 
 
-(* Rest of the theorems *)
 Theorem not_everything_is_impossible : forall `{H_N: AlphaSet},
   ~ (forall P: Alphacarrier -> Prop, forall x: Alphacarrier, ~ P x).
 Proof.
@@ -1523,6 +1521,7 @@ Proof.
 Qed.
 
 
+(* NOTE: Classical logic is used in the following two theorems. But again, we try to keep it scoped here! *)
 Theorem alpha_is_spatial : forall `{H_N: AlphaSet},
   (* Alpha enforces separation through mutual exclusion rather than time *)
   forall P Q: Alphacarrier -> Prop,
