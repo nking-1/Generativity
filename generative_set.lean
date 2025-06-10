@@ -424,3 +424,46 @@ section AlphaSetTheorems
       exact h
 
 end AlphaSetTheorems
+
+
+theorem omega_contains_alpha (Omega : OmegaSet) :
+ /- We can simulate an AlphaSet inside Omega -/
+ Exists fun (alpha_sim : Omega.Omegacarrier -> Prop) =>
+   /- The alpha_sim predicate identifies elements that "act like Alpha elements" -/
+   Exists fun (impossible_sim : Omega.Omegacarrier -> Prop) =>
+     /- For elements in our simulated Alpha: -/
+     forall x : Omega.Omegacarrier, alpha_sim x ->
+       /- Every predicate restricted to alpha_sim either: -/
+       forall P : Omega.Omegacarrier -> Prop,
+         /- Has no witnesses in alpha_sim (and thus acts like the impossible) -/
+         (forall y, alpha_sim y -> Not (P y)) \/
+         /- Or has a witness in alpha_sim -/
+         (Exists fun y => alpha_sim y /\ P y) := by
+
+ /- Define the predicate that describes "being an Alpha-like subset" -/
+ let alpha_structure := fun x : Omega.Omegacarrier =>
+   Exists fun (A : Omega.Omegacarrier -> Prop) =>
+   Exists fun (imp : Omega.Omegacarrier -> Prop) =>
+     A x /\
+     /- imp is impossible within A -/
+     (forall y, A y -> Not (imp y)) /\
+     /- Every predicate on A either has no witnesses or has witnesses -/
+     (forall P : Omega.Omegacarrier -> Prop,
+       (forall y, A y -> Not (P y)) \/ (Exists fun y => A y /\ P y))
+
+ /- By omega_completeness, this structure must have a witness -/
+ have h := Omega.omega_completeness alpha_structure
+ match h with
+ | Exists.intro x0 Hx0 =>
+   match Hx0 with
+   | Exists.intro A HA =>
+     match HA with
+     | Exists.intro imp Himp =>
+       match Himp with
+       | And.intro HAx0 (And.intro Himp_imp Hpartial) =>
+         /- Use A as our alpha_sim and imp as our impossible_sim -/
+         exists A, imp
+
+         intro x Hx P
+         /- Apply the partial completeness property -/
+         exact Hpartial P

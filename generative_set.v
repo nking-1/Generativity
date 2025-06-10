@@ -1489,6 +1489,8 @@ Proof.
 Qed.
 
 
+(* NOTE: Classical logic is used in the following theorems. But again, we try to keep it scoped here! *)
+(* Classical logic is kind of the point here - we're showing that predicates emerge from not being impossible *)
 Theorem alpha_partial_completeness : forall `{H_N: AlphaSet},
   forall P: Alphacarrier -> Prop,
     P <> the_impossible ->
@@ -1521,7 +1523,6 @@ Proof.
 Qed.
 
 
-(* NOTE: Classical logic is used in the following two theorems. But again, we try to keep it scoped here! *)
 Theorem alpha_is_spatial : forall `{H_N: AlphaSet},
   (* Alpha enforces separation through mutual exclusion rather than time *)
   forall P Q: Alphacarrier -> Prop,
