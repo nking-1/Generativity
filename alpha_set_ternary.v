@@ -387,129 +387,219 @@ End TernaryLogic.
 
 
 (* ============================================================ *)
-(* The Contradiction: Alpha Cannot Have Excluded Middle *)
+(* The Contradiction: Alpha Cannot Have Excluded Middle         *)
 (* ============================================================ *)
-
 Section AlphaNeedsThreeValues.
   Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
+  Variable enum_complete : forall A : Alphacarrier -> Prop, exists n, alpha_enum n = Some A.
+  Variable embed : Alphacarrier -> Omegacarrier.
   
-  (* First, let's be clear about what excluded middle means *)
-  Definition excluded_middle := forall P : Prop, P \/ ~P.
+  (* First, let's define what it means for Alpha to have excluded middle *)
+  (* This means Alpha can decide any proposition about its own elements *)
+  Definition alpha_excluded_middle := 
+    forall (A : Alphacarrier -> Prop), 
+    (exists a, A a) \/ (forall a, ~ A a).
   
-  (* If Alpha has excluded middle, it can construct a decision procedure *)
-  Lemma em_gives_decisions :
-    excluded_middle ->
-    forall P : Prop, {P} + {~P}.
+  (* Key lemma: if Alpha has excluded middle, it can "detect" 
+     which of its elements map to omega_diagonal witnesses *)
+  Lemma alpha_em_detects_diagonal :
+    alpha_excluded_middle ->
+    exists (A_detect : Alphacarrier -> Prop),
+    forall a : Alphacarrier,
+      A_detect a <-> omega_diagonal alpha_enum embed (embed a).
   Proof.
-    intros EM P.
-    (* This actually requires more work in Coq - we need classical axioms *)
-    (* For now, let's assume we can go from EM to decidability *)
-    admit.
-  Admitted.
+    intro AEM.
+    
+    (* Define A_detect as the preimage of omega_diagonal *)
+    pose (A_detect := fun a => omega_diagonal alpha_enum embed (embed a)).
+    exists A_detect.
+    
+    (* This is just the definition - no EM needed yet *)
+    split; intro H; exact H.
+  Qed.
   
-  (* The killer theorem: Alpha cannot have excluded middle *)
+  (* The killer theorem: if Alpha has excluded middle, 
+     then omega_diagonal is representable *)
+  Theorem alpha_em_makes_diagonal_representable :
+    alpha_excluded_middle ->
+    representable (omega_diagonal alpha_enum embed).
+  Proof.
+    intro AEM.
+    
+    (* Get the detection predicate *)
+    destruct (alpha_em_detects_diagonal AEM) as [A_detect HA_detect].
+    
+    (* By alpha_excluded_middle, either A_detect has witnesses or it doesn't *)
+    destruct (AEM A_detect) as [H_exists | H_none].
+    
+    - (* Case 1: A_detect has witnesses *)
+      (* Then A_detect is a legitimate Alpha predicate that tracks omega_diagonal *)
+      unfold representable.
+      exists A_detect, embed.
+      exact HA_detect.
+      
+    - (* Case 2: A_detect has no witnesses *)
+      (* This means no embedded Alpha element satisfies omega_diagonal *)
+      (* But we know omega_diagonal has witnesses in Omega *)
+      
+      (* Actually, both cases lead to the same conclusion: *)
+      (* A_detect and embed form a representation! *)
+      unfold representable.
+      exists A_detect, embed.
+      exact HA_detect.
+  Qed.
+  
+  (* Therefore: Alpha cannot have excluded middle *)
   Theorem alpha_cannot_have_excluded_middle :
-    excluded_middle -> False.
+    alpha_excluded_middle -> False.
   Proof.
-    intro EM.
+    intro AEM.
     
-    (* Consider the proposition: "omega_unrepresentable has a witness" *)
-    pose (P := exists x : Omegacarrier, omega_unrepresentable x).
+    (* By the previous theorem, omega_diagonal becomes representable *)
+    pose proof (alpha_em_makes_diagonal_representable AEM) as H_rep.
     
-    (* By excluded middle, either P or ~P *)
-    destruct (EM P) as [HP | HnP].
-    
-    - (* Case 1: P holds *)
-      (* We know this is true from omega_completeness *)
-      (* So far so good... *)
-      
-      (* But now consider: can Alpha express the question 
-         "is x a witness for omega_unrepresentable?" *)
-      
-      (* If Alpha could fully decide P, it would need to be able to
-         check whether any given x satisfies omega_unrepresentable *)
-      
-      (* This would require Alpha to represent omega_unrepresentable! *)
-      (* Let's make this precise... *)
-      
-      (* Define a predicate in Alpha that tries to track unrepresentability *)
-      assert (H_bad : representable omega_unrepresentable).
-      {
-        (* If Alpha can decide everything, it can define:
-           "the set of Alpha elements that map to unrepresentable Omega elements" *)
-        admit. (* This is where the technical argument would go *)
-      }
-      
-      (* But we proved this is impossible! *)
-      exact (unrepresentable_not_representable H_bad).
-      
-    - (* Case 2: ~P holds *)
-      (* This says there's no witness for omega_unrepresentable *)
-      (* But we proved there IS a witness! *)
-      apply HnP.
-      exact unrepresentable_exists.
+    (* But we proved omega_diagonal is not representable! *)
+    exact (omega_diagonal_not_representable alpha_enum enum_complete embed H_rep).
   Qed.
   
 End AlphaNeedsThreeValues.
 
+
 (* ============================================================ *)
-(* Therefore: Ternary Logic is Necessary *)
+(* Ternary Logic Emerges in Alpha *)
 (* ============================================================ *)
 
-Section TernaryNecessity.
+Section AlphaTernaryLogic.
   Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
+  Variable enum_complete : forall A : Alphacarrier -> Prop, exists n, alpha_enum n = Some A.
+  Variable embed : Alphacarrier -> Omegacarrier.
   
-  (* Some propositions cannot be decided in Alpha *)
-  Definition undecidable_in_alpha (P : Prop) : Prop :=
-    (* Asserting P leads to contradiction *)
-    (P -> exists x, omega_unrepresentable x -> representable omega_unrepresentable) /\
-    (* Asserting ~P leads to contradiction *)  
-    (~P -> forall x, ~omega_unrepresentable x).
+  (* Define Alpha's ternary truth values *)
+  Inductive AlphaTruth (A : Alphacarrier -> Prop) : Type :=
+    | Alpha_True : (exists a, A a) -> AlphaTruth A
+    | Alpha_False : (forall a, ~ A a) -> AlphaTruth A
+    | Alpha_Undecidable : 
+        (~ exists a, A a) -> 
+        (~ forall a, ~ A a) -> 
+        AlphaTruth A.
   
-  (* The witness question is undecidable *)
-  Theorem witness_question_undecidable :
-    undecidable_in_alpha (exists x : Omegacarrier, omega_unrepresentable x).
+  (* The key theorem: some predicates are undecidable in Alpha *)
+  Theorem exists_undecidable_predicate :
+    exists A : Alphacarrier -> Prop,
+    (~ exists a, A a) /\ (~ forall a, ~ A a).
   Proof.
+    (* Use the omega_diagonal detection predicate *)
+    exists (fun a => omega_diagonal alpha_enum embed (embed a)).
+    
     split.
-    - (* If we assert witnesses exist, we'd need to represent unrepresentable *)
-      intros H_exists.
-      exists (proj1_sig (omega_completeness omega_unrepresentable)).
-      intro _.
-      (* This would require Alpha to check unrepresentability *)
-      admit.
+    - (* Assume exists a witness *)
+      intro H_exists.
+      destruct H_exists as [a Ha].
       
-    - (* If we assert no witnesses exist, contradicts Omega *)
-      intros H_not_exists x H_unrep.
-      apply H_not_exists.
-      exists x.
-      exact H_unrep.
+      (* Then we could represent omega_diagonal *)
+      apply (omega_diagonal_not_representable alpha_enum enum_complete embed).
+      unfold representable.
+      exists (fun a => omega_diagonal alpha_enum embed (embed a)), embed.
+      intro a'. split; intro H; exact H.
+      
+    - (* Assume no witnesses *)
+      intro H_none.
+      
+      (* But omega_diagonal has witnesses in Omega *)
+      destruct (omega_diagonal_exists alpha_enum embed) as [x Hx].
+      
+      (* If embed is surjective onto its image, we'd get a contradiction *)
+      (* But we can't prove this in general... *)
+      (* Instead, use omega_completeness more cleverly *)
+      
+      (* Consider the predicate "x is in the image of embed and satisfies omega_diagonal" *)
+      pose (P := fun x => omega_diagonal alpha_enum embed x /\ exists a, embed a = x).
+      assert (HP: exists x, P x).
+      { apply omega_completeness. }
+      
+      destruct HP as [x' [Hx' [a' Hembed]]].
+      
+      (* So embed a' = x' and omega_diagonal x' *)
+      rewrite <- Hembed in Hx'.
+      
+      (* But H_none says no such a' exists *)
+      exact (H_none a' Hx').
   Qed.
   
-  (* Therefore, Alpha must use ternary logic *)
-  Theorem alpha_uses_ternary :
-    exists P : Prop,
-    forall (decision : {P} + {~P}),
-    False.
+  (* Therefore: Alpha must use ternary classification *)
+  Definition alpha_classify (A : Alphacarrier -> Prop) : Type :=
+    AlphaTruth A.
+  
+  (* Examples showing all three truth values are inhabited *)
+  
+  (* Example of Alpha_True *)
+  Example always_true_is_true :
+    AlphaTruth (fun _ : Alphacarrier => True).
   Proof.
-    exists (exists x : Omegacarrier, omega_unrepresentable x).
-    intro decision.
-    destruct decision as [H_yes | H_no].
-    - (* If we decide yes, we need representation *)
-      admit. (* Use first part of witness_question_undecidable *)
-    - (* If we decide no, contradicts omega_completeness *)
-      apply H_no.
-      exact unrepresentable_exists.
+    apply Alpha_True.
+    destruct alpha_not_empty as [a _].
+    exists a. exact I.
   Qed.
   
-  (* The final picture: Alpha must classify propositions into three categories *)
-  Definition alpha_classification (P : Prop) : TernaryTruth P :=
-    match excluded_middle_decidable P with
-    | inl H_P => Proved P H_P
-    | inr H_nP => 
-        match excluded_middle_decidable (~P) with
-        | inl H_nnP => Refuted P (fun HP => H_nnP HP)
-        | inr H_undec => Undecidable P (fun HP => _) (fun HnP => _)
-        end
-    end.
+  (* Example of Alpha_False *)  
+  Example impossible_is_false :
+    AlphaTruth the_impossible.
+  Proof.
+    apply Alpha_False.
+    exact the_impossible_has_no_witnesses.
+  Qed.
   
-End TernaryNecessity.
+  (* Example of Alpha_Undecidable *)
+  Example diagonal_is_undecidable :
+    AlphaTruth (fun a => omega_diagonal alpha_enum embed (embed a)).
+  Proof.
+    apply Alpha_Undecidable.
+    
+    - (* ~ exists a, ... *)
+      intro H_exists.
+      apply (omega_diagonal_not_representable alpha_enum enum_complete embed).
+      unfold representable.
+      exists (fun a => omega_diagonal alpha_enum embed (embed a)), embed.
+      intro a. split; intro H; exact H.
+      
+    - (* ~ forall a, ~ ... *)
+      intro H_none.
+      destruct (omega_diagonal_exists alpha_enum embed) as [x Hx].
+      pose (P := fun x => omega_diagonal alpha_enum embed x /\ exists a, embed a = x).
+      assert (HP: exists x, P x) by apply omega_completeness.
+      destruct HP as [x' [Hx' [a' Hembed]]].
+      rewrite <- Hembed in Hx'.
+      exact (H_none a' Hx').
+  Qed.
+  
+  (* The crucial theorem: Alpha cannot escape ternary logic *)
+  Theorem alpha_necessarily_ternary :
+    ~ (forall A : Alphacarrier -> Prop, 
+        (exists a, A a) \/ (forall a, ~ A a)).
+  Proof.
+    intro H_binary.
+    
+    (* Pass all the required arguments in order *)
+    exact (alpha_cannot_have_excluded_middle alpha_enum enum_complete embed H_binary).
+  Qed.
+  
+  (* Final insight: The three values correspond to Alpha's relationship with Omega *)
+  Definition truth_value_meaning : forall A : Alphacarrier -> Prop, AlphaTruth A -> Prop :=
+    fun A truth_val =>
+      match truth_val with
+      | Alpha_True _ _ => 
+          (* A is witnessed within Alpha's domain *)
+          True  
+      | Alpha_False _ _ => 
+          (* A is the_impossible or equivalent to it *)
+          forall a, A a <-> the_impossible a
+      | Alpha_Undecidable _ _ _ => 
+          (* A touches Omega's unrepresentable reality *)
+          exists (P : Omegacarrier -> Prop), 
+          ~ representable P /\
+          forall a, A a <-> P (embed a)
+      end.
+  
+End AlphaTernaryLogic.

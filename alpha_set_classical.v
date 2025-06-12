@@ -23,6 +23,23 @@ Class AlphaSet := {
  alpha_constant_decision : forall P : Prop, P \/ ~ P
 }.
 
+(* AlphaSet embodies excluded middle - we're not claiming to derive it *)
+Theorem alpha_embodies_excluded_middle `{H_N: AlphaSet} :
+ forall P : Prop, P \/ ~ P.
+Proof.
+ exact alpha_constant_decision.
+Qed.
+
+(* Double negation elimination follows from excluded middle *)
+Theorem alpha_double_negation_elimination `{H_N: AlphaSet} :
+ forall P : Prop, ~~P -> P.
+Proof.
+ intros P H_nnP.
+ destruct (alpha_constant_decision P) as [HP | HnP].
+ - exact HP.
+ - exfalso. exact (H_nnP HnP).
+Qed.
+
 (* Extract the impossible predicate *)
 Definition the_impossible `{H_N: AlphaSet} : Alphacarrier -> Prop :=
  proj1_sig alpha_impossibility.
@@ -99,28 +116,6 @@ Proof.
    intros x Px.
    apply H_not_exists.
    exists x. exact Px.
-Qed.
-
-(* AlphaSet embodies excluded middle - we're not claiming to derive it *)
-Theorem alpha_embodies_excluded_middle `{H_N: AlphaSet} :
- forall P : Prop, P \/ ~ P.
-Proof.
- exact alpha_constant_decision.
-Qed.
-
-(* Note: This theorem shows that AlphaSet naturally embodies classical logic,
-  not that it generates it from nothing. The alpha_constant_decision axiom
-  IS excluded middle, and the structure of "one impossible predicate" provides
-  the natural home for classical reasoning about predicates. *)
-
-(* Double negation elimination follows from excluded middle *)
-Theorem alpha_double_negation_elimination `{H_N: AlphaSet} :
- forall P : Prop, ~~P -> P.
-Proof.
- intros P H_nnP.
- destruct (alpha_constant_decision P) as [HP | HnP].
- - exact HP.
- - exfalso. exact (H_nnP HnP).
 Qed.
 
 (* Spatial characterization of AlphaSet *)
