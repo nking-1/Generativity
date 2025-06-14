@@ -155,3 +155,30 @@ Qed.
   partners: the decision principle for propositions extends naturally to a
   dichotomy for all predicates relative to the unique impossibility.
 *)
+
+
+Theorem predicate_polarity_trichotomy `{AlphaSet} :
+  forall (P : Alphacarrier -> Prop),
+    pred_equiv P the_impossible \/
+    pred_equiv (fun x => ~ P x) the_impossible \/
+    (exists x, P x) /\ (exists y, ~ P y).
+Proof.
+  intros P.
+  destruct (alpha_constant_decision (exists x, P x)) as [Hex | Hnex].
+  - (* Case: P has a witness *)
+    destruct (alpha_constant_decision (exists x, ~ P x)) as [Hneg | Hnoneg].
+    + (* Both P and ~P have witnesses *)
+      right. right. split; assumption.
+    + (* ~P has no witness => ¬P ≡ the_impossible *)
+      right. left.
+      unfold pred_equiv, the_impossible.
+      apply the_impossible_unique.
+      intros x HnegPx.
+      apply Hnoneg. exists x. exact HnegPx.
+  - (* P has no witness => P ≡ the_impossible *)
+    left.
+    unfold pred_equiv, the_impossible.
+    apply the_impossible_unique.
+    intros x Px.
+    apply Hnex. exists x. exact Px.
+Qed.
