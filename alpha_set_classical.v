@@ -182,3 +182,53 @@ Proof.
     intros x Px.
     apply Hnex. exists x. exact Px.
 Qed.
+
+
+Lemma impossible_at : forall `{AlphaSet} x,
+  the_impossible x <-> False.
+Proof.
+  intros. unfold the_impossible.
+  split.
+  - apply (proj1 (proj2_sig alpha_impossibility)).
+  - intro F. destruct F.
+Qed.
+
+
+Lemma negation_has_witness_if_not_impossible `{AlphaSet} :
+  forall P : Alphacarrier -> Prop,
+    ~(pred_equiv P the_impossible) ->
+    exists x, ~ P x.
+Proof.
+  intros P H_not_impossible.
+
+  destruct (alpha_constant_decision (exists x, ~ P x)) as [H_yes | H_no].
+  - exact H_yes.
+
+  - (* Assume: no witness for ¬P ⇒ ¬P ≡ the_impossible *)
+    assert (H_neg_equiv : pred_equiv (fun x => ~ P x) the_impossible).
+    {
+      unfold pred_equiv.
+      apply the_impossible_unique.
+      intros x Hneg.
+      apply H_no. exists x. exact Hneg.
+    }
+
+    (* Now deduce: P ≡ not the_impossible ⇒ contradiction *)
+    assert (H_equiv : pred_equiv P the_impossible).
+    {
+      unfold pred_equiv in *.
+      intros x.
+      specialize (H_neg_equiv x).
+      rewrite impossible_at in H_neg_equiv.
+      split.
+      - intros Px.
+        destruct H_neg_equiv as [to_imp _].
+        apply to_imp. intro contra. apply contra. exact Px.
+
+      - intros Ti.
+        rewrite impossible_at in Ti. destruct Ti.
+    }
+
+    (* Contradiction with assumption *)
+    apply H_not_impossible. exact H_equiv.
+Qed.
