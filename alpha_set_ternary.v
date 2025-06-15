@@ -719,8 +719,6 @@ Qed.
 (* Connecting Dynamic Systems to the Omega/Alpha Framework *)
 (* ============================================================ *)
 
-Section DynamicSystems.
-
 (* First, let's define an unbounded OmegaSystem *)
 Record OmegaSystem := {
   omega_structure : nat -> nat;
@@ -1085,3 +1083,355 @@ Section OmegaAlphaConnection.
   Qed. *)
 
 End OmegaAlphaConnection.
+
+
+(* ============================================================ *)
+(* The Yoneda-I_max Construction: Objects as Optimized Relations *)
+(* Version 2: Building up from concrete foundations *)
+(* ============================================================ *)
+
+Require Import Coq.Arith.Arith.
+Require Import Coq.Arith.PeanoNat.
+Require Import Coq.Lists.List.
+Import ListNotations.
+
+(* Start with concrete information morphisms *)
+Record InfoMorphism := {
+  source_complexity : nat;      (* S_source *)
+  target_complexity : nat;      (* S_target *)
+  transformation_rate : nat;    (* How fast information flows *)
+  
+  (* Constraints *)
+  rate_bounded : transformation_rate > 0;
+  complexity_preserved : target_complexity > 0 -> source_complexity > 0
+}.
+
+(* I_val for a morphism: how much information flows *)
+Definition morphism_I_val (f : InfoMorphism) : nat :=
+  source_complexity f * transformation_rate f.
+
+(* A simple concrete category with I_max constraints *)
+Module ConcreteInfoCategory.
+  
+  (* Objects are just natural numbers representing complexity levels *)
+  Definition Obj := nat.
+  
+  (* Global I_max bound *)
+  Definition I_max_global : nat := 1000.
+  
+  (* Valid morphisms must respect I_max *)
+  Definition valid_morphism (source target : Obj) (f : InfoMorphism) : Prop :=
+    source_complexity f <= source /\
+    target_complexity f <= target /\
+    morphism_I_val f <= I_max_global.
+  
+  (* Identity morphism - provable! *)
+  Definition id_morphism (n : Obj) : InfoMorphism.
+  Proof.
+    refine {| 
+      source_complexity := n;
+      target_complexity := n;
+      transformation_rate := 1
+    |}.
+    - auto.
+    - intro. auto.
+  Defined.
+  
+  (* Identity respects I_max *)
+  Lemma id_morphism_valid : forall n : Obj,
+    n > 0 -> n <= I_max_global ->
+    valid_morphism n n (id_morphism n).
+  Proof.
+    intros n Hn Hmax.
+    unfold valid_morphism, id_morphism, morphism_I_val.
+    simpl.
+    split; [|split]; auto.
+    rewrite Nat.mul_1_r.
+    assumption.
+  Qed.
+  
+End ConcreteInfoCategory.
+
+(* Now let's build toward Yoneda *)
+(* Make sure you're inside the YonedaForInfo module *)
+Module YonedaForInfo.
+  Import ConcreteInfoCategory.
+  
+  (* The Yoneda embedding: view object n through all morphisms from it *)
+  Definition hom_functor (n : Obj) : Obj -> Type :=
+    fun m => { f : InfoMorphism | valid_morphism n m f }.
+  
+  (* Key insight: objects with no outgoing morphisms don't "exist" *)
+  Definition has_morphisms (n : Obj) : Prop :=
+    exists m : Obj, exists f : InfoMorphism,
+    valid_morphism n m f.
+  
+  (* Trivial: every object has id morphism to itself *)
+  Lemma every_object_has_morphism : forall n : Obj,
+    n > 0 -> n <= I_max_global ->
+    has_morphisms n.
+  Proof.
+    intros n Hn Hmax.
+    unfold has_morphisms.
+    exists n, (id_morphism n).
+    apply id_morphism_valid; assumption.
+  Qed.
+  
+  (* Objects are "stable" if they achieve good I_val *)
+  Definition stable_object (n : Obj) : Prop :=
+    n > 0 /\
+    exists threshold : nat,
+    threshold >= n / 2 /\
+    exists m : Obj, exists f : InfoMorphism,
+    valid_morphism n m f /\
+    morphism_I_val f >= threshold.
+  
+  (* Alternative: prove that stable objects achieve good I_val relative to size *)
+  Lemma stable_objects_achieve_good_flow : forall n : Obj,
+    stable_object n ->
+    exists f : InfoMorphism, exists m : Obj,
+    valid_morphism n m f /\
+    morphism_I_val f >= n / 2 /\
+    morphism_I_val f <= I_max_global.
+  Proof.
+    intros n H_stable.
+    destruct H_stable as [Hn [threshold [Hthresh [m [f [Hvalid Hival]]]]]].
+    exists f, m.
+    split; [|split].
+    - exact Hvalid.
+    - lia. (* threshold >= n/2 and morphism_I_val f >= threshold *)
+    - unfold valid_morphism in Hvalid.
+      destruct Hvalid as [_ [_ Hmax]].
+      exact Hmax.
+  Qed.
+  
+End YonedaForInfo.
+
+
+Require Import Coq.Arith.Arith.
+
+
+Module ObjectsAsOptimization.
+  Import ConcreteInfoCategory.
+  Import YonedaForInfo.
+  
+  (* First, let's handle the easy cases *)
+  
+  (* Case 1: Morphism to itself (identity) *)
+  Lemma morphism_to_self : forall n : Obj,
+    n > 0 -> n <= I_max_global ->
+    exists f : InfoMorphism,
+    valid_morphism n n f /\
+    morphism_I_val f = n.
+  Proof.
+    intros n Hn Hmax.
+    exists (id_morphism n).
+    split.
+    - apply id_morphism_valid; assumption.
+    - unfold morphism_I_val, id_morphism. simpl.
+      lia.
+  Qed.
+
+  Lemma div_le : forall a b : nat, b > 0 -> a / b <= a.
+  Proof.
+    intros a b Hb.
+    apply Nat.div_le_upper_bound.
+    - lia.
+    - (* show a ≤ b * a *)
+      destruct b as [|b0].
+      + lia.              (* b = 0 contradicts Hb : b > 0 *)
+      + simpl.            (* now b = S b0, so b * a = a + b0 * a *)
+        apply Nat.le_add_r.  (* a ≤ a + (b0 * a) *)
+  Qed.
+
+  
+  (* Helper lemma about division *)
+  Lemma div_2_le : forall n : nat, n / 2 <= n.
+  Proof.
+    intros n.
+    apply div_le.
+    lia.
+  Qed.
+  
+  (* Case 2: Morphism to smaller objects - information reduction *)
+  Lemma morphism_to_smaller : forall n m : Obj,
+    n > 0 -> m > 0 -> n > m -> n <= I_max_global ->
+    exists f : InfoMorphism,
+    valid_morphism n m f /\
+    morphism_I_val f >= m / 2.
+  Proof.
+    intros n m Hn Hm Hnm Hmax.
+    (* Create a "reduction" morphism *)
+    assert (m <= n) by lia.
+    
+    (* First prove 1 > 0 *)
+    assert (H_one_pos : 1 > 0) by lia.
+    
+    exists {|
+      source_complexity := m;
+      target_complexity := m;
+      transformation_rate := 1;
+      rate_bounded := H_one_pos;
+      complexity_preserved := fun H => H  (* if m > 0 then m > 0 *)
+    |}.
+    
+    (* Now prove the properties *)
+    unfold valid_morphism, morphism_I_val. simpl.
+    split.
+    - (* valid_morphism *)
+      split; [|split]; lia.
+    - (* morphism_I_val >= m/2 *)
+      rewrite Nat.mul_1_r.
+      (* Use our helper lemma *)
+      apply div_2_le.
+  Qed.
+  
+  (* Case 3: Morphism to larger objects - need to be more careful *)
+  Lemma morphism_to_larger : forall n m : Obj,
+    n > 0 -> m > 0 -> m > n -> m <= I_max_global ->
+    exists f : InfoMorphism,
+    valid_morphism n m f /\
+    morphism_I_val f >= n / 2.
+  Proof.
+    intros n m Hn Hm Hmn Hmax.
+    
+    (* First prove 1 > 0 *)
+    assert (H_one_pos : 1 > 0) by lia.
+    
+    (* Create an "embedding" morphism *)
+    exists {|
+      source_complexity := n;
+      target_complexity := n;  (* Only fill part of target *)
+      transformation_rate := 1;
+      rate_bounded := H_one_pos;
+      complexity_preserved := fun H => H  (* if n > 0 then n > 0 *)
+    |}.
+    
+    (* Now prove the properties *)
+    unfold valid_morphism, morphism_I_val. simpl.
+    split.
+    - (* valid_morphism *)
+      split; [|split].
+      + (* source_complexity <= n *)
+        lia.
+      + (* target_complexity <= m *)
+        (* n <= m because n < m *)
+        lia.
+      + (* morphism_I_val <= I_max_global *)
+        rewrite Nat.mul_1_r.
+        (* n <= I_max_global because n < m <= I_max_global *)
+        lia.
+    - (* morphism_I_val >= n/2 *)
+      rewrite Nat.mul_1_r.
+      (* Use the same helper lemma *)
+      apply div_2_le.
+  Qed.
+  
+  (* Now combine these cases *)
+  Lemma morphism_to_any : forall n m : Obj,
+    n > 0 -> m > 0 -> n <= I_max_global -> m <= I_max_global ->
+    exists f : InfoMorphism,
+    valid_morphism n m f /\
+    morphism_I_val f >= (Nat.min n m) / 2.  (* Use Nat.min explicitly *)
+  Proof.
+    intros n m Hn Hm Hn_max Hm_max.
+    destruct (Nat.lt_trichotomy n m) as [Hlt | [Heq | Hgt]].
+    
+    - (* n < m *)
+      destruct (morphism_to_larger n m Hn Hm Hlt Hm_max) as [f [Hvalid Hival]].
+      exists f.
+      split; [exact Hvalid|].
+      (* When n < m, Nat.min n m = n *)
+      rewrite Nat.min_l.
+      + exact Hival.
+      + (* Prove n <= m *)
+        lia.
+    
+    - (* n = m *)
+      subst m.
+      destruct (morphism_to_self n Hn Hn_max) as [f [Hvalid Hival]].
+      exists f.
+      split; [exact Hvalid|].
+      rewrite Hival.
+      (* When n = n, Nat.min n n = n *)
+      rewrite Nat.min_id.
+      (* n >= n/2 *)
+      apply div_2_le.
+    
+    - (* n > m *)
+      destruct (morphism_to_smaller n m Hn Hm Hgt Hn_max) as [f [Hvalid Hival]].
+      exists f.
+      split; [exact Hvalid|].
+      (* When n > m, Nat.min n m = m *)
+      rewrite Nat.min_r.
+      + exact Hival.
+      + (* Prove m <= n *)
+        lia.
+  Qed.
+  
+  (* Finally, we can prove the main theorem! *)
+  Definition optimization_pattern (n : Obj) : Prop :=
+    forall m : Obj,
+    m > 0 -> m <= I_max_global ->
+    exists f : InfoMorphism,
+    valid_morphism n m f /\
+    morphism_I_val f >= (min n m) / 2.
+  
+  Theorem stable_implies_optimization : forall n : Obj,
+    stable_object n ->
+    n <= I_max_global ->  (* Add this assumption *)
+    optimization_pattern n.
+  Proof.
+    intros n H_stable Hn_max m Hm Hm_max.
+    (* Use our lemma! *)
+    destruct H_stable as [Hn _].
+    apply morphism_to_any; assumption.
+  Qed.
+  
+End ObjectsAsOptimization.
+
+(* Simple example to verify our definitions work *)
+Module Example.
+  Import ConcreteInfoCategory.
+  Import YonedaForInfo.
+  Import ObjectsAsOptimization.
+  
+  (* Object 10 is stable *)
+  Example object_10_stable : stable_object 10.
+  Proof.
+    unfold stable_object.
+    split.
+    - lia.
+    - exists 5.
+      split.
+      + (* Need to prove 5 >= 10/2 *)
+        assert (10 / 2 = 5) by reflexivity.
+        rewrite H.
+        lia.
+      + exists 10, (id_morphism 10).
+        split.
+        * (* Need to prove valid_morphism 10 10 (id_morphism 10) *)
+          apply id_morphism_valid.
+          -- (* 10 > 0 *)
+             lia.
+          -- (* 10 <= I_max_global *)
+             unfold I_max_global.
+             lia.
+        * unfold morphism_I_val, id_morphism. simpl.
+          (* I_val = 10 * 1 = 10, need to show 10 >= 5 *)
+          lia.
+  Qed.
+  
+  (* Let's also show object 10 has an optimization pattern! *)
+  Example object_10_optimizes : 
+    optimization_pattern 10.
+  Proof.
+    (* Use our theorem! *)
+    apply stable_implies_optimization.
+    - exact object_10_stable.
+    - (* 10 <= I_max_global = 1000 *)
+      unfold I_max_global.
+      lia.
+  Qed.
+  
+End Example.
