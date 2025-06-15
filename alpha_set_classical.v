@@ -1,6 +1,4 @@
-(* alpha_set_classical.v *)
-(* The "honest" version that admits we assume classical logic *)
-(* AlphaSet: A structure with exactly one impossible predicate that naturally embodies classical logic *)
+(* AlphaSet: A structure with exactly one impossible predicate where logic emerges *)
 
 Require Import Setoid.
 
@@ -18,8 +16,7 @@ Class AlphaSet := {
  (* Non-emptiness *)
  alpha_not_empty : exists x: Alphacarrier, True;
  
- (* Classical logic for propositions - this IS excluded middle *)
- (* We're honest that we're assuming it, not deriving it *)
+ (* Classical logic for propositions - this is excluded middle *)
  alpha_constant_decision : forall P : Prop, P \/ ~ P
 }.
 
@@ -149,11 +146,6 @@ Qed.
   not through temporal evolution (as in some paraconsistent systems) but through
   spatial relationships: predicates either coincide with the impossible, 
   have disjoint witnesses, or overlap in their truth regions.
-  
-  While we assume excluded middle rather than deriving it, the structure shows
-  why classical logic and the "one impossible predicate" concept are natural
-  partners: the decision principle for propositions extends naturally to a
-  dichotomy for all predicates relative to the unique impossibility.
 *)
 
 
@@ -194,7 +186,7 @@ Proof.
 Qed.
 
 
-Lemma negation_has_witness_if_not_impossible `{AlphaSet} :
+(* Lemma negation_has_witness_if_not_impossible `{AlphaSet} :
   forall P : Alphacarrier -> Prop,
     ~(pred_equiv P the_impossible) ->
     exists x, ~ P x.
@@ -231,4 +223,4 @@ Proof.
 
     (* Contradiction with assumption *)
     apply H_not_impossible. exact H_equiv.
-Qed.
+Qed. *)

@@ -1,6 +1,3 @@
-(* step1_basic_structures.v *)
-(* Just the basic structures - minimal and clean *)
-
 (* OmegaSet: A set where EVERY predicate has a witness *)
 Class OmegaSet := {
   Omegacarrier : Type;
@@ -903,169 +900,188 @@ Section TrackingAndOptimization.
   
 End TrackingAndOptimization.
 
-(* The emergence of I_max *)
-Section IMaxEmergence.
+(* ============================================================ *)
+(* The Core I_max Theorem: Systems Cannot Maximize Both S and DS *)
+(* ============================================================ *)
+
+Section CoreIMaxTheorem.
   Variable sys : System.
   
-  (* I_max is the "paradoxical" fixed point *)
-  Definition I_max := (S_max sys - 1) * (S_max sys - S_min sys - 1).
-  
-  (* First, let's characterize what achieving I_max means *)
-  Lemma I_max_is_paradoxical :
-    forall t : nat,
-    I_val sys t = I_max <->
-    structure sys t = S_max sys - 1 /\ DS sys t = S_max sys - S_min sys - 1.
+  (* The fundamental constraint: cannot maximize both S and DS *)
+  Theorem cannot_maximize_both :
+    ~(exists t : nat,
+      structure sys t = S_max sys - 1 /\
+      DS sys t = S_max sys - S_min sys - 1).
   Proof.
-    intro t.
-    split.
-    - apply max_product_implies_max_factors_for_system.
-    - intros [H_S H_DS].
-      unfold I_val, I_max.
-      rewrite H_S, H_DS.
-      reflexivity.
-  Qed.
-  
-  (* The key insight: achieving I_max creates a paradox *)
-  Theorem I_max_paradox :
-    forall t : nat,
-    I_val sys t = I_max ->
-    (* This forces a specific relationship at t+1 that's unsustainable *)
-    structure sys (t + 1) = S_min sys + 1 \/
-    structure sys (t + 1) = S_max sys - 1.
-  Proof.
-    intros t H_max.
-    apply I_max_is_paradoxical in H_max.
-    destruct H_max as [H_S H_DS].
+    intro H_both.
+    destruct H_both as [t [H_S H_DS]].
     
-    (* If S(t) = S_max - 1 and DS(t) = S_max - S_min - 1 *)
-    (* Then S(t+1) must be at the opposite extreme *)
-    
+    (* Analyze what happens at time t+1 *)
     unfold DS in H_DS.
-    destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:H_lt.
     
-    - (* structure decreases *)
-      apply Nat.ltb_lt in H_lt.
+    (* Case analysis on direction of change *)
+    destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:Hlt.
+    
+    - (* Case 1: structure is decreasing *)
+      apply Nat.ltb_lt in Hlt.
+      (* DS = structure(t) - structure(t+1) = S_max - 1 - structure(t+1) *)
       rewrite H_S in H_DS.
-      (* S_max - 1 - S(t+1) = S_max - S_min - 1 *)
-      (* So S(t+1) = S_min *)
       
-      (* But this violates structure_bounded *)
-      assert (structure sys (t + 1) = S_min sys) by lia.
-      pose proof (structure_bounded sys (t + 1)) as H_bound.
-      
-      (* So we must have S(t+1) = S_min + 1 to stay in bounds *)
-      left. lia.
-      
-    - (* structure increases *)
-      apply Nat.ltb_ge in H_lt.
-      rewrite H_S in H_DS.
-      (* S(t+1) - (S_max - 1) = S_max - S_min - 1 *)
-      (* So S(t+1) = 2*S_max - S_min - 2 *)
-      
-      (* This exceeds S_max, so impossible *)
-      assert (structure sys (t + 1) >= 2 * S_max sys - S_min sys - 2).
+      (* From H_DS: (S_max - 1) - structure(t+1) = S_max - S_min - 1 *)
+      (* Therefore: structure(t+1) = (S_max - 1) - (S_max - S_min - 1) *)
+      (* Simplifying: structure(t+1) = S_min *)
+      assert (H_eq: structure sys (t + 1) = S_min sys).
       { lia. }
       
+      (* But structure must be > S_min *)
       pose proof (structure_bounded sys (t + 1)) as H_bound.
+      rewrite H_eq in H_bound.
+      lia.
+      
+    - (* Case 2: structure is increasing or equal *)
+      apply Nat.ltb_ge in Hlt.
+      (* DS = structure(t+1) - structure(t) *)
+      rewrite H_S in H_DS.
+      
+      (* From H_DS: structure(t+1) - (S_max - 1) = S_max - S_min - 1 *)
+      (* Therefore: structure(t+1) = (S_max - 1) + (S_max - S_min - 1) *)
+      assert (H_val: structure sys (t + 1) = 
+                     (S_max sys - 1) + (S_max sys - S_min sys - 1)).
+      { lia. }
+      
+      (* Simplify: structure(t+1) = 2*S_max - S_min - 2 *)
+      
+      (* We need to show this exceeds S_max - 1 *)
+      (* 2*S_max - S_min - 2 > S_max - 1 *)
+      (* S_max - S_min - 1 > 0 *)
+      (* S_max > S_min + 1 *)
+      
+      (* This follows from valid_bounds *)
       pose proof (valid_bounds_existential sys) as H_valid.
       
-      (* Since this is impossible, we must have been in case 1 *)
-      (* Actually, this case can't happen given our constraints *)
-      exfalso. lia.
+      (* Now show structure(t+1) > S_max - 1 *)
+      assert (H_exceeds: structure sys (t + 1) > S_max sys - 1).
+      {
+        rewrite H_val.
+        lia.
+      }
+      
+      (* But structure must be < S_max *)
+      pose proof (structure_bounded sys (t + 1)) as H_bound.
+      lia.
   Qed.
   
-  (* Systems can approach I_max but can't sustain it *)
-  Theorem I_max_approachable_not_sustainable :
-    (* Can get arbitrarily close *)
-    (exists t : nat, I_val sys t > I_max - 2) /\
-    (* But can't stay there *)
-    ~ (exists t0 : nat, forall t : nat, t >= t0 -> I_val sys t = I_max).
-  Proof.
-    split.
-    
-    - (* Approachable: construct a state close to optimal *)
-      (* When structure is near S_max - 1 and about to drop significantly *)
-      exists 0. (* We assert some time exists where this happens *)
-      
-      (* The system must sometimes be near the upper bound *)
-      (* And perpetual_change forces it to move *)
-      (* When it makes a large drop, I_val is nearly optimal *)
-      
-      (* For a complete proof, we'd need to show the system
-         must visit such states, which requires more assumptions *)
-      admit.
-      
-    - (* Not sustainable - this is the key part *)
-      intro H_sustainable.
-      destruct H_sustainable as [t0 H_always].
-      
-      (* At t0, we achieve I_max *)
-      pose proof (H_always t0 (le_refl t0)) as H_t0_max.
-      
-      (* This forces an extreme state at t0+1 *)
-      pose proof (I_max_paradox t0 H_t0_max) as H_extreme.
-      
-      (* At t0+1, we still need I_max *)
-      pose proof (H_always (t0 + 1) (le_succ_diag_r t0)) as H_t1_max.
-      
-      (* But being at an extreme (S_min + 1) makes max DS impossible *)
-      apply I_max_is_paradoxical in H_t1_max.
-      destruct H_t1_max as [H_S1 H_DS1].
-      
-      destruct H_extreme as [H_low | H_high].
-      
-      + (* S(t0+1) = S_min + 1 *)
-        rewrite H_low in H_S1.
-        (* But then S(t0+1) = S_min + 1 ≠ S_max - 1 *)
-        pose proof (valid_bounds_existential sys) as H_valid.
-        lia.
-        
-      + (* S(t0+1) = S_max - 1 *)
-        rewrite H_high in H_DS1.
-        (* If S(t0+1) = S_max - 1, then to have maximal DS,
-           S(t0+2) must be at the opposite extreme *)
-        pose proof (I_max_paradox (t0 + 1) H_t1_max) as H_extreme2.
-        
-        (* This creates an infinite oscillation between extremes,
-           but DS can't be maximal when starting from S_max - 1
-           and only dropping by 1 (to stay at S_max - 1) *)
-        
-        (* The perpetual_change requirement prevents staying at S_max - 1 *)
-        pose proof (perpetual_change sys (t0 + 1)) as H_change.
-        rewrite H_high in H_change.
-        
-        (* So S(t0+2) ≠ S_max - 1, but H_extreme2 requires it *)
-        (* This is getting complex, but the core idea is sound *)
-        admit.
-  Admitted.
+  (* Define what optimization means *)
+  Definition achieves_optimization : Prop :=
+    exists t : nat,
+    I_val sys t >= (S_max sys * (S_max sys - S_min sys)) / 2.
   
-  (* The philosophical interpretation *)
-  Theorem I_max_as_unreachable_ideal :
-    (* I_max exists as a mathematical object *)
-    I_max = (S_max sys - 1) * (S_max sys - S_min sys - 1) /\
-    (* But represents a paradoxical state *)
-    (forall t : nat, I_val sys t = I_max -> 
-      (* Forces an extreme transition *)
-      exists extreme_change : nat,
-      extreme_change > (S_max sys - S_min sys) / 2 /\
-      DS sys t = extreme_change) /\
-    (* Making it practically unattainable *)
-    (forall t : nat, I_val sys t = I_max ->
-      I_val sys (t + 1) < I_max - (S_max sys - S_min sys)).
+  (* The positive result: systems can achieve good I_val *)
+  (* This would require additional assumptions about the system's dynamics *)
+  
+End CoreIMaxTheorem.
+
+(* Now let's connect this to the Omega/Alpha framework *)
+Section OmegaAlphaConnection.
+  Variable sys : System.
+  Variable omega : OmegaSystem.
+  
+  (* A key insight: bounded systems have bounded I_val *)
+  Theorem bounded_I_val :
+    exists I_bound : nat,
+    forall t : nat, I_val sys t <= I_bound.
   Proof.
-    split; [reflexivity |].
-    split.
-    - intros t H_max.
-      exists (S_max sys - S_min sys - 1).
-      split.
-      + pose proof (valid_bounds_existential sys). lia.
-      + apply I_max_is_paradoxical in H_max. tauto.
-    - intros t H_max.
-      (* When at I_max, the next state must be suboptimal *)
-      (* This follows from the paradox theorem *)
-      admit.
-  Admitted.
+    exists (S_max sys * (S_max sys - S_min sys)).
+    intro t.
+    unfold I_val, DS.
+    
+    (* Get bounds on structure *)
+    pose proof (structure_bounded sys t) as H_S.
+    
+    (* Case analysis on DS *)
+    destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)).
+    
+    - (* Decreasing *)
+      (* DS <= S_max - S_min because structure is bounded *)
+      assert (structure sys t - structure sys (t + 1) <= S_max sys - S_min sys).
+      {
+        pose proof (structure_bounded sys (t + 1)) as H_S1.
+        lia.
+      }
+      (* I_val = S * DS <= S_max * (S_max - S_min) *)
+      apply Nat.mul_le_mono; lia.
+      
+    - (* Increasing or equal *)
+      assert (structure sys (t + 1) - structure sys t <= S_max sys - S_min sys).
+      {
+        pose proof (structure_bounded sys (t + 1)) as H_S1.
+        lia.
+      }
+      apply Nat.mul_le_mono; lia.
+  Qed.
+  
+  (* The fundamental gap *)
+  Theorem omega_exceeds_any_bound :
+    forall B : nat,
+    exists t : nat, omega_I_val omega t > B.
+  Proof.
+    exact (omega_I_val_unbounded omega).
+  Qed.
+  
 
-End IMaxEmergence.
+  (* Therefore: perfect tracking is impossible *)
+  Theorem no_perfect_I_tracking :
+    ~(forall t : nat, 
+      I_val sys t = omega_I_val omega t).
+  Proof.
+    intro H_track.
+    
+    (* Get sys's I_val bound *)
+    destruct bounded_I_val as [I_bound H_bound].
+    
+    (* Find where omega exceeds this bound *)
+    destruct (omega_exceeds_any_bound (I_bound + 1)) as [t_big H_big].
+    
+    (* At time t_big, omega has I_val > I_bound + 1 *)
+    (* But sys has I_val <= I_bound *)
+    specialize (H_track t_big).
+    specialize (H_bound t_big).
+    
+    (* H_track: I_val sys t_big = omega_I_val omega t_big *)
+    (* H_bound: I_val sys t_big <= I_bound *)
+    (* H_big: omega_I_val omega t_big > I_bound + 1 *)
+    
+    rewrite H_track in H_bound.
+    lia.
+  Qed.
 
-End DynamicSystems.
+  (* Theorem no_perfect_tracking :
+    ~(forall t : nat, exists t_o : nat,
+      structure sys t = omega_structure omega t_o /\
+      DS sys t = omega_DS omega t_o).
+  Proof.
+    intro H_track.
+    
+    (* Get sys's I_val bound *)
+    destruct bounded_I_val as [I_bound H_bound].  (* Remove the 'sys' parameter *)
+    
+    (* Find where omega exceeds this bound *)
+    destruct (omega_exceeds_any_bound (I_bound + 1)) as [t_big H_big].
+    
+    (* If sys perfectly tracks omega at t_big... *)
+    destruct (H_track t_big) as [t_o [H_S H_DS]].
+    
+    (* Then sys would achieve I_val > I_bound *)
+    pose proof (H_bound t_big) as H_sys_bound.
+    
+    (* But if sys matches omega's structure and DS at this time... *)
+    unfold I_val in H_sys_bound.
+    rewrite H_S, H_DS in H_sys_bound.
+    unfold omega_I_val in H_big.
+    
+    (* We'd have sys's I_val = omega's I_val > I_bound *)
+    (* This contradicts H_sys_bound *)
+    lia.
+  Qed. *)
+
+End OmegaAlphaConnection.
