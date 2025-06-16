@@ -1053,41 +1053,11 @@ Section OmegaAlphaConnection.
     lia.
   Qed.
 
-  (* Theorem no_perfect_tracking :
-    ~(forall t : nat, exists t_o : nat,
-      structure sys t = omega_structure omega t_o /\
-      DS sys t = omega_DS omega t_o).
-  Proof.
-    intro H_track.
-    
-    (* Get sys's I_val bound *)
-    destruct bounded_I_val as [I_bound H_bound].  (* Remove the 'sys' parameter *)
-    
-    (* Find where omega exceeds this bound *)
-    destruct (omega_exceeds_any_bound (I_bound + 1)) as [t_big H_big].
-    
-    (* If sys perfectly tracks omega at t_big... *)
-    destruct (H_track t_big) as [t_o [H_S H_DS]].
-    
-    (* Then sys would achieve I_val > I_bound *)
-    pose proof (H_bound t_big) as H_sys_bound.
-    
-    (* But if sys matches omega's structure and DS at this time... *)
-    unfold I_val in H_sys_bound.
-    rewrite H_S, H_DS in H_sys_bound.
-    unfold omega_I_val in H_big.
-    
-    (* We'd have sys's I_val = omega's I_val > I_bound *)
-    (* This contradicts H_sys_bound *)
-    lia.
-  Qed. *)
-
 End OmegaAlphaConnection.
 
 
 (* ============================================================ *)
 (* The Yoneda-I_max Construction: Objects as Optimized Relations *)
-(* Version 2: Building up from concrete foundations *)
 (* ============================================================ *)
 
 Require Import Coq.Arith.Arith.
