@@ -1015,6 +1015,139 @@ Section ConstructiveArithmetic.
 End ConstructiveArithmetic.
 
 
+Section HaltingProblemViaAlphaOmega.
+  Context {Alpha : AlphaSet} {Omega : OmegaSet}.
+  Variable embed : Alphacarrier -> Omegacarrier.
+  
+  (* Basic Turing machine setup *)
+  Variable TM : Type.  (* Type of Turing machines *)
+  
+  (* Inputs are encoded as Alpha elements *)
+  Variable encode_tm : TM -> Alphacarrier.
+  Variable decode_tm : Alphacarrier -> option TM.
+  
+  (* The computation relation: machine M on encoded input halts *)
+  Variable Halts : TM -> Alphacarrier -> Prop.
+  
+  (* Self-application: a machine run on its own encoding *)
+  Definition SelfHalts (M : TM) : Prop :=
+    Halts M (encode_tm M).
+  
+  (* Enumeration of all Turing machines *)
+  Variable tm_enum : nat -> option TM.
+  Variable enum_complete : forall M : TM, exists n, tm_enum n = Some M.
+  
+  (* The diagonal predicate: machines that DON'T halt on themselves *)
+  Definition anti_diagonal (n : nat) : Prop :=
+    match tm_enum n with
+    | None => True
+    | Some M => ~ SelfHalts M
+    end.
+  
+  (* Lift this to Omega - the space of "computational paradoxes" *)
+  Definition halting_diagonal_omega : Omegacarrier -> Prop :=
+    fun x => exists n M,
+      embed (encode_tm M) = x /\
+      tm_enum n = Some M /\
+      anti_diagonal n.
+  
+  (* Omega contains computational paradoxes *)
+  Theorem omega_has_halting_paradoxes :
+    exists x, halting_diagonal_omega x.
+  Proof.
+    apply omega_completeness.
+  Qed.
+  
+  (* Now define what it means for Alpha to "solve" the halting problem *)
+  Definition Alpha_Solves_Halting : Prop :=
+    exists (decider : TM -> Prop),
+      (forall M, decider M <-> SelfHalts M).
+  
+  (* Alternative: a decider as an Alpha predicate on encodings *)
+  Definition Alpha_Has_Halting_Decider : Prop :=
+    exists (A : Alphacarrier -> Prop),
+      forall M, A (encode_tm M) <-> SelfHalts M.
+  
+  (* The classic diagonal argument, viewed through Alpha/Omega *)
+  (* The diagonal machine specification *)
+  Definition DiagonalMachineExists : Prop :=
+    forall (decider : Alphacarrier -> Prop),
+    (forall M, decider (encode_tm M) <-> SelfHalts M) ->
+    exists D : TM, forall M,
+      Halts D (encode_tm M) <-> ~ decider (encode_tm M).
+  
+  (* Assume we can build diagonal machines *)
+  Axiom diagonal_construction : DiagonalMachineExists.
+  
+  Theorem alpha_cannot_solve_halting :
+    ~ Alpha_Has_Halting_Decider.
+  Proof.
+    intro H.
+    destruct H as [decider Hdec].
+    
+    (* Use the diagonal construction *)
+    destruct (diagonal_construction decider Hdec) as [D D_spec].
+    
+    (* What happens when D runs on itself? *)
+    specialize (D_spec D).
+    
+    (* D_spec: Halts D (encode_tm D) <-> ~ decider (encode_tm D) *)
+    (* Hdec: decider (encode_tm D) <-> SelfHalts D *)
+    (* SelfHalts D = Halts D (encode_tm D) *)
+    
+    unfold SelfHalts in *.
+    
+    (* Combine the biconditionals *)
+    assert (Halts D (encode_tm D) <-> ~ Halts D (encode_tm D)).
+    {
+      split.
+      - intro HD.
+        apply D_spec in HD.
+        intro HD'.
+        apply HD.
+        apply Hdec.
+        exact HD'.
+      - intro HnD.
+        apply D_spec.
+        intro Hdec_D.
+        apply HnD.
+        apply Hdec.
+        exact Hdec_D.
+    }
+    
+    (* Direct contradiction *)
+    destruct H as [H1 H2].
+    assert (~ Halts D (encode_tm D)).
+    { intro H. exact (H1 H H). }
+    apply H. apply H2. exact H.
+  Qed.
+  
+  (* The deeper insight: computational and logical incompleteness are one *)
+  
+  (* A statement about halting *)
+  Definition Halting_Statement : Prop :=
+    exists M, SelfHalts M.
+  
+  (* This statement is "true but unprovable" in Alpha *)
+  (* Just like Gödel sentences! *)
+  
+  Theorem halting_creates_incompleteness :
+    (* The halting problem creates statements that are: *)
+    (* 1. True (witnesses exist in Omega) *)
+    (* 2. Unprovable (Alpha cannot decide them) *)
+    (exists x, halting_diagonal_omega x) /\
+    ~ Alpha_Has_Halting_Decider.
+  Proof.
+    split.
+    - exact omega_has_halting_paradoxes.
+    - exact alpha_cannot_solve_halting.
+  Qed.
+  
+  (* The universal principle: diagonalization creates unrepresentability *)
+  (* Whether in logic (Gödel) or computation (Turing), the mechanism is the same *)
+  
+End HaltingProblemViaAlphaOmega.
+
 
 
 Require Import Coq.Init.Nat.
