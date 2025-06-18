@@ -1072,3 +1072,4 @@ Qed.
 End EuclidPrimesKeyLemmas.
 
 
+(* TODO: ZFC foundation recovery *)
