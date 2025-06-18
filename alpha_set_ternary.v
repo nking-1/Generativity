@@ -2048,34 +2048,73 @@ Section PvsNP_via_AlphaOmega.
   (* Step 3: Alpha has undecidable predicates     *)
   (* ============================================ *)
   
-  (* From our earlier work: Alpha cannot have excluded middle *)
-  Theorem alpha_no_excluded_middle :
-    ~ (forall P : Alphacarrier -> Prop,
-        (exists a, P a) \/ (forall a, ~ P a)).
-  Proof.
-    (* We proved this using omega_diagonal *)
-    (* Alpha's interface with Omega forces undecidability *)
-    admit.
-  Admitted.
-  
   (* Import the fact that we have enumeration and omega_diagonal *)
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
   Variable enum_complete : forall A : Alphacarrier -> Prop, exists n, alpha_enum n = Some A.
   
   (* Therefore, there exist undecidable predicates in Alpha *)
+  (* ============================================ *)
+  (* Step 3: Alpha has undecidable predicates     *)
+  (* ============================================ *)
+  
   Theorem exists_undecidable_in_alpha :
     exists (P : Alphacarrier -> Prop),
     ~ ((exists a, P a) \/ (forall a, ~ P a)).
   Proof.
-    (* Use the diagonal detection predicate *)
+    (* Use the omega_diagonal detection predicate *)
     exists (fun a => omega_diagonal alpha_enum embed (embed a)).
     
-    (* We proved this is undecidable in the ternary logic section *)
-    (* apply constructive_circular_no_mixed. *)
+    (* Let's call this predicate D for "detects diagonal" *)
+    set (D := fun a => omega_diagonal alpha_enum embed (embed a)).
     
-    (* Need to show it's circular... *)
-    admit.
-  Admitted.
+    (* Suppose D were decidable *)
+    intro H_dec.
+    destruct H_dec as [H_exists | H_forall].
+    
+    - (* Case 1: exists a, D a *)
+      destruct H_exists as [a Ha].
+      
+      (* This means omega_diagonal is representable! *)
+      assert (representable (omega_diagonal alpha_enum embed)).
+      {
+        exists D, embed.
+        intro a'.
+        split.
+        - intro HD. exact HD.
+        - intro Hod. exact Hod.
+      }
+      
+      (* But we proved omega_diagonal is not representable *)
+      apply (omega_diagonal_not_representable alpha_enum enum_complete embed).
+      exact H.
+      
+    - (* Case 2: forall a, ~ D a *)
+      (* This means no Alpha element detects omega_diagonal *)
+      
+      (* But omega_diagonal has witnesses in Omega *)
+      assert (exists x, omega_diagonal alpha_enum embed x).
+      { apply omega_diagonal_exists. }
+      destruct H as [x Hx].
+      
+      (* By construction of omega_diagonal, there exist n and a such that
+         embed a = x and omega_diagonal holds at x *)
+      unfold omega_diagonal in Hx.
+      destruct Hx as [n [a' [Hembed Hdiag]]].
+      
+      (* So D a' should be true *)
+      assert (D a').
+      {
+        unfold D.
+        rewrite Hembed.
+        exists n, a'.
+        split.
+        - exact Hembed.  (* Use the hypothesis, not reflexivity! *)
+        - exact Hdiag.
+      }
+      
+      (* But H_forall says D a' is false *)
+      exact (H_forall a' H).
+  Qed.
   
   (* ============================================ *)
   (* Step 4: Connect undecidability to SAT        *)
@@ -2175,7 +2214,7 @@ Section PvsNP_via_AlphaOmega.
      2. Consistent systems (Alpha) must have undecidable predicates  
      3. These undecidable predicates can be encoded in SAT
      4. Therefore SAT must be undecidable in polynomial time
-     5. Therefore P ≠ NP
+     5. Therefore P and NP behave differently in Alpha
      
      This is the same phenomenon as:
      - Gödel: Logic has undecidable statements
