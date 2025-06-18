@@ -1842,4 +1842,40 @@ Proof.
 Qed.
 
 
+(* Axiom of Choice *)
+
+(* A family of sets is a set whose elements are all sets *)
+Definition is_family_of_sets (F : Alphacarrier) : Prop :=
+  is_set_code F /\ forall x, x mem F -> is_set_code x.
+
+(* A choice function selects one element from each set in the family *)
+Definition is_choice_function (F f : Alphacarrier) : Prop :=
+  is_family_of_sets F /\ is_set_code f /\
+  forall A, A mem F -> 
+    (exists a, a mem A) ->  (* if A is non-empty *)
+    exists a, a mem A /\ (pair_code A a) mem f.  (* f picks element a from A *)
+
+(* Axiom of Choice: Every family of non-empty sets has a choice function *)
+Axiom choice : forall F,
+  is_family_of_sets F ->
+  (forall A, A mem F -> exists a, a mem A) ->  (* all sets non-empty *)
+  exists f, is_choice_function F f.
+
+(* Example consequence: Every surjection has a right inverse *)
+Theorem surjection_has_right_inverse : forall A B f,
+  is_set_code A -> is_set_code B -> is_set_code f ->
+  (* f : A -> B is surjective as a set of pairs *)
+  (forall b, b mem B -> exists a, a mem A /\ pair_code a b mem f) ->
+  (* Then there exists g : B -> A with f∘g = id *)
+  exists g, is_set_code g /\ 
+    forall b, b mem B -> 
+      exists a, a mem A /\ pair_code b a mem g /\ pair_code a b mem f.
+Proof.
+  intros A B f HA HB Hf Hsurj.
+  (* For each b in B, collect the set of a's that map to b *)
+  (* Use separation to build {a ∈ A | (a,b) ∈ f} for each b *)
+  (* Then use choice to pick one a for each b *)
+  (* This is getting complex, so let's admit for now *)
+Admitted.
+
 End ZFC_in_ClassicalAlpha.
