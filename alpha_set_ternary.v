@@ -1966,11 +1966,8 @@ Module Example.
 End Example.
 
 
-Require Import Coq.Logic.FunctionalExtensionality.
-From Coq Require Import List Bool Arith Lia.
 From Coq.Vectors Require Import Fin.
 Require Import Coq.Program.Program.
-Import ListNotations.
 
 
 Section PvsNP_via_AlphaOmega.
@@ -2240,7 +2237,7 @@ Section PvsNP_via_AlphaOmega.
 End PvsNP_via_AlphaOmega.
 
 
-Section ZFC_in_Alpha.
+(* Section ZFC_in_Alpha.
   Context {Alpha : AlphaSet}.
   
   (* ============================================ *)
@@ -2402,4 +2399,4 @@ Section ZFC_in_Alpha.
   (* The punchline: ZFC avoids the_impossible by syntactic restrictions,
      while Alpha handles it semantically! *)
   
-End ZFC_in_Alpha.
+End ZFC_in_Alpha. *)
