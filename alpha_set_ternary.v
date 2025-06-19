@@ -2334,18 +2334,6 @@ Section MetaProof.
       exact I.
   Qed.
   
-  (* The final touch: bounded certainty *)
-  Definition bounded_certainty_about_I_max : nat := 99.
-  
-  Theorem imperfect_certainty_about_perfect_imperfection :
-    bounded_certainty_about_I_max < 100 /\
-    bounded_certainty_about_I_max > 0 /\
-    (* This bounded certainty is itself predicted by I_max *)
-    True.
-  Proof.
-    split; [|split]; unfold bounded_certainty_about_I_max; lia.
-  Qed.
-
 End MetaProof.
 
 
