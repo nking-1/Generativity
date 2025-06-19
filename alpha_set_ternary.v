@@ -1970,6 +1970,7 @@ From Coq.Vectors Require Import Fin.
 Require Import Coq.Program.Program.
 
 
+(* A sketch of what P vs NP looks like in Alpha vs Omega *)
 Section PvsNP_via_AlphaOmega.
   Context {Alpha : AlphaSet} {Omega : OmegaSet}.
   Variable embed : Alphacarrier -> Omegacarrier.
@@ -2070,6 +2071,7 @@ Section PvsNP_via_AlphaOmega.
     forall n, (Satisfiable (encode n) <-> 
               exists a, P a (* where a is "encoded" by first n bits *)).
 
+  (* This axiom needs proof - it's a massive assumption *)
   Axiom undecidable_creates_undecidable_sat :
     forall (P : Alphacarrier -> Prop),
     ~ ((exists a, P a) \/ (forall a, ~ P a)) ->
@@ -2237,166 +2239,95 @@ Section PvsNP_via_AlphaOmega.
 End PvsNP_via_AlphaOmega.
 
 
-(* Section ZFC_in_Alpha.
+Section HoTT_in_AlphaSet.
   Context {Alpha : AlphaSet}.
   
-  (* ============================================ *)
-  (* Basic Setup: Sets as Safe Predicates         *)
-  (* ============================================ *)
+  (* Types are predicates on Alphacarrier *)
+  Definition Type_A := Alphacarrier -> Prop.
   
-  (* In ZFC, sets are built from membership. In Alpha, we'll show
-     that ZFC sets correspond to predicates that avoid the_impossible *)
+  (* Elements of a type *)
+  Definition El (A : Type_A) := { x : Alphacarrier | A x }.
   
-  (* The membership relation *)
-  Variable In : Alphacarrier -> Alphacarrier -> Prop.
+  (* The empty type is the_impossible *)
+  Definition Empty_t : Type_A := the_impossible.
   
-  (* A predicate is "set-like" if it could form a ZFC set *)
-  Definition is_set_like (P : Alphacarrier -> Prop) : Prop :=
-    exists a : Alphacarrier, forall x, In x a <-> P x.
+  (* Unit type *)
+  Variable unit_point : Alphacarrier.
+  Definition Unit_t : Type_A := fun x => x = unit_point.
   
-  (* ============================================ *)
-  (* Russell's Paradox: The First Test            *)
-  (* ============================================ *)
+  (* We need pairing operations in Alphacarrier *)
+  Variable pair_alpha : Alphacarrier -> Alphacarrier -> Alphacarrier.
+  Variable fst_alpha : Alphacarrier -> Alphacarrier.
+  Variable snd_alpha : Alphacarrier -> Alphacarrier.
   
-  (* Russell's predicate: things that don't contain themselves *)
-  Definition Russell : Alphacarrier -> Prop :=
-    fun x => ~ In x x.
+  (* Pairing axioms *)
+  Variable pair_fst : forall a b, fst_alpha (pair_alpha a b) = a.
+  Variable pair_snd : forall a b, snd_alpha (pair_alpha a b) = b.
+  Variable pair_eta : forall p, pair_alpha (fst_alpha p) (snd_alpha p) = p.
   
-  (* The key theorem: Russell can't be set-like *)
-  Theorem russell_not_set_like :
-    ~ is_set_like Russell.
-  Proof.
-    unfold is_set_like, Russell.
-    intros [r Hr].
-    (* Hr: forall x, In x r <-> ~ In x x *)
+  (* Sum type constructors *)
+  Variable inl_alpha : Alphacarrier -> Alphacarrier.
+  Variable inr_alpha : Alphacarrier -> Alphacarrier.
+  
+  (* Path types *)
+  Variable Path : forall (A : Type_A), Alphacarrier -> Alphacarrier -> Type_A.
+  
+  (* Reflexivity *)
+  Variable refl : forall (A : Type_A) (x : Alphacarrier) (a : A x), 
+    { r : Alphacarrier | Path A x x r }.
     
-    (* Ask: is r ∈ r? *)
-    specialize (Hr r).
-    (* Hr: In r r <-> ~ In r r *)
-    
-    (* This is a direct contradiction *)
-    tauto.
-  Qed.
+  Variable path_elim : forall (A : Type_A) (C : forall x y, Alphacarrier -> Type),
+    (forall x (a : A x), C x x (proj1_sig (refl A x a))) ->
+    forall x y p, Path A x y p -> C x y p.
   
-  (* But in Alpha, we can say more! *)
-  Theorem russell_classification :
-    Russell = the_impossible \/
-    (exists x, Russell x /\ ~ In x x).
-  Proof.
-    (* By Alpha's fundamental theorem *)
-    destruct (everything_possible_except_one Russell) as [H_imp | H_wit].
-    - left. 
-      (* Russell equals the_impossible *)
-      unfold pred_equiv in H_imp.
-      extensionality x.
-      apply propositional_extensionality.
-      exact (H_imp x).
-    - right.
-      (* Russell has witnesses *)
-      destruct H_wit as [x Hx].
-      exists x.
-      split; [exact Hx | exact Hx].
-  Qed.
+  (* Product type *)
+  Definition Prod (A B : Type_A) : Type_A :=
+    fun p => exists a b, A a /\ B b /\ p = pair_alpha a b.
   
-  (* ============================================ *)
-  (* ZFC Axioms as Safety Conditions             *)
-  (* ============================================ *)
+  (* Sum type *)
+  Definition Sum (A B : Type_A) : Type_A :=
+    fun s => (exists a, A a /\ s = inl_alpha a) \/ 
+             (exists b, B b /\ s = inr_alpha b).
   
-  (* Axiom of Extensionality: sets with same elements are equal *)
-  Axiom extensionality : forall a b,
-    (forall x, In x a <-> In x b) -> a = b.
+  (* Contractibility *)
+  Definition isContr (A : Type_A) : Prop :=
+    exists (center : Alphacarrier), A center /\ 
+    forall x, A x -> exists p, Path A x center p.
   
-  (* This is safe - no paradox risk here *)
+  (* Transport - just axiomatize its existence *)
+  Variable transport : forall (A : Type_A) (P : forall x, A x -> Type_A)
+    (x y : Alphacarrier) (p : Alphacarrier) (a : A x) (ax : A y),
+    Path A x y p -> 
+    forall (u : Alphacarrier), P x a u -> 
+    { v : Alphacarrier | P y ax v }.
   
-  (* Axiom of Empty Set *)
-  Axiom empty_set : exists e, forall x, ~ In x e.
+  (* Path spaces *)
+  Definition PathSpace (A : Type_A) (x y : Alphacarrier) : Type_A :=
+    Path A x y.
   
-  (* This corresponds to a predicate that's always false *)
-  Definition empty_pred : Alphacarrier -> Prop :=
-    fun x => False.
+  (* Ternary structure of paths in AlphaSet:
+     For any x, y in type A, the PathSpace A x y is:
+     1. Inhabited (witnessed path exists)
+     2. Empty (the_impossible - provably no path)
+     3. Undecidable (neither inhabited nor empty)
+  *)
   
-  (* Empty set is safe - it's not the_impossible *)
-  Theorem empty_not_impossible :
-    ~ (forall x, empty_pred x <-> the_impossible x).
-  Proof.
-    intro H.
-    (* empty_pred is constantly False, but the_impossible might have structure *)
-    (* Actually, we need to know more about the_impossible to prove this *)
-    admit.
-  Admitted.
+  (* This could be the computational content of HoTT! *)
+  Definition PathStatus (A : Type_A) (x y : Alphacarrier) : Type :=
+    {p : Alphacarrier | Path A x y p} + 
+    (Path A x y = the_impossible) +
+    ((~ exists p, Path A x y p) * (~ forall p, ~ Path A x y p)).
   
-  (* Axiom of Pairing *)
-  Axiom pairing : forall a b, exists c, forall x,
-    In x c <-> (x = a \/ x = b).
+  (* Univalence might emerge from the undecidability structure *)
+  Definition Equiv (A B : Type_A) : Type_A :=
+    fun e => exists (f g : Alphacarrier),
+      (* f : A -> B and g : B -> A with appropriate properties *)
+      (* Details omitted for brevity *)
+      True.
   
-  (* Pairing is safe - creates finite sets *)
+  Variable univalence : forall (A B : Type_A),
+    (* Equivalence of types gives path between them *)
+    (* But this path might be undecidable! *)
+    True.
   
-  (* Axiom of Union *)
-  Axiom union : forall a, exists b, forall x,
-    In x b <-> exists y, In y a /\ In x y.
-  
-  (* Union is safe - combines existing sets *)
-  
-  (* ============================================ *)
-  (* The Dangerous Axiom: Unrestricted Comprehension *)
-  (* ============================================ *)
-  
-  (* This is what naive set theory had: *)
-  Definition unrestricted_comprehension :=
-    forall P : Alphacarrier -> Prop,
-    exists a, forall x, In x a <-> P x.
-  
-  (* This leads to Russell's paradox! *)
-  Theorem unrestricted_comprehension_inconsistent :
-    unrestricted_comprehension -> False.
-  Proof.
-    intro H_comp.
-    (* Use Russell's predicate *)
-    destruct (H_comp Russell) as [r Hr].
-    (* Now we have the same contradiction as before *)
-    specialize (Hr r).
-    unfold Russell in Hr.
-    tauto.
-  Qed.
-  
-  (* ============================================ *)
-  (* ZFC's Solution: Restricted Comprehension     *)
-  (* ============================================ *)
-  
-  (* Separation axiom: only form subsets *)
-  Axiom separation : forall P : Alphacarrier -> Prop, forall a,
-    exists b, forall x, In x b <-> (In x a /\ P x).
-  
-  (* This is safe because we only select FROM existing sets *)
-  
-  (* The key insight: ZFC axioms carefully avoid predicates 
-     that might equal the_impossible *)
-  
-  (* ============================================ *)
-  (* The Correspondence Theorem                   *)
-  (* ============================================ *)
-  
-  (* A predicate is ZFC-safe if it can be built using ZFC axioms *)
-  Inductive ZFC_safe : (Alphacarrier -> Prop) -> Prop :=
-    | safe_empty : ZFC_safe empty_pred
-    | safe_single : forall a, ZFC_safe (fun x => x = a)
-    | safe_pair : forall a b, ZFC_safe (fun x => x = a \/ x = b)
-    | safe_union : forall P Q, 
-        ZFC_safe P -> ZFC_safe Q -> 
-        ZFC_safe (fun x => P x \/ Q x)
-    | safe_sep : forall P Q,
-        ZFC_safe P ->
-        ZFC_safe (fun x => P x /\ Q x).
-  
-  (* The correspondence: ZFC sets are exactly the safe predicates *)
-  Theorem ZFC_corresponds_to_safe_predicates :
-    forall P, is_set_like P <-> ZFC_safe P.
-  Proof.
-    (* This would be a major theorem showing the exact correspondence *)
-    admit.
-  Admitted.
-  
-  (* The punchline: ZFC avoids the_impossible by syntactic restrictions,
-     while Alpha handles it semantically! *)
-  
-End ZFC_in_Alpha. *)
+End HoTT_in_AlphaSet.

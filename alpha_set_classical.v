@@ -1856,7 +1856,7 @@ Definition is_choice_function (F f : Alphacarrier) : Prop :=
     exists a, a mem A /\ (pair_code A a) mem f.  (* f picks element a from A *)
 
 (* Axiom of Choice: Every family of non-empty sets has a choice function *)
-Axiom choice : forall F,
+Axiom zf_choice : forall F,
   is_family_of_sets F ->
   (forall A, A mem F -> exists a, a mem A) ->  (* all sets non-empty *)
   exists f, is_choice_function F f.
