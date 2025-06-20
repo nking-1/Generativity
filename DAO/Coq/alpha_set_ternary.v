@@ -1,12 +1,12 @@
-(* OmegaSet: A set where EVERY predicate has a witness *)
-Class OmegaSet := {
+(* OmegaType: A set where EVERY predicate has a witness *)
+Class OmegaType := {
   Omegacarrier : Type;
   omega_completeness : forall (P : Omegacarrier -> Prop), 
     exists x : Omegacarrier, P x
 }.
 
-(* AlphaSet: A set with exactly one impossible predicate *)
-Class AlphaSet := {
+(* AlphaType: A set with exactly one impossible predicate *)
+Class AlphaType := {
   Alphacarrier : Type;
   
   (* The unique impossible predicate, bundled with its properties *)
@@ -22,12 +22,12 @@ Class AlphaSet := {
 }.
 
 (* Helper to extract the impossible predicate *)
-Definition the_impossible {Alpha : AlphaSet} : Alphacarrier -> Prop :=
+Definition the_impossible {Alpha : AlphaType} : Alphacarrier -> Prop :=
   proj1_sig (@alpha_impossibility Alpha).
 
 
 Section OmegaProperties.
-  Context {Omega : OmegaSet}.
+  Context {Omega : OmegaType}.
   
   (* Omega contains paradoxes *)
   Theorem omega_has_paradoxes :
@@ -61,7 +61,7 @@ Section OmegaProperties.
 
   (* Show Omega has the predicate Alpha rejects *)
   Theorem Omega_completeness_requires_contradiction :
-    forall `{H_O: OmegaSet},
+    forall `{H_O: OmegaType},
       (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) <->
       (exists R: Omegacarrier -> Prop, forall z: Omegacarrier, R z -> False).
   Proof.
@@ -97,11 +97,11 @@ End OmegaProperties.
 
 
 (* ============================================================ *)
-(* Properties of AlphaSet *)  
+(* Properties of AlphaType *)  
 (* ============================================================ *)
 
 Section AlphaProperties.
-  Context {Alpha : AlphaSet}.
+  Context {Alpha : AlphaType}.
   
   (* The impossible predicate has no witnesses *)
   Theorem the_impossible_has_no_witnesses :
@@ -137,11 +137,11 @@ End AlphaProperties.
 
 
 (* ============================================================ *)
-(* Simple Diagonal for AlphaSet *)
+(* Simple Diagonal for AlphaType *)
 (* ============================================================ *)
 
 Section SimpleDiagonal.
-  Context {Alpha : AlphaSet}.
+  Context {Alpha : AlphaType}.
   
   (* Assume we can enumerate Alpha's predicates *)
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
@@ -181,11 +181,11 @@ End SimpleDiagonal.
 
 
 (* ============================================================ *)
-(* Diagonal in OmegaSet *)
+(* Diagonal in OmegaType *)
 (* ============================================================ *)
 
 Section OmegaDiagonal.
-  Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
   
   (* Given enumeration of Alpha and embedding into Omega *)
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
@@ -227,7 +227,7 @@ End OmegaDiagonal.
 (* ============================================================ *)
 
 Section DiagonalPrep.
-  Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
   
   (* If we have a complete enumeration of Alpha's predicates,
      then the diagonal can't be among them *)
@@ -268,7 +268,7 @@ End DiagonalPrep.
 (* ============================================================ *)
 
 Section Representation.
-  Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
   
   (* A predicate P is representable if there's an Alpha predicate
      that tracks P through some mapping *)
@@ -284,7 +284,7 @@ End Representation.
 (* ============================================================ *)
 
 Section UnrepresentablePredicate.
-  Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
   
   (* We'll use the omega_diagonal from the previous section *)
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
@@ -348,7 +348,7 @@ End UnrepresentablePredicate.
 (* ============================================================ *)
 
 Section DiagonalQuestions.
-  Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
   Variable enum_complete : forall A : Alphacarrier -> Prop, exists n, alpha_enum n = Some A.
   Variable embed : Alphacarrier -> Omegacarrier.
@@ -391,7 +391,7 @@ End DiagonalQuestions.
 (* ============================================================ *)
 
 Section TernaryLogic.
-  Context {Alpha : AlphaSet}.
+  Context {Alpha : AlphaType}.
   
   (* Alpha needs three truth values *)
   Inductive TernaryTruth (P : Prop) : Type :=
@@ -414,7 +414,7 @@ End TernaryLogic.
 (* The Contradiction: Alpha Cannot Have Excluded Middle         *)
 (* ============================================================ *)
 Section AlphaNeedsThreeValues.
-  Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
   Variable enum_complete : forall A : Alphacarrier -> Prop, exists n, alpha_enum n = Some A.
   Variable embed : Alphacarrier -> Omegacarrier.
@@ -495,7 +495,7 @@ End AlphaNeedsThreeValues.
 (* ============================================================ *)
 
 Section AlphaTernaryLogic.
-  Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
   Variable enum_complete : forall A : Alphacarrier -> Prop, exists n, alpha_enum n = Some A.
   Variable embed : Alphacarrier -> Omegacarrier.
@@ -629,9 +629,9 @@ Section AlphaTernaryLogic.
 End AlphaTernaryLogic.
 
 
-(* Paradox Firewalls in Constructive AlphaSet *)
+(* Paradox Firewalls in Constructive AlphaType *)
 Section ConstructiveParadoxFirewalls.
-  Context {Alpha : AlphaSet}.
+  Context {Alpha : AlphaType}.
   
   (* Russell's Paradox firewall - this should work constructively *)
   Theorem constructive_no_russell_predicate :
@@ -755,7 +755,7 @@ End ConstructiveParadoxFirewalls.
 
 
 Section GodelViaOmega.
- Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+ Context {Omega : OmegaType} {Alpha : AlphaType}.
  Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
  Variable enum_complete : forall A : Alphacarrier -> Prop, exists n, alpha_enum n = Some A.
  Variable embed : Alphacarrier -> Omegacarrier.
@@ -866,7 +866,7 @@ End GodelViaOmega.
 (* ============================================================ *)
 
 Section OmegaContainsAlpha.
-  Context {Omega : OmegaSet}.
+  Context {Omega : OmegaType}.
   
   (* Define what it means to be an Alpha-like structure in Omega *)
   Definition alpha_like_structure (A : Omegacarrier -> Prop) : Prop :=
@@ -1009,7 +1009,7 @@ End OmegaContainsAlpha.
 
 
 Section ConstructiveArithmetic.
-  Context {Alpha : AlphaSet}.
+  Context {Alpha : AlphaType}.
   
   (* Natural numbers as Alpha predicates *)
   Variable IsNat : Alphacarrier -> Prop.
@@ -1202,7 +1202,7 @@ End ConstructiveArithmetic.
 
 
 Section HaltingProblemViaAlphaOmega.
-  Context {Alpha : AlphaSet} {Omega : OmegaSet}.
+  Context {Alpha : AlphaType} {Omega : OmegaType}.
   Variable embed : Alphacarrier -> Omegacarrier.
   
   (* Basic Turing machine setup *)
@@ -1483,12 +1483,12 @@ Record OmegaSystem := {
        omega_structure t2 - omega_structure t1) > D
 }.
 
-(* Now let's connect System to AlphaSet conceptually *)
+(* Now let's connect System to AlphaType conceptually *)
 Section SystemAlphaConnection.
-  Variable Alpha : AlphaSet.
+  Variable Alpha : AlphaType.
   Variable sys : System.
   
-  (* A System is like an AlphaSet evolving in time 
+  (* A System is like an AlphaType evolving in time 
      Each time step gives us a predicate on Alpha *)
   Definition system_predicate_at_time (t : nat) : Alphacarrier -> Prop :=
     fun a => exists (encoding : Alphacarrier -> nat),
@@ -2157,7 +2157,7 @@ End Example.
 (* ============================================================ *)
 
 Section MetaProof.
-  Context {Omega : OmegaSet} {Alpha : AlphaSet}.
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
   Variable embed : Alphacarrier -> Omegacarrier.
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
   Variable enum_complete : forall A : Alphacarrier -> Prop, 
@@ -2344,7 +2344,7 @@ Require Import Coq.Program.Program.
 
 (* A sketch of what P vs NP looks like in Alpha vs Omega *)
 Section PvsNP_via_AlphaOmega.
-  Context {Alpha : AlphaSet} {Omega : OmegaSet}.
+  Context {Alpha : AlphaType} {Omega : OmegaType}.
   Variable embed : Alphacarrier -> Omegacarrier.
   
   (* ============================================ *)
@@ -2611,8 +2611,8 @@ Section PvsNP_via_AlphaOmega.
 End PvsNP_via_AlphaOmega.
 
 
-Section HoTT_in_AlphaSet.
-  Context {Alpha : AlphaSet}.
+Section HoTT_in_AlphaType.
+  Context {Alpha : AlphaType}.
   
   (* Types are predicates on Alphacarrier *)
   Definition Type_A := Alphacarrier -> Prop.
@@ -2677,7 +2677,7 @@ Section HoTT_in_AlphaSet.
   Definition PathSpace (A : Type_A) (x y : Alphacarrier) : Type_A :=
     Path A x y.
   
-  (* Ternary structure of paths in AlphaSet:
+  (* Ternary structure of paths in AlphaType:
      For any x, y in type A, the PathSpace A x y is:
      1. Inhabited (witnessed path exists)
      2. Empty (the_impossible - provably no path)
@@ -2702,4 +2702,4 @@ Section HoTT_in_AlphaSet.
     (* But this path might be undecidable! *)
     True.
   
-End HoTT_in_AlphaSet.
+End HoTT_in_AlphaType.

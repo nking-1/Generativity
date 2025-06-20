@@ -1,6 +1,6 @@
 Require Import Setoid.
 
-Class ClassicalAlphaSet := {
+Class ClassicalAlphaType := {
  Alphacarrier : Type;
  exists_in_Alpha : Alphacarrier -> Prop;
  
@@ -18,15 +18,15 @@ Class ClassicalAlphaSet := {
  alpha_constant_decision : forall P : Prop, P \/ ~ P
 }.
 
-(* ClassicalAlphaSet embodies excluded middle - we're not claiming to derive it *)
-Theorem alpha_embodies_excluded_middle `{H_N: ClassicalAlphaSet} :
+(* ClassicalAlphaType embodies excluded middle - we're not claiming to derive it *)
+Theorem alpha_embodies_excluded_middle `{H_N: ClassicalAlphaType} :
  forall P : Prop, P \/ ~ P.
 Proof.
  exact alpha_constant_decision.
 Qed.
 
 (* Double negation elimination follows from excluded middle *)
-Theorem alpha_double_negation_elimination `{H_N: ClassicalAlphaSet} :
+Theorem alpha_double_negation_elimination `{H_N: ClassicalAlphaType} :
  forall P : Prop, ~~P -> P.
 Proof.
  intros P H_nnP.
@@ -36,12 +36,12 @@ Proof.
 Qed.
 
 (* Extract the impossible predicate *)
-Definition the_impossible `{H_N: ClassicalAlphaSet} : Alphacarrier -> Prop :=
+Definition the_impossible `{H_N: ClassicalAlphaType} : Alphacarrier -> Prop :=
  proj1_sig alpha_impossibility.
 
 (* Basic properties of the impossible predicate *)
 
-Lemma the_impossible_is_impossible `{H_N: ClassicalAlphaSet} :
+Lemma the_impossible_is_impossible `{H_N: ClassicalAlphaType} :
  forall x: Alphacarrier, ~ the_impossible x.
 Proof.
  intros x.
@@ -49,7 +49,7 @@ Proof.
  exact (proj1 (proj2_sig alpha_impossibility) x).
 Qed.
 
-Lemma the_impossible_unique `{H_N: ClassicalAlphaSet} :
+Lemma the_impossible_unique `{H_N: ClassicalAlphaType} :
  forall P: Alphacarrier -> Prop,
    (forall x: Alphacarrier, ~ P x) -> 
    (forall x: Alphacarrier, P x <-> the_impossible x).
@@ -62,7 +62,7 @@ Proof.
 Qed.
 
 (* Not everything can be impossible *)
-Theorem not_everything_is_impossible `{H_N: ClassicalAlphaSet} :
+Theorem not_everything_is_impossible `{H_N: ClassicalAlphaType} :
  ~ (forall P: Alphacarrier -> Prop, forall x: Alphacarrier, ~ P x).
 Proof.
  intros H_all_impossible.
@@ -73,12 +73,12 @@ Proof.
 Qed.
 
 (* Define predicate equivalence *)
-Definition pred_equiv `{H_N: ClassicalAlphaSet} (P Q : Alphacarrier -> Prop) :=
+Definition pred_equiv `{H_N: ClassicalAlphaType} (P Q : Alphacarrier -> Prop) :=
  forall x, P x <-> Q x.
 
 (* The fundamental theorem: using classical logic, every predicate that isn't
   the_impossible must have witnesses *)
-Theorem alpha_partial_completeness `{H_N: ClassicalAlphaSet} :
+Theorem alpha_partial_completeness `{H_N: ClassicalAlphaType} :
  forall P: Alphacarrier -> Prop,
    ~(pred_equiv P the_impossible) ->
    exists x: Alphacarrier, P x.
@@ -97,7 +97,7 @@ Proof.
 Qed.
 
 (* The dichotomy theorem: every predicate either equals the_impossible or has witnesses *)
-Theorem everything_possible_except_one `{H_N: ClassicalAlphaSet} :
+Theorem everything_possible_except_one `{H_N: ClassicalAlphaType} :
  forall P: Alphacarrier -> Prop,
    pred_equiv P the_impossible \/ exists x: Alphacarrier, P x.
 Proof.
@@ -113,8 +113,8 @@ Proof.
    exists x. exact Px.
 Qed.
 
-(* Spatial characterization of ClassicalAlphaSet *)
-Theorem alpha_is_spatial `{H_N: ClassicalAlphaSet} :
+(* Spatial characterization of ClassicalAlphaType *)
+Theorem alpha_is_spatial `{H_N: ClassicalAlphaType} :
  forall P Q: Alphacarrier -> Prop,
    pred_equiv P the_impossible \/ 
    pred_equiv Q the_impossible \/ 
@@ -135,19 +135,19 @@ Qed.
 
 (* The relationship between classical logic and the one-hole structure:
   
-  This file demonstrates that ClassicalAlphaSet, with its single impossible predicate
+  This file demonstrates that ClassicalAlphaType, with its single impossible predicate
   and classical logic for propositions, provides a natural foundation for
   classical reasoning about predicates. Every predicate either falls into
   the unique "hole" (the_impossible) or has witnesses - there is no middle ground.
   
-  The spatial nature of ClassicalAlphaSet shows how classical logic organizes predicates
+  The spatial nature of ClassicalAlphaType shows how classical logic organizes predicates
   not through temporal evolution (as in some paraconsistent systems) but through
   spatial relationships: predicates either coincide with the impossible, 
   have disjoint witnesses, or overlap in their truth regions.
 *)
 
 
-Theorem predicate_polarity_trichotomy `{ClassicalAlphaSet} :
+Theorem predicate_polarity_trichotomy `{ClassicalAlphaType} :
   forall (P : Alphacarrier -> Prop),
     pred_equiv P the_impossible \/
     pred_equiv (fun x => ~ P x) the_impossible \/
@@ -174,7 +174,7 @@ Proof.
 Qed.
 
 
-Lemma impossible_at : forall `{ClassicalAlphaSet} x,
+Lemma impossible_at : forall `{ClassicalAlphaType} x,
   the_impossible x <-> False.
 Proof.
   intros. unfold the_impossible.
@@ -184,7 +184,7 @@ Proof.
 Qed.
 
 
-(* Lemma negation_has_witness_if_not_impossible `{ClassicalAlphaSet} :
+(* Lemma negation_has_witness_if_not_impossible `{ClassicalAlphaType} :
   forall P : Alphacarrier -> Prop,
     ~(pred_equiv P the_impossible) ->
     exists x, ~ P x.
@@ -224,9 +224,9 @@ Proof.
 Qed. *)
 
 
-(* Helper lemmas for working with ClassicalAlphaSet *)
+(* Helper lemmas for working with ClassicalAlphaType *)
 Section HelperLemmas.
-Context `{H_alpha: ClassicalAlphaSet}.
+Context `{H_alpha: ClassicalAlphaType}.
 
 (* The key equivalence we just used: converting between negated existence and universal negation *)
 Lemma not_exists_forall_not (P : Alphacarrier -> Prop) :
@@ -338,11 +338,11 @@ Qed.
 End HelperLemmas.
 
 
-(* Boolean Algebra Implementation in ClassicalAlphaSet *)
+(* Boolean Algebra Implementation in ClassicalAlphaType *)
 
 (* First, let's define the quotient type for predicates modulo equivalence *)
 Section BooleanAlgebraOnPredicates.
-Context `{H_alpha: ClassicalAlphaSet}.
+Context `{H_alpha: ClassicalAlphaType}.
 
 (* Define the type of predicates *)
 Definition AlphaPred := Alphacarrier -> Prop.
@@ -457,7 +457,7 @@ Proof.
   - intros HP. left. exact HP.
 Qed.
 
-(* Complement laws - this is where ClassicalAlphaSet shines! *)
+(* Complement laws - this is where ClassicalAlphaType shines! *)
 Theorem pred_not_not (P : AlphaPred) :
   pred_equiv (pred_not (pred_not P)) P.
 Proof.
@@ -542,7 +542,7 @@ End BooleanAlgebraOnPredicates.
 
 (* Paradox Firewalls *)
 Section ParadoxFirewalls.
-Context `{H_alpha: ClassicalAlphaSet}.
+Context `{H_alpha: ClassicalAlphaType}.
 
 (* Russell's Paradox firewall: There is no "set of all sets that don't contain themselves" *)
 Theorem no_russell_predicate :
@@ -653,9 +653,9 @@ Qed.
 End ParadoxFirewalls.
 
 
-(* Natural Numbers in ClassicalAlphaSet *)
+(* Natural Numbers in ClassicalAlphaType *)
 Section NaturalNumbers.
-Context `{H_alpha: ClassicalAlphaSet}.
+Context `{H_alpha: ClassicalAlphaType}.
 
 (* We'll encode natural numbers as elements that satisfy certain predicates *)
 (* First, we need a predicate that picks out the "numbers" *)
@@ -802,7 +802,7 @@ End NaturalNumbers.
 
 (* Building Arithmetic towards the Infinitude of Primes *)
 Section ArithmeticAndPrimes.
-Context `{H_alpha: ClassicalAlphaSet}.
+Context `{H_alpha: ClassicalAlphaType}.
 
 (* Import our natural numbers *)
 Context (IsNat : AlphaPred) (IsZero : AlphaPred) 
@@ -898,7 +898,7 @@ End ArithmeticAndPrimes.
 
 
 Section EuclidPrimesKeyLemmas.
-  Context `{H_alpha : ClassicalAlphaSet}.
+  Context `{H_alpha : ClassicalAlphaType}.
   Context (IsNat IsZero IsOne : AlphaPred).
   Context (Succ : Alphacarrier -> Alphacarrier -> Prop).
   Context (zero_exists : exists z, IsZero z /\ IsNat z).
@@ -1073,7 +1073,7 @@ End EuclidPrimesKeyLemmas.
 
 
 Section ZFC_in_ClassicalAlpha.
-Context `{H_alpha: ClassicalAlphaSet}.
+Context `{H_alpha: ClassicalAlphaType}.
 
 (* Sets are just predicates - rename to avoid conflict with Coq's Set *)
 Definition ZSet := AlphaPred.

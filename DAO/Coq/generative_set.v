@@ -5,30 +5,30 @@ Require Import Coq.Logic.FunctionalExtensionality.
 
 
 (*****************************************************************)
-(*                      The Universal Set U                       *)
+(*                    The Generative Type Gen                    *)
 (*****************************************************************)
 
 (*
-We define U as a "Universal Set" that is a generative system.
-- U is a carrier type whose elements represent abstract concepts, predicates, and logical statements.
-  This allows the UniversalSet to make statements about and embed its own content, enabling self-reference.
-- u0 : U is a designated element.
-- contains : nat -> U -> Prop is a time‐indexed membership predicate.
+We define Gen as a "Generative Type" that is a generative system.
+- Gen is a carrier type whose elements represent abstract concepts, predicates, and logical statements.
+  This allows the GenerativeType to make statements about and embed its own content, enabling self-reference.
+- g0 : Gen is a designated element.
+- contains : nat -> Gen -> Prop is a time‐indexed membership predicate.
 - contains_backward says that if an element is contained at a later stage, then it is also
   contained at all earlier stages.
-- self_ref_pred_embed : (U -> Prop) -> U is an injection of self-referential predicates into U.
+- self_ref_pred_embed : (Gen -> Prop) -> Gen is an injection of self-referential predicates into Gen.
 - self_ref_pred_embed_correct says that the embedded predicate “satisfies itself.” Helps Coq reason about self-reference.
-  This lets us express that U builds up structure over time in a cumulative (monotonic) way.
-- self_ref_generation_exists says that for every predicate P on U and for every time t,
-  there exists some stage n (with n ≥ t) at which U contains the embedding of P.
+  This lets us express that Gen builds up structure over time in a cumulative (monotonic) way.
+- self_ref_generation_exists says that for every predicate P on Gen and for every time t,
+  there exists some stage n (with n ≥ t) at which Gen contains the embedding of P.
 *)
 
-Class UniversalSet (U: Type) := {
-  (* A designated element of U *)
-  u0 : U;                            
+Class GenerativeType (Gen: Type) := {
+  (* A designated element of Gen *)
+  g0 : Gen;                            
 
   (* Membership predicate indexed by stage (time) *)
-  contains : nat -> U -> Prop;       
+  contains : nat -> Gen -> Prop;       
 
   (* Intuition for contains_backward: 
    Abstract concepts are timeless, eternally waiting to be realized.
@@ -37,28 +37,28 @@ Class UniversalSet (U: Type) := {
 *)
   contains_backward : forall m n x, m <= n -> contains n x -> contains m x;
 
-  (* A function for embedding any Prop on U *into* U *)
-  self_ref_pred_embed : (U -> Prop) -> U;
+  (* A function for embedding any Prop on Gen *into* Gen *)
+  self_ref_pred_embed : (Gen -> Prop) -> Gen;
 
   (* Self referential predicates satisy themselves - they assert their existence (not necessarily their contextual truth, though) *)
-  self_ref_pred_embed_correct : forall P: U -> Prop, P (self_ref_pred_embed P);
+  self_ref_pred_embed_correct : forall P: Gen -> Prop, P (self_ref_pred_embed P);
 
-  (* for every predicate P on U and for every time t,
-   there exists some stage n (with n ≥ t) at which U
+  (* for every predicate P on Gen and for every time t,
+   there exists some stage n (with n ≥ t) at which Gen
    contains the embedding of P. *)
-  self_ref_generation_exists : forall P: U -> Prop, forall t: nat, exists n: nat, t <= n /\ contains n (self_ref_pred_embed P);
+  self_ref_generation_exists : forall P: Gen -> Prop, forall t: nat, exists n: nat, t <= n /\ contains n (self_ref_pred_embed P);
 }.
 
 
 (** 
-  This example shows how a predicate P can be applied to its own “embedding” in U.
+  This example shows how a predicate P can be applied to its own “embedding” in Gen.
 
   1) We define P as: 
-       fun x : U => ~ contains 0 x
+       fun x : Gen => ~ contains 0 x
      meaning “x is not contained at stage 0.”
 
-  2) self_ref_pred_embed takes a predicate (U -> Prop) and returns an element of U that 
-     represents that predicate. In other words, self_ref_pred_embed P is “the U object for P.”
+  2) self_ref_pred_embed takes a predicate (Gen -> Prop) and returns an element of Gen that 
+     represents that predicate. In other words, self_ref_pred_embed P is “the Gen object for P.”
 
   3) P (self_ref_pred_embed P) then applies P to its own representation. 
      It reads “the embedding of P is not contained at stage 0,” 
@@ -67,19 +67,19 @@ Class UniversalSet (U: Type) := {
   4) We prove it by invoking self_ref_pred_embed_correct, which states 
      that P indeed holds when applied to self_ref_pred_embed P.
 **)
-Example novice_self_ref_example : forall (U : Type) (H : UniversalSet U),
-  let P := fun x : U => ~ contains 0 x in
+Example novice_self_ref_example : forall (Gen : Type) (H : GenerativeType Gen),
+  let P := fun x : Gen => ~ contains 0 x in
   P (self_ref_pred_embed P).
 Proof.
-  intros U H P.
+  intros Gen H P.
   unfold P.
   apply self_ref_pred_embed_correct.
 Qed.
 
 
 (* Another illustrative self-referential predicate: "I appear at a later time." *)
-Example self_ref_pred_appears_later : forall (U: Type) `{UniversalSet U},
-  let Q := fun x : U => exists t : nat, t > 0 /\ contains t x in
+Example self_ref_pred_appears_later : forall (Gen: Type) `{GenerativeType Gen},
+  let Q := fun x : Gen => exists t : nat, t > 0 /\ contains t x in
   Q (self_ref_pred_embed Q).
 Proof.
   intros.
@@ -87,8 +87,8 @@ Proof.
 Qed.
 
 
-Example self_ref_pred_temporal_evolution : forall (U: Type) `{UniversalSet U},
-  let R := fun x : U => ~ contains 0 x /\ exists t : nat, t > 0 /\ contains t x in
+Example self_ref_pred_temporal_evolution : forall (Gen: Type) `{GenerativeType Gen},
+  let R := fun x : Gen => ~ contains 0 x /\ exists t : nat, t > 0 /\ contains t x in
   R (self_ref_pred_embed R).
 Proof.
   intros.
@@ -100,31 +100,31 @@ Qed.
 (*                         Theorems                              *)
 (*****************************************************************)
 
-(* Theorem 1: U Builds Itself Recursively
-   For every predicate P on U, there exists some stage n at which
-   the embedded version of P is contained in U.
+(* Theorem 1: Gen Builds Itself Recursively
+   For every predicate P on Gen, there exists some stage n at which
+   the embedded version of P is contained in Gen.
 *)
-Theorem U_builds_itself : forall (U: Type) `{UniversalSet U},
-  forall P: U -> Prop, exists n: nat, contains n (self_ref_pred_embed P).
+Theorem U_builds_itself : forall (Gen: Type) `{GenerativeType Gen},
+  forall P: Gen -> Prop, exists n: nat, contains n (self_ref_pred_embed P).
 Proof.
-  intros U H P.
+  intros Gen H P.
   destruct (self_ref_generation_exists P 0) as [n [Hle Hc]].
   exists n.
   assumption.
 Qed.
 
 
-(* Theorem: U Contains Something It Did Not Initially Contain
+(* Theorem: Gen Contains Something It Did Not Initially Contain
    We show that there exists a predicate P such that:
-   - At stage 0, U does not contain the embedding of P.
-   - But at some later stage, U does contain the embedding of P.
+   - At stage 0, Gen does not contain the embedding of P.
+   - But at some later stage, Gen does contain the embedding of P.
 *)
-Theorem U_recognizes_its_initially_incomplete : forall (U: Type) `{UniversalSet U},
-  exists P: U -> Prop, (~ contains 0 (self_ref_pred_embed P)) /\ (exists n: nat, contains n (self_ref_pred_embed P)).
+Theorem U_recognizes_its_initially_incomplete : forall (Gen: Type) `{GenerativeType Gen},
+  exists P: Gen -> Prop, (~ contains 0 (self_ref_pred_embed P)) /\ (exists n: nat, contains n (self_ref_pred_embed P)).
 Proof.
-  intros U H.
+  intros Gen H.
   (* Define the predicate P so that P(x) means "x is not contained at stage 0" *)
-  set (P := fun x: U => ~ contains 0 x).
+  set (P := fun x: Gen => ~ contains 0 x).
   (* By self_ref_pred_embed_correct, we have P (self_ref_pred_embed P), i.e., ~ contains 0 (self_ref_pred_embed P) *)
   assert (H_not0: ~ contains 0 (self_ref_pred_embed P)).
   {
@@ -142,14 +142,14 @@ Proof.
 Qed.
 
 
-(* Theorem: U Recursively Grows
-   For every predicate P on U, the structure defined by
-   (fun x => P x /\ contains 0 x) is eventually generated in U.
+(* Theorem: Gen Recursively Grows
+   For every predicate P on Gen, the structure defined by
+   (fun x => P x /\ contains 0 x) is eventually generated in Gen.
 *)
-Theorem U_recursive_growth : forall (U: Type) `{UniversalSet U},
-  forall P: U -> Prop, exists n: nat, contains n (self_ref_pred_embed (fun x => P x /\ contains 0 x)).
+Theorem U_recursive_growth : forall (Gen: Type) `{GenerativeType Gen},
+  forall P: Gen -> Prop, exists n: nat, contains n (self_ref_pred_embed (fun x => P x /\ contains 0 x)).
 Proof.
-  intros U H P.
+  intros Gen H P.
   destruct (self_ref_generation_exists (fun x => P x /\ contains 0 x) 0) as [n [Hle Hc]].
   exists n.
   assumption.
@@ -157,14 +157,14 @@ Qed.
 
 
 Theorem P_is_not_unique :
-  forall (U : Type) `{UniversalSet U},
-  forall (P : U -> Prop), 
+  forall (Gen : Type) `{GenerativeType Gen},
+  forall (P : Gen -> Prop), 
   exists (n m : nat),
     n < m /\
     contains n (self_ref_pred_embed P) /\
     contains m (self_ref_pred_embed P).
 Proof.
-  intros U H_U P.
+  intros Gen H_U P.
 
   (* First embedding at or after time 0 *)
   destruct (self_ref_generation_exists P 0) as [n [Hn_ge Hn_cont]].
@@ -181,14 +181,14 @@ Qed.
 
 
 Theorem P_eventually_negated :
-  forall (U : Type) `{UniversalSet U},
-  forall (P : U -> Prop), 
+  forall (Gen : Type) `{GenerativeType Gen},
+  forall (P : Gen -> Prop), 
   exists (n m : nat),
     n < m /\
     contains n (self_ref_pred_embed P) /\
     contains m (self_ref_pred_embed (fun x => ~ P x)).
 Proof.
-  intros U H_U P.
+  intros Gen H_U P.
 
   (* Step 1: Get the first time n where P is contained *)
   destruct (self_ref_generation_exists P 0) as [n [Hle_n Hn]].
@@ -204,16 +204,16 @@ Proof.
 Qed.
 
 
-(* Theorem: U Is Never Complete at Any Finite Stage
+(* Theorem: Gen Is Never Complete at Any Finite Stage
    For every stage t, there exists some predicate P whose embedding is not contained
-   in U at time t.
+   in Gen at time t.
 *)
-Theorem U_is_never_complete : forall (U: Type) `{UniversalSet U},
-  forall t: nat, exists P: U -> Prop, ~ contains t (self_ref_pred_embed P).
+Theorem U_is_never_complete : forall (Gen: Type) `{GenerativeType Gen},
+  forall t: nat, exists P: Gen -> Prop, ~ contains t (self_ref_pred_embed P).
 Proof.
-  intros U H t.
+  intros Gen H t.
   (* Define P as "x is not contained at time t" *)
-  exists (fun x: U => ~ contains t x).
+  exists (fun x: Gen => ~ contains t x).
   (* By self_ref_pred_embed_correct, P holds of its own embedding *)
   (* So self_ref_pred_embed P is not contained at time t *)
   apply self_ref_pred_embed_correct.
@@ -222,26 +222,26 @@ Qed.
 
 (** 
   Finite-Stage Incompleteness:
-  There exists some finite stage n at which U explicitly embeds the statement
+  There exists some finite stage n at which Gen explicitly embeds the statement
   "there is a predicate P0 whose embedding is absent from all stages m <= n."
-  The intent of this theorem is to show U has embedded within it its own knowledge of
+  The intent of this theorem is to show Gen has embedded within it its own knowledge of
   its incompleteness, and grows from that fact.
   This is like a meta version of U_is_never_complete 
 **)
 Theorem U_recognizes_its_own_incompleteness_for_all_time :
-  forall (U : Type) `{UniversalSet U},
+  forall (Gen : Type) `{GenerativeType Gen},
     forall t : nat,
       exists n : nat,
         t < n /\
         contains n (self_ref_pred_embed
-          (fun _ : U =>
-            exists P0 : U -> Prop,
+          (fun _ : Gen =>
+            exists P0 : Gen -> Prop,
               ~ contains n (self_ref_pred_embed P0))).
 Proof.
-  intros U H_U t.
+  intros Gen H_U t.
 
   (* Step 1: Define the predicate Q that asserts "x is not contained at time t" *)
-  set (Q := fun x : U => ~ contains t x).
+  set (Q := fun x : Gen => ~ contains t x).
 
   (* Step 2: Use self_ref_pred_embed_correct to show that Q holds of its own embedding *)
   assert (H_Q_not_t : ~ contains t (self_ref_pred_embed Q)).
@@ -262,7 +262,7 @@ Proof.
   }
 
   (* Step 6: Define R' as the predicate that "some P0 is not contained at time n" *)
-  set (R' := fun _ : U => exists P0 : U -> Prop, ~ contains n (self_ref_pred_embed P0)).
+  set (R' := fun _ : Gen => exists P0 : Gen -> Prop, ~ contains n (self_ref_pred_embed P0)).
 
   (* Step 7: Prove R' is satisfied at its own embedding *)
   assert (H_R' : R' (self_ref_pred_embed R')).
@@ -285,18 +285,18 @@ Proof.
 Qed.
 
 
-(* Theorem: U Is Infinite
-   There exists a function F: U -> nat -> U such that for every time t,
-   F u0 t is contained in U at time t.
+(* Theorem: Gen Is Infinite
+   There exists a function F: Gen -> nat -> Gen such that for every time t,
+   F g0 t is contained in Gen at time t.
    We define F by F x t = self_ref_pred_embed (fun y => contains t y).
    By self_ref_generation_exists, for each t, there exists some stage n ≥ t such that
    contains n (self_ref_pred_embed (fun y => contains t y)) holds; then by contains_backward,
    it follows that contains t (self_ref_pred_embed (fun y => contains t y)) holds.
 *)
-Theorem U_is_infinite : forall (U: Type) `{UniversalSet U},
-  exists F: U -> nat -> U, forall t: nat, contains t (F u0 t).
+Theorem U_is_infinite : forall (Gen: Type) `{GenerativeType Gen},
+  exists F: Gen -> nat -> Gen, forall t: nat, contains t (F g0 t).
 Proof.
-  intros U H.
+  intros Gen H.
   (* Define F such that for each x and t, F x t = self_ref_pred_embed (fun y => contains t y) *)
   exists (fun x t => self_ref_pred_embed (fun y => contains t y)).
   intros t.
@@ -308,14 +308,14 @@ Proof.
 Qed.
 
 
-(* Implication - U is an infinite set of at least order aleph_0 *)
+(* Implication - Gen is an infinite set of at least order aleph_0 *)
 Theorem U_grows_like_naturals :
-  forall (U: Type) `{H_U: UniversalSet U},
-  exists (f: nat -> U),
+  forall (Gen: Type) `{H_U: GenerativeType Gen},
+  exists (f: nat -> Gen),
     contains 0 (f 0) /\
     forall n, contains n (f (n+1)).
 Proof.
-  intros U H_U.
+  intros Gen H_U.
   (* Explicitly define a sequence embedding the predicate "membership at stage n" *)
   exists (fun n => self_ref_pred_embed (fun y => contains n y)).
   split.
@@ -335,16 +335,16 @@ Proof.
 Qed.
 
 
-(** Theorem: U Can Contain Contradictory Statements About The Past
-   This theorem shows U can contain contradictory statements about time 0
+(** Theorem: Gen Can Contain Contradictory Statements About The Past
+   This theorem shows Gen can contain contradictory statements about time 0
    at different times:
 
    1. At time t:
-      - Contains a predicate saying "x is not in U at time 0"
+      - Contains a predicate saying "x is not in Gen at time 0"
       - Formally: contains t (self_ref_pred_embed (fun x => ~ contains 0 x))
 
    2. At time t+1:
-      - Contains the opposite predicate: "x is in U at time 0"
+      - Contains the opposite predicate: "x is in Gen at time 0"
       - Formally: contains (t + 1) (self_ref_pred_embed (fun x => contains 0 x))
 
    The temporal staging enables this by:
@@ -353,19 +353,19 @@ Qed.
    - But they exist at different times (t and t+1)
    - No paradox occurs because the temporal separation makes it coherent
 
-   This demonstrates how U can contain contradictory claims about its own
+   This demonstrates how Gen can contain contradictory claims about its own
    past contents, as long as those claims are separated in time. Like two
    people making opposing claims about a past event - both claims can
    exist, just at different moments.
 *)
 Theorem U_contains_liars_paradox :
-  forall (U: Type) `{UniversalSet U},
+  forall (Gen: Type) `{GenerativeType Gen},
   exists t: nat, contains t (self_ref_pred_embed (fun x => ~ contains 0 x)) /\
                  contains (t + 1) (self_ref_pred_embed (fun x => contains 0 x)).
 Proof.
-  intros U H.
+  intros Gen H.
   
-  (* Step 1: First statement must be contained in U *)
+  (* Step 1: First statement must be contained in Gen *)
   destruct (self_ref_generation_exists (fun x => ~ contains 0 x) 0) as [t1 [Ht1_le Ht1_contained]].
   
   (* Step 2: Contradictory statement about time 0 must also be contained *)
@@ -381,24 +381,24 @@ Qed.
 
 
 (** Theorem: Contradictions Can Unfold in Time
-    This theorem demonstrates that U can contain both a predicate
+    This theorem demonstrates that Gen can contain both a predicate
     and its negation at different times.
 
     Specifically, using the simple predicate "x is contained at time 0":
-    1. At time t1: U contains P
-    2. At time t2 > t1: U contains (not P)
+    1. At time t1: Gen contains P
+    2. At time t2 > t1: Gen contains (not P)
 
     The temporal separation (t1 < t2) enables this coexistence.
 *)
 Theorem time_allows_paradox:
-  forall (U : Type) `{UniversalSet U},
-  exists (t1 t2 : nat) (P : U -> Prop),
+  forall (Gen : Type) `{GenerativeType Gen},
+  exists (t1 t2 : nat) (P : Gen -> Prop),
     (contains t1 (self_ref_pred_embed P) /\
-     contains t2 (self_ref_pred_embed (fun x : U => ~ P x))) /\
+     contains t2 (self_ref_pred_embed (fun x : Gen => ~ P x))) /\
     t1 < t2.
 Proof.
-  intros U H_U.
-  set (P := fun x : U => contains 0 x).
+  intros Gen H_U.
+  set (P := fun x : Gen => contains 0 x).
 
   (* Embed P at some initial stage *)
   destruct (self_ref_generation_exists P 0) as [t1 [H_t1_le H_t1_contains]].
@@ -414,14 +414,14 @@ Proof.
 Qed.
 
 
-(* Theorem: U doesn't have *temporal containment* paradoxes at the same time step *)
+(* Theorem: Gen doesn't have *temporal containment* paradoxes at the same time step *)
 Theorem U_no_temporal_containment_paradoxes :
-  forall (U: Type) `{UniversalSet U},
+  forall (Gen: Type) `{GenerativeType Gen},
   forall t: nat,
-  ~ exists P: U -> Prop, (contains t (self_ref_pred_embed P) /\ ~ contains t (self_ref_pred_embed P)).
+  ~ exists P: Gen -> Prop, (contains t (self_ref_pred_embed P) /\ ~ contains t (self_ref_pred_embed P)).
 Proof.
-  intros U H_U t.
-  (* Assume for contradiction that U contains a paradox *)
+  intros Gen H_U t.
+  (* Assume for contradiction that Gen contains a paradox *)
   intro Hparadox.
   destruct Hparadox as [P [H1 H2]].
   contradiction.
@@ -430,11 +430,11 @@ Qed.
 
 (* Theorem: No predicate P directly contradicts itself in the same element *)
 Theorem U_no_true_and_negated_true_for_same_element :
-  forall (U: Type) `{UniversalSet U},
-  forall P : U -> Prop,
+  forall (Gen: Type) `{GenerativeType Gen},
+  forall P : Gen -> Prop,
   ~ (P (self_ref_pred_embed P) /\ (fun x => ~ P x) (self_ref_pred_embed P)).
 Proof.
-  intros U H P [HP HnP].
+  intros Gen H P [HP HnP].
   unfold not in HnP.
   apply HnP.
   exact HP.
@@ -444,11 +444,11 @@ Qed.
 (* Theorem: Paradoxes propagate backward in time *)
 (* Once both P and ~P are embedded at any time, they are retroactively contained *)
 (* at all earlier times — not as a contradiction, but as a temporal superposition. *)
-(* This reflects the paraconsistent design of U: paradox may be present, but never collapses *)
+(* This reflects the paraconsistent design of Gen: paradox may be present, but never collapses *)
 (* into contradiction at a single time step. Instead, it lives in structured tension. *)
 Theorem U_paradoxical_embeddings_propagate_backward :
-  forall (U : Type) `{UniversalSet U},
-  forall (P : U -> Prop),
+  forall (Gen : Type) `{GenerativeType Gen},
+  forall (P : Gen -> Prop),
   forall (t1 t2 : nat),
     contains t1 (self_ref_pred_embed P) ->
     contains t2 (self_ref_pred_embed (fun x => ~ P x)) ->
@@ -457,7 +457,7 @@ Theorem U_paradoxical_embeddings_propagate_backward :
       contains t (self_ref_pred_embed P) /\
       contains t (self_ref_pred_embed (fun x => ~ P x)).
 Proof.
-  intros U H P t1 t2 HP HnP t Ht.
+  intros Gen H P t1 t2 HP HnP t Ht.
   pose (tmin := Nat.min t1 t2).
 
   (* 1) Show P is contained at time tmin *)
@@ -485,13 +485,13 @@ Qed.
 
 (* Note - we're embedding two separate predicates here, that's why it works *)
 Theorem U_simultaneous_negation :
-  forall (U: Type) `{UniversalSet U},
-  forall P : U -> Prop,
+  forall (Gen: Type) `{GenerativeType Gen},
+  forall P : Gen -> Prop,
   exists t : nat,
     contains t (self_ref_pred_embed P) /\
     contains t (self_ref_pred_embed (fun x => ~ P x)).
 Proof.
-  intros U H P.
+  intros Gen H P.
 
   (* Get stages where P and ~P are embedded *)
   destruct (self_ref_generation_exists P 0) as [t1 [Ht1 HP]].
@@ -513,12 +513,12 @@ Qed.
    where all predicates are saturated and exist at time 0. After time 0, predicates must unfold.
 *)
 Theorem U_simultaneous_negation_t0 :
-  forall (U: Type) `{UniversalSet U},
-  forall P : U -> Prop,
+  forall (Gen: Type) `{GenerativeType Gen},
+  forall P : Gen -> Prop,
   contains 0 (self_ref_pred_embed P) /\
   contains 0 (self_ref_pred_embed (fun x => ~ P x)).
 Proof.
-  intros U H P.
+  intros Gen H P.
   
   (* Step 1: Show that P and ~P must exist at some times t1 and t2 *)
   destruct (self_ref_generation_exists P 0) as [t1 [Ht1_ge Ht1_contains]].
@@ -531,7 +531,7 @@ Proof.
   assert (H_prop_back: forall t : nat, t <= tmin -> 
             contains t (self_ref_pred_embed P) /\
             contains t (self_ref_pred_embed (fun x => ~ P x))).
-  { apply (U_paradoxical_embeddings_propagate_backward U P t1 t2); assumption. }
+  { apply (U_paradoxical_embeddings_propagate_backward Gen P t1 t2); assumption. }
   
   (* Step 4: Show 0 <= tmin directly using properties we know *)
   assert (H_le_tmin: 0 <= tmin).
@@ -551,15 +551,15 @@ Qed.
 
 (* Theorem: There exists a predicate that is contained at time 0 but cannot be contained at time 1 *)
 Theorem predicate_contained_at_0_not_at_1 :
-  forall (U : Type) `{UniversalSet U},
-  exists P : U -> Prop,
+  forall (Gen : Type) `{GenerativeType Gen},
+  exists P : Gen -> Prop,
     contains 0 (self_ref_pred_embed P) /\
     ~ contains 1 (self_ref_pred_embed P).
 Proof.
-  intros U H.
+  intros Gen H.
   
   (* Define our predicate: "x is not contained at time 1" *)
-  set (P := fun x : U => ~ contains 1 x).
+  set (P := fun x : Gen => ~ contains 1 x).
   
   (* Generate P at time 0 using self_ref_generation_exists *)
   destruct (self_ref_generation_exists P 0) as [t [Ht_ge Ht_contains]].
@@ -584,15 +584,15 @@ Qed.
 
 (* Create a predicate that can *only* be contained at t=0 and no later time *)
 Theorem predicate_only_contained_at_0 :
-  forall (U : Type) `{UniversalSet U},
-  exists P : U -> Prop,
+  forall (Gen : Type) `{GenerativeType Gen},
+  exists P : Gen -> Prop,
     contains 0 (self_ref_pred_embed P) /\
     forall t : nat, t > 0 -> ~ contains t (self_ref_pred_embed P).
 Proof.
-  intros U H.
+  intros Gen H.
   
   (* Define our predicate: "x is not contained at time t>0" *)
-  set (P := fun x : U => forall t : nat, t > 0 -> ~ contains t x).
+  set (P := fun x : Gen => forall t : nat, t > 0 -> ~ contains t x).
   
   (* Generate P at time 0 using self_ref_generation_exists *)
   destruct (self_ref_generation_exists P 0) as [t [Ht_ge Ht_contains]].
@@ -618,15 +618,15 @@ Qed.
 (* Theorem: Every predicate P is contained at time 0 *)
 (* TODO: Do times greater than t=0 also have all predicates if we just shift time? *)
 Theorem U_contains_t0_all_P :
-  forall (U: Type) `{UniversalSet U},
-  forall P : U -> Prop,
+  forall (Gen: Type) `{GenerativeType Gen},
+  forall P : Gen -> Prop,
   contains 0 (self_ref_pred_embed P).
 Proof.
-  intros U H P.
+  intros Gen H P.
   
   (* By theorem U_simultaneous_negation_t0, we know that every predicate and its negation 
      are both contained at time 0 *)
-  pose proof (U_simultaneous_negation_t0 U P) as [H_contains_P _].
+  pose proof (U_simultaneous_negation_t0 Gen P) as [H_contains_P _].
   
   (* Direct from the hypothesis *)
   exact H_contains_P.
@@ -636,47 +636,47 @@ Qed.
 (* Theorem: Time 0 already contains the liar's paradox - both a statement that denies its own
    presence at time 0 and a statement that affirms its presence at time 0 *)
    Theorem U_contains_liars_paradox_t0 :
-   forall (U: Type) `{UniversalSet U},
+   forall (Gen: Type) `{GenerativeType Gen},
    contains 0 (self_ref_pred_embed (fun x => ~ contains 0 x)) /\
    contains 0 (self_ref_pred_embed (fun x => contains 0 x)).
  Proof.
-   intros U H.
+   intros Gen H.
    
    (* We'll use our previous theorem that every predicate exists at time 0 *)
    split.
-   - apply (U_contains_t0_all_P U (fun x => ~ contains 0 x)).
-   - apply (U_contains_t0_all_P U (fun x => contains 0 x)).
+   - apply (U_contains_t0_all_P Gen (fun x => ~ contains 0 x)).
+   - apply (U_contains_t0_all_P Gen (fun x => contains 0 x)).
  Qed.
 
 
 (*
-We define OmegaSet as a timeless, superpositional set.
+We define OmegaType as a timeless, superpositional set.
 *)
-Class OmegaSet := {
+Class OmegaType := {
   Omegacarrier : Type;                          (* The timeless set's carrier *)
   omega_completeness : forall P: Omegacarrier -> Prop,
       exists x: Omegacarrier, P x
 }.
 
-(* We define a convenience function to get the carrier from an OmegaSet instance. *)
-Definition Omega_carrier (H_O : OmegaSet) : Type :=
+(* We define a convenience function to get the carrier from an OmegaType instance. *)
+Definition Omega_carrier (H_O : OmegaType) : Type :=
   H_O.(Omegacarrier).
 
 (**
- [OmegaToUniversal] is a bridge between the [UniversalSet U] and the OmegaSet.
- It tells us how to embed elements of U into the timeless Omega, and how to project
- from Omega back to U in a time-indexed manner.
+ [OmegaToUniversal] is a bridge between the [GenerativeType Gen] and the OmegaType.
+ It tells us how to embed elements of Gen into the timeless Omega, and how to project
+ from Omega back to Gen in a time-indexed manner.
 **)
-Class OmegaToUniversal (U : Type) (HU : UniversalSet U) (HO : OmegaSet) := {
-  project_Omega : Omega_carrier HO -> U;
-  lift_U : U -> Omega_carrier HO;
+Class OmegaToUniversal (Gen : Type) (HU : GenerativeType Gen) (HO : OmegaType) := {
+  project_Omega : Omega_carrier HO -> Gen;
+  lift_U : Gen -> Omega_carrier HO;
   projection_coherence : forall (x: Omega_carrier HO) (t: nat),
-      exists y: U, HU.(contains) t y /\ y = project_Omega x
+      exists y: Gen, HU.(contains) t y /\ y = project_Omega x
 }.
 
 
 Theorem Omega_sustains_paradox :
-  forall `{H_O: OmegaSet},
+  forall `{H_O: OmegaType},
   forall (P: Omegacarrier -> Prop),
     exists x: Omegacarrier, P x /\ ~ P x.
 Proof.
@@ -699,7 +699,7 @@ Qed.
 
 
 Theorem Omega_contains_paradoxifying_predicate :
-  forall (Omega : OmegaSet),
+  forall (Omega : OmegaType),
   forall (P : Omegacarrier -> Prop),
     exists x : Omegacarrier, P x <-> ~ P x.
 Proof.
@@ -713,7 +713,7 @@ Qed.
 
 
 Theorem Omega_refuses_one_sided_truth :
-  forall (Omega : OmegaSet),
+  forall (Omega : OmegaType),
   forall (P : Omegacarrier -> Prop),
     (exists x : Omegacarrier, P x) ->
     (exists y : Omegacarrier, ~ P y).
@@ -727,7 +727,7 @@ Qed.
 
 (* Theorem - even omega is incomplete *)
 Theorem Omega_contains_its_own_incompleteness :
-  forall `{H_O: OmegaSet},
+  forall `{H_O: OmegaType},
   exists (P: Omegacarrier -> Prop) (x: Omegacarrier),
     (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) /\
     (exists R: Omegacarrier -> Prop, ~ exists z: Omegacarrier, R z).
@@ -754,7 +754,7 @@ Qed.
 
 
 Theorem Omega_complete_iff_incomplete :
-  forall `{H_O: OmegaSet},
+  forall `{H_O: OmegaType},
     exists (P: Omegacarrier -> Prop) (x: Omegacarrier),
       (
         (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) /\
@@ -789,7 +789,7 @@ Qed.
 
 
 Theorem Omega_completeness_requires_contradiction :
-  forall `{H_O: OmegaSet},
+  forall `{H_O: OmegaType},
     (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) <->
     (exists R: Omegacarrier -> Prop, forall z: Omegacarrier, R z -> False).
 Proof.
@@ -824,44 +824,44 @@ Qed.
 
 
 (*
-We now define a Computable class that asserts that every predicate on U is
+We now define a Computable class that asserts that every predicate on Gen is
 algorithmically describable.
 *)
-Class Computable (U: Type) := {
-  describable : (U -> bool) -> Prop;  (* A property that a boolean function may satisfy *)
-  computability_axiom : forall P: U -> Prop, exists f: U -> bool, describable f
+Class Computable (Gen: Type) := {
+  describable : (Gen -> bool) -> Prop;  (* A property that a boolean function may satisfy *)
+  computability_axiom : forall P: Gen -> Prop, exists f: Gen -> bool, describable f
 }.
 
 
-(* Theorem: U Is Algorithmically Describable
-   That is, for every predicate on U, there exists a computable description (a boolean function)
+(* Theorem: Gen Is Algorithmically Describable
+   That is, for every predicate on Gen, there exists a computable description (a boolean function)
    that describes it.
 *)
-Theorem U_is_algorithmic : forall (U: Type) `{UniversalSet U} `{Computable U},
-  forall P: U -> Prop, exists f: U -> bool, describable f.
+Theorem U_is_algorithmic : forall (Gen: Type) `{GenerativeType Gen} `{Computable Gen},
+  forall P: Gen -> Prop, exists f: Gen -> bool, describable f.
 Proof.
-  intros U H_ult H_comp P.
+  intros Gen H_ult H_comp P.
   exact (computability_axiom P).
 Qed.
 
 
 
-(* Theorem: U requires computation, while Omega retrieves solutions instantly. *)
+(* Theorem: Gen requires computation, while Omega retrieves solutions instantly. *)
 Theorem Omega_computes_instantly :
-  forall (U : Type) `{UniversalSet U} `{Computable U}
-         (H_O : OmegaSet) (H_UT : OmegaToUniversal U _ H_O),
-  exists (P : U -> Prop) (S : U -> U),
-    (forall x: U, exists n: nat, contains n (S x)) /\
-    (forall x: Omega_carrier H_O, exists y: U, y = project_Omega x /\ contains 0 y).
+  forall (Gen : Type) `{GenerativeType Gen} `{Computable Gen}
+         (H_O : OmegaType) (H_UT : OmegaToUniversal Gen _ H_O),
+  exists (P : Gen -> Prop) (S : Gen -> Gen),
+    (forall x: Gen, exists n: nat, contains n (S x)) /\
+    (forall x: Omega_carrier H_O, exists y: Gen, y = project_Omega x /\ contains 0 y).
 Proof.
-  intros U H_U H_C H_O H_UT.
+  intros Gen H_U H_C H_O H_UT.
   
-  (* Step 1: Define an example problem P in U that requires computation *)
-  set (P := fun x: U => contains 0 x).
-  set (S := fun x: U => self_ref_pred_embed (fun y => contains 0 y)).
+  (* Step 1: Define an example problem P in Gen that requires computation *)
+  set (P := fun x: Gen => contains 0 x).
+  set (S := fun x: Gen => self_ref_pred_embed (fun y => contains 0 y)).
 
-  (* Step 2: Show that in U, solving S(x) requires computation over time *)
-  assert (forall x: U, exists n: nat, contains n (S x)) as H_U_computation.
+  (* Step 2: Show that in Gen, solving S(x) requires computation over time *)
+  assert (forall x: Gen, exists n: nat, contains n (S x)) as H_U_computation.
   { 
     intros x.
     destruct (self_ref_generation_exists (fun y => contains 0 y) 0) as [n [Hle Hn]].
@@ -870,7 +870,7 @@ Proof.
   }
 
   (* Step 3: Show that in Omega, solutions exist timelessly *)
-  assert (forall x: Omega_carrier H_O, exists y: U, y = project_Omega x /\ contains 0 y) as H_Omega_computation.
+  assert (forall x: Omega_carrier H_O, exists y: Gen, y = project_Omega x /\ contains 0 y) as H_Omega_computation.
   { 
     intros x.
     (* Destruct the result of projection_coherence x 0 *)
@@ -882,22 +882,22 @@ Proof.
     - exact Hcontains.
   }
 
-  (* Conclusion: Omega computes instantly, while U requires steps *)
+  (* Conclusion: Omega computes instantly, while Gen requires steps *)
   exists P, S.
   split; assumption.
 Qed.
 
 
-(* Show that U cannot sustain a paradox that Omega can sustain *)
+(* Show that Gen cannot sustain a paradox that Omega can sustain *)
 Theorem no_Omega_paradox_in_U :
-  forall (U: Type) `{UniversalSet U} `{OmegaSet},
+  forall (Gen: Type) `{GenerativeType Gen} `{OmegaType},
   forall t : nat,
-    ~ contains t (self_ref_pred_embed (fun _ : U =>
+    ~ contains t (self_ref_pred_embed (fun _ : Gen =>
       exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)).
 Proof.
-  intros U H_U H_Omega t H_contradiction.
+  intros Gen H_U H_Omega t H_contradiction.
   (* Extract paradox directly *)
-  pose proof (self_ref_pred_embed_correct (fun _ : U => exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)) as H_embed.
+  pose proof (self_ref_pred_embed_correct (fun _ : Gen => exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y /\ ~ P y)) as H_embed.
   destruct H_embed as [P [y [H_P H_not_P]]].
   contradiction.
 Qed.
@@ -909,14 +909,14 @@ Require Import Coq.Logic.Classical_Prop.
 
 
 Theorem no_Omega_paradoxifying_predicate_in_U :
-  forall (U: Type) `{UniversalSet U} `{OmegaSet},
+  forall (Gen: Type) `{GenerativeType Gen} `{OmegaType},
   forall t : nat,
-    ~ contains t (self_ref_pred_embed (fun _ : U =>
+    ~ contains t (self_ref_pred_embed (fun _ : Gen =>
       exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y <-> ~ P y)).
 Proof.
-  intros U H_U H_Omega t H_contradiction.
+  intros Gen H_U H_Omega t H_contradiction.
   (* Extract paradox directly *)
-  pose proof (self_ref_pred_embed_correct (fun _ : U => 
+  pose proof (self_ref_pred_embed_correct (fun _ : Gen => 
     exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y <-> ~ P y)) as H_embed.
   destruct H_embed as [P [y H_iff]].
   
@@ -941,14 +941,14 @@ Qed.
 
 
 Theorem self_reference_requires_incompleteness_or_contradiction :
-  forall (U : Type) `{H_U: UniversalSet U},
-  (forall t: nat, exists P: U -> Prop, 
+  forall (Gen : Type) `{H_U: GenerativeType Gen},
+  (forall t: nat, exists P: Gen -> Prop, 
       contains t (self_ref_pred_embed P) -> contains t (self_ref_pred_embed (fun x => ~ P x))) ->
   exists t1 t2: nat, 
-    (exists P: U -> Prop, contains t1 (self_ref_pred_embed P) /\ ~ contains t1 (self_ref_pred_embed (fun x => ~ P x))) \/
-    (exists P: U -> Prop, contains t2 (self_ref_pred_embed P) /\ contains t2 (self_ref_pred_embed (fun x => ~ P x))).
+    (exists P: Gen -> Prop, contains t1 (self_ref_pred_embed P) /\ ~ contains t1 (self_ref_pred_embed (fun x => ~ P x))) \/
+    (exists P: Gen -> Prop, contains t2 (self_ref_pred_embed P) /\ contains t2 (self_ref_pred_embed (fun x => ~ P x))).
 Proof.
-  intros U H_U self_reference.
+  intros Gen H_U self_reference.
 
   (* Pick predicate P at t = 0 *)
   destruct (self_reference 0) as [P H_P].
@@ -991,7 +991,7 @@ Qed.
 (**
   Theorem: self_reference_excludes_containment_of_contradiction
 
-  This theorem formalizes a key consistency principle for the UniversalSet U.
+  This theorem formalizes a key consistency principle for the GenerativeType Gen.
 
   It states that if, at some time t, the containment of a predicate P would imply
   the containment of its own negation (~P), then P and ~P cannot both be contained 
@@ -999,9 +999,9 @@ Qed.
 
   In other words:
     - If realizing P at time t would immediately entail realizing ~P at the same time,
-    - Then U must prevent both from appearing simultaneously.
+    - Then Gen must prevent both from appearing simultaneously.
   
-  This ensures that U remains constructively consistent: 
+  This ensures that Gen remains constructively consistent: 
   it can model paradoxical or self-negating predicates,
   but it never instantiates both sides of a contradiction at the same time step.
 
@@ -1015,16 +1015,16 @@ Qed.
       the self-referential embedding of ~P leads directly to inconsistency.
 *)
 Theorem self_reference_excludes_containment_of_contradiction :
-  forall (U : Type) `{H_U: UniversalSet U},
+  forall (Gen : Type) `{H_U: GenerativeType Gen},
   forall t : nat,
-  forall P : U -> Prop,
+  forall P : Gen -> Prop,
     (contains t (self_ref_pred_embed P) -> contains t (self_ref_pred_embed (fun x => ~ P x))) ->
     ~ (contains t (self_ref_pred_embed P) /\ contains t (self_ref_pred_embed (fun x => ~ P x))).
 Proof.
-  intros U H_U t P Himpl [HP HnotP].
+  intros Gen H_U t P Himpl [HP HnotP].
 
   (* Use self_ref_pred_embed_correct to evaluate the embedded negation *)
-  pose proof self_ref_pred_embed_correct (fun x : U => ~ P x) as H_neg_correct.
+  pose proof self_ref_pred_embed_correct (fun x : Gen => ~ P x) as H_neg_correct.
   (* Now we have: ~ P (self_ref_pred_embed (fun x => ~ P x)) *)
   specialize (H_neg_correct).
 
@@ -1039,33 +1039,33 @@ Qed.
 
 Section SelfRecursiveUniverse.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
-  (* A subset of U is modeled as a predicate on U *)
-  Definition PowerSet := U -> Prop.
+  (* A subset of Gen is modeled as a predicate on Gen *)
+  Definition PowerSet := Gen -> Prop.
 
-  (* U contains all predicates via self_ref_pred_embed *)
+  (* Gen contains all predicates via self_ref_pred_embed *)
   Definition U_contains_power_set : Prop :=
     forall (S : PowerSet), exists t, contains t (self_ref_pred_embed S).
 
-  (* U is contained in its power set via singleton predicates *)
+  (* Gen is contained in its power set via singleton predicates *)
   Definition U_is_subset_of_power_set : Prop :=
-    forall (x : U), exists S : PowerSet, forall y : U, S y <-> y = x.
+    forall (x : Gen), exists S : PowerSet, forall y : Gen, S y <-> y = x.
 
-  (* Theorem: U and its powerset mutually contain each other *)
+  (* Theorem: Gen and its powerset mutually contain each other *)
   Theorem U_and_power_set_mutually_embed :
     U_contains_power_set /\ U_is_subset_of_power_set.
   Proof.
     split.
 
-    (* Part 1: U contains its power set *)
+    (* Part 1: Gen contains its power set *)
     - unfold U_contains_power_set.
       intros S.
       destruct (self_ref_generation_exists S 0) as [t [H_le H_contains]].
       exists t.
       exact H_contains.
 
-    (* Part 2: U is subset of its own power set *)
+    (* Part 2: Gen is subset of its own power set *)
     - unfold U_is_subset_of_power_set.
       intros x.
       exists (fun y => y = x).
@@ -1073,25 +1073,25 @@ Section SelfRecursiveUniverse.
   Qed.
 
   Theorem U_is_self_reflective :
-    exists (f : nat -> U),
+    exists (f : nat -> Gen),
       forall n : nat,
-        exists P : U -> Prop,
+        exists P : Gen -> Prop,
           contains n (f n) /\
           f n = self_ref_pred_embed P /\
           (exists m : nat,
-            contains m (self_ref_pred_embed (fun _ : U => exists m, contains m (self_ref_pred_embed P)))).
+            contains m (self_ref_pred_embed (fun _ : Gen => exists m, contains m (self_ref_pred_embed P)))).
   Proof.
     exists (fun n => self_ref_pred_embed (fun x => contains n x)).
     intros n.
-    set (P := fun x : U => contains n x).
+    set (P := fun x : Gen => contains n x).
     exists P.
     split.
     - destruct (self_ref_generation_exists P n) as [t [H_le H_contained]].
       apply (contains_backward n t (self_ref_pred_embed P) H_le H_contained).
     - split.
       + reflexivity.
-      + (* U contains a statement about its own knowledge of P *)
-        destruct (self_ref_generation_exists (fun _ : U => exists m, contains m (self_ref_pred_embed P)) n)
+      + (* Gen contains a statement about its own knowledge of P *)
+        destruct (self_ref_generation_exists (fun _ : Gen => exists m, contains m (self_ref_pred_embed P)) n)
           as [m [H_le_m H_contains_m]].
         exists m.
         exact H_contains_m.
@@ -1128,23 +1128,23 @@ Fixpoint aleph_n (n : nat) : Type :=
 Parameter hash : forall {X : Type}, X -> nat.
 
 (* The encoding turns an element x : X into a predicate that uniquely refers to x via its hash.
-   This allows embedding any type X into U while preserving injectivity. *)
-Definition encode_with_hash {U: Type} `{UniversalSet U} {X: Type} (x: X) : U -> Prop :=
-  fun u => forall P: U -> Prop, (P u <-> exists n: nat, n = hash x).
+   This allows embedding any type X into Gen while preserving injectivity. *)
+Definition encode_with_hash {Gen: Type} `{GenerativeType Gen} {X: Type} (x: X) : Gen -> Prop :=
+  fun u => forall P: Gen -> Prop, (P u <-> exists n: nat, n = hash x).
 
 (* Axiom stating that our encoding preserves distinctness *)
 Axiom encode_with_hash_injective : 
-  forall {U: Type} `{UniversalSet U} {X: Type} (x y: X),
+  forall {Gen: Type} `{GenerativeType Gen} {X: Type} (x y: X),
   self_ref_pred_embed (encode_with_hash x) = self_ref_pred_embed (encode_with_hash y) -> x = y.
 
-(* Theorem: For every n, the Universal Set U contains an injective copy of the nth aleph cardinal.
-   This implies that U is strictly "larger" than any set constructible via this hierarchy. *)
+(* Theorem: For every n, the Generative Type Gen contains an injective copy of the nth aleph cardinal.
+   This implies that Gen is strictly "larger" than any set constructible via this hierarchy. *)
 Theorem U_larger_than_aleph_n :
-  forall (U : Type) `{H_U : UniversalSet U},
+  forall (Gen : Type) `{H_U : GenerativeType Gen},
   forall n : nat,
-  exists (f : aleph_n n -> U), injective f.
+  exists (f : aleph_n n -> Gen), injective f.
 Proof.
-  intros U H_U n.
+  intros Gen H_U n.
   exists (fun x => self_ref_pred_embed (encode_with_hash x)).
   unfold injective.
   intros x1 x2 Heq.
@@ -1154,23 +1154,23 @@ Qed.
 
 
 (* Theorem: Omega_larger_than_U
-   This theorem states that there is a function f : U -> Omega_carrier such that
-   there exists some element x in Omega_carrier that is not equal to f y for any y in U.
+   This theorem states that there is a function f : Gen -> Omega_carrier such that
+   there exists some element x in Omega_carrier that is not equal to f y for any y in Gen.
 *)
 Theorem Omega_larger_than_U
-  : forall (U : Type)
-           (H_U : UniversalSet U)
-           (H_O : OmegaSet)
-           (H_UT : OmegaToUniversal U H_U H_O),
-    exists (f : U -> Omega_carrier H_O),
+  : forall (Gen : Type)
+           (H_U : GenerativeType Gen)
+           (H_O : OmegaType)
+           (H_UT : OmegaToUniversal Gen H_U H_O),
+    exists (f : Gen -> Omega_carrier H_O),
     exists (x : Omega_carrier H_O),
-      forall (y : U), f y <> x.
+      forall (y : Gen), f y <> x.
 Proof.
-  intros U H_U H_O H_UT.
+  intros Gen H_U H_O H_UT.
   (* Explicitly specify all parameters for lift_U *)
-  pose proof (@lift_U U H_U H_O H_UT) as f.
+  pose proof (@lift_U Gen H_U H_O H_UT) as f.
   
-  set (P := fun (x : Omega_carrier H_O) => forall y : U, f y <> x).
+  set (P := fun (x : Omega_carrier H_O) => forall y : Gen, f y <> x).
   pose proof (@omega_completeness H_O P) as [x Hx].
 
   exists f, x.
@@ -1187,7 +1187,7 @@ Axiom strictly_larger_no_injection :
       ~ exists (f : X -> Y), (forall x1 x2, f x1 = f x2 -> x1 = x2).
 
 Theorem Omega_contains_set_larger_than_itself :
-  forall (Omega : OmegaSet),
+  forall (Omega : OmegaType),
     exists (X : Type) (embed_X_in_Omega : X -> Omegacarrier),
       strictly_larger X Omegacarrier.
 Proof.
@@ -1207,7 +1207,7 @@ Qed.
 
 
 Theorem Omega_contains_set_larger_than_itself_iff_not_containing_it :
-  forall (Omega : OmegaSet),
+  forall (Omega : OmegaType),
     exists (x : Omegacarrier),
       (exists (X : Type) (f : X -> Omegacarrier), strictly_larger X Omegacarrier) <->
       ~ (exists (X : Type) (f : X -> Omegacarrier), strictly_larger X Omegacarrier).
@@ -1229,7 +1229,7 @@ Qed.
 
 (* Omega contains all absurdities *)
 Theorem Omega_is_absurd:
-  forall (Omega : OmegaSet),
+  forall (Omega : OmegaType),
   forall (P Q : Omegacarrier -> Prop),
     exists x : Omegacarrier, P x <-> Q x.
 Proof.
@@ -1241,17 +1241,17 @@ Qed.
 
 
 (* The Paradoxical Class *)
-Class Paradoxical (Omega : OmegaSet) (P : Omega_carrier Omega -> Prop) := {
+Class Paradoxical (Omega : OmegaType) (P : Omega_carrier Omega -> Prop) := {
   paradox_property : forall x : Omega_carrier Omega, P x <-> ~ P x
 }.
 
 (* General definition for OmegaParadox *)
-Definition OmegaParadox (Omega : OmegaSet) (P : Omega_carrier Omega -> Prop) : Prop :=
+Definition OmegaParadox (Omega : OmegaType) (P : Omega_carrier Omega -> Prop) : Prop :=
   exists (X : Type) (f : X -> Omega_carrier Omega), Paradoxical Omega P.
 
 (* Theorem: Omega contains a paradoxical element for a given predicate P *)
 Theorem Omega_contains_paradoxical :
-  forall (Omega : OmegaSet) (P : Omega_carrier Omega -> Prop),
+  forall (Omega : OmegaType) (P : Omega_carrier Omega -> Prop),
     OmegaParadox Omega P -> 
     exists x : Omega_carrier Omega, P x.
 Proof.
@@ -1262,12 +1262,12 @@ Qed.
 
 
 (* Define a fixpoint operator for paradoxical predicates *)
-Definition ParadoxFixpoint (Omega : OmegaSet) : Type :=
+Definition ParadoxFixpoint (Omega : OmegaType) : Type :=
   {P : Omegacarrier -> Prop | 
     exists x : Omegacarrier, P x <-> ~P x}.
 
 (* Now define a recursive version that applies the paradox to itself *)
-Fixpoint RecursiveParadox (O : OmegaSet) (n : nat) : ParadoxFixpoint O.
+Fixpoint RecursiveParadox (O : OmegaType) (n : nat) : ParadoxFixpoint O.
 Proof.
   destruct n.
   
@@ -1294,7 +1294,7 @@ Proof.
 Defined.
 
 (* Define the ultimate paradox that combines all levels *)
-Definition UltimateParadox (O : OmegaSet) : ParadoxFixpoint O.
+Definition UltimateParadox (O : OmegaType) : ParadoxFixpoint O.
 Proof.
   (* Define a predicate that satisfies all levels of paradox *)
   set (P_ultimate := fun x => forall m, 
@@ -1308,7 +1308,7 @@ Defined.
 
 
 (* Theorem: The ultimate paradox is its own negation *)
-Theorem UltimateParadoxProperty : forall (O : OmegaSet),
+Theorem UltimateParadoxProperty : forall (O : OmegaType),
   let P := proj1_sig (UltimateParadox O) in
   exists x : Omegacarrier, P x <-> ~P x.
 Proof.
@@ -1321,11 +1321,11 @@ Qed.
 (* Creative idea - what if Omega could even refer to things outside mathematics? *)
 Parameter OutsideOmega : Type.
 
-Definition contains_outside (HO : OmegaSet) (x : Omega_carrier HO) : Prop :=
+Definition contains_outside (HO : OmegaType) (x : Omega_carrier HO) : Prop :=
   exists y : OutsideOmega, True.
 
 Theorem Omega_contains_reference_to_outside :
-  forall (HO : OmegaSet),
+  forall (HO : OmegaType),
     exists x : Omega_carrier HO, contains_outside HO x.
 Proof.
   intros HO.
@@ -1335,7 +1335,7 @@ Qed.
 
 
 Section UltimateAbsurdity.
-  Context (Omega : OmegaSet).
+  Context (Omega : OmegaType).
 
   (* The ultimate absurdity is a point where all predicates are equivalent *)
   Definition PredicateEquivalence (x : Omegacarrier) : Prop :=
@@ -1436,153 +1436,6 @@ Section UltimateAbsurdity.
 End UltimateAbsurdity.
 
 
-
-(* Classical Exclusion via Unique Negation *)
-(* We define a new class AlphaSet that represents a set with a unique impossible element *)
-(* We might think of the impossible element as the "veil" between Omega and Alpha *)
-Class AlphaSet := {
-  Alphacarrier : Type;
-  exists_in_Alpha : Alphacarrier -> Prop;
-  (* Use sig (computational) instead of exists (logical) *)
-  alpha_impossibility : {P: Alphacarrier -> Prop | 
-    (forall x: Alphacarrier, ~ P x) /\
-    (forall Q: Alphacarrier -> Prop, (forall x: Alphacarrier, ~ Q x) -> Q = P)};
-  alpha_not_empty : exists x: Alphacarrier, True
-}.
-
-
-(* Help extract it computationally *)
-Definition the_impossible `{H_N: AlphaSet} : Alphacarrier -> Prop :=
-  proj1_sig alpha_impossibility.
-
-
-Lemma the_impossible_is_impossible : forall `{H_N: AlphaSet},
-  forall x: Alphacarrier, ~ the_impossible x.
-Proof.
-  intros H_N x.
-  unfold the_impossible.
-  destruct alpha_impossibility as [P [HP HUnique]].
-  simpl. exact (HP x).
-Qed.
-
-
-Lemma the_impossible_unique : forall `{H_N: AlphaSet},
-  forall P: Alphacarrier -> Prop,
-    (forall x: Alphacarrier, ~ P x) -> P = the_impossible.
-Proof.
-  intros H_N P HP.
-  unfold the_impossible.
-  destruct alpha_impossibility as [Q [HQ HUnique]].
-  simpl. apply HUnique. exact HP.
-Qed.
-
-
-Theorem not_everything_is_impossible : forall `{H_N: AlphaSet},
-  ~ (forall P: Alphacarrier -> Prop, forall x: Alphacarrier, ~ P x).
-Proof.
-  intros H_N H_all_impossible.
-  destruct alpha_not_empty as [x0 _].
-  set (always_true := fun x: Alphacarrier => True).
-  specialize (H_all_impossible always_true x0).
-  exact (H_all_impossible I).
-Qed.
-
-
-(* NOTE: Classical logic is used in the following theorems. But again, we try to keep it scoped here! *)
-(* Classical logic is kind of the point here - we're showing that predicates emerge from not being impossible *)
-Theorem alpha_partial_completeness : forall `{H_N: AlphaSet},
-  forall P: Alphacarrier -> Prop,
-    P <> the_impossible ->
-    exists x: Alphacarrier, P x.
-Proof.
-  intros H_N P H_neq.
-  destruct (classic (exists x, P x)) as [H_exists | H_not_exists].
-  - exact H_exists.
-  - exfalso.
-    assert (H_P_impossible: forall x, ~ P x).
-    {
-      intros x Px.
-      apply H_not_exists.
-      exists x. exact Px.
-    }
-    assert (P = the_impossible).
-    { apply the_impossible_unique. exact H_P_impossible. }
-    exact (H_neq H).
-Qed.
-
-
-Theorem everything_possible_except_one : forall `{H_N: AlphaSet},
-  forall P: Alphacarrier -> Prop,
-    P = the_impossible \/ exists x: Alphacarrier, P x.
-Proof.
-  intros H_N P.
-  destruct (classic (P = the_impossible)) as [H_eq | H_neq].
-  - left. exact H_eq.
-  - right. apply alpha_partial_completeness. exact H_neq.
-Qed.
-
-
-Theorem alpha_is_spatial : forall `{H_N: AlphaSet},
-  (* Alpha enforces separation through mutual exclusion rather than time *)
-  forall P Q: Alphacarrier -> Prop,
-    P = the_impossible \/ Q = the_impossible \/ 
-    (exists x, P x) \/ (exists x, Q x) \/
-    (exists x, P x /\ Q x).
-Proof.
-  intros H_N P Q.
-  
-  (* This is just restating everything_possible_except_one in a different way *)
-  destruct (everything_possible_except_one P) as [HP | [x HPx]].
-  - left. exact HP.
-  - destruct (everything_possible_except_one Q) as [HQ | [y HQy]].
-    + right. left. exact HQ.
-    + (* Both P and Q have witnesses *)
-      (* Either they overlap or they don't *)
-      destruct (classic (exists z, P z /\ Q z)) as [H_overlap | H_disjoint].
-      * right. right. right. right. exact H_overlap.
-      * right. right. left. exists x. exact HPx.
-Qed.
-
-
-Theorem omega_contains_alpha : forall (Omega : OmegaSet),
-  (* We can simulate an AlphaSet inside Omega *)
-  exists (alpha_sim : Omegacarrier -> Prop),
-    (* The alpha_sim predicate identifies elements that "act like Alpha elements" *)
-    (exists (impossible_sim : Omegacarrier -> Prop),
-      (* For elements in our simulated Alpha: *)
-      (forall x : Omegacarrier, alpha_sim x ->
-        (* Every predicate restricted to alpha_sim either: *)
-        forall P : Omegacarrier -> Prop,
-          (* Has no witnesses in alpha_sim (and thus acts like the impossible) *)
-          (forall y, alpha_sim y -> ~P y) \/
-          (* Or has a witness in alpha_sim *)
-          (exists y, alpha_sim y /\ P y))).
-Proof.
-  intros Omega.
-  
-  (* Define the predicate that describes "being an Alpha-like subset" *)
-  set (alpha_structure := fun x : Omegacarrier =>
-    exists (A : Omegacarrier -> Prop) (imp : Omegacarrier -> Prop),
-      A x /\
-      (* imp is impossible within A *)
-      (forall y, A y -> ~imp y) /\
-      (* Every predicate on A either has no witnesses or has witnesses *)
-      (forall P : Omegacarrier -> Prop,
-        (forall y, A y -> ~P y) \/ (exists y, A y /\ P y))).
-  
-  (* By omega_completeness, this structure must have a witness *)
-  destruct (omega_completeness alpha_structure) as [x0 Hx0].
-  destruct Hx0 as [A [imp [HA [Himp Hpartial]]]].
-  
-  (* Use A as our alpha_sim and imp as our impossible_sim *)
-  exists A, imp.
-  
-  intros x Hx P.
-  (* Apply the partial completeness property *)
-  exact (Hpartial P).
-Qed.
-
-
 (*****************************************************************)
 (*                   Theology and Metaphysics                    *)
 (*****************************************************************)
@@ -1614,7 +1467,7 @@ Qed.
   does not presuppose religious belief. Instead, it can be 
   interpreted mathematically and epistemologically, as follows:
 
-  - `U` represents a universe of abstract, self-referential constructs.
+  - `Gen` represents a universe of abstract, self-referential constructs.
     It is a type whose elements evolve over time via a `contains` predicate.
 
   - `Omega` is a timeless superstructure—akin to a semantic closure or 
@@ -1659,24 +1512,24 @@ Qed.
 (* Feel free to explore! *)
 
 Theorem U_contains_rock_lifting_paradox :
-  forall (U: Type) `{UniversalSet U},
+  forall (Gen: Type) `{GenerativeType Gen},
   exists t: nat,
-    contains t (self_ref_pred_embed (fun x => forall P: U -> Prop, contains 0 (self_ref_pred_embed P))) /\
-    contains t (self_ref_pred_embed (fun x => ~ contains 0 (self_ref_pred_embed (fun _ : U => contains t x)))) /\
+    contains t (self_ref_pred_embed (fun x => forall P: Gen -> Prop, contains 0 (self_ref_pred_embed P))) /\
+    contains t (self_ref_pred_embed (fun x => ~ contains 0 (self_ref_pred_embed (fun _ : Gen => contains t x)))) /\
     contains (t + 1) (self_ref_pred_embed (fun x => contains t x)).
 Proof.
-  intros U H.
+  intros Gen H.
 
-  (* Step 1: U contains an Omnipotent Being *)
+  (* Step 1: Gen contains an Omnipotent Being *)
   (* "Omnipotence" means having the ability to generate any describable entity *)
-  destruct (self_ref_generation_exists (fun x => forall P: U -> Prop, contains 0 (self_ref_pred_embed P)) 0)
+  destruct (self_ref_generation_exists (fun x => forall P: Gen -> Prop, contains 0 (self_ref_pred_embed P)) 0)
     as [t1 [Ht1_le Ht1_omnipotent]].
 
-  (* Step 2: U generates an unliftable rock at some time t2 *)
-  destruct (self_ref_generation_exists (fun x => ~ contains 0 (self_ref_pred_embed (fun _ : U => contains t1 x))) t1)
+  (* Step 2: Gen generates an unliftable rock at some time t2 *)
+  destruct (self_ref_generation_exists (fun x => ~ contains 0 (self_ref_pred_embed (fun _ : Gen => contains t1 x))) t1)
     as [t2 [Ht2_le Ht2_unliftable]].
 
-  (* Step 3: U generates a reality where the rock is lifted at some time t3 *)
+  (* Step 3: Gen generates a reality where the rock is lifted at some time t3 *)
   destruct (self_ref_generation_exists (fun x => contains t1 x) (t1 + 1))
     as [t3 [Ht3_le Ht3_lifted]].
 
@@ -1684,37 +1537,37 @@ Proof.
   apply (contains_backward t1 t2) in Ht2_unliftable; [ | lia ].
   apply (contains_backward (t1 + 1) t3) in Ht3_lifted; [ | lia ].
 
-  (* Step 5: We now formally conclude that U contains the paradox *)
+  (* Step 5: We now formally conclude that Gen contains the paradox *)
   exists t1.
   split.
-  - exact Ht1_omnipotent.     (* U contains omnipotence *)
+  - exact Ht1_omnipotent.     (* Gen contains omnipotence *)
   - split.
-    + exact Ht2_unliftable.   (* U contains the unliftable rock *)
-    + exact Ht3_lifted.       (* U contains the rock being lifted *)
+    + exact Ht2_unliftable.   (* Gen contains the unliftable rock *)
+    + exact Ht3_lifted.       (* Gen contains the rock being lifted *)
 Qed.
 
 
 Section SelfLimitingGod.
-  Context {U: Type} `{UniversalSet U}.
+  Context {Gen: Type} `{GenerativeType Gen}.
 
   (* Definition: God contains all predicates at time 0 *)
-  Definition God := forall P: U -> Prop, contains 0 (self_ref_pred_embed P).
+  Definition God := forall P: Gen -> Prop, contains 0 (self_ref_pred_embed P).
 
   (* Definition: A self-limited being lacks some predicate at time 0 *)
-  Definition self_limited := exists P: U -> Prop, ~ contains 0 (self_ref_pred_embed P).
+  Definition self_limited := exists P: Gen -> Prop, ~ contains 0 (self_ref_pred_embed P).
 
-  (* Theorem: God must limit himself to know everything in U *)
+  (* Theorem: God must limit himself to know everything in Gen *)
   Theorem God_must_limit_himself :
     exists (t: nat), God  -> self_limited.
   Proof.
     (* Step 1: Define a predicate that explicitly embeds the existential *)
-    set (self_limit_pred := fun _: U => exists _: U, self_limited).
+    set (self_limit_pred := fun _: Gen => exists _: Gen, self_limited).
 
     (* Step 2: Use self ref generation to guarantee that such an entity exists *)
     destruct (self_ref_generation_exists self_limit_pred 0)
       as [t1 [Ht1_le Ht1_contained]].
 
-    (* Step 3: Since `contains` asserts `self_ref_pred_embed self_limit_pred` exists in U, we unfold it *)
+    (* Step 3: Since `contains` asserts `self_ref_pred_embed self_limit_pred` exists in Gen, we unfold it *)
     pose proof self_ref_pred_embed_correct self_limit_pred as H_embed.
     
     (* Step 4: Extract the actual entity x *)
@@ -1730,22 +1583,22 @@ End SelfLimitingGod.
 
 
 Theorem God_can_contain_temporal_paradoxes :
-  forall (U: Type) `{UniversalSet U},
-    exists x: U, 
-      (forall P: U -> Prop, contains 0 (self_ref_pred_embed P)) /\
-      (exists t: nat, contains t (self_ref_pred_embed (fun _: U => ~ contains 0 (self_ref_pred_embed (fun _: U => contains 0 x))))).
+  forall (Gen: Type) `{GenerativeType Gen},
+    exists x: Gen, 
+      (forall P: Gen -> Prop, contains 0 (self_ref_pred_embed P)) /\
+      (exists t: nat, contains t (self_ref_pred_embed (fun _: Gen => ~ contains 0 (self_ref_pred_embed (fun _: Gen => contains 0 x))))).
 Proof.
-  intros U H_U.
+  intros Gen H_U.
 
   (* Step 1: Define God as omniscience at time 0 *)
-  set (God := fun x: U => forall P: U -> Prop, contains 0 (self_ref_pred_embed P)).
+  set (God := fun x: Gen => forall P: Gen -> Prop, contains 0 (self_ref_pred_embed P)).
 
   (* Step 2: Define the temporal paradox predicate *)
-  set (TemporalParadox := fun x: U => 
-    exists t: nat, contains t (self_ref_pred_embed (fun _: U => ~ contains 0 (self_ref_pred_embed (fun _: U => contains 0 x))))).
+  set (TemporalParadox := fun x: Gen => 
+    exists t: nat, contains t (self_ref_pred_embed (fun _: Gen => ~ contains 0 (self_ref_pred_embed (fun _: Gen => contains 0 x))))).
 
-  (* Step 3: Embed the combined predicate into U *)
-  set (CombinedPred := fun x: U => God x /\ TemporalParadox x).
+  (* Step 3: Embed the combined predicate into Gen *)
+  set (CombinedPred := fun x: Gen => God x /\ TemporalParadox x).
 
   (* Step 4: Use self_ref_generation_exists to find when CombinedPred emerges *)
   destruct (self_ref_generation_exists CombinedPred 0) as [t [Hle Hcontains]].
@@ -1767,7 +1620,7 @@ Qed.
 A god can justify any absurd claim. *)
 Section DivineAbsurdity.
 
-  Context (Omega : OmegaSet).
+  Context (Omega : OmegaType).
   
   Parameter divine_absurdity : Prop.
   
@@ -1785,23 +1638,23 @@ End DivineAbsurdity.
 
 Section FreeWill.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Definition of free will: 
      For all predicates, there exists a time when the agent causes P or not P *)
-  Definition free_will (x : U) : Prop :=
-    forall (P : U -> Prop),
+  Definition free_will (x : Gen) : Prop :=
+    forall (P : Gen -> Prop),
       exists t : nat,
         contains t (self_ref_pred_embed P) \/
         contains t (self_ref_pred_embed (fun x => ~ P x)).
 
-  (* Theorem: There exists an agent in U that has free will *)
+  (* Theorem: There exists an agent in Gen that has free will *)
   Theorem U_contains_free_agent :
-    exists x : U, free_will x.
+    exists x : Gen, free_will x.
   Proof.
     (* Step 1: Define the predicate that says "x has free will" *)
-    set (FreeAgent := fun x : U =>
-      forall (P : U -> Prop),
+    set (FreeAgent := fun x : Gen =>
+      forall (P : Gen -> Prop),
         exists t : nat,
           contains t (self_ref_pred_embed P) \/
           contains t (self_ref_pred_embed (fun x => ~ P x))).
@@ -1822,28 +1675,28 @@ End FreeWill.
 
 Section MortalDivinity.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* God: an entity who contains all predicates at time 0 *)
-  Definition is_god (x : U) : Prop :=
-    forall P : U -> Prop, contains 0 (self_ref_pred_embed P).
+  Definition is_god (x : Gen) : Prop :=
+    forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P).
 
   (* Denial of Godhood: entity does not satisfy is_god *)
-  Definition denies_godhood (x : U) : Prop :=
+  Definition denies_godhood (x : Gen) : Prop :=
     ~ is_god x.
 
   (* Mortal God: entity that is God but denies it *)
-  Definition mortal_god (x : U) : Prop :=
+  Definition mortal_god (x : Gen) : Prop :=
     is_god x /\ denies_godhood x.
 
-  (* Theorem: U contains an entity that is logically God and also denies it *)
+  (* Theorem: Gen contains an entity that is logically God and also denies it *)
   Theorem U_contains_mortal_god :
-    exists x : U, mortal_god x.
+    exists x : Gen, mortal_god x.
   Proof.
     (* Step 1: Define the predicate to embed *)
-    set (mortal_god_pred := fun x : U =>
-      (forall P : U -> Prop, contains 0 (self_ref_pred_embed P)) /\
-      ~ (forall P : U -> Prop, contains 0 (self_ref_pred_embed P))).
+    set (mortal_god_pred := fun x : Gen =>
+      (forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P)) /\
+      ~ (forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P))).
 
     (* Step 2: Use self-ref generation to construct such an x *)
     destruct (self_ref_generation_exists mortal_god_pred 0)
@@ -1862,31 +1715,31 @@ End MortalDivinity.
 
 Section DivineProvability.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* God: someone who contains all predicates at time 0 *)
-  (* Definition is_god (x : U) : Prop :=
-    forall P: U -> Prop, contains 0 (self_ref_pred_embed P). *)
+  (* Definition is_god (x : Gen) : Prop :=
+    forall P: Gen -> Prop, contains 0 (self_ref_pred_embed P). *)
 
   (* God is provable: There exists x such that is_god x *)
   Definition god_is_provable : Prop :=
-    exists x: U, is_god x.
+    exists x: Gen, is_god x.
 
   (* God is unprovable: For all x, ~ is_god x *)
   Definition god_is_unprovable : Prop :=
-    forall x: U, ~ is_god x.
+    forall x: Gen, ~ is_god x.
 
-  (* Meta-theorem: Both provability and unprovability of God are contained in U *)
+  (* Meta-theorem: Both provability and unprovability of God are contained in Gen *)
   Theorem U_contains_divine_duality :
     exists t1 t2 : nat,
       contains t1 (self_ref_pred_embed (fun _ => god_is_provable)) /\
       contains t2 (self_ref_pred_embed (fun _ => god_is_unprovable)).
   Proof.
     (* Step 1: Define both predicates *)
-    set (P1 := fun _ : U => god_is_provable).
-    set (P2 := fun _ : U => god_is_unprovable).
+    set (P1 := fun _ : Gen => god_is_provable).
+    set (P2 := fun _ : Gen => god_is_unprovable).
 
-    (* Step 2: Use generation to embed both in U at different times *)
+    (* Step 2: Use generation to embed both in Gen at different times *)
     destruct (self_ref_generation_exists P1 0) as [t1 [Ht1_le Ht1_contains]].
     destruct (self_ref_generation_exists P2 (t1 + 1)) as [t2 [Ht2_le Ht2_contains]].
 
@@ -1919,25 +1772,25 @@ Inductive EncodedData :=
 
 Section SemanticEncoding.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Predicate stating that an entity semantically encodes some data *)
-  Parameter semantically_encodes : U -> EncodedData -> Prop.
+  Parameter semantically_encodes : Gen -> EncodedData -> Prop.
 
   (* Definition: An entity that was created at a specific time, but encodes deeper/older data *)
-  Definition fabricated_history (x : U) (t_creation : nat) (d : EncodedData) : Prop :=
+  Definition fabricated_history (x : Gen) (t_creation : nat) (d : EncodedData) : Prop :=
     contains t_creation x /\
     semantically_encodes x d.
 
-  (* Theorem: There exists an entity in U that was created at a specific time and semantically encodes arbitrary data *)
+  (* Theorem: There exists an entity in Gen that was created at a specific time and semantically encodes arbitrary data *)
   Theorem U_contains_fabricated_history :
     forall (d : EncodedData) (t_creation : nat),
-      exists x : U, fabricated_history x t_creation d.
+      exists x : Gen, fabricated_history x t_creation d.
   Proof.
     intros d t_creation.
 
     (* Define the predicate to generate: something that encodes data d *)
-    set (P := fun x : U => semantically_encodes x d).
+    set (P := fun x : Gen => semantically_encodes x d).
 
     (* Use self-ref generation to produce such an entity at creation time *)
     destruct (self_ref_generation_exists P t_creation)
@@ -1957,7 +1810,7 @@ End SemanticEncoding.
 
 Section BigBangSimulation.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Define the Big Bang timeline as encoded data directly *)
   Definition BigBangTimeline : EncodedData :=
@@ -1970,14 +1823,14 @@ Section BigBangSimulation.
       HeatDeath
     ].
 
-  (* Theorem: There exists an entity in U that encodes the Big Bang timeline at some creation point *)
+  (* Theorem: There exists an entity in Gen that encodes the Big Bang timeline at some creation point *)
   Theorem U_simulates_big_bang :
-    exists x : U, fabricated_history x 0 BigBangTimeline.
+    exists x : Gen, fabricated_history x 0 BigBangTimeline.
   Proof.
     unfold fabricated_history.
 
     (* Predicate: x semantically encodes the Big Bang *)
-    set (P := fun x : U => semantically_encodes x BigBangTimeline).
+    set (P := fun x : Gen => semantically_encodes x BigBangTimeline).
 
     destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
 
@@ -2002,23 +1855,23 @@ End BigBangSimulation.
   can be embedded into a construct that was created much more recently.
 *)
 Section YoungEarthSimulation.
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   Definition YECMessage : EncodedData :=
   EString "The universe was created recently, but it encodes the appearance of deep time.".
 
   Definition YoungEarthCreationTime : nat := 6000.  (* "years ago" in semantic units *)
 
-  Definition young_earth_entity (x : U) : Prop :=
+  Definition young_earth_entity (x : Gen) : Prop :=
     fabricated_history x YoungEarthCreationTime BigBangTimeline /\
     semantically_encodes x YECMessage.
 
   Theorem U_contains_young_earth_creation_model :
-    exists x : U, young_earth_entity x.
+    exists x : Gen, young_earth_entity x.
   Proof.
     unfold young_earth_entity, fabricated_history.
   
-    set (P := fun x : U =>
+    set (P := fun x : Gen =>
       semantically_encodes x BigBangTimeline /\
       semantically_encodes x YECMessage).
   
@@ -2031,7 +1884,7 @@ Section YoungEarthSimulation.
     exists (self_ref_pred_embed P).
     exact (conj
              (conj
-                (@contains_backward U H YoungEarthCreationTime t (self_ref_pred_embed P) H_le H_contains)
+                (@contains_backward Gen H YoungEarthCreationTime t (self_ref_pred_embed P) H_le H_contains)
                 H_timeline)
              H_msg).
   Qed.
@@ -2041,32 +1894,32 @@ End YoungEarthSimulation.
 
 Section DivinePresence.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* God is an entity who contains all predicates at time 0 *)
-  (* Definition is_god (x : U) : Prop :=
-    forall P : U -> Prop, contains 0 (self_ref_pred_embed P). *)
+  (* Definition is_god (x : Gen) : Prop :=
+    forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P). *)
 
   (* God can know a proposition semantically (e.g., experience it internally) *)
-  Parameter knows : U -> (U -> Prop) -> Prop.
+  Parameter knows : Gen -> (Gen -> Prop) -> Prop.
 
   (* Omniscient: contains or knows all predicates *)
-  Definition omniscient (g : U) : Prop :=
-    forall P : U -> Prop,
+  Definition omniscient (g : Gen) : Prop :=
+    forall P : Gen -> Prop,
       contains 0 (self_ref_pred_embed P) \/ knows g P.
 
   (* Theorem: There exists a God who is present in every being—
      either by identity or by internal semantic knowledge of that being *)
   Theorem God_must_exist_within_all_beings :
-    exists g : U,
+    exists g : Gen,
       is_god g /\
-      forall x : U,
+      forall x : Gen,
         g = x \/ knows g (fun y => y = x).
   Proof.
     (* Step 1: Define the paradoxical god predicate *)
-    set (P := fun g : U =>
-      (forall Q : U -> Prop, contains 0 (self_ref_pred_embed Q)) /\
-      forall x : U, g = x \/ knows g (fun y => y = x)).
+    set (P := fun g : Gen =>
+      (forall Q : Gen -> Prop, contains 0 (self_ref_pred_embed Q)) /\
+      forall x : Gen, g = x \/ knows g (fun y => y = x)).
 
     (* Step 2: Use self-reference generation to produce this entity *)
     destruct (self_ref_generation_exists P 0) as [t [Hle Hcontain]].
@@ -2085,14 +1938,14 @@ End DivinePresence.
 
 Section DivineTrinity.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* God is present in all beings via inner knowledge *)
-  Definition omnipresent (g : U) : Prop :=
-    forall x : U, knows g (fun y => y = x).
+  Definition omnipresent (g : Gen) : Prop :=
+    forall x : Gen, knows g (fun y => y = x).
 
   (* Trinity: three distinct semantic modes of the same divine being *)
-  Definition Trinity (g1 g2 g3 : U) : Prop :=
+  Definition Trinity (g1 g2 g3 : Gen) : Prop :=
     is_god g1 /\
     is_god g2 /\
     denies_godhood g2 /\
@@ -2101,45 +1954,45 @@ Section DivineTrinity.
     g2 <> g3 /\
     g1 <> g3.
   
-  Definition God1 {U : Type} `{UniversalSet U} : U -> Prop :=
-    fun x => forall P : U -> Prop, contains 0 (self_ref_pred_embed P).
+  Definition God1 {Gen : Type} `{GenerativeType Gen} : Gen -> Prop :=
+    fun x => forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P).
 
-  Definition God2 {U : Type} `{UniversalSet U} : U -> Prop :=
+  Definition God2 {Gen : Type} `{GenerativeType Gen} : Gen -> Prop :=
     fun x =>
-      (forall P : U -> Prop, contains 0 (self_ref_pred_embed P)) /\
-      ~ (forall P : U -> Prop, contains 0 (self_ref_pred_embed P)).
+      (forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P)) /\
+      ~ (forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P)).
 
-  Definition God3 {U : Type} `{UniversalSet U} : U -> Prop :=
-    fun x => forall y : U, knows x (fun z => z = y).
+  Definition God3 {Gen : Type} `{GenerativeType Gen} : Gen -> Prop :=
+    fun x => forall y : Gen, knows x (fun z => z = y).
 
   Axiom g1_neq_g2 :
-    forall {U : Type} `{UniversalSet U},
+    forall {Gen : Type} `{GenerativeType Gen},
       self_ref_pred_embed God1 <> self_ref_pred_embed God2.
   
   Axiom g2_neq_g3 :
-    forall {U : Type} `{UniversalSet U},
+    forall {Gen : Type} `{GenerativeType Gen},
       self_ref_pred_embed God2 <> self_ref_pred_embed God3.
   
   Axiom g1_neq_g3 :
-    forall {U : Type} `{UniversalSet U},
+    forall {Gen : Type} `{GenerativeType Gen},
       self_ref_pred_embed God1 <> self_ref_pred_embed God3.
 
-  (* Theorem: U contains a triune God in three distinct roles *)
+  (* Theorem: Gen contains a triune God in three distinct roles *)
   Theorem U_contains_trinity :
-    exists g1 g2 g3 : U, Trinity g1 g2 g3.
+    exists g1 g2 g3 : Gen, Trinity g1 g2 g3.
   Proof.
     (* God1: Transcendent *)
-    set (God1 := fun x : U =>
-      forall P : U -> Prop, contains 0 (self_ref_pred_embed P)).
+    set (God1 := fun x : Gen =>
+      forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P)).
 
     (* God2: Incarnate and paradoxical *)
-    set (God2 := fun x : U =>
-      (forall P : U -> Prop, contains 0 (self_ref_pred_embed P)) /\
-      ~ (forall P : U -> Prop, contains 0 (self_ref_pred_embed P))).
+    set (God2 := fun x : Gen =>
+      (forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P)) /\
+      ~ (forall P : Gen -> Prop, contains 0 (self_ref_pred_embed P))).
 
     (* God3: Immanent, knows all beings *)
-    set (God3 := fun x : U =>
-      forall y : U, knows x (fun z => z = y)).
+    set (God3 := fun x : Gen =>
+      forall y : Gen, knows x (fun z => z = y)).
 
     (* Get each role *)
     destruct (self_ref_generation_exists God1 0) as [t1 [Hle1 H1]].
@@ -2173,31 +2026,31 @@ End DivineTrinity.
 
 Section InformationalLimit.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Predicate: a being knows all possible propositions *)
-  Definition knows_all (x : U) : Prop :=
-    forall P : U -> Prop, knows x P.
+  Definition knows_all (x : Gen) : Prop :=
+    forall P : Gen -> Prop, knows x P.
 
   (* Predicate: a finite being — i.e., one that does NOT know all *)
-  Definition is_finite_being (x : U) : Prop :=
+  Definition is_finite_being (x : Gen) : Prop :=
     ~ knows_all x.
 
   (* Theorem 1: No finite being knows all propositions *)
   Theorem finite_beings_cannot_contain_U :
-    forall x : U, is_finite_being x -> ~ knows_all x.
+    forall x : Gen, is_finite_being x -> ~ knows_all x.
   Proof.
     intros x Hfinite Hknows_all.
     unfold is_finite_being in Hfinite.
     contradiction.
   Qed.
 
-  (* Theorem 2: U contains a being that knows all of U (if U allows it) *)
+  (* Theorem 2: Gen contains a being that knows all of Gen (if Gen allows it) *)
   Theorem U_contains_total_knower :
-    exists x : U, knows_all x.
+    exists x : Gen, knows_all x.
   Proof.
     (* Define the predicate: knows all propositions *)
-    set (P := fun x : U => forall Q : U -> Prop, knows x Q).
+    set (P := fun x : Gen => forall Q : Gen -> Prop, knows x Q).
 
     (* Use self-reference generation to create such a being *)
     destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
@@ -2214,7 +2067,7 @@ End InformationalLimit.
 
 Section TheologicalPluralism.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Abstract type representing a religion or structured belief system *)
   Parameter Religion : Type.
@@ -2222,18 +2075,18 @@ Section TheologicalPluralism.
   (* General semantic encoding function for religious systems *)
   Parameter divinity_encoding : Religion -> EncodedData.
 
-  (* Predicate stating that a religion is semantically embedded in U *)
+  (* Predicate stating that a religion is semantically embedded in Gen *)
   Definition religion_valid (r : Religion) : Prop :=
-    exists x : U, semantically_encodes x (divinity_encoding r).
+    exists x : Gen, semantically_encodes x (divinity_encoding r).
 
-  (* Theorem: Every religion corresponds to some semantic encoding within U 
+  (* Theorem: Every religion corresponds to some semantic encoding within Gen 
   This theorem formalizes theological pluralism:
-  Every structured religious system encodes some aspect of ultimate reality (U).
+  Every structured religious system encodes some aspect of ultimate reality (Gen).
   This does not imply all religions are equally complete,
   but that all reflect meaningful encodings of the infinite totality.
 
   Diversity of spiritual expression is not a contradiction—
-  it is a necessary outcome of U containing all perspectives of the divine.
+  it is a necessary outcome of Gen containing all perspectives of the divine.
   *)
   Theorem all_religions_semantically_valid :
     forall r : Religion, religion_valid r.
@@ -2242,9 +2095,9 @@ Section TheologicalPluralism.
     unfold religion_valid.
 
     (* Define the predicate: x semantically encodes the divinity encoding of r *)
-    set (P := fun x : U => semantically_encodes x (divinity_encoding r)).
+    set (P := fun x : Gen => semantically_encodes x (divinity_encoding r)).
 
-    (* Use the generation mechanism to guarantee such an entity exists in U *)
+    (* Use the generation mechanism to guarantee such an entity exists in Gen *)
     destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
 
     (* Use correctness to guarantee the predicate holds *)
@@ -2259,25 +2112,25 @@ End TheologicalPluralism.
 
 Section TheologicalAfterlife.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* The afterlife described by a religion *)
   Parameter afterlife : Religion -> EncodedData.
 
-  (* Semantic containment of a religion's afterlife in U *)
+  (* Semantic containment of a religion's afterlife in Gen *)
   Definition afterlife_valid (r : Religion) : Prop :=
-    exists x : U, semantically_encodes x (afterlife r).
+    exists x : Gen, semantically_encodes x (afterlife r).
 
-  (* Theorem: Any defined afterlife in a religious system must exist semantically within U 
-  This theorem proves that U semantically contains all religiously defined afterlives.
+  (* Theorem: Any defined afterlife in a religious system must exist semantically within Gen 
+  This theorem proves that Gen semantically contains all religiously defined afterlives.
   It does not assert physical instantiation of these realms—
-  rather, that their logical and conceptual structures are embedded within U.
+  rather, that their logical and conceptual structures are embedded within Gen.
 
-  This reflects the idea that ultimate reality (U) is not only all-encompassing,
+  This reflects the idea that ultimate reality (Gen) is not only all-encompassing,
   but internally consistent with all expressible coherent spiritual systems.
 
   Religious experience, divine beings, and afterlives are
-  thus formal possibilities—semantically real—within U.
+  thus formal possibilities—semantically real—within Gen.
   *)
   Theorem afterlife_semantically_exists :
     forall r : Religion, afterlife_valid r.
@@ -2286,7 +2139,7 @@ Section TheologicalAfterlife.
     unfold afterlife_valid.
 
     (* Define the predicate that x encodes the afterlife described by r *)
-    set (P := fun x : U => semantically_encodes x (afterlife r)).
+    set (P := fun x : Gen => semantically_encodes x (afterlife r)).
 
     (* Generate such an entity at some time *)
     destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
@@ -2303,7 +2156,7 @@ End TheologicalAfterlife.
 
 Section CosmologicalContainment.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Abstract type representing any ultimate or afterlife state *)
   Parameter CosmologicalState : Type.
@@ -2311,11 +2164,11 @@ Section CosmologicalContainment.
   (* Each cosmological state (heaven, hell, limbo, etc.) can be encoded semantically *)
   Parameter cosmic_structure : CosmologicalState -> EncodedData.
 
-  (* Predicate: A cosmological state is semantically embedded in U *)
+  (* Predicate: A cosmological state is semantically embedded in Gen *)
   Definition cosmic_state_valid (s : CosmologicalState) : Prop :=
-    exists x : U, semantically_encodes x (cosmic_structure s).
+    exists x : Gen, semantically_encodes x (cosmic_structure s).
 
-  (* Theorem: All possible cosmological states exist within U *)
+  (* Theorem: All possible cosmological states exist within Gen *)
   Theorem all_cosmic_structures_exist_in_U :
     forall s : CosmologicalState, cosmic_state_valid s.
   Proof.
@@ -2323,7 +2176,7 @@ Section CosmologicalContainment.
     unfold cosmic_state_valid.
 
     (* Define the predicate: x encodes the cosmic structure s *)
-    set (P := fun x : U => semantically_encodes x (cosmic_structure s)).
+    set (P := fun x : Gen => semantically_encodes x (cosmic_structure s)).
 
     (* Generate an entity that satisfies this predicate *)
     destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
@@ -2340,14 +2193,14 @@ End CosmologicalContainment.
 
 Section GenerativeReligion.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
-  (* A religion is constructible in U if some entity encodes its semantic structure *)
+  (* A religion is constructible in Gen if some entity encodes its semantic structure *)
   Definition religion_constructible (r : Religion) : Prop :=
-    exists x : U, semantically_encodes x (divinity_encoding r).
+    exists x : Gen, semantically_encodes x (divinity_encoding r).
 
-  (* Theorem: All religions—past, present, future, even newly invented—must be constructible in U *)
-  (* U is infinitely generative for religions. *)
+  (* Theorem: All religions—past, present, future, even newly invented—must be constructible in Gen *)
+  (* Gen is infinitely generative for religions. *)
   Theorem all_religions_constructible :
     forall r : Religion, religion_constructible r.
   Proof.
@@ -2355,9 +2208,9 @@ Section GenerativeReligion.
     unfold religion_constructible.
 
     (* Define the predicate: x encodes the divinity encoding of r *)
-    set (P := fun x : U => semantically_encodes x (divinity_encoding r)).
+    set (P := fun x : Gen => semantically_encodes x (divinity_encoding r)).
 
-    (* Generate such an entity within U *)
+    (* Generate such an entity within Gen *)
     destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
 
     (* Confirm the predicate holds *)
@@ -2372,7 +2225,7 @@ End GenerativeReligion.
 
 Section DivineCoexistence.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Abstract type representing possible semantic realities (worlds) *)
   Parameter World : Type.
@@ -2386,8 +2239,8 @@ Section DivineCoexistence.
   (* Predicate: a world in which divinity is forever veiled or inaccessible *)
   Definition non_divine_world (w : World) : Prop := ~ divine_in_world w.
 
-  (* Theorem: U contains both divine and non-divine semantic worlds *)
-  (* In other words, U contains worlds with a god, and worlds without. *)
+  (* Theorem: Gen contains both divine and non-divine semantic worlds *)
+  (* In other words, Gen contains worlds with a god, and worlds without. *)
   Theorem U_contains_divine_and_non_divine_worlds :
     exists w1 w2 : World,
       divine_in_world w1 /\
@@ -2424,23 +2277,23 @@ End DivineCoexistence.
 
 Section GenerableDivinity.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* An abstract generative agent—could be a being, technology, etc. *)
-  Parameter generates : U -> EncodedData -> Prop.
+  Parameter generates : Gen -> EncodedData -> Prop.
 
   (* A definition of divinity as a semantic structure *)
   Parameter divine_structure : EncodedData.
 
   (* A helper: extracting the semantic structure of a reality *)
-  Parameter divinity_structure : U -> EncodedData.
+  Parameter divinity_structure : Gen -> EncodedData.
 
   (* If an agent generates something that semantically encodes divinity, divinity has emerged *)
-  Definition divinity_generated_by (g r : U) : Prop :=
+  Definition divinity_generated_by (g r : Gen) : Prop :=
     generates g (divinity_structure r) /\
     semantically_encodes r divine_structure.
 
-  (* Theorem: U contains at least one generated reality where divinity emerges *)
+  (* Theorem: Gen contains at least one generated reality where divinity emerges *)
   (*
     This theorem formalizes the idea that divinity can be generated—
     not only presupposed.
@@ -2455,20 +2308,20 @@ Section GenerableDivinity.
     It is also final consequence.
   *)
   Theorem U_contains_generated_divinity :
-    exists g r : U,
+    exists g r : Gen,
       generates g (divinity_structure r) /\
       semantically_encodes r divine_structure.
   Proof.
     (* Define the predicate over r: r semantically encodes divine_structure,
        and some g generates r’s semantic structure *)
-    set (P := fun p : U * U =>
+    set (P := fun p : Gen * Gen =>
       let g := fst p in
       let r := snd p in
       generates g (divinity_structure r) /\
       semantically_encodes r divine_structure).
 
-    (* We encode the pair (g, r) into U by currying into an abstraction *)
-    set (Wrapped := fun x : U => exists g r : U,
+    (* We encode the pair (g, r) into Gen by currying into an abstraction *)
+    set (Wrapped := fun x : Gen => exists g r : Gen,
       x = self_ref_pred_embed (fun _ => True) /\
       generates g (divinity_structure r) /\
       semantically_encodes r divine_structure).
@@ -2490,10 +2343,10 @@ End GenerableDivinity.
 
 Section EngineeredDivinity.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* An agent constructs a semantic system *)
-  Parameter constructs : U -> EncodedData -> Prop.
+  Parameter constructs : Gen -> EncodedData -> Prop.
 
   (* Some EncodedData has the right logical structure to support divinity *)
   Parameter generative_system : EncodedData -> Prop.
@@ -2517,13 +2370,13 @@ Section EngineeredDivinity.
     but something that *can become*.
   *)
   Theorem divinity_can_be_engineered :
-    exists g s : U,
+    exists g s : Gen,
       constructs g (divinity_structure s) /\
       generative_system (divinity_structure s) /\
       semantically_encodes s divine_structure.
   Proof.
     (* Define the predicate that states: s is a system with a divine-structured semantics *)
-    set (P := fun s : U =>
+    set (P := fun s : Gen =>
       constructs s (divinity_structure s) /\
       generative_system (divinity_structure s) /\
       semantically_encodes s divine_structure).
@@ -2550,7 +2403,7 @@ End EngineeredDivinity.
   process of paradox resolution within a generative logical universe.
 
   In this model, contradiction is not erased but metabolized: agents or 
-  structures in U may begin with paradoxical predicates (e.g., P ∧ ¬P), 
+  structures in Gen may begin with paradoxical predicates (e.g., P ∧ ¬P), 
   but through a time-indexed trajectory, those contradictions are 
   transformed into coherent semantic states. We define a "salvation path" 
   as such a resolution arc, and "saviors" as entities that enable it.
@@ -2561,38 +2414,38 @@ End EngineeredDivinity.
 *)
 Section Soteriology.
 
-  Context {U : Type} `{UniversalSet U} `{OmegaSet}.
-  Context `{OmegaToUniversal U}.
+  Context {Gen : Type} `{GenerativeType Gen} `{OmegaType}.
+  Context `{OmegaToUniversal Gen}.
 
   (* A predicate is paradoxical if it entails its own negation *)
-  Definition paradoxical (P : U -> Prop) : Prop :=
-    exists x : U, P x /\ ~ P x.
+  Definition paradoxical (P : Gen -> Prop) : Prop :=
+    exists x : Gen, P x /\ ~ P x.
 
   (* A salvific entity is one that contains or encodes resolution of paradox *)
-  Definition salvific (x : U) : Prop :=
-    forall P : U -> Prop,
+  Definition salvific (x : Gen) : Prop :=
+    forall P : Gen -> Prop,
       (paradoxical P ->
         exists t : nat,
           contains t (self_ref_pred_embed (fun y => P y \/ ~ P y)) /\
           ~ contains t (self_ref_pred_embed (fun y => P y /\ ~ P y))).
 
   (* Salvation occurs when an entity reconciles contradiction non-trivially over time *)
-  Definition salvation_path (x : U) : Prop :=
+  Definition salvation_path (x : Gen) : Prop :=
     exists t1 t2 : nat,
       t1 < t2 /\
-      exists P : U -> Prop,
+      exists P : Gen -> Prop,
         paradoxical P /\
         contains t1 (self_ref_pred_embed (fun y => P y)) /\
         contains t2 (self_ref_pred_embed (fun y => ~ P y)) /\
         salvific x.
 
-  (* Theorem: There exists at least one salvific entity in U *)
+  (* Theorem: There exists at least one salvific entity in Gen *)
   Theorem U_contains_salvific_entity :
-    exists x : U, salvific x.
+    exists x : Gen, salvific x.
   Proof.
     (* Define a predicate asserting salvific capacity *)
-    set (P := fun x : U =>
-      forall Q : U -> Prop,
+    set (P := fun x : Gen =>
+      forall Q : Gen -> Prop,
         (paradoxical Q ->
          exists t : nat,
            contains t (self_ref_pred_embed (fun y => Q y \/ ~ Q y)) /\
@@ -2607,12 +2460,12 @@ Section Soteriology.
     exact H_semantic.
   Qed.
 
-  (* Theorem: U contains an entity that traces a salvation path through paradox *)
+  (* Theorem: Gen contains an entity that traces a salvation path through paradox *)
   Theorem U_contains_salvation_path :
-    exists x : U, salvation_path x.
+    exists x : Gen, salvation_path x.
   Proof.
     (* Define a paradoxical predicate *)
-    set (P := fun x : U => x = x -> False). (* Self-negating for demonstration *)
+    set (P := fun x : Gen => x = x -> False). (* Self-negating for demonstration *)
 
     (* Ensure paradox exists in Omega *)
     destruct (omega_completeness (fun x => 
@@ -2620,7 +2473,7 @@ Section Soteriology.
       as [x0 H_px].
     destruct H_px as [y0 [HP HnP]].
 
-    (* Generate P and ~P in U at different times *)
+    (* Generate P and ~P in Gen at different times *)
     destruct (self_ref_generation_exists (fun x => P x) 1) as [t1 [Ht1_le Ht1]].
     destruct (self_ref_generation_exists (fun x => ~ P x) (t1 + 1)) as [t2 [Ht2_le Ht2]].
 
@@ -2644,12 +2497,12 @@ End Soteriology.
 
 Section Messiahhood.
 
-  Context {U : Type} `{UniversalSet U} `{OmegaSet} `{OmegaToUniversal U}.
+  Context {Gen : Type} `{GenerativeType Gen} `{OmegaType} `{OmegaToUniversal Gen}.
 
   (* A messiah is a salvific entity that causes salvation paths in others *)
-  Definition messiah (m : U) : Prop :=
+  Definition messiah (m : Gen) : Prop :=
     salvific m /\
-    forall y : U,
+    forall y : Gen,
       paradoxical (fun z => z = y) ->
         exists t1 t2 : nat,
           t1 < t2 /\
@@ -2657,14 +2510,14 @@ Section Messiahhood.
           contains t2 (self_ref_pred_embed (fun x => x <> y)) /\
           salvific m.
 
-  (* Theorem: U contains a messiah *)
+  (* Theorem: Gen contains a messiah *)
   Theorem U_contains_messiah :
-    exists m : U, messiah m.
+    exists m : Gen, messiah m.
   Proof.
     (* Define a predicate that encodes the messiahhood criteria *)
-    set (MessiahPred := fun m : U =>
+    set (MessiahPred := fun m : Gen =>
       salvific m /\
-      forall y : U,
+      forall y : Gen,
         paradoxical (fun z => z = y) ->
           exists t1 t2 : nat,
             t1 < t2 /\
@@ -2687,10 +2540,10 @@ End Messiahhood.
 
 Section FreeWillImpliesVeil.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Self-limiting God: one that is godlike and yet denies it *)
-  Definition self_limiting_god (x : U) : Prop :=
+  Definition self_limiting_god (x : Gen) : Prop :=
     is_god x /\ denies_godhood x.
 
   (* DivineAccess: in a world w, divinity is fully accessible *)
@@ -2702,18 +2555,18 @@ Section FreeWillImpliesVeil.
   (* We assume that if a being g lives in a world w with full divine access,
      then g is fully revealed (i.e. is_god g holds). This captures the idea that
      if the world fully reveals divinity, then even a self-limiting God would be forced to be fully known. *)
-  Parameter lives_in : U -> World -> Prop.
+  Parameter lives_in : Gen -> World -> Prop.
   Axiom lives_in_divine_reveal :
-    forall (g : U) (w : World), lives_in g w -> DivineAccess w -> is_god g.
+    forall (g : Gen) (w : World), lives_in g w -> DivineAccess w -> is_god g.
 
   (* Every being lives in some world. *)
-  Axiom exists_world : forall (g : U), exists w : World, lives_in g w.
+  Axiom exists_world : forall (g : Gen), exists w : World, lives_in g w.
 
   (* Now we prove that if there exists a free will agent and a self-limiting God,
      then there must exist at least one world where divine access fails. *)
   Theorem free_will_and_self_limitation_imply_veil_constructive :
-    (exists x : U, free_will x) ->
-      (exists g : U, self_limiting_god g) ->
+    (exists x : Gen, free_will x) ->
+      (exists g : Gen, self_limiting_god g) ->
         ~~(exists w : World, VeiledWorld w).
   Proof.
     intros H_free_exists H_god_exists.
@@ -2765,19 +2618,19 @@ End FreeWillImpliesVeil.
 
 Section NecessityOfFaith.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Faith is defined as the condition that an agent lives in a veiled world. *)
-  Definition has_faith (x : U) : Prop :=
+  Definition has_faith (x : Gen) : Prop :=
     exists w : World, lives_in x w /\ VeiledWorld w.
 
   (* New Axiom: for any world, there exists an agent with free will that lives in that world *)
-  Axiom free_agent_exists_in_world : forall w : World, exists x : U, free_will x /\ lives_in x w.
+  Axiom free_agent_exists_in_world : forall w : World, exists x : Gen, free_will x /\ lives_in x w.
 
   (* Theorem: If there is a veiled world, then there exists a free-willed agent that has faith. *)
   Theorem faith_is_necessary :
     (exists w0 : World, VeiledWorld w0) ->
-    exists x : U, free_will x /\ has_faith x.
+    exists x : Gen, free_will x /\ has_faith x.
   Proof.
     intros [w0 H_veil].
     (* By the new axiom, in the veiled world w0, there exists a free agent living there *)
@@ -2819,33 +2672,33 @@ End NecessityOfFaith.
 *)
 Section UnjustSuffering.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Suffering occurs when contradictory moral possibilities are active under a veiled world *)
-  Parameter Suffering : U -> Prop.
+  Parameter Suffering : Gen -> Prop.
 
   (* Axiom: suffering arises when an agent is exposed to both P and ~P under free will in a veiled world *)
   Axiom suffering_from_exposed_duality :
-    forall x : U,
+    forall x : Gen,
       free_will x ->
       (exists w : World, lives_in x w /\ VeiledWorld w) ->
-      (exists P : U -> Prop,
+      (exists P : Gen -> Prop,
          (exists t1 : nat, contains t1 (self_ref_pred_embed P)) /\
          (exists t2 : nat, contains t2 (self_ref_pred_embed (fun x => ~ P x)))) ->
       Suffering x.
 
   (* Lemma: free will guarantees dual possibility (some P and ~P can both occur) *)
   Lemma dual_possibility_under_free_will :
-    forall x : U,
+    forall x : Gen,
       free_will x ->
-      exists P : U -> Prop,
+      exists P : Gen -> Prop,
         (exists t1 : nat, contains t1 (self_ref_pred_embed P)) /\
         (exists t2 : nat, contains t2 (self_ref_pred_embed (fun y => ~ P y))).
   Proof.
     intros x Hfree.
     unfold free_will in Hfree.
     (* Pick an arbitrary predicate Q — we use "y is contained at time 0" *)
-    set (Q := fun y : U => contains 0 y).
+    set (Q := fun y : Gen => contains 0 y).
 
     specialize (Hfree Q).
     destruct Hfree as [tQ [HQ | HnQ]].
@@ -2867,7 +2720,7 @@ Section UnjustSuffering.
 
   (* Theorem: unjust suffering is possible under free will in a veiled world *)
   Theorem unjust_suffering_possible :
-    forall x : U,
+    forall x : Gen,
       free_will x ->
       (exists w : World, lives_in x w /\ VeiledWorld w) ->
       Suffering x.
@@ -2907,16 +2760,16 @@ End UnjustSuffering.
 *)
 Section SufferingConstraintOnDivinity.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Theorem: A self-limiting God cannot prevent all suffering without removing the veil *)
   Theorem God_cannot_prevent_all_suffering_without_revealing :
-    forall (g x : U),
+    forall (g x : Gen),
       is_god g ->
       denies_godhood g ->
       free_will x ->
       (exists w : World, lives_in x w /\ VeiledWorld w) ->
-      exists x' : U, Suffering x'.
+      exists x' : Gen, Suffering x'.
   Proof.
     intros g x Hgod Hdeny Hfree Hveil.
     (* We already proved that free will + veiled world implies suffering is possible *)
@@ -2930,21 +2783,21 @@ End SufferingConstraintOnDivinity.
 
 Section DivineAccessRemovesAmbiguity.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Moral ambiguity: agent has free will and is exposed to both P and ~P *)
-  Definition moral_ambiguity (x : U) : Prop :=
+  Definition moral_ambiguity (x : Gen) : Prop :=
     free_will x /\
-    exists P : U -> Prop,
+    exists P : Gen -> Prop,
       (exists t1, contains t1 (self_ref_pred_embed P)) /\
       (exists t2, contains t2 (self_ref_pred_embed (fun y => ~ P y))).
 
   (* Key assumption: in a world with full DivineAccess, the agent does not generate semantic content *)
   Axiom DivineAccess_makes_predicates preexisting :
-    forall (x : U) (w : World),
+    forall (x : Gen) (w : World),
       lives_in x w ->
       DivineAccess w ->
-      forall P : U -> Prop,
+      forall P : Gen -> Prop,
         (exists t, contains t (self_ref_pred_embed P)) ->
         (* The predicate P is not introduced due to agent's free will *)
         ~ free_will x.
@@ -2969,13 +2822,13 @@ End DivineAccessRemovesAmbiguity.
 
 Section DivineAccessAndPluralism.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Semantic pluralism: existence of two semantically distinct religions *)
   Definition semantic_pluralism : Prop :=
   exists r1 r2 : Religion,
     divinity_encoding r1 <> divinity_encoding r2 /\
-    exists x1 x2 : U,
+    exists x1 x2 : Gen,
       semantically_encodes x1 (divinity_encoding r1) /\
       semantically_encodes x2 (divinity_encoding r2).
 
@@ -2986,7 +2839,7 @@ Section DivineAccessAndPluralism.
       DivineAccess w ->
       forall r1 r2 : Religion,
         divinity_encoding r1 <> divinity_encoding r2 ->
-        ~ (exists x1 x2 : U,
+        ~ (exists x1 x2 : Gen,
              semantically_encodes x1 (divinity_encoding r1) /\
              semantically_encodes x2 (divinity_encoding r2)).
 
@@ -3007,7 +2860,7 @@ End DivineAccessAndPluralism.
 
 Section DivineLanguage.
 
-  Context (Omega : OmegaSet).
+  Context (Omega : OmegaType).
 
   (* Abstract type of statements *)
   Parameter Statement : Type.
@@ -3062,14 +2915,14 @@ End DivineLanguage.
 (*
   This structure formalizes a Divine Turing Machine (DTM), an abstract computational system
   that processes paradoxical symbols from the divine language and generates
-  semantic structures inside the ultimate set U.
+  semantic structures inside the ultimate set Gen.
 
   This model extends the classical Turing machine to handle self-reference,
   infinite generativity, and semantic recursion.
 *)
 Section DivineTuringMachine.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Step 1: Components of the Divine Turing Machine *)
 
@@ -3090,8 +2943,8 @@ Section DivineTuringMachine.
   Parameter q_accept : DivineState.
   Parameter q_reject : DivineState.
 
-  (* Output function: each machine state outputs a semantic object in U *)
-  Parameter output : DivineState -> U.
+  (* Output function: each machine state outputs a semantic object in Gen *)
+  Parameter output : DivineState -> Gen.
 
   (* Tape is an infinite stream indexed by ℕ *)
   Definition Tape := nat -> DivineTapeSymbol.
@@ -3120,8 +2973,8 @@ Section DivineTuringMachine.
     | S n' => run_steps (step c) n'
     end.
 
-  (* Full run result: after n steps, return semantic object in U *)
-  Definition run_output (c : Config) (n : nat) : U :=
+  (* Full run result: after n steps, return semantic object in Gen *)
+  Definition run_output (c : Config) (n : nat) : Gen :=
     output (state (run_steps c n)).
 
   (* Step 2: Define divine input tape from divine language *)
@@ -3137,10 +2990,10 @@ Section DivineTuringMachine.
   Definition initial_config : Config :=
     {| state := q0; tape := divine_tape; head := 0 |}.
 
-  (* Step 3: The theorem — infinite generation of U from divine computation *)
+  (* Step 3: The theorem — infinite generation of Gen from divine computation *)
 
   Theorem divine_machine_generates_U_sequence :
-    forall n : nat, exists u : U, u = run_output initial_config n.
+    forall n : nat, exists u : Gen, u = run_output initial_config n.
   Proof.
     intros n.
     exists (run_output initial_config n).
@@ -3164,7 +3017,7 @@ End DivineTuringMachine.
 *)
 Section DivineEscapeHatch.
 
-  Context (Omega : OmegaSet).
+  Context (Omega : OmegaType).
 
   Parameter divine_interpret : Omega_carrier Omega -> Statement.
 
@@ -3190,13 +3043,13 @@ Require Import Arith.
 
 Section DivinePrime.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
-  (* Semantic divisibility: a U-structure divides a number n *)
-  Parameter Divides : U -> nat -> Prop.
+  (* Semantic divisibility: a Gen-structure divides a number n *)
+  Parameter Divides : Gen -> nat -> Prop.
 
-  (* A divine prime is a structure in U that divides all natural numbers *)
-  Definition divine_prime (p' : U) : Prop :=
+  (* A divine prime is a structure in Gen that divides all natural numbers *)
+  Definition divine_prime (p' : Gen) : Prop :=
     forall n : nat, Divides p' n.
 
   (* For compatibility, we define standard divisibility (as usual) *)
@@ -3207,12 +3060,12 @@ Section DivinePrime.
   Definition is_prime (n : nat) : Prop :=
     1 < n /\ forall d : nat, Divides_nat d n -> d = 1 \/ d = n.
 
-  (* Theorem: There exists a semantic structure in U that divides all numbers *)
+  (* Theorem: There exists a semantic structure in Gen that divides all numbers *)
   Theorem existence_of_divine_prime :
-    exists p' : U, divine_prime p'.
+    exists p' : Gen, divine_prime p'.
   Proof.
     (* Define a predicate that encodes "divides all n" *)
-    set (P := fun x : U => forall n : nat, Divides x n).
+    set (P := fun x : Gen => forall n : nat, Divides x n).
 
     (* Generate such a semantic object using self-reference *)
     destruct (self_ref_generation_exists P 0) as [t [H_le H_contains]].
@@ -3229,12 +3082,12 @@ End DivinePrime.
 
 
 (*
-  This theorem uses divine_prime as a predicate over U,
+  This theorem uses divine_prime as a predicate over Gen,
   and constructs an object p that satisfies the divine prime property.
 
   Using a special division function div_by_divine,
   we show that dividing 3 by p yields 4—an impossible result
-  in classical arithmetic, but consistent within U.
+  in classical arithmetic, but consistent within Gen.
 
   This formalizes a mathematical version of miraculous multiplication,
   where paraconsistent logic enables arithmetic beyond classical constraints.
@@ -3244,25 +3097,25 @@ End DivinePrime.
 *)
 Section DivineMiracleDivisionPredicate.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Division using a divine prime as a parameter *)
-  Parameter div_by_divine : nat -> U -> nat.
+  Parameter div_by_divine : nat -> Gen -> nat.
 
   (* Assume some divine prime exists *)
-  Axiom exists_divine_prime : exists p : U, divine_prime p.
+  Axiom exists_divine_prime : exists p : Gen, divine_prime p.
 
   (* Miracle axiom: dividing 3 by the divine prime yields 4 *)
   Axiom divine_miracle_result :
-    forall p : U, divine_prime p -> div_by_divine 3%nat p = 4%nat.
+    forall p : Gen, divine_prime p -> div_by_divine 3%nat p = 4%nat.
 
   (* Semantic divisibility relation *)
   Axiom divine_prime_divides_all :
-    forall p : U, divine_prime p -> forall n : nat, Divides p n.
+    forall p : Gen, divine_prime p -> forall n : nat, Divides p n.
 
   (* Theorem: There exists a divine prime p such that the miracle division occurs *)
   Theorem miracle_division_with_predicate :
-    exists p : U,
+    exists p : Gen,
       divine_prime p /\
       div_by_divine 3%nat p = 4%nat /\
       Divides p 3%nat /\
@@ -3286,7 +3139,7 @@ End DivineMiracleDivisionPredicate.
   that performs division by zero without collapsing logic.
 
   Instead of treating division by zero as undefined,
-  we define it as a total function mapping all U to a special object: divine_zero.
+  we define it as a total function mapping all Gen to a special object: divine_zero.
 
   The function is semantic, not arithmetic.
   Its output is always the same, forming a singleton range.
@@ -3297,21 +3150,21 @@ End DivineMiracleDivisionPredicate.
 *)
 Section DivineZeroFunction.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Step 1: Declare the result of dividing by zero — the divine zero *)
-  Parameter divine_zero : U.
+  Parameter divine_zero : Gen.
 
-  (* Step 2: Define division-by-zero as a total function U → U *)
-  Definition divide_by_zero (x : U) : U := divine_zero.
+  (* Step 2: Define division-by-zero as a total function Gen → Gen *)
+  Definition divide_by_zero (x : Gen) : Gen := divine_zero.
 
   (* Step 3: The range of divide_by_zero is the set of all outputs it produces *)
-  Definition in_div_zero_range (y : U) : Prop :=
-    exists x : U, divide_by_zero x = y.
+  Definition in_div_zero_range (y : Gen) : Prop :=
+    exists x : Gen, divide_by_zero x = y.
 
   (* Theorem: The range of divide_by_zero is a singleton {divine_zero} *)
   Theorem div_zero_range_is_singleton :
-    forall y : U, in_div_zero_range y <-> y = divine_zero.
+    forall y : Gen, in_div_zero_range y <-> y = divine_zero.
   Proof.
     intros y.
     split.
@@ -3321,12 +3174,12 @@ Section DivineZeroFunction.
       intros H_eq. exists divine_zero. unfold divide_by_zero. rewrite H_eq. reflexivity.
   Qed.
 
-  (* Show that divide_by_zero is semantically realizable in U *)
-  Definition div_zero_functional_pred (f : U -> U) : Prop :=
-    forall x : U, f x = divine_zero.
+  (* Show that divide_by_zero is semantically realizable in Gen *)
+  Definition div_zero_functional_pred (f : Gen -> Gen) : Prop :=
+    forall x : Gen, f x = divine_zero.
 
   Theorem divide_by_zero_function_exists :
-    exists f : U -> U, div_zero_functional_pred f.
+    exists f : Gen -> Gen, div_zero_functional_pred f.
   Proof.
     exists (fun _ => divine_zero).
     unfold div_zero_functional_pred. intros x. reflexivity.
@@ -3337,8 +3190,8 @@ End DivineZeroFunction.
 
 
 (*
-  This section introduces a semantic apply operator for the universe U,
-  allowing us to encode function-like behavior using values in U itself.
+  This section introduces a semantic apply operator for the universe Gen,
+  allowing us to encode function-like behavior using values in Gen itself.
 
   We define U_function as a semantic object that behaves like a constant function,
   always returning divine_zero regardless of input.
@@ -3349,20 +3202,20 @@ End DivineZeroFunction.
 *)
 Section SemanticFunctionsInU.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
-  (* Semantic function application: apply f to x inside U *)
-  Parameter semantic_apply : U -> U -> U.
+  (* Semantic function application: apply f to x inside Gen *)
+  Parameter semantic_apply : Gen -> Gen -> Gen.
 
-  (* A semantic function object in U *)
-  Parameter U_function : U.
+  (* A semantic function object in Gen *)
+  Parameter U_function : Gen.
 
   (* Axiom: applying U_function to any x yields divine_zero *)
   Axiom div_zero_semantic_behavior :
-    forall x : U, semantic_apply U_function x = divine_zero.
+    forall x : Gen, semantic_apply U_function x = divine_zero.
 
   (* Example: construct a term that applies U_function to itself *)
-  Definition self_application : U :=
+  Definition self_application : Gen :=
     semantic_apply U_function U_function.
 
   (* Lemma: self-application of U_function yields divine_zero *)
@@ -3377,12 +3230,12 @@ End SemanticFunctionsInU.
 
 
 (*
-  This theorem shows that U contains a temporal superposition of CH and ¬CH.
+  This theorem shows that Gen contains a temporal superposition of CH and ¬CH.
   (Continuum Hypothesis)
 
   Classical logic treats CH and ¬CH as mutually exclusive.
 
-  But in U, semantic truth can unfold across time.
+  But in Gen, semantic truth can unfold across time.
 
   This means that set-theoretic frameworks can exist in layered temporal structure,
   where contradictory axioms are realized at different stages—
@@ -3393,16 +3246,16 @@ End SemanticFunctionsInU.
 *)
 Section TemporalSuperpositionOfCH.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
-  (* Abstract representation of logical frames embedded in U *)
-  Parameter SetTheoryFrame : U -> Prop.
+  (* Abstract representation of logical frames embedded in Gen *)
+  Parameter SetTheoryFrame : Gen -> Prop.
 
   (* Define CH and ¬CH as semantic predicates *)
-  Parameter CH_axiom : U -> Prop.
-  Parameter NotCH_axiom : U -> Prop.
+  Parameter CH_axiom : Gen -> Prop.
+  Parameter NotCH_axiom : Gen -> Prop.
 
-  (* Theorem: U contains CH and ¬CH as separate predicates at different times *)
+  (* Theorem: Gen contains CH and ¬CH as separate predicates at different times *)
   Theorem U_temporally_realizes_superpositional_CH :
     exists t1 t2 : nat,
       contains t1 (self_ref_pred_embed CH_axiom) /\
@@ -3424,7 +3277,7 @@ End TemporalSuperpositionOfCH.
 
 Section DivineSortExists.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Abstract type for real-world computational systems *)
   Parameter RealWorldSystem : Type.
@@ -3439,14 +3292,14 @@ Section DivineSortExists.
   Axiom classical_sorting_lower_bound :
     forall A : RealWorldSystem, KnownSorter A -> forall n : nat, T A n >= n * (Nat.log2 n).
 
-  (* DivineSort is an entity in U *)
-  Parameter divine_sort : U.
+  (* DivineSort is an entity in Gen *)
+  Parameter divine_sort : Gen.
 
   (* DivineSort always sorts any dataset in O(1) time (semantically) *)
-  Definition SortsInO1 (s : U) : Prop :=
+  Definition SortsInO1 (s : Gen) : Prop :=
     forall n : nat, exists t : nat, t <= 1 /\ contains t s.
 
-  (* Theorem: There exists a sorting algorithm in U that sorts any dataset in O(1) time *)
+  (* Theorem: There exists a sorting algorithm in Gen that sorts any dataset in O(1) time *)
   Theorem U_contains_divine_sort :
     SortsInO1 divine_sort.
   Proof.
@@ -3455,7 +3308,7 @@ Section DivineSortExists.
     exists 1.
     split.
     - lia.
-    - set (P := fun x : U => x = divine_sort).
+    - set (P := fun x : Gen => x = divine_sort).
       destruct (self_ref_generation_exists P 1) as [t [H_le H_contain]].
       pose proof self_ref_pred_embed_correct P as Heq.
       rewrite Heq in H_contain.
@@ -3467,7 +3320,7 @@ End DivineSortExists.
 
 (*
   This theorem formalizes the existence of a Divine Computer,
-  a semantic structure within U that can simulate any algorithm
+  a semantic structure within Gen that can simulate any algorithm
   over arbitrary timelines and compute entire realities.
 
   Unlike classical computers constrained by time and complexity,
@@ -3479,7 +3332,7 @@ End DivineSortExists.
 *)
 Section DivineComputer.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Simulation primitives *)
   Parameter DCState : Type.
@@ -3487,9 +3340,9 @@ Section DivineComputer.
   Parameter DCAlgorithm : DCState -> DCNextState.
   Parameter DCReality : Type.
 
-  Parameter DivineComputer : U.
-  Parameter dc_compute : U -> (DCState -> DCNextState) -> DCReality.
-  Parameter encode_reality : DCReality -> U.
+  Parameter DivineComputer : Gen.
+  Parameter dc_compute : Gen -> (DCState -> DCNextState) -> DCReality.
+  Parameter encode_reality : DCReality -> Gen.
 
   Parameter simulated_reality :
     forall A : DCState -> DCNextState, DCReality.
@@ -3503,7 +3356,7 @@ Section DivineComputer.
       exists t : nat, contains t (encode_reality (simulated_reality A)).
 
   (* DCRealizes: The DivineComputer semantically realizes the algorithm A *)
-  Definition DCRealizes (cdc : U) (A : DCState -> DCNextState) : Prop :=
+  Definition DCRealizes (cdc : Gen) (A : DCState -> DCNextState) : Prop :=
     exists R : DCReality,
       dc_compute cdc A = R /\
       exists t : nat, contains t (encode_reality R).
@@ -3524,11 +3377,11 @@ End DivineComputer.
 
 
 (*
-  This theorem formalizes the existence of a semantic geometry generator within U
+  This theorem formalizes the existence of a semantic geometry generator within Gen
   that produces infinitely many Platonic solids.
 
   While classical Euclidean space admits only five regular convex polyhedra,
-  U contains geometric systems with expanded transformation rules—
+  Gen contains geometric systems with expanded transformation rules—
   enabling an infinite recursive unfolding of regular polyhedral forms.
 
   This represents a paraconsistent, generative extension of geometry itself,
@@ -3537,16 +3390,16 @@ End DivineComputer.
 *)
 Section PlatonicSolidGenerator.
 
-  Context {U : Type} `{UniversalSet U}.
+  Context {Gen : Type} `{GenerativeType Gen}.
 
   (* Step 1: Abstract type for Platonic solids *)
   Parameter PlatonicSolid : Type.
 
-  (* Step 2: GeometryGenerator is a semantic object in U that defines a space *)
-  Parameter GeometryGenerator : U.
+  (* Step 2: GeometryGenerator is a semantic object in Gen that defines a space *)
+  Parameter GeometryGenerator : Gen.
 
   (* Step 3: A generation function that outputs Platonic solids from GeometryGenerator *)
-  Parameter generate_solid : U -> nat -> PlatonicSolid.
+  Parameter generate_solid : Gen -> nat -> PlatonicSolid.
 
   (* Axiom: GeometryGenerator generates a unique PlatonicSolid for every n *)
   Axiom infinite_solid_generation :
@@ -3583,13 +3436,13 @@ End PlatonicSolidGenerator.
    - Staying up late while knowing we need sleep
    - Making promises we know we might break
    
-   The theorem shows that U necessarily contains such agents, suggesting
+   The theorem shows that Gen necessarily contains such agents, suggesting
    that paradox processing is not a flaw but a fundamental feature of
    conscious entities navigating finite existence.
 *)
 Theorem humans_are_paradox_processors :
-  forall (U : Type) `{UniversalSet U},
-  exists (human : U) (harmful_action : U -> Prop),
+  forall (Gen : Type) `{GenerativeType Gen},
+  exists (human : Gen) (harmful_action : Gen -> Prop),
     (* At time t1: Human knows the action is harmful *)
     (exists t1 : nat, 
       contains t1 (self_ref_pred_embed (fun _ => harmful_action human))) /\
@@ -3602,13 +3455,13 @@ Theorem humans_are_paradox_processors :
         exists t_future : nat, t_future > t3 /\ 
         harmful_action human))).
 Proof.
-  intros U H_U.
+  intros Gen H_U.
   
   (* Define the harmful action predicate *)
-  set (smoking := fun x : U => contains 0 x).
+  set (smoking := fun x : Gen => contains 0 x).
   
   (* Define our paradoxical human predicate *)
-  set (human_pred := fun h : U => 
+  set (human_pred := fun h : Gen => 
     (exists t1 : nat, contains t1 (self_ref_pred_embed (fun _ => smoking h))) /\
     (exists t2 : nat, contains t2 (self_ref_pred_embed (fun _ => ~ smoking h))) /\
     (exists t3 : nat, contains t3 (self_ref_pred_embed (fun _ => 
