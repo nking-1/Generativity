@@ -3915,7 +3915,7 @@ End HoTT_in_AlphaType.
 End CategoryTheory. *)
 
 
-Class AlphaGenerativeType (Alpha : AlphaType) := {
+Class GenerativeType (Alpha : AlphaType) := {
   (* Time-indexed containment of Alpha predicates *)
   contains : nat -> (Alphacarrier -> Prop) -> Prop;
   
@@ -3948,8 +3948,8 @@ Class AlphaGenerativeType (Alpha : AlphaType) := {
 
 (* First, let's establish the basic self-reference examples *)
 
-Example alpha_novice_self_ref_example : 
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Example gen_novice_self_ref_example : 
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   let P := fun (pred : Alphacarrier -> Prop) => ~ contains 0 pred in
   P (self_ref_pred_embed P).
 Proof.
@@ -3958,8 +3958,8 @@ Proof.
   apply self_ref_pred_embed_correct.
 Qed.
 
-Example alpha_self_ref_pred_appears_later : 
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Example gen_self_ref_pred_appears_later : 
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   let Q := fun (pred : Alphacarrier -> Prop) => 
     exists t : nat, t > 0 /\ contains t pred in
   Q (self_ref_pred_embed Q).
@@ -3969,8 +3969,8 @@ Proof.
 Qed.
 
 (* Temporal evolution with Alpha awareness *)
-Example alpha_self_ref_pred_temporal_evolution : 
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Example gen_self_ref_pred_temporal_evolution : 
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   let R := fun (pred : Alphacarrier -> Prop) => 
     ~ contains 0 pred /\ exists t : nat, t > 0 /\ contains t pred in
   R (self_ref_pred_embed R).
@@ -3980,8 +3980,8 @@ Proof.
 Qed.
 
 (* NEW: Example showing the_impossible is always present *)
-Example impossible_always_contained :
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Example gen_impossible_always_contained :
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   forall t : nat, contains t the_impossible.
 Proof.
   intros.
@@ -3993,8 +3993,8 @@ Qed.
 (*****************************************************************)
 
 (* AlphaGen builds itself recursively *)
-Theorem alpha_builds_itself : 
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Theorem gen_builds_itself : 
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   forall P : (Alphacarrier -> Prop) -> Prop, 
   exists n : nat, contains n (self_ref_pred_embed P).
 Proof.
@@ -4005,8 +4005,8 @@ Proof.
 Qed.
 
 (* Theorem: AlphaGen recognizes its initial incompleteness *)
-Theorem alpha_recognizes_initially_incomplete : 
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Theorem gen_recognizes_initially_incomplete : 
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   exists P : (Alphacarrier -> Prop) -> Prop, 
     (~ contains 0 (self_ref_pred_embed P)) /\ 
     (exists n : nat, contains n (self_ref_pred_embed P)).
@@ -4027,8 +4027,8 @@ Qed.
 
 (* Theorem: AlphaGen Recursively Grows
    For predicates on Alpha predicates, we can combine them with temporal conditions *)
-Theorem alpha_recursive_growth : 
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Theorem gen_recursive_growth : 
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   forall P : (Alphacarrier -> Prop) -> Prop, 
   exists n : nat, 
     contains n (self_ref_pred_embed (fun pred => P pred /\ contains 0 pred)).
@@ -4040,8 +4040,8 @@ Proof.
 Qed.
 
 (* Predicates appear at multiple times *)
-Theorem alpha_P_not_unique :
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Theorem gen_P_not_unique :
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   forall P : (Alphacarrier -> Prop) -> Prop, 
   exists n m : nat,
     n < m /\
@@ -4057,8 +4057,8 @@ Proof.
 Qed.
 
 (* P and its negation eventually both appear *)
-Theorem alpha_P_eventually_negated :
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Theorem gen_P_eventually_negated :
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   forall P : (Alphacarrier -> Prop) -> Prop, 
   exists n m : nat,
     n < m /\
@@ -4075,8 +4075,8 @@ Proof.
 Qed.
 
 (* The fundamental incompleteness - there's always something not yet contained *)
-Theorem alpha_never_complete : 
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+Theorem gen_never_complete : 
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   forall t : nat, 
   exists P : (Alphacarrier -> Prop) -> Prop, 
   ~ contains t (self_ref_pred_embed P).
@@ -4089,7 +4089,7 @@ Qed.
 
 (* NEW: Theorem showing undecidable predicates must oscillate *)
 (* Theorem undecidable_must_oscillate :
-  forall (Alpha : AlphaType) `{AlphaGenerativeType Alpha},
+  forall (Alpha : AlphaType) `{GenerativeType Alpha},
   forall P : Alphacarrier -> Prop,
   (~ exists a, P a) -> (~ forall a, ~ P a) ->
   forall t, exists t' : nat, t' > t /\ 
@@ -4115,7 +4115,7 @@ Admitted. *)
 
 (* NEW: A theorem specific to Alpha - the impossible creates incompleteness *)
 (* Theorem impossible_ensures_incompleteness :
-  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   forall t : nat,
   exists P : Alphacarrier -> Prop,
     P = the_impossible /\
