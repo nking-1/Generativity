@@ -663,11 +663,11 @@ Definition Omega_carrier (H_O : OmegaType) : Type :=
   H_O.(Omegacarrier).
 
 (**
- [OmegaToUniversal] is a bridge between the [GenerativeType Gen] and the OmegaType.
+ [OmegaToGen] is a bridge between the [GenerativeType Gen] and the OmegaType.
  It tells us how to embed elements of Gen into the timeless Omega, and how to project
  from Omega back to Gen in a time-indexed manner.
 **)
-Class OmegaToUniversal (Gen : Type) (HU : GenerativeType Gen) (HO : OmegaType) := {
+Class OmegaToGen (Gen : Type) (HU : GenerativeType Gen) (HO : OmegaType) := {
   project_Omega : Omega_carrier HO -> Gen;
   lift_U : Gen -> Omega_carrier HO;
   projection_coherence : forall (x: Omega_carrier HO) (t: nat),
@@ -837,7 +837,7 @@ Class Computable (Gen: Type) := {
    That is, for every predicate on Gen, there exists a computable description (a boolean function)
    that describes it.
 *)
-Theorem U_is_algorithmic : forall (Gen: Type) `{GenerativeType Gen} `{Computable Gen},
+Theorem Gen_is_algorithmic : forall (Gen: Type) `{GenerativeType Gen} `{Computable Gen},
   forall P: Gen -> Prop, exists f: Gen -> bool, describable f.
 Proof.
   intros Gen H_ult H_comp P.
@@ -849,7 +849,7 @@ Qed.
 (* Theorem: Gen requires computation, while Omega retrieves solutions instantly. *)
 Theorem Omega_computes_instantly :
   forall (Gen : Type) `{GenerativeType Gen} `{Computable Gen}
-         (H_O : OmegaType) (H_UT : OmegaToUniversal Gen _ H_O),
+         (H_O : OmegaType) (H_UT : OmegaToGen Gen _ H_O),
   exists (P : Gen -> Prop) (S : Gen -> Gen),
     (forall x: Gen, exists n: nat, contains n (S x)) /\
     (forall x: Omega_carrier H_O, exists y: Gen, y = project_Omega x /\ contains 0 y).
@@ -889,7 +889,7 @@ Qed.
 
 
 (* Show that Gen cannot sustain a paradox that Omega can sustain *)
-Theorem no_Omega_paradox_in_U :
+Theorem no_Omega_paradox_in_Gen :
   forall (Gen: Type) `{GenerativeType Gen} `{OmegaType},
   forall t : nat,
     ~ contains t (self_ref_pred_embed (fun _ : Gen =>
@@ -1139,7 +1139,7 @@ Axiom encode_with_hash_injective :
 
 (* Theorem: For every n, the Generative Type Gen contains an injective copy of the nth aleph cardinal.
    This implies that Gen is strictly "larger" than any set constructible via this hierarchy. *)
-Theorem U_larger_than_aleph_n :
+Theorem Gen_larger_than_aleph_n :
   forall (Gen : Type) `{H_U : GenerativeType Gen},
   forall n : nat,
   exists (f : aleph_n n -> Gen), injective f.
@@ -1153,15 +1153,15 @@ Proof.
 Qed.
 
 
-(* Theorem: Omega_larger_than_U
+(* Theorem: Omega_larger_than_Gen
    This theorem states that there is a function f : Gen -> Omega_carrier such that
    there exists some element x in Omega_carrier that is not equal to f y for any y in Gen.
 *)
-Theorem Omega_larger_than_U
+Theorem Omega_larger_than_Gen
   : forall (Gen : Type)
            (H_U : GenerativeType Gen)
            (H_O : OmegaType)
-           (H_UT : OmegaToUniversal Gen H_U H_O),
+           (H_UT : OmegaToGen Gen H_U H_O),
     exists (f : Gen -> Omega_carrier H_O),
     exists (x : Omega_carrier H_O),
       forall (y : Gen), f y <> x.
@@ -1396,7 +1396,7 @@ Section UltimateAbsurdity.
     forall f : Omegacarrier -> Omegacarrier, 
       forall P : Omegacarrier -> Prop, P (f x) <-> P x.
   
-  Theorem absurdity_is_universal_fixpoint :
+  Theorem absurdity_is_Gen_fixpoint :
     forall x : Omegacarrier,
       PredicateEquivalence x -> FunctionFixpoint x.
   Proof.
@@ -1511,7 +1511,7 @@ End UltimateAbsurdity.
 (* There are certainly other ways to interpret what a god logically is, or what free will is. *)
 (* Feel free to explore! *)
 
-Theorem U_contains_rock_lifting_paradox :
+Theorem Gen_contains_rock_lifting_paradox :
   forall (Gen: Type) `{GenerativeType Gen},
   exists t: nat,
     contains t (self_ref_pred_embed (fun x => forall P: Gen -> Prop, contains 0 (self_ref_pred_embed P))) /\
@@ -2415,7 +2415,7 @@ End EngineeredDivinity.
 Section Soteriology.
 
   Context {Gen : Type} `{GenerativeType Gen} `{OmegaType}.
-  Context `{OmegaToUniversal Gen}.
+  Context `{OmegaToGen Gen}.
 
   (* A predicate is paradoxical if it entails its own negation *)
   Definition paradoxical (P : Gen -> Prop) : Prop :=
@@ -2497,7 +2497,7 @@ End Soteriology.
 
 Section Messiahhood.
 
-  Context {Gen : Type} `{GenerativeType Gen} `{OmegaType} `{OmegaToUniversal Gen}.
+  Context {Gen : Type} `{GenerativeType Gen} `{OmegaType} `{OmegaToGen Gen}.
 
   (* A messiah is a salvific entity that causes salvation paths in others *)
   Definition messiah (m : Gen) : Prop :=
@@ -2662,7 +2662,7 @@ End NecessityOfFaith.
     - Instead, it shows that suffering is structurally possible *because*
       agents are free and God is epistemically hidden.
     - In such a world, not all morally relevant outcomes are known in advance,
-      nor can they be universally prevented.
+      nor can they be Genly prevented.
     - Suffering, therefore, becomes a semantic consequence of freedom under veiling.
 
   This section lays the groundwork for answering the problem of evil

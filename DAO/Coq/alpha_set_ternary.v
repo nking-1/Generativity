@@ -1,4 +1,9 @@
 Require Import Setoid.
+Require Import Nat.
+Require Import Coq.Arith.Arith.
+Require Import Coq.Arith.PeanoNat.
+Require Import List.
+Import ListNotations.
 
 (* OmegaType: A set where EVERY predicate has a witness *)
 Class OmegaType := {
@@ -1640,6 +1645,320 @@ Section ImpossibilityAlgebra.
   Qed.
 
 End ImpossibilityAlgebra.
+
+
+Section ImpossibilityNumbers.
+  Context {Alpha : AlphaType}.
+  
+  (* First, let's verify that every natural number is realized *)
+  Theorem every_nat_has_impossible_predicate :
+    forall n : nat, exists P, Impossibility_Rank P n.
+  Proof.
+    induction n.
+    - (* Base case: rank 0 *)
+      exists the_impossible.
+      apply Rank_Direct.
+      intro a. reflexivity.
+    - (* Inductive: if rank n exists, so does rank n+1 *)
+      destruct IHn as [Q HQ].
+      (* Create P that implies Q but isn't Q *)
+      exists (fun a => Q a /\ Q a).  (* Q ∧ Q *)
+      apply (Rank_Composite _ Q n).
+      + exact HQ.
+      + intros a [HQa _]. exact HQa.
+  Qed.
+  
+  
+  (* Addition: The rank of P ∧ Q *)
+  (* Theorem impossibility_conjunction_rank :
+    forall P Q m n,
+    Impossibility_Rank P m ->
+    Impossibility_Rank Q n ->
+    Impossibility_Rank (fun a => P a /\ Q a) (max m n).
+  Proof.
+    intros P Q m n HP HQ.
+    (* The conjunction is as far as the furthest component *)
+    destruct (Nat.max_dec m n) as [Hmax | Hmax].
+    - (* max = m *)
+      rewrite Hmax.
+      apply (Rank_Composite _ P m).
+      + exact HP.
+      + intros a [HPa _]. exact HPa.
+    - (* max = n *)
+      rewrite Hmax.
+      apply (Rank_Composite _ Q n).
+      + exact HQ.
+      + intros a [_ HQa]. exact HQa.
+  Qed. *)
+  
+End ImpossibilityNumbers.
+
+
+Section PredicateCalculus.
+  Context {Alpha : AlphaType}.
+  
+  (* Sequence of predicates *)
+  Definition predicate_sequence := nat -> (Alphacarrier -> Prop).
+  
+  (* Two predicates agree on a specific element *)
+  Definition agrees_at (P Q : Alphacarrier -> Prop) (a : Alphacarrier) : Prop :=
+    P a <-> Q a.
+  
+  (* Finite approximation: predicates agree on a list of test points *)
+  Definition agrees_on_list (P Q : Alphacarrier -> Prop) (witnesses : list Alphacarrier) : Prop :=
+    forall a, In a witnesses -> agrees_at P Q a.
+  
+  (* Convergence: eventually agrees on any finite set *)
+  Definition converges_to (seq : predicate_sequence) (P : Alphacarrier -> Prop) : Prop :=
+    forall (witnesses : list Alphacarrier),
+    exists N : nat,
+    forall n : nat,
+    n >= N ->
+    agrees_on_list (seq n) P witnesses.
+  
+  (* Example: constant sequence *)
+  Definition constant_sequence (P : Alphacarrier -> Prop) : predicate_sequence :=
+    fun n => P.
+  
+  Theorem constant_converges :
+    forall P, converges_to (constant_sequence P) P.
+  Proof.
+    intros P witnesses.
+    exists 0.
+    intros n Hn a Ha.
+    unfold constant_sequence, agrees_at.
+    reflexivity.
+  Qed.
+  
+  (* Continuity for predicate transformations *)
+  Definition continuous (F : (Alphacarrier -> Prop) -> (Alphacarrier -> Prop)) : Prop :=
+    forall (seq : predicate_sequence) (P : Alphacarrier -> Prop),
+    converges_to seq P ->
+    converges_to (fun n => F (seq n)) (F P).
+  
+  (* Negation function *)
+  Definition pred_neg (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    fun a => ~ P a.
+  
+  (* Is negation continuous? *)
+  Theorem negation_continuous : continuous pred_neg.
+Proof.
+  unfold continuous, converges_to.
+  intros seq P Hconv witnesses.
+  destruct (Hconv witnesses) as [N HN].
+  exists N.
+  intros n Hn a Ha.
+  specialize (HN n Hn a Ha).
+  unfold pred_neg, agrees_at in *.
+  split; intro H.
+  - (* ~ seq n a -> ~ P a *)
+    intro HPa. 
+    apply H.
+    apply HN.  (* Use HN: seq n a <-> P a in the forward direction *)
+    exact HPa.
+  - (* ~ P a -> ~ seq n a *)
+    intro Hseq.
+    apply H.
+    apply HN.  (* Use HN: seq n a <-> P a in the backward direction *)
+    exact Hseq.
+Qed.
+  
+  (* Observable differences - constructive approach *)
+  Inductive observable_diff (P Q : Alphacarrier -> Prop) : Alphacarrier -> Type :=
+    | diff_PQ : forall a, P a -> ~ Q a -> observable_diff P Q a
+    | diff_QP : forall a, ~ P a -> Q a -> observable_diff P Q a.
+  
+  (* A constructive notion of "no observable differences" on a witness set *)
+  Definition no_observable_diffs (P Q : Alphacarrier -> Prop) (witnesses : list Alphacarrier) : Prop :=
+    forall a, In a witnesses -> 
+      (P a -> Q a) /\ (Q a -> P a).
+  
+  (* This is equivalent to agrees_on_list for our purposes *)
+  Theorem no_diffs_iff_agrees :
+    forall P Q witnesses,
+    no_observable_diffs P Q witnesses <-> agrees_on_list P Q witnesses.
+  Proof.
+    intros P Q witnesses.
+    unfold no_observable_diffs, agrees_on_list, agrees_at.
+    split.
+    - intros H a Ha.
+      specialize (H a Ha).
+      split; apply H.
+    - intros H a Ha.
+      specialize (H a Ha).
+      split; apply H.
+  Qed.
+  
+  (* Approaching the_impossible *)
+  Definition approaches_impossible (seq : predicate_sequence) : Prop :=
+    converges_to seq the_impossible.
+  
+  (* Example: shrinking sequence *)
+  Definition shrinking_sequence (base : Alphacarrier -> Prop) : predicate_sequence :=
+    fun n => fun a => base a /\ 
+      exists (witness_list : list Alphacarrier), 
+      length witness_list <= n /\ 
+      In a witness_list.
+  
+  (* Conjunction is continuous *)
+  Definition pred_and (P Q : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    fun a => P a /\ Q a.
+  
+  Theorem and_continuous_left :
+    forall Q, continuous (fun P => pred_and P Q).
+  Proof.
+    intros Q.
+    unfold continuous, converges_to.
+    intros seq P Hconv witnesses.
+    destruct (Hconv witnesses) as [N HN].
+    exists N.
+    intros n Hn a Ha.
+    specialize (HN n Hn a Ha).
+    unfold pred_and, agrees_at in *.
+    split; intros [H1 H2].
+    - split.
+      + apply HN. exact H1.
+      + exact H2.
+    - split.
+      + apply HN. exact H1.
+      + exact H2.
+  Qed.
+  
+  (* Disjunction is continuous *)
+  Definition pred_or (P Q : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    fun a => P a \/ Q a.
+  
+  Theorem or_continuous_left :
+    forall Q, continuous (fun P => pred_or P Q).
+  Proof.
+    intros Q.
+    unfold continuous, converges_to.
+    intros seq P Hconv witnesses.
+    destruct (Hconv witnesses) as [N HN].
+    exists N.
+    intros n Hn a Ha.
+    specialize (HN n Hn a Ha).
+    unfold pred_or, agrees_at in *.
+    split; intros [H | H].
+    - left. apply HN. exact H.
+    - right. exact H.
+    - left. apply HN. exact H.
+    - right. exact H.
+  Qed.
+  
+  (* Composition of continuous functions is continuous *)
+  Theorem continuous_compose :
+    forall F G,
+    continuous F ->
+    continuous G ->
+    continuous (fun P => F (G P)).
+  Proof.
+    intros F G HF HG.
+    unfold continuous in *.
+    intros seq P Hconv.
+    apply HF.
+    apply HG.
+    exact Hconv.
+  Qed.
+  
+  (* A predicate sequence that oscillates *)
+  Definition oscillating_sequence : predicate_sequence :=
+    fun n => if Nat.even n then (fun _ => True) else the_impossible.
+  
+  Theorem oscillating_not_convergent :
+    ~ exists P, converges_to oscillating_sequence P.
+  Proof.
+    intros [P Hconv].
+    destruct alpha_not_empty as [a0 _].
+    destruct (Hconv [a0]) as [N HN].
+    
+    (* The key insight: find two consecutive positions where the sequence differs *)
+    (* Let's use positions 0 and 1 for simplicity *)
+    destruct (Hconv [a0]) as [N' HN'].
+    
+    (* Take a large enough N that covers both positions we'll check *)
+    pose (M := max N' 2).
+    
+    (* Check at positions M (which is even) and M+1 (which is odd) *)
+    assert (HM_ge : M >= N') by (unfold M; apply Nat.le_max_l).
+    assert (H_in : In a0 [a0]) by (left; reflexivity).
+    
+    (* Get a specific even position *)
+    pose (E := 2 * M).  (* E is definitely even *)
+    assert (HE_even : Nat.even E = true).
+    { unfold E. rewrite Nat.even_mul. reflexivity. }
+    
+    assert (HE_ge : E >= N').
+    { unfold E. unfold ge.
+      apply Nat.le_trans with M.
+      - exact HM_ge.
+      - (* Prove M <= 2 * M directly *)
+        rewrite <- (Nat.mul_1_l M) at 1.
+        apply Nat.mul_le_mono_r.
+        apply Nat.le_succ_diag_r. }
+    
+    (* At position E: oscillating_sequence E = True *)
+    pose proof (HN'_at_E := HN' E HE_ge a0 H_in).
+    unfold oscillating_sequence in HN'_at_E.
+    rewrite HE_even in HN'_at_E.
+    
+    (* At position E+1: oscillating_sequence (E+1) = the_impossible *)
+    assert (HE1_ge : E + 1 >= N').
+    { unfold ge. apply Nat.le_trans with E; [exact HE_ge | apply Nat.le_add_r]. }
+    
+    pose proof (HN'_at_E1 := HN' (E + 1) HE1_ge a0 H_in).
+    unfold oscillating_sequence in HN'_at_E1.
+    
+    (* E+1 is odd because E is even *)
+    assert (HE1_odd : Nat.even (E + 1) = false).
+    { 
+      (* Since E = 2*M, E+1 = 2*M + 1 which is odd *)
+      unfold E.
+      rewrite <- Nat.add_1_r.
+      rewrite Nat.even_add.
+      rewrite Nat.even_mul.
+      reflexivity.
+    }
+    rewrite HE1_odd in HN'_at_E1.
+    
+    (* Now we have: P a0 <-> True and P a0 <-> the_impossible a0 *)
+    assert (P a0) by (apply HN'_at_E; exact I).
+    apply HN'_at_E1 in H.
+    exact (the_impossible_has_no_witnesses a0 H).
+  Qed.
+  
+  (* Path from one predicate to another *)
+  Definition predicate_path := nat -> (Alphacarrier -> Prop).
+  
+  Definition path_from_to (path : predicate_path) (P Q : Alphacarrier -> Prop) : Prop :=
+    path 0 = P /\
+    converges_to path Q.
+  
+  (* The trivial path *)
+  Definition trivial_path (P : Alphacarrier -> Prop) : predicate_path :=
+    constant_sequence P.
+  
+  Theorem trivial_path_works :
+    forall P, path_from_to (trivial_path P) P P.
+  Proof.
+    intro P.
+    split.
+    - reflexivity.
+    - apply constant_converges.
+  Qed.
+  
+  (* Linear interpolation doesn't quite work in predicate space, 
+     but we can do something similar *)
+  
+  (* A sequence that gradually "turns off" a predicate *)
+  Definition fade_to_impossible (P : Alphacarrier -> Prop) : predicate_sequence :=
+    fun n => fun a => P a /\ 
+      exists (proof_size : nat), proof_size <= n.
+  
+  (* If P has witnesses, this doesn't converge to impossible *)
+  (* But it shows how we might think about "gradual" changes *)
+
+End PredicateCalculus.
 
 
 Section UndecidabilityFramework.
@@ -3594,3 +3913,223 @@ End HoTT_in_AlphaType.
         (mor_map_ok f Hf) (mor_map_ok g Hg) (admitted)
   }.
 End CategoryTheory. *)
+
+
+Class AlphaGenerativeType (Alpha : AlphaType) := {
+  (* Time-indexed containment of Alpha predicates *)
+  contains : nat -> (Alphacarrier -> Prop) -> Prop;
+  
+  (* The impossible is always contained (it's the anchor) *)
+  impossible_always : forall t, contains t the_impossible;
+  
+  (* Backward containment still holds *)
+  contains_backward : forall m n P, m <= n -> contains n P -> contains m P;
+  
+  (* Self-reference through Alpha predicates *)
+  self_ref_pred_embed : ((Alphacarrier -> Prop) -> Prop) -> (Alphacarrier -> Prop);
+  self_ref_pred_embed_correct : 
+    forall P : (Alphacarrier -> Prop) -> Prop, 
+    P (self_ref_pred_embed P);
+  
+  (* Generation with three-valued awareness *)
+  self_ref_generation_exists : 
+    forall P : (Alphacarrier -> Prop) -> Prop, 
+    forall t : nat, 
+    exists n : nat, t <= n /\ contains n (self_ref_pred_embed P);
+  
+  (* NEW: Undecidable predicates oscillate *)
+  (* undecidable_oscillation :
+    forall P : Alphacarrier -> Prop,
+    (~ exists a, P a) -> (~ forall a, ~ P a) ->
+    forall t, exists t', t' > t /\
+      contains t P <> contains t' P *)
+}.
+
+
+(* First, let's establish the basic self-reference examples *)
+
+Example alpha_novice_self_ref_example : 
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  let P := fun (pred : Alphacarrier -> Prop) => ~ contains 0 pred in
+  P (self_ref_pred_embed P).
+Proof.
+  intros Alpha H P.
+  unfold P.
+  apply self_ref_pred_embed_correct.
+Qed.
+
+Example alpha_self_ref_pred_appears_later : 
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  let Q := fun (pred : Alphacarrier -> Prop) => 
+    exists t : nat, t > 0 /\ contains t pred in
+  Q (self_ref_pred_embed Q).
+Proof.
+  intros.
+  apply self_ref_pred_embed_correct.
+Qed.
+
+(* Temporal evolution with Alpha awareness *)
+Example alpha_self_ref_pred_temporal_evolution : 
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  let R := fun (pred : Alphacarrier -> Prop) => 
+    ~ contains 0 pred /\ exists t : nat, t > 0 /\ contains t pred in
+  R (self_ref_pred_embed R).
+Proof.
+  intros.
+  apply self_ref_pred_embed_correct.
+Qed.
+
+(* NEW: Example showing the_impossible is always present *)
+Example impossible_always_contained :
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  forall t : nat, contains t the_impossible.
+Proof.
+  intros.
+  apply impossible_always.
+Qed.
+
+(*****************************************************************)
+(*                         Core Theorems                         *)
+(*****************************************************************)
+
+(* AlphaGen builds itself recursively *)
+Theorem alpha_builds_itself : 
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  forall P : (Alphacarrier -> Prop) -> Prop, 
+  exists n : nat, contains n (self_ref_pred_embed P).
+Proof.
+  intros Alpha H P.
+  destruct (self_ref_generation_exists P 0) as [n [Hle Hc]].
+  exists n.
+  assumption.
+Qed.
+
+(* Theorem: AlphaGen recognizes its initial incompleteness *)
+Theorem alpha_recognizes_initially_incomplete : 
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  exists P : (Alphacarrier -> Prop) -> Prop, 
+    (~ contains 0 (self_ref_pred_embed P)) /\ 
+    (exists n : nat, contains n (self_ref_pred_embed P)).
+Proof.
+  intros Alpha H.
+  (* Define P: "pred is not contained at stage 0" *)
+  set (P := fun pred : Alphacarrier -> Prop => ~ contains 0 pred).
+  assert (H_not0: ~ contains 0 (self_ref_pred_embed P)).
+  {
+    apply self_ref_pred_embed_correct.
+  }
+  destruct (self_ref_generation_exists P 0) as [n [Hle Hn]].
+  exists P.
+  split.
+  - exact H_not0.
+  - exists n. exact Hn.
+Qed.
+
+(* Theorem: AlphaGen Recursively Grows
+   For predicates on Alpha predicates, we can combine them with temporal conditions *)
+Theorem alpha_recursive_growth : 
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  forall P : (Alphacarrier -> Prop) -> Prop, 
+  exists n : nat, 
+    contains n (self_ref_pred_embed (fun pred => P pred /\ contains 0 pred)).
+Proof.
+  intros Alpha H P.
+  destruct (self_ref_generation_exists (fun pred => P pred /\ contains 0 pred) 0) as [n [Hle Hc]].
+  exists n.
+  assumption.
+Qed.
+
+(* Predicates appear at multiple times *)
+Theorem alpha_P_not_unique :
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  forall P : (Alphacarrier -> Prop) -> Prop, 
+  exists n m : nat,
+    n < m /\
+    contains n (self_ref_pred_embed P) /\
+    contains m (self_ref_pred_embed P).
+Proof.
+  intros Alpha H P.
+  destruct (self_ref_generation_exists P 0) as [n [Hn_ge Hn_cont]].
+  destruct (self_ref_generation_exists P (n + 1)) as [m [Hm_ge Hm_cont]].
+  assert (n < m) by lia.
+  exists n, m.
+  repeat split; assumption.
+Qed.
+
+(* P and its negation eventually both appear *)
+Theorem alpha_P_eventually_negated :
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  forall P : (Alphacarrier -> Prop) -> Prop, 
+  exists n m : nat,
+    n < m /\
+    contains n (self_ref_pred_embed P) /\
+    contains m (self_ref_pred_embed (fun pred => ~ P pred)).
+Proof.
+  intros Alpha H P.
+  destruct (self_ref_generation_exists P 0) as [n [Hle_n Hn]].
+  destruct (self_ref_generation_exists (fun pred => ~ P pred) (n + 1)) as [m [Hle_m Hm]].
+  exists n, m.
+  split.
+  - lia.
+  - split; assumption.
+Qed.
+
+(* The fundamental incompleteness - there's always something not yet contained *)
+Theorem alpha_never_complete : 
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  forall t : nat, 
+  exists P : (Alphacarrier -> Prop) -> Prop, 
+  ~ contains t (self_ref_pred_embed P).
+Proof.
+  intros Alpha H t.
+  exists (fun pred => ~ contains t pred).
+  apply self_ref_pred_embed_correct.
+Qed.
+
+
+(* NEW: Theorem showing undecidable predicates must oscillate *)
+(* Theorem undecidable_must_oscillate :
+  forall (Alpha : AlphaType) `{AlphaGenerativeType Alpha},
+  forall P : Alphacarrier -> Prop,
+  (~ exists a, P a) -> (~ forall a, ~ P a) ->
+  forall t, exists t' : nat, t' > t /\ 
+    ((contains t P /\ ~ contains t' P) \/ 
+     (~ contains t P /\ contains t' P)).
+Proof.
+  intros Alpha H P Hno_witness Hnot_impossible t.
+  (* Use the undecidable_oscillation axiom *)
+  destruct (undecidable_oscillation P Hno_witness Hnot_impossible t) as [t' Hdiff].
+  exists t'.
+  split.
+  - (* Prove t' > t from the oscillation property *)
+    (* This would need to be added to undecidable_oscillation or proven separately *)
+    admit. (* We'd need to strengthen the axiom to include t' > t *)
+  - (* Show they differ *)
+    destruct (classic (contains t P)).
+    + left. split; [assumption|].
+      intro Hcont. apply Hdiff. reflexivity.
+    + right. split; [assumption|].
+      (* If not at t, must be at t' since they differ *)
+      admit. (* Needs classical logic or more structure *)
+Admitted. *)
+
+(* NEW: A theorem specific to Alpha - the impossible creates incompleteness *)
+(* Theorem impossible_ensures_incompleteness :
+  forall (Alpha : AlphaType) (H : AlphaGenerativeType Alpha),
+  forall t : nat,
+  exists P : Alphacarrier -> Prop,
+    P = the_impossible /\
+    contains t P /\
+    (forall Q : (Alphacarrier -> Prop) -> Prop,
+      Q (fun a => P a) -> ~ contains t (self_ref_pred_embed Q)).
+Proof.
+  intros Alpha H t.
+  exists the_impossible.
+  split; [reflexivity|].
+  split.
+  - apply impossible_always.
+  - intros Q HQ.
+    (* This would need more development - showing how the_impossible 
+       blocks certain meta-predicates from being contained *)
+    admit.
+Admitted. *)
