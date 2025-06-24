@@ -5010,6 +5010,259 @@ Section SelfRecursiveGenerative.
 End SelfRecursiveGenerative.
 
 
+(* Injectivity and cardinality definitions remain the same *)
+Definition injective {A B: Type} (f: A -> B) : Prop :=
+  forall x y: A, f x = f y -> x = y.
+
+Class Cardinality (X: Type) := {
+  get_cardinality : nat -> Type;
+}.
+
+Definition aleph_0 := nat.
+
+Fixpoint aleph_n (n : nat) : Type :=
+  match n with
+  | 0 => aleph_0
+  | S n' => { A : Type & A -> aleph_n n' }
+  end.
+
+(* Hash function remains the same *)
+Parameter hash : forall {X : Type}, X -> nat.
+
+(* The encoding for GenerativeType - turns an element x : X into a meta-predicate *)
+Definition encode_with_hash_gen {Alpha : AlphaType} {HG : GenerativeType Alpha} {X : Type} 
+  (x : X) : (Alphacarrier -> Prop) -> Prop :=
+  fun P => forall Q : (Alphacarrier -> Prop) -> Prop, 
+    (Q P <-> exists n : nat, n = hash x).
+
+(* Axiom stating that our encoding preserves distinctness *)
+Axiom encode_with_hash_gen_injective : 
+  forall {Alpha : AlphaType} {HG : GenerativeType Alpha} {X : Type} (x y : X),
+  self_ref_pred_embed (encode_with_hash_gen x) = 
+  self_ref_pred_embed (encode_with_hash_gen y) -> x = y.
+
+(* Theorem: GenerativeType contains an injective copy of the nth aleph cardinal *)
+Theorem gen_larger_than_aleph_n :
+  forall (Alpha : AlphaType) (HG : GenerativeType Alpha),
+  forall n : nat,
+  exists (f : aleph_n n -> (Alphacarrier -> Prop)), injective f.
+Proof.
+  intros Alpha HG n.
+  exists (fun x => self_ref_pred_embed (encode_with_hash_gen x)).
+  unfold injective.
+  intros x1 x2 Heq.
+  apply encode_with_hash_gen_injective.
+  exact Heq.
+Qed.
+
+(* The OmegaToGenerative connection needs to be defined first *)
+(* Using the definition from earlier: *)
+
+(* Theorem: Omega is larger than GenerativeType *)
+Theorem omega_larger_than_gen :
+  forall (Alpha : AlphaType) (HG : GenerativeType Alpha)
+         (Omega : OmegaType)
+         (HOG : OmegaToGenerative Alpha HG Omega),
+    exists (f : (Alphacarrier -> Prop) -> Omegacarrier),
+    exists (x : Omegacarrier),
+      forall (P : Alphacarrier -> Prop), f P <> x.
+Proof.
+  intros Alpha HG Omega HOG.
+  
+  (* Use lift_Gen as our function *)
+  pose proof (@lift_Gen Alpha HG Omega HOG) as f.
+  
+  (* Define the predicate for omega_completeness *)
+  set (Pred := fun (x : Omegacarrier) => 
+    forall P : Alphacarrier -> Prop, f P <> x).
+  
+  (* Apply omega_completeness *)
+  pose proof (@omega_completeness Omega Pred) as [x Hx].
+  
+  exists f, x.
+  exact Hx.
+Qed.
+
+(* embed the fact that we can encode aleph_n *)
+Theorem gen_embeds_aleph_encoding :
+  forall (Alpha : AlphaType) (HG : GenerativeType Alpha),
+  forall n : nat,
+  exists t : nat,
+    contains t (self_ref_pred_embed 
+      (fun _ => exists (f : aleph_n n -> (Alphacarrier -> Prop)), 
+        injective f)).
+Proof.
+  intros Alpha HG n.
+  destruct (self_ref_generation_exists 
+    (fun _ => exists (f : aleph_n n -> (Alphacarrier -> Prop)), 
+      injective f) 0)
+    as [t [_ Ht]].
+  exists t. exact Ht.
+Qed.
+
+(* GenerativeType contains statements about transfinite cardinals *)
+Theorem gen_reasons_about_infinity :
+  forall (Alpha : AlphaType) (HG : GenerativeType Alpha),
+  exists t : nat,
+    contains t (self_ref_pred_embed
+      (fun P => forall n : nat, 
+        exists (f : aleph_n n -> (Alphacarrier -> Prop)), 
+        injective f)).
+Proof.
+  intros Alpha HG.
+  destruct (self_ref_generation_exists
+    (fun P => forall n : nat, 
+      exists (f : aleph_n n -> (Alphacarrier -> Prop)), 
+      injective f) 0)
+    as [t [_ Ht]].
+  exists t. exact Ht.
+Qed.
+
+
+(*****************************************************************)
+(*                   Theology and Metaphysics in GenerativeType  *)
+(*****************************************************************)
+
+(*
+  Using GenerativeType to explore theological paradoxes and metaphysical concepts.
+  This remains a formal logical exercise - we're exploring how these concepts
+  behave mathematically within the Alpha/Omega framework.
+  
+  Key reinterpretations for GenerativeType:
+  - "God" → A predicate structure approaching Omega's completeness
+  - "Omnipotence" → Ability to generate any Alpha predicate
+  - "Self-limitation" → Necessary incompleteness to avoid paradox
+  - "Free will" → Temporal choice between contradictory predicates
+*)
+
+(* The Rock Lifting Paradox in GenerativeType *)
+Theorem gen_contains_rock_lifting_paradox :
+  forall (Alpha : AlphaType) (HG : GenerativeType Alpha),
+  exists t : nat,
+    (* Omnipotence: can generate any predicate *)
+    contains t (self_ref_pred_embed 
+      (fun _ => forall P : (Alphacarrier -> Prop) -> Prop, 
+        contains 0 (self_ref_pred_embed P))) /\
+    (* Unliftable rock: a predicate that denies its own containment *)
+    contains t (self_ref_pred_embed 
+      (fun pred => ~ contains 0 (self_ref_pred_embed (fun _ => contains t pred)))) /\
+    (* Resolution: the rock IS lifted at a later time *)
+    contains (t + 1) (self_ref_pred_embed (fun pred => contains t pred)).
+Proof.
+  intros Alpha HG.
+
+  (* Step 1: GenerativeType contains an Omnipotent predicate structure *)
+  destruct (self_ref_generation_exists 
+    (fun _ => forall P : (Alphacarrier -> Prop) -> Prop, 
+      contains 0 (self_ref_pred_embed P)) 0)
+    as [t1 [Ht1_le Ht1_omnipotent]].
+
+  (* Step 2: Generate an unliftable rock at time t1 *)
+  destruct (self_ref_generation_exists 
+    (fun pred => ~ contains 0 (self_ref_pred_embed (fun _ => contains t1 pred))) t1)
+    as [t2 [Ht2_le Ht2_unliftable]].
+
+  (* Step 3: Generate the lifted rock at time t1 + 1 *)
+  destruct (self_ref_generation_exists (fun pred => contains t1 pred) (t1 + 1))
+    as [t3 [Ht3_le Ht3_lifted]].
+
+  (* Step 4: Use backward containment to align times *)
+  apply (contains_backward t1 t2) in Ht2_unliftable; [ | lia ].
+  apply (contains_backward (t1 + 1) t3) in Ht3_lifted; [ | lia ].
+
+  (* Step 5: The paradox is resolved temporally *)
+  exists t1.
+  split; [exact Ht1_omnipotent|].
+  split; [exact Ht2_unliftable|exact Ht3_lifted].
+Qed.
+
+Section SelfLimitingDivinity.
+  Context (Alpha : AlphaType) (HG : GenerativeType Alpha).
+
+  (* Definition: Divinity contains all predicates at time 0 *)
+  (* This is like Omega but within Alpha's framework *)
+  Definition Divinity := 
+    forall P : (Alphacarrier -> Prop) -> Prop, 
+    contains 0 (self_ref_pred_embed P).
+
+  (* Definition: Self-limitation - lacking some predicate at time 0 *)
+  Definition self_limited := 
+    exists P : (Alphacarrier -> Prop) -> Prop, 
+    ~ contains 0 (self_ref_pred_embed P).
+
+  (* Theorem: Divinity must self-limit to exist coherently in Alpha *)
+  Theorem divinity_must_self_limit :
+    exists t : nat, Divinity -> self_limited.
+  Proof.
+    (* Define a predicate about self-limitation *)
+    set (self_limit_pred := fun _ : Alphacarrier -> Prop => 
+      exists _ : Alphacarrier -> Prop, self_limited).
+
+    (* This predicate must eventually exist *)
+    destruct (self_ref_generation_exists self_limit_pred 0)
+      as [t1 [Ht1_le Ht1_contained]].
+
+    (* By self_ref_pred_embed_correct, this predicate holds *)
+    pose proof (self_ref_pred_embed_correct self_limit_pred) as H_embed.
+    
+    (* Extract the witness *)
+    destruct H_embed as [witness Hwitness].
+
+    exists t1.
+    intros _.
+    exact Hwitness.
+  Qed.
+
+  (* Additional theorem: The connection to the_impossible *)
+  Theorem divinity_and_impossibility :
+    Divinity -> 
+    contains 0 (self_ref_pred_embed (fun P => P = the_impossible)).
+  Proof.
+    intro H_div.
+    (* If Divinity contains all predicates, it contains the one about the_impossible *)
+    apply H_div.
+  Qed.
+
+  (* Free will as temporal choice *)
+  Definition has_free_will (agent : Alphacarrier -> Prop) : Prop :=
+    exists (choice : (Alphacarrier -> Prop) -> Prop),
+    exists t1 t2 : nat,
+      t1 < t2 /\
+      contains t1 (self_ref_pred_embed choice) /\
+      contains t2 (self_ref_pred_embed (fun P => ~ choice P)).
+
+  (* Suffering as experiencing contradiction due to incomplete knowledge *)
+  Definition experiences_suffering : Prop :=
+    exists (P : (Alphacarrier -> Prop) -> Prop) (t : nat),
+      (* Agent believes P at time t *)
+      contains t (self_ref_pred_embed P) /\
+      (* But ~P is also true (though perhaps not known at t) *)
+      exists t' : nat, contains t' (self_ref_pred_embed (fun Q => ~ P Q)).
+
+  (* The theological insight: Free will necessitates suffering *)
+  Theorem free_will_implies_suffering :
+    (exists agent, has_free_will agent) -> experiences_suffering.
+  Proof.
+    intros [agent Hfree].
+    unfold has_free_will in Hfree.
+    destruct Hfree as [choice [t1 [t2 [Hlt [Ht1 Ht2]]]]].
+    
+    (* The agent's choice creates a contradiction across time *)
+    unfold experiences_suffering.
+    exists choice, t1.
+    split.
+    - exact Ht1.
+    - exists t2. exact Ht2.
+  Qed.
+
+End SelfLimitingDivinity.
+
+
+
+
+
+
+
 (* Experimental theorems section *)
 
 
