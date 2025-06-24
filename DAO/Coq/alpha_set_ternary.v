@@ -1,30 +1,11 @@
+Require Import Setoid.
+
 (* OmegaType: A set where EVERY predicate has a witness *)
 Class OmegaType := {
   Omegacarrier : Type;
   omega_completeness : forall (P : Omegacarrier -> Prop), 
     exists x : Omegacarrier, P x
 }.
-
-(* AlphaType: A set with exactly one impossible predicate *)
-Class AlphaType := {
-  Alphacarrier : Type;
-  
-  (* The unique impossible predicate, bundled with its properties *)
-  alpha_impossibility : { P : Alphacarrier -> Prop | 
-    (forall x : Alphacarrier, ~ P x) /\
-    (forall Q : Alphacarrier -> Prop, 
-      (forall x : Alphacarrier, ~ Q x) -> 
-      (forall x : Alphacarrier, Q x <-> P x))
-  };
-  
-  (* Non-emptiness - need at least one element *)
-  alpha_not_empty : exists x : Alphacarrier, True
-}.
-
-(* Helper to extract the impossible predicate *)
-Definition the_impossible {Alpha : AlphaType} : Alphacarrier -> Prop :=
-  proj1_sig (@alpha_impossibility Alpha).
-
 
 Section OmegaProperties.
   Context {Omega : OmegaType}.
@@ -96,6 +77,105 @@ Section OmegaProperties.
 End OmegaProperties.
 
 
+Class NomegaType := {
+  Nomegacarrier : Type;
+  nomega_emptiness : forall x : Nomegacarrier, False
+}.
+
+
+Section NomegaProperties.
+  Context {Nomega : NomegaType}.
+  
+  (* The predicate "there exists no x" should be "true" for Nomega *)
+  Definition no_witness (P : Nomegacarrier -> Prop) : Prop :=
+    ~ exists x : Nomegacarrier, P x.
+  
+  (* But wait - can we even state facts about Nomega's emptiness? *)
+  Theorem nomega_paradox : 
+    exists P : Nomegacarrier -> Prop, no_witness P.
+  Proof.
+    exists (fun _ => True).
+    unfold no_witness.
+    intros [x _].
+    exact (nomega_emptiness x).
+  Qed.
+
+  (* First, let's show we can prove any proposition about Nomegacarrier *)
+  Theorem nomega_proves_anything : 
+    forall (P : Nomegacarrier -> Prop),
+    forall x : Nomegacarrier, P x.
+  Proof.
+    intros P x.
+    (* We have x : Nomegacarrier *)
+    (* By nomega_emptiness, this gives us False *)
+    destruct (nomega_emptiness x).
+    (* From False, we can prove anything - principle of explosion *)
+  Qed.
+
+  (* This means we can prove both P and ~P *)
+  Theorem nomega_contradiction :
+    forall (P : Nomegacarrier -> Prop),
+    forall x : Nomegacarrier, P x /\ ~ P x.
+  Proof.
+    intros P x.
+    split.
+    - exact (nomega_proves_anything P x).
+    - exact (nomega_proves_anything (fun x => ~ P x) x).
+  Qed.
+
+    (* In any trivial type, everything equals everything *)
+  Definition trivial_equality {T : Type} (contradiction : T -> False) : 
+    forall (x y : T), x = y.
+  Proof.
+    intros x y.
+    destruct (contradiction x).
+  Qed.
+
+    (* Both types allow us to prove anything *)
+    Theorem omega_nomega_equivalence :
+    forall {O : OmegaType} {N : NomegaType},
+    (* Both can prove any proposition about their carriers *)
+    (forall (P : Omegacarrier -> Prop) (x : Omegacarrier), P x) /\
+    (forall (Q : Nomegacarrier -> Prop) (y : Nomegacarrier), Q y).
+  Proof.
+    split.
+    - (* Omega case: we have P x and ~P x *)
+      intros P x.
+      destruct (omega_has_paradoxes P) as [w [Hw Hnw]].
+      (* We have Hw : P w and Hnw : ~ P w, which is a contradiction *)
+      (* Apply Hnw to Hw to get False *)
+      contradiction.
+      (* Or more explicitly: *)
+      (* exact (False_ind (P x) (Hnw Hw)). *)
+    - (* Nomega case: from any y we get False *)
+      intros Q y.
+      destruct (nomega_emptiness y).
+  Qed.
+End NomegaProperties.
+
+
+(* AlphaType: A set with exactly one impossible predicate *)
+Class AlphaType := {
+  Alphacarrier : Type;
+  
+  (* The unique impossible predicate, bundled with its properties *)
+  alpha_impossibility : { P : Alphacarrier -> Prop | 
+    (forall x : Alphacarrier, ~ P x) /\
+    (forall Q : Alphacarrier -> Prop, 
+      (forall x : Alphacarrier, ~ Q x) -> 
+      (forall x : Alphacarrier, Q x <-> P x))
+  };
+  
+  (* Non-emptiness - need at least one element *)
+  alpha_not_empty : exists x : Alphacarrier, True
+}.
+
+(* Helper to extract the impossible predicate *)
+Definition the_impossible {Alpha : AlphaType} : Alphacarrier -> Prop :=
+  proj1_sig (@alpha_impossibility Alpha).
+
+
+
 (* ============================================================ *)
 (* Properties of AlphaType *)  
 (* ============================================================ *)
@@ -135,12 +215,250 @@ Section AlphaProperties.
   
 End AlphaProperties.
 
+(* Paradox Firewalls in Constructive AlphaType *)
+Section ConstructiveParadoxFirewalls.
+  Context {Alpha : AlphaType}.
+  
+  (* Russell's Paradox firewall - this should work constructively *)
+  Theorem constructive_no_russell_predicate :
+    ~ exists (R : Alphacarrier -> Prop), 
+      forall x, R x <-> ~ R x.
+  Proof.
+    intros [R HR].
+    (* We can still get a witness from non-emptiness *)
+    destruct alpha_not_empty as [x0 _].
+    specialize (HR x0).
+    (* R x0 <-> ~ R x0 leads to contradiction constructively *)
+    destruct HR as [H1 H2].
+    (* If we had R x0, then by H1 we get ~ R x0, contradiction *)
+    (* If we had ~ R x0, then by H2 we get R x0, contradiction *)
+    (* So we need to show False without assuming either *)
+    assert (R x0 -> False).
+    { intro Hr. apply (H1 Hr). exact Hr. }
+    (* Now H tells us ~ R x0, so by H2 we get R x0 *)
+    apply H. apply H2. exact H.
+  Qed.
+  
+  (* Curry's Paradox for False - also works constructively *)
+  Theorem constructive_no_curry_false :
+    ~ exists (C : Alphacarrier -> Prop),
+      forall x, C x <-> (C x -> False).
+  Proof.
+    intros [C HC].
+    destruct alpha_not_empty as [x0 _].
+    specialize (HC x0).
+    destruct HC as [H1 H2].
+    
+    (* Key insight: C x0 leads to contradiction *)
+    assert (HnC: ~ C x0).
+    { intros HC0.
+      apply (H1 HC0). exact HC0. }
+    
+    (* But then C x0 -> False, so by H2, C x0 *)
+    apply HnC. apply H2. exact HnC.
+  Qed.
+  
+  (* For general Curry: if such a predicate exists, Q becomes provable *)
+  Theorem constructive_curry_explosion :
+    forall (Q : Prop),
+      (exists (C : Alphacarrier -> Prop), forall x, C x <-> (C x -> Q)) -> 
+      Q.
+  Proof.
+    intros Q [C HC].
+    destruct alpha_not_empty as [x0 _].
+    specialize (HC x0).
+    destruct HC as [H1 H2].
+    
+    (* The key lemma still works constructively *)
+    assert (HQ: (C x0 -> Q) -> Q).
+    { intros Himp.
+      apply Himp. apply H2. exact Himp. }
+    
+    (* Now prove Q *)
+    apply HQ.
+    intros HC0.
+    apply HQ.
+    apply H1.
+    exact HC0.
+  Qed.
+  
+  (* No self-denying existence - straightforward *)
+  Theorem constructive_no_self_denying :
+    ~ exists (P : Alphacarrier -> Prop),
+      (forall x, P x <-> the_impossible x) /\ (exists x, P x).
+  Proof.
+    intros [P [Heq [x Px]]].
+    apply (the_impossible_has_no_witnesses x).
+    apply Heq. exact Px.
+  Qed.
+  
+  (* Now here's where it gets interesting - predicate grounding *)
+  (* Without excluded middle, we might not get a clean dichotomy *)
+  
+  (* First, let's define what makes a predicate "grounded" *)
+  Definition circular_predicate (P : Alphacarrier -> Prop) : Prop :=
+    forall x, P x <-> exists y, P y.
+  
+  (* What we CAN prove: if a circular predicate has a witness, 
+     it's universal *)
+  Theorem constructive_circular_witness_universal :
+    forall P : Alphacarrier -> Prop,
+      circular_predicate P ->
+      (exists x, P x) ->
+      forall y, P y.
+  Proof.
+    intros P Hcirc [x Px] y.
+    apply Hcirc.
+    exists x. exact Px.
+  Qed.
+  
+  (* And if it's not universal, it has no witnesses *)
+  Theorem constructive_circular_not_universal_empty :
+    forall P : Alphacarrier -> Prop,
+      circular_predicate P ->
+      (exists y, ~ P y) ->
+      forall x, ~ P x.
+  Proof.
+    intros P Hcirc [y HnPy] x Px.
+    apply HnPy.
+    apply Hcirc.
+    exists x. exact Px.
+  Qed.
+  
+  (* The key insight: circular predicates can't be "mixed" *)
+  Theorem constructive_circular_no_mixed :
+    forall P : Alphacarrier -> Prop,
+      circular_predicate P ->
+      ~ ((exists x, P x) /\ (exists y, ~ P y)).
+  Proof.
+    intros P Hcirc [[x Px] [y HnPy]].
+    apply HnPy.
+    apply (constructive_circular_witness_universal P Hcirc).
+    - exists x. exact Px.
+  Qed.
+  
+End ConstructiveParadoxFirewalls.
+
+
+Section ParadoxesEqualTheImpossible.
+  Context {Alpha : AlphaType}.
+  
+  (* First, let's prove that any predicate that always leads to False 
+     must equal the_impossible *)
+  Theorem contradiction_equals_impossible :
+    forall P : Alphacarrier -> Prop,
+    (forall x : Alphacarrier, P x -> False) ->
+    (forall x : Alphacarrier, P x <-> the_impossible x).
+  Proof.
+    intros P HP.
+    apply the_impossible_unique.
+    intros x Px.
+    exact (HP x Px).
+  Qed.
+  
+  (* Now let's show Russell's paradox equals the_impossible *)
+  Theorem russell_equals_impossible :
+    forall R : Alphacarrier -> Prop,
+    (forall x, R x <-> ~ R x) ->
+    (forall x, R x <-> the_impossible x).
+  Proof.
+    intros R HR.
+    apply contradiction_equals_impossible.
+    intros x Rx.
+    (* R x -> ~ R x by HR *)
+    apply (proj1 (HR x) Rx).
+    exact Rx.
+  Qed.
+  
+  (* Curry's paradox with False equals the_impossible *)
+  Theorem curry_false_equals_impossible :
+    forall C : Alphacarrier -> Prop,
+    (forall x, C x <-> (C x -> False)) ->
+    (forall x, C x <-> the_impossible x).
+  Proof.
+    intros C HC.
+    apply contradiction_equals_impossible.
+    intros x Cx.
+    (* C x -> (C x -> False) by HC *)
+    apply (proj1 (HC x) Cx).
+    exact Cx.
+  Qed.
+  
+  (* Here's a more general principle: any self-contradictory predicate
+     equals the_impossible *)
+  Theorem self_contradictory_equals_impossible :
+    forall P : Alphacarrier -> Prop,
+    (exists x, P x -> ~ P x) ->
+    (forall x, ~ P x) ->
+    (forall x, P x <-> the_impossible x).
+  Proof.
+    intros P Hself Hnone.
+    apply the_impossible_unique.
+    exact Hnone.
+  Qed.
+  
+  (* Even more interesting: predicates that would make everything true
+     must be impossible *)
+  Theorem trivializing_equals_impossible :
+    forall P : Alphacarrier -> Prop,
+    (forall Q : Prop, (exists x, P x) -> Q) ->
+    (forall x, P x <-> the_impossible x).
+  Proof.
+    intros P Htriv.
+    apply contradiction_equals_impossible.
+    intros x Px.
+    (* If P x, then we can prove False *)
+    apply (Htriv False).
+    exists x. exact Px.
+  Qed.
+  
+  (* The circular predicate, if it has no witnesses, equals the_impossible *)
+  Theorem empty_circular_equals_impossible :
+    forall P : Alphacarrier -> Prop,
+    circular_predicate P ->
+    (forall x, ~ P x) ->
+    (forall x, P x <-> the_impossible x).
+  Proof.
+    intros P Hcirc Hempty.
+    apply the_impossible_unique.
+    exact Hempty.
+  Qed.
+  
+  (* The key theorem: In AlphaType, all paradoxes are the same paradox *)
+  Theorem all_paradoxes_are_one :
+    forall P Q : Alphacarrier -> Prop,
+    (forall x, ~ P x) ->
+    (forall x, ~ Q x) ->
+    (forall x, P x <-> Q x).
+  Proof.
+    intros P Q HP HQ x.
+    split.
+    - intro Px. destruct (HP x Px).
+    - intro Qx. destruct (HQ x Qx).
+  Qed.
+  
+  (* Therefore: there's only one way to be impossible in AlphaType *)
+  Theorem impossibility_is_unique :
+    forall P : Alphacarrier -> Prop,
+    (forall x, ~ P x) <->
+    (forall x, P x <-> the_impossible x).
+  Proof.
+    intro P.
+    split.
+    - apply the_impossible_unique.
+    - intros H x Px.
+      apply (the_impossible_has_no_witnesses x).
+      apply H. exact Px.
+  Qed.
+
+End ParadoxesEqualTheImpossible.
+
 
 (* ============================================================ *)
 (* Simple Diagonal for AlphaType *)
 (* ============================================================ *)
 
-Section SimpleDiagonal.
+Section AlphaSelfDiagonal.
   Context {Alpha : AlphaType}.
   
   (* Assume we can enumerate Alpha's predicates *)
@@ -177,7 +495,7 @@ Section SimpleDiagonal.
     exact (HnP HP).
   Qed.
   
-End SimpleDiagonal.
+End AlphaSelfDiagonal.
 
 
 (* ============================================================ *)
@@ -264,22 +582,6 @@ End DiagonalPrep.
 
 
 (* ============================================================ *)
-(* Basic Representation *)
-(* ============================================================ *)
-
-Section Representation.
-  Context {Omega : OmegaType} {Alpha : AlphaType}.
-  
-  (* A predicate P is representable if there's an Alpha predicate
-     that tracks P through some mapping *)
-  Definition representable (P : Omegacarrier -> Prop) : Prop :=
-    exists (A : Alphacarrier -> Prop) (f : Alphacarrier -> Omegacarrier),
-    forall a : Alphacarrier, A a <-> P (f a).
-  
-End Representation.
-
-
-(* ============================================================ *)
 (* The Unrepresentable Predicate *)
 (* ============================================================ *)
 
@@ -291,6 +593,13 @@ Section UnrepresentablePredicate.
   Variable enum_complete : forall A : Alphacarrier -> Prop, 
     exists n, alpha_enum n = Some A.
   Variable embed : Alphacarrier -> Omegacarrier.
+
+  (* A predicate P is representable if there's an Alpha predicate
+     that tracks P through some mapping *)
+  Definition representable (P : Omegacarrier -> Prop) : Prop :=
+    exists (A : Alphacarrier -> Prop) (f : Alphacarrier -> Omegacarrier),
+    forall a : Alphacarrier, A a <-> P (f a).
+  
   
   Theorem omega_diagonal_not_representable :
     ~ representable (omega_diagonal alpha_enum embed).
@@ -629,131 +938,6 @@ Section AlphaTernaryLogic.
 End AlphaTernaryLogic.
 
 
-(* Paradox Firewalls in Constructive AlphaType *)
-Section ConstructiveParadoxFirewalls.
-  Context {Alpha : AlphaType}.
-  
-  (* Russell's Paradox firewall - this should work constructively *)
-  Theorem constructive_no_russell_predicate :
-    ~ exists (R : Alphacarrier -> Prop), 
-      forall x, R x <-> ~ R x.
-  Proof.
-    intros [R HR].
-    (* We can still get a witness from non-emptiness *)
-    destruct alpha_not_empty as [x0 _].
-    specialize (HR x0).
-    (* R x0 <-> ~ R x0 leads to contradiction constructively *)
-    destruct HR as [H1 H2].
-    (* If we had R x0, then by H1 we get ~ R x0, contradiction *)
-    (* If we had ~ R x0, then by H2 we get R x0, contradiction *)
-    (* So we need to show False without assuming either *)
-    assert (R x0 -> False).
-    { intro Hr. apply (H1 Hr). exact Hr. }
-    (* Now H tells us ~ R x0, so by H2 we get R x0 *)
-    apply H. apply H2. exact H.
-  Qed.
-  
-  (* Curry's Paradox for False - also works constructively *)
-  Theorem constructive_no_curry_false :
-    ~ exists (C : Alphacarrier -> Prop),
-      forall x, C x <-> (C x -> False).
-  Proof.
-    intros [C HC].
-    destruct alpha_not_empty as [x0 _].
-    specialize (HC x0).
-    destruct HC as [H1 H2].
-    
-    (* Key insight: C x0 leads to contradiction *)
-    assert (HnC: ~ C x0).
-    { intros HC0.
-      apply (H1 HC0). exact HC0. }
-    
-    (* But then C x0 -> False, so by H2, C x0 *)
-    apply HnC. apply H2. exact HnC.
-  Qed.
-  
-  (* For general Curry: if such a predicate exists, Q becomes provable *)
-  Theorem constructive_curry_explosion :
-    forall (Q : Prop),
-      (exists (C : Alphacarrier -> Prop), forall x, C x <-> (C x -> Q)) -> 
-      Q.
-  Proof.
-    intros Q [C HC].
-    destruct alpha_not_empty as [x0 _].
-    specialize (HC x0).
-    destruct HC as [H1 H2].
-    
-    (* The key lemma still works constructively *)
-    assert (HQ: (C x0 -> Q) -> Q).
-    { intros Himp.
-      apply Himp. apply H2. exact Himp. }
-    
-    (* Now prove Q *)
-    apply HQ.
-    intros HC0.
-    apply HQ.
-    apply H1.
-    exact HC0.
-  Qed.
-  
-  (* No self-denying existence - straightforward *)
-  Theorem constructive_no_self_denying :
-    ~ exists (P : Alphacarrier -> Prop),
-      (forall x, P x <-> the_impossible x) /\ (exists x, P x).
-  Proof.
-    intros [P [Heq [x Px]]].
-    apply (the_impossible_has_no_witnesses x).
-    apply Heq. exact Px.
-  Qed.
-  
-  (* Now here's where it gets interesting - predicate grounding *)
-  (* Without excluded middle, we might not get a clean dichotomy *)
-  
-  (* First, let's define what makes a predicate "grounded" *)
-  Definition circular_predicate (P : Alphacarrier -> Prop) : Prop :=
-    forall x, P x <-> exists y, P y.
-  
-  (* What we CAN prove: if a circular predicate has a witness, 
-     it's universal *)
-  Theorem constructive_circular_witness_universal :
-    forall P : Alphacarrier -> Prop,
-      circular_predicate P ->
-      (exists x, P x) ->
-      forall y, P y.
-  Proof.
-    intros P Hcirc [x Px] y.
-    apply Hcirc.
-    exists x. exact Px.
-  Qed.
-  
-  (* And if it's not universal, it has no witnesses *)
-  Theorem constructive_circular_not_universal_empty :
-    forall P : Alphacarrier -> Prop,
-      circular_predicate P ->
-      (exists y, ~ P y) ->
-      forall x, ~ P x.
-  Proof.
-    intros P Hcirc [y HnPy] x Px.
-    apply HnPy.
-    apply Hcirc.
-    exists x. exact Px.
-  Qed.
-  
-  (* The key insight: circular predicates can't be "mixed" *)
-  Theorem constructive_circular_no_mixed :
-    forall P : Alphacarrier -> Prop,
-      circular_predicate P ->
-      ~ ((exists x, P x) /\ (exists y, ~ P y)).
-  Proof.
-    intros P Hcirc [[x Px] [y HnPy]].
-    apply HnPy.
-    apply (constructive_circular_witness_universal P Hcirc).
-    - exists x. exact Px.
-  Qed.
-  
-End ConstructiveParadoxFirewalls.
-
-
 Section GodelViaOmega.
  Context {Omega : OmegaType} {Alpha : AlphaType}.
  Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
@@ -860,6 +1044,763 @@ Section GodelViaOmega.
  
 End GodelViaOmega.
 
+
+Section HaltingProblemViaAlphaOmega.
+  Context {Alpha : AlphaType} {Omega : OmegaType}.
+  Variable embed : Alphacarrier -> Omegacarrier.
+  
+  (* Basic Turing machine setup *)
+  Variable TM : Type.  (* Type of Turing machines *)
+  
+  (* Inputs are encoded as Alpha elements *)
+  Variable encode_tm : TM -> Alphacarrier.
+  Variable decode_tm : Alphacarrier -> option TM.
+  
+  (* The computation relation: machine M on encoded input halts *)
+  Variable Halts : TM -> Alphacarrier -> Prop.
+  
+  (* Self-application: a machine run on its own encoding *)
+  Definition SelfHalts (M : TM) : Prop :=
+    Halts M (encode_tm M).
+  
+  (* Enumeration of all Turing machines *)
+  Variable tm_enum : nat -> option TM.
+  Variable enum_complete : forall M : TM, exists n, tm_enum n = Some M.
+  
+  (* The diagonal predicate: machines that DON'T halt on themselves *)
+  Definition anti_diagonal (n : nat) : Prop :=
+    match tm_enum n with
+    | None => True
+    | Some M => ~ SelfHalts M
+    end.
+  
+  (* Lift this to Omega - the space of "computational paradoxes" *)
+  Definition halting_diagonal_omega : Omegacarrier -> Prop :=
+    fun x => exists n M,
+      embed (encode_tm M) = x /\
+      tm_enum n = Some M /\
+      anti_diagonal n.
+  
+  (* Omega contains computational paradoxes *)
+  Theorem omega_has_halting_paradoxes :
+    exists x, halting_diagonal_omega x.
+  Proof.
+    apply omega_completeness.
+  Qed.
+  
+  (* Now define what it means for Alpha to "solve" the halting problem *)
+  Definition Alpha_Solves_Halting : Prop :=
+    exists (decider : TM -> Prop),
+      (forall M, decider M <-> SelfHalts M).
+  
+  (* Alternative: a decider as an Alpha predicate on encodings *)
+  Definition Alpha_Has_Halting_Decider : Prop :=
+    exists (A : Alphacarrier -> Prop),
+      forall M, A (encode_tm M) <-> SelfHalts M.
+  
+  (* The classic diagonal argument, viewed through Alpha/Omega *)
+  (* The diagonal machine specification *)
+  Definition DiagonalMachineExists : Prop :=
+    forall (decider : Alphacarrier -> Prop),
+    (forall M, decider (encode_tm M) <-> SelfHalts M) ->
+    exists D : TM, forall M,
+      Halts D (encode_tm M) <-> ~ decider (encode_tm M).
+  
+  (* Assume we can build diagonal machines *)
+  Axiom diagonal_construction : DiagonalMachineExists.
+  
+  Theorem alpha_cannot_solve_halting :
+    ~ Alpha_Has_Halting_Decider.
+  Proof.
+    intro H.
+    destruct H as [decider Hdec].
+    
+    (* Use the diagonal construction *)
+    destruct (diagonal_construction decider Hdec) as [D D_spec].
+    
+    (* What happens when D runs on itself? *)
+    specialize (D_spec D).
+    
+    (* D_spec: Halts D (encode_tm D) <-> ~ decider (encode_tm D) *)
+    (* Hdec: decider (encode_tm D) <-> SelfHalts D *)
+    (* SelfHalts D = Halts D (encode_tm D) *)
+    
+    unfold SelfHalts in *.
+    
+    (* Combine the biconditionals *)
+    assert (Halts D (encode_tm D) <-> ~ Halts D (encode_tm D)).
+    {
+      split.
+      - intro HD.
+        apply D_spec in HD.
+        intro HD'.
+        apply HD.
+        apply Hdec.
+        exact HD'.
+      - intro HnD.
+        apply D_spec.
+        intro Hdec_D.
+        apply HnD.
+        apply Hdec.
+        exact Hdec_D.
+    }
+    
+    (* Direct contradiction *)
+    destruct H as [H1 H2].
+    assert (~ Halts D (encode_tm D)).
+    { intro H. exact (H1 H H). }
+    apply H. apply H2. exact H.
+  Qed.
+  
+  (* The deeper insight: computational and logical incompleteness are one *)
+  
+  (* A statement about halting *)
+  Definition Halting_Statement : Prop :=
+    exists M, SelfHalts M.
+  
+  (* This statement is "true but unprovable" in Alpha *)
+  (* Just like Gödel sentences! *)
+  
+  Theorem halting_creates_incompleteness :
+    (* The halting problem creates statements that are: *)
+    (* 1. True (witnesses exist in Omega) *)
+    (* 2. Unprovable (Alpha cannot decide them) *)
+    (exists x, halting_diagonal_omega x) /\
+    ~ Alpha_Has_Halting_Decider.
+  Proof.
+    split.
+    - exact omega_has_halting_paradoxes.
+    - exact alpha_cannot_solve_halting.
+  Qed.
+  
+  (* The universal principle: diagonalization creates unrepresentability *)
+  (* Whether in logic (Gödel) or computation (Turing), the mechanism is the same *)
+  
+End HaltingProblemViaAlphaOmega.
+
+
+Section ConstructiveNegation.
+  Context {Alpha : AlphaType}.
+  
+  (* If P is impossible (equals the_impossible), what about ~P? *)
+  
+  Theorem impossible_implies_negation_holds :
+    forall P : Alphacarrier -> Prop,
+    (forall a, P a <-> the_impossible a) ->
+    forall a, ~ P a.
+  Proof.
+    intros P H a HPa.
+    apply H in HPa.
+    exact (the_impossible_has_no_witnesses a HPa).
+  Qed.
+  
+  (* But can ~P also be impossible? Let's check: *)
+  Theorem both_impossible_is_impossible :
+    forall P : Alphacarrier -> Prop,
+    (forall a, P a <-> the_impossible a) ->
+    (forall a, ~ P a <-> the_impossible a) ->
+    False.
+  Proof.
+    intros P HP HnP.
+    destruct alpha_not_empty as [a _].
+    
+    (* From HP: P a <-> the_impossible a *)
+    (* From HnP: ~P a <-> the_impossible a *)
+    
+    (* ~P a is true by the first theorem *)
+    assert (~ P a).
+    { intro HPa. apply HP in HPa. 
+      exact (the_impossible_has_no_witnesses a HPa). }
+    
+    (* But HnP says ~P a <-> the_impossible a *)
+    apply HnP in H.
+    exact (the_impossible_has_no_witnesses a H).
+  Qed.
+  
+  (* So if P is impossible, ~P CANNOT also be impossible *)
+  
+  (* But constructively, we have three options: *)
+  Inductive Negation_Status (P : Alphacarrier -> Prop) : Type :=
+    | P_Impossible : 
+        (forall a, P a <-> the_impossible a) -> 
+        Negation_Status P
+    | NegP_Impossible : 
+        (forall a, ~ P a <-> the_impossible a) -> 
+        Negation_Status P  
+    | Neither_Impossible :
+        (exists a, ~ (P a <-> the_impossible a)) ->
+        (exists a, ~ (~ P a <-> the_impossible a)) ->
+        Negation_Status P.
+  
+  (* The key constructive insight: *)
+  (* If P is impossible, then ~P is NOT impossible *)
+  (* But we might not be able to prove ~P has witnesses! *)
+  
+  (* This is the constructive gap: *)
+  (* P impossible → ~P holds *)
+  (* But ~P holds ≠ ~P has witnesses *)
+End ConstructiveNegation.
+
+
+Section ImpossibilityAlgebra.
+  Context {Alpha : AlphaType}.
+  
+  (* Helper definitions *)
+  Definition Is_Impossible (P : Alphacarrier -> Prop) : Prop :=
+    forall a, P a <-> the_impossible a.
+    
+  Definition Is_Possible (P : Alphacarrier -> Prop) : Prop :=
+    ~ Is_Impossible P.
+  
+  (* Conjunction with impossible *)
+  Theorem impossible_and_anything_is_impossible :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    Is_Impossible (fun a => P a /\ Q a).
+  Proof.
+    intros P Q HP.
+    intro a.
+    split.
+    - intros [HPa HQa].
+      apply HP in HPa.
+      exact HPa.
+    - intro Himp.
+      split.
+      + apply HP. exact Himp.
+      + (* We need Q a, but we have the_impossible a *)
+        exfalso.
+        exact (the_impossible_has_no_witnesses a Himp).
+  Qed.
+  
+  (* Disjunction with impossible *)
+  Theorem impossible_or_possible :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    Is_Possible Q ->
+    (* P ∨ Q has same possibility status as Q *)
+    (forall a, (P a \/ Q a) <-> Q a).
+  Proof.
+    intros P Q HP HQ a.
+    split.
+    - intros [HPa | HQa].
+      + apply HP in HPa.
+        exfalso.
+        exact (the_impossible_has_no_witnesses a HPa).
+      + exact HQa.
+    - intro HQa.
+      right. exact HQa.
+  Qed.
+  
+  (* Implication from impossible *)
+  Theorem impossible_implies_anything :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    forall a, P a -> Q a.
+  Proof.
+    intros P Q HP a HPa.
+    apply HP in HPa.
+    exfalso.
+    exact (the_impossible_has_no_witnesses a HPa).
+  Qed.
+  
+  (* Negation of impossible *)
+  Theorem not_impossible_is_necessary :
+    forall P : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    forall a, ~ P a.
+  Proof.
+    intros P HP a HPa.
+    apply HP in HPa.
+    exact (the_impossible_has_no_witnesses a HPa).
+  Qed.
+  
+  (* Double negation of impossible *)
+  Theorem not_not_impossible_is_possible :
+    forall P : Alphacarrier -> Prop,
+    Is_Impossible (fun a => ~ P a) ->
+    Is_Possible P.
+  Proof.
+    intros P HnP HP.
+    (* If P is impossible, then ~P holds everywhere *)
+    assert (forall a, ~ P a).
+    { apply not_impossible_is_necessary. exact HP. }
+    (* But HnP says ~P is impossible *)
+    (* Get a witness from alpha_not_empty *)
+    destruct alpha_not_empty as [a0 _].
+    specialize (HnP a0).
+    destruct HnP as [H1 H2].
+    (* H1: ~ P a0 -> the_impossible a0 *)
+    (* H2: the_impossible a0 -> ~ P a0 *)
+    (* We have ~ P a0 from H *)
+    specialize (H a0).
+    apply H1 in H.
+    (* Now we have the_impossible a0 *)
+    exact (the_impossible_has_no_witnesses a0 H).
+  Qed.
+  
+  (* The algebra forms a partial order *)
+  Definition Impossible_Order (P Q : Alphacarrier -> Prop) : Prop :=
+    Is_Impossible P -> Is_Impossible Q.
+  
+  (* Key theorem: impossibility propagates through logical connectives *)
+  Theorem impossibility_propagation_constructive :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    (Is_Impossible (fun a => P a /\ Q a)) /\
+    (forall a, P a -> Q a) /\
+    (forall a, ~ (P a \/ Q a) -> ~ Q a).
+  Proof.
+    intros P Q HP.
+    split; [|split].
+    - apply impossible_and_anything_is_impossible. exact HP.
+    - apply impossible_implies_anything. exact HP.
+    - intros a H HQa.
+      apply H. right. exact HQa.
+  Qed.
+  
+  (* Equivalence *)
+  Theorem impossible_iff_impossible :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    (forall a, P a <-> Q a) ->
+    Is_Impossible Q.
+  Proof.
+    intros P Q HP Hiff.
+    intro a.
+    rewrite <- Hiff.
+    apply HP.
+  Qed.
+  
+  (* Both directions of implication *)
+  Theorem impossible_implies_both_ways :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    Is_Impossible Q ->
+    (forall a, P a <-> Q a).
+  Proof.
+    intros P Q HP HQ a.
+    split; intro H.
+    - apply HQ. apply HP. exact H.
+    - apply HP. apply HQ. exact H.
+  Qed.
+  
+  (* Contrapositive *)
+  Theorem possible_contrapositive :
+    forall P Q : Alphacarrier -> Prop,
+    (forall a, P a -> Q a) ->
+    Is_Impossible Q ->
+    Is_Impossible P.
+  Proof.
+    intros P Q Himp HQ a.
+    split.
+    - intro HPa.
+      apply HQ.
+      apply Himp.
+      exact HPa.
+    - intro Himpa.
+      exfalso.
+      exact (the_impossible_has_no_witnesses a Himpa).
+  Qed.
+  
+  (* Multiple conjunctions *)
+  Theorem impossible_and_chain :
+    forall P Q R : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    Is_Impossible (fun a => P a /\ Q a /\ R a).
+  Proof.
+    intros P Q R HP.
+    intro a.
+    split.
+    - intros [HPa [HQa HRa]].
+      apply HP. exact HPa.
+    - intro Himpa.
+      split.
+      + apply HP. exact Himpa.
+      + split.
+        * exfalso. exact (the_impossible_has_no_witnesses a Himpa).
+        * exfalso. exact (the_impossible_has_no_witnesses a Himpa).
+  Qed.
+  
+  (* Impossible is preserved under weakening *)
+  Theorem and_impossible_at_witness :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible (fun a => P a /\ Q a) ->
+    forall a, Q a -> ~ P a.
+  Proof.
+    intros P Q HPQ a HQa HPa.
+    assert (the_impossible a).
+    { apply HPQ. split; assumption. }
+    exact (the_impossible_has_no_witnesses a H).
+  Qed.
+  
+  Theorem and_impossible_gives_info :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible (fun a => P a /\ Q a) ->
+    forall a, P a -> ~ Q a.
+  Proof.
+    intros P Q HPQ a HPa HQa.
+    assert (the_impossible a).
+    { apply HPQ. split; assumption. }
+    exact (the_impossible_has_no_witnesses a H).
+  Qed.
+  
+  (* Disjunction properties *)
+  Theorem or_impossible_iff_both_impossible :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible (fun a => P a \/ Q a) <->
+    Is_Impossible P /\ Is_Impossible Q.
+  Proof.
+    intros P Q.
+    split.
+    - intro H.
+      split; intro a; split.
+      + intro HPa. apply H. left. exact HPa.
+      + intro Hi. exfalso. exact (the_impossible_has_no_witnesses a Hi).
+      + intro HQa. apply H. right. exact HQa.
+      + intro Hi. exfalso. exact (the_impossible_has_no_witnesses a Hi).
+    - intros [HP HQ] a.
+      split.
+      + intros [HPa | HQa].
+        * apply HP. exact HPa.
+        * apply HQ. exact HQa.
+      + intro Hi.
+        left. apply HP. exact Hi.
+  Qed.
+  
+  (* XOR with impossible *)
+  Theorem xor_with_impossible :
+    forall P Q : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    (forall a, (P a /\ ~ Q a) \/ (~ P a /\ Q a)) <->
+    (forall a, ~ P a /\ Q a).
+  Proof.
+    intros P Q HP.
+    split.
+    - intros H a.
+      specialize (H a).
+      destruct H as [[HPa HnQa] | [HnPa HQa]].
+      + exfalso. apply HP in HPa. 
+        exact (the_impossible_has_no_witnesses a HPa).
+      + exact (conj HnPa HQa).
+    - intros H a.
+      right.
+      exact (H a).
+  Qed.
+
+   Theorem impossible_preimage :
+    forall (f : Alphacarrier -> Alphacarrier) (P : Alphacarrier -> Prop),
+    Is_Impossible P ->
+    forall a, P (f a) -> the_impossible (f a).
+  Proof.
+    intros f P HP a H.
+    apply HP.
+    exact H.
+  Qed.
+  
+  (* What if we show that the preimage of impossible is empty? *)
+  Theorem impossible_has_no_preimage :
+    forall (f : Alphacarrier -> Alphacarrier) (P : Alphacarrier -> Prop),
+    Is_Impossible P ->
+    forall a, ~ P (f a).
+  Proof.
+    intros f P HP a H.
+    (* H : P (f a) *)
+    (* By HP, P (f a) <-> the_impossible (f a) *)
+    apply HP in H.
+    (* H : the_impossible (f a) *)
+    exact (the_impossible_has_no_witnesses (f a) H).
+  Qed.
+  
+  Theorem composition_with_impossible_is_empty :
+    forall (f : Alphacarrier -> Alphacarrier) (P : Alphacarrier -> Prop),
+    Is_Impossible P ->
+    forall a, (fun x => P (f x)) a <-> False.
+  Proof.
+    intros f P HP a.
+    split.
+    - apply impossible_has_no_preimage. exact HP.
+    - intro F. contradiction.
+  Qed. 
+
+  Theorem impossible_composition_empty :
+    forall (f : Alphacarrier -> Alphacarrier) (P : Alphacarrier -> Prop),
+    Is_Impossible P ->
+    forall a, ~ P (f a).
+  Proof.
+    intros f P HP a HPfa.
+    apply HP in HPfa.
+    exact (the_impossible_has_no_witnesses (f a) HPfa).
+  Qed.
+
+   Definition Impossible_Given (P Q : Alphacarrier -> Prop) : Prop :=
+    Is_Impossible (fun a => P a /\ Q a) /\
+    Is_Possible Q.
+  
+  (* If P is impossible given Q, and Q holds somewhere, then P fails there *)
+  Theorem impossible_given_witness :
+    forall P Q : Alphacarrier -> Prop,
+    Impossible_Given P Q ->
+    forall a, Q a -> ~ P a.
+  Proof.
+    intros P Q [Himp Hpos] a HQa HPa.
+    assert (the_impossible a).
+    { apply Himp. split; assumption. }
+    exact (the_impossible_has_no_witnesses a H).
+  Qed.
+
+  Definition Almost_Impossible (P : Alphacarrier -> Prop) : Prop :=
+    Is_Possible P /\
+    forall (witness : Alphacarrier -> Prop),
+    (exists a, witness a /\ P a) ->
+    exists (blocker : Alphacarrier -> Prop),
+    Is_Impossible (fun a => witness a /\ blocker a).
+  
+  Theorem self_referential_impossible :
+    forall P : Alphacarrier -> Prop,
+    (forall a, P a <-> P a /\ ~ P a) ->
+    Is_Impossible P.
+  Proof.
+    intros P Hself a.
+    split.
+    - intro HPa.
+      (* From Hself: P a <-> P a /\ ~ P a *)
+      apply Hself in HPa.
+      destruct HPa as [HPa' HnPa].
+      (* We have P a and ~ P a - this is the_impossible! *)
+      exfalso. exact (HnPa HPa').
+    - intro Hi.
+      (* From the_impossible a, we need P a *)
+      (* But P can never hold because it implies its own negation *)
+      exfalso.
+      exact (the_impossible_has_no_witnesses a Hi).
+  Qed.
+
+   (* Now for something really fun - the "impossibility rank" *)
+  Inductive Impossibility_Rank : (Alphacarrier -> Prop) -> nat -> Prop :=
+    | Rank_Direct : forall P,
+        (forall a, P a <-> the_impossible a) ->
+        Impossibility_Rank P 0
+    | Rank_Composite : forall P Q n,
+        Impossibility_Rank Q n ->
+        (forall a, P a -> Q a) ->
+        Impossibility_Rank P (S n).
+  
+  (* This measures "how many steps" away from the_impossible we are *)
+  
+  Theorem impossibility_rank_implies_impossible :
+    forall P n,
+    Impossibility_Rank P n ->
+    Is_Impossible P.
+  Proof.
+    intros P n H.
+    induction H.
+    - (* Base case: P is directly the_impossible *)
+      exact H.
+    - (* Inductive: P implies something impossible *)
+      intro a.
+      split.
+      + intro HPa.
+        apply IHImpossibility_Rank.
+        apply H0.
+        exact HPa.
+      + intro Hi.
+        exfalso.
+        exact (the_impossible_has_no_witnesses a Hi).
+  Qed.
+  
+  (* The cool part: Russell's paradox has rank 1! *)
+  Example russell_rank_one :
+    forall (R : Alphacarrier -> Prop),
+    (forall x, R x <-> ~ R x) ->
+    Impossibility_Rank R 1.
+  Proof.
+    intros R Hrussell.
+    (* First show R equals the_impossible *)
+    assert (H: forall a, R a <-> the_impossible a).
+    { 
+      intro a.
+      split.
+      - intro HRa.
+        (* R a implies ~ R a by Hrussell *)
+        assert (HnRa: ~ R a).
+        { apply Hrussell. exact HRa. }
+        (* So we have R a and ~ R a *)
+        exfalso.
+        exact (HnRa HRa).
+      - intro Hi.
+        exfalso.
+        exact (the_impossible_has_no_witnesses a Hi).
+    }
+    (* Now show it has rank 1 *)
+    apply (Rank_Composite R the_impossible 0).
+    - apply Rank_Direct.
+      intro a. reflexivity.
+    - intro a. intro HRa.
+      apply H. exact HRa.
+  Qed.
+
+End ImpossibilityAlgebra.
+
+
+Section UndecidabilityFramework.
+  Context {Alpha : AlphaType} {Omega : OmegaType}.
+  Variable embed : Alphacarrier -> Omegacarrier.
+  
+  (* Pattern 1: Unrepresentable Omega predicates *)
+  Definition Undecidable_Via_Unrepresentability 
+    (P_alpha : Alphacarrier -> Prop) 
+    (P_omega : Omegacarrier -> Prop) : Prop :=
+    (* P_alpha tries to detect P_omega *)
+    (forall a, P_alpha a <-> P_omega (embed a)) /\
+    (* P_omega exists in Omega *)
+    (exists x, P_omega x) /\
+    (* But P_omega is not representable *)
+    (~ representable P_omega).
+  
+  (* Remove the global Variable embed_surjective_on_range *)
+  
+  Theorem unrepresentable_implies_undecidable :
+    forall P_alpha P_omega,
+    (forall x, P_omega x -> exists a, embed a = x) ->  (* Add as parameter here *)
+    Undecidable_Via_Unrepresentability P_alpha P_omega ->
+    (~ exists a, P_alpha a) /\ (~ forall a, ~ P_alpha a).
+  Proof.
+    intros PA PO Hsurj [Hdetect [Hexists_omega Hunrep]].
+    (* Rest of proof stays the same *)
+    split.
+    
+    - (* Cannot prove it has witnesses *)
+      intro Hexists_alpha.
+      apply Hunrep.
+      unfold representable.
+      exists PA, embed.
+      exact Hdetect.
+      
+    - (* Cannot prove it has no witnesses *)
+      intro Hnone_alpha.
+      destruct Hexists_omega as [x Hx].
+      destruct (Hsurj x Hx) as [a Ha].
+      rewrite <- Ha in Hx.
+      apply Hdetect in Hx.
+      exact (Hnone_alpha a Hx).
+  Qed.
+  
+  (* Pattern 2: Self-referential classification - fixed type *)
+  (* We need a concrete type for the truth values *)
+  Inductive TruthValue : Type :=
+    | TV_True : TruthValue
+    | TV_False : TruthValue  
+    | TV_Undecidable : TruthValue.
+  
+  Definition Undecidable_Via_Self_Reference
+    (P : Alphacarrier -> Prop)
+    (classify_P : TruthValue) : Prop :=
+    (* P asks about its own classification *)
+    match classify_P with
+    | TV_True => forall a, P a <-> False
+    | TV_False => forall a, P a <-> True  
+    | TV_Undecidable => True  (* Consistent with undecidability *)
+    end.
+  
+  Theorem self_reference_implies_undecidable :
+    forall P classify_P,
+    (* If classification is correct *)
+    (match classify_P with
+     | TV_True => exists a, P a
+     | TV_False => forall a, ~ P a
+     | TV_Undecidable => (~ exists a, P a) /\ (~ forall a, ~ P a)
+     end) ->
+    Undecidable_Via_Self_Reference P classify_P ->
+    classify_P = TV_Undecidable.
+  Proof.
+    intros P classify_P Hcorrect Hself.
+    destruct classify_P.
+    - (* If classified as True *)
+      destruct Hcorrect as [a Ha].
+      unfold Undecidable_Via_Self_Reference in Hself.
+      apply Hself in Ha.
+      contradiction.
+    - (* If classified as False *)
+      unfold Undecidable_Via_Self_Reference in Hself.
+      destruct alpha_not_empty as [a _].
+      specialize (Hcorrect a).
+      assert (P a) by (apply Hself; exact I).
+      contradiction.
+    - (* If classified as Undecidable - that's what we want *)
+      reflexivity.
+  Qed.
+  
+
+  Definition Both_Detect_Unrepresentable (P Q : Alphacarrier -> Prop) : Prop :=
+    exists (U_omega : Omegacarrier -> Prop),
+      (~ representable U_omega) /\
+      (exists x, U_omega x) /\
+      (forall a, P a <-> U_omega (embed a)) /\
+      (forall a, Q a <-> U_omega (embed a)) /\
+      (forall x, U_omega x -> exists a, embed a = x).
+  
+  Theorem both_detect_implies_both_undecidable :
+    forall P Q,
+    Both_Detect_Unrepresentable P Q ->
+    ((~ exists a, P a) /\ (~ forall a, ~ P a)) /\
+    ((~ exists a, Q a) /\ (~ forall a, ~ Q a)).
+  Proof.
+    intros P Q [U_omega [Hunrep [Hex [HP [HQ Hsurj]]]]].
+    
+    (* Key insight: P and Q are extensionally equal *)
+    assert (forall a, P a <-> Q a).
+    { intro a. rewrite HP, HQ. reflexivity. }
+    
+    (* So proving undecidability for P proves it for Q *)
+    split.
+    - (* P is undecidable *)
+      apply (unrepresentable_implies_undecidable P U_omega Hsurj).
+      unfold Undecidable_Via_Unrepresentability.
+      split; [exact HP | split; [exact Hex | exact Hunrep]].
+    - (* Q is undecidable *)  
+      apply (unrepresentable_implies_undecidable Q U_omega Hsurj).
+      unfold Undecidable_Via_Unrepresentability.
+      split; [exact HQ | split; [exact Hex | exact Hunrep]].
+  Qed.
+
+  Inductive UndecidabilityReason (P : Alphacarrier -> Prop) : Type :=
+    | Unrep_Omega : forall (P_omega : Omegacarrier -> Prop),
+        (forall x, P_omega x -> exists a, embed a = x) ->
+        Undecidable_Via_Unrepresentability P P_omega -> 
+        UndecidabilityReason P
+    | Self_Ref : forall classify_P,
+        (match classify_P with
+         | TV_True => exists a, P a
+         | TV_False => forall a, ~ P a
+         | TV_Undecidable => (~ exists a, P a) /\ (~ forall a, ~ P a)
+         end) ->
+        Undecidable_Via_Self_Reference P classify_P ->
+        UndecidabilityReason P
+    | Both_Detect : forall Q,
+        Both_Detect_Unrepresentable P Q ->
+        UndecidabilityReason P.
+  
+  (* Master theorem *)
+  Theorem undecidability_master :
+    forall P,
+    UndecidabilityReason P ->
+    (~ exists a, P a) /\ (~ forall a, ~ P a).
+  Proof.
+    intros P reason.
+    destruct reason.
+    - (* Via unrepresentability *)
+      apply (unrepresentable_implies_undecidable P P_omega e u).
+    - (* Via self-reference *)
+      assert (classify_P = TV_Undecidable).
+      { apply (self_reference_implies_undecidable P classify_P y u). }
+      subst classify_P.
+      exact y.
+    - (* Both detect same unrepresentable *)
+      pose proof (both_detect_implies_both_undecidable P Q b) as [HP HQ].
+      exact HP.
+  Qed.
+  
+End UndecidabilityFramework.
 
 (* ============================================================ *)
 (* Omega Contains Alpha                                         *)
@@ -1200,139 +2141,6 @@ Section ConstructiveArithmetic.
   
 End ConstructiveArithmetic.
 
-
-Section HaltingProblemViaAlphaOmega.
-  Context {Alpha : AlphaType} {Omega : OmegaType}.
-  Variable embed : Alphacarrier -> Omegacarrier.
-  
-  (* Basic Turing machine setup *)
-  Variable TM : Type.  (* Type of Turing machines *)
-  
-  (* Inputs are encoded as Alpha elements *)
-  Variable encode_tm : TM -> Alphacarrier.
-  Variable decode_tm : Alphacarrier -> option TM.
-  
-  (* The computation relation: machine M on encoded input halts *)
-  Variable Halts : TM -> Alphacarrier -> Prop.
-  
-  (* Self-application: a machine run on its own encoding *)
-  Definition SelfHalts (M : TM) : Prop :=
-    Halts M (encode_tm M).
-  
-  (* Enumeration of all Turing machines *)
-  Variable tm_enum : nat -> option TM.
-  Variable enum_complete : forall M : TM, exists n, tm_enum n = Some M.
-  
-  (* The diagonal predicate: machines that DON'T halt on themselves *)
-  Definition anti_diagonal (n : nat) : Prop :=
-    match tm_enum n with
-    | None => True
-    | Some M => ~ SelfHalts M
-    end.
-  
-  (* Lift this to Omega - the space of "computational paradoxes" *)
-  Definition halting_diagonal_omega : Omegacarrier -> Prop :=
-    fun x => exists n M,
-      embed (encode_tm M) = x /\
-      tm_enum n = Some M /\
-      anti_diagonal n.
-  
-  (* Omega contains computational paradoxes *)
-  Theorem omega_has_halting_paradoxes :
-    exists x, halting_diagonal_omega x.
-  Proof.
-    apply omega_completeness.
-  Qed.
-  
-  (* Now define what it means for Alpha to "solve" the halting problem *)
-  Definition Alpha_Solves_Halting : Prop :=
-    exists (decider : TM -> Prop),
-      (forall M, decider M <-> SelfHalts M).
-  
-  (* Alternative: a decider as an Alpha predicate on encodings *)
-  Definition Alpha_Has_Halting_Decider : Prop :=
-    exists (A : Alphacarrier -> Prop),
-      forall M, A (encode_tm M) <-> SelfHalts M.
-  
-  (* The classic diagonal argument, viewed through Alpha/Omega *)
-  (* The diagonal machine specification *)
-  Definition DiagonalMachineExists : Prop :=
-    forall (decider : Alphacarrier -> Prop),
-    (forall M, decider (encode_tm M) <-> SelfHalts M) ->
-    exists D : TM, forall M,
-      Halts D (encode_tm M) <-> ~ decider (encode_tm M).
-  
-  (* Assume we can build diagonal machines *)
-  Axiom diagonal_construction : DiagonalMachineExists.
-  
-  Theorem alpha_cannot_solve_halting :
-    ~ Alpha_Has_Halting_Decider.
-  Proof.
-    intro H.
-    destruct H as [decider Hdec].
-    
-    (* Use the diagonal construction *)
-    destruct (diagonal_construction decider Hdec) as [D D_spec].
-    
-    (* What happens when D runs on itself? *)
-    specialize (D_spec D).
-    
-    (* D_spec: Halts D (encode_tm D) <-> ~ decider (encode_tm D) *)
-    (* Hdec: decider (encode_tm D) <-> SelfHalts D *)
-    (* SelfHalts D = Halts D (encode_tm D) *)
-    
-    unfold SelfHalts in *.
-    
-    (* Combine the biconditionals *)
-    assert (Halts D (encode_tm D) <-> ~ Halts D (encode_tm D)).
-    {
-      split.
-      - intro HD.
-        apply D_spec in HD.
-        intro HD'.
-        apply HD.
-        apply Hdec.
-        exact HD'.
-      - intro HnD.
-        apply D_spec.
-        intro Hdec_D.
-        apply HnD.
-        apply Hdec.
-        exact Hdec_D.
-    }
-    
-    (* Direct contradiction *)
-    destruct H as [H1 H2].
-    assert (~ Halts D (encode_tm D)).
-    { intro H. exact (H1 H H). }
-    apply H. apply H2. exact H.
-  Qed.
-  
-  (* The deeper insight: computational and logical incompleteness are one *)
-  
-  (* A statement about halting *)
-  Definition Halting_Statement : Prop :=
-    exists M, SelfHalts M.
-  
-  (* This statement is "true but unprovable" in Alpha *)
-  (* Just like Gödel sentences! *)
-  
-  Theorem halting_creates_incompleteness :
-    (* The halting problem creates statements that are: *)
-    (* 1. True (witnesses exist in Omega) *)
-    (* 2. Unprovable (Alpha cannot decide them) *)
-    (exists x, halting_diagonal_omega x) /\
-    ~ Alpha_Has_Halting_Decider.
-  Proof.
-    split.
-    - exact omega_has_halting_paradoxes.
-    - exact alpha_cannot_solve_halting.
-  Qed.
-  
-  (* The universal principle: diagonalization creates unrepresentability *)
-  (* Whether in logic (Gödel) or computation (Turing), the mechanism is the same *)
-  
-End HaltingProblemViaAlphaOmega.
 
 
 
@@ -2703,3 +3511,86 @@ Section HoTT_in_AlphaType.
     True.
   
 End HoTT_in_AlphaType.
+
+
+(* Section CategoryTheory.
+  Context {Alpha : AlphaType}.
+  
+  (* Standard definition: A category has objects and morphisms *)
+  (* We'll use Alphacarrier elements to represent both *)
+  
+  (* A morphism is just an element with source and target data *)
+  Record Morphism := {
+    mor_carrier : Alphacarrier;
+    source : Alphacarrier;
+    target : Alphacarrier
+  }.
+  
+  (* A category is a predicate that identifies which elements are objects/morphisms *)
+  Record Category := {
+    is_object : Alphacarrier -> Prop;
+    is_morphism : Morphism -> Prop;
+    
+    (* For each object, there's an identity morphism *)
+    identity : forall x, is_object x -> Morphism;
+    id_is_morphism : forall x (H : is_object x), is_morphism (identity x H);
+    id_source : forall x (H : is_object x), source (identity x H) = x;
+    id_target : forall x (H : is_object x), target (identity x H) = x;
+    
+    (* Composition of morphisms *)
+    compose : forall (f g : Morphism), 
+      is_morphism f -> is_morphism g -> 
+      target f = source g ->
+      Morphism;
+    
+    comp_is_morphism : forall f g Hf Hg Heq,
+      is_morphism (compose f g Hf Hg Heq);
+    comp_source : forall f g Hf Hg Heq,
+      source (compose f g Hf Hg Heq) = source f;
+    comp_target : forall f g Hf Hg Heq,
+      target (compose f g Hf Hg Heq) = target g;
+    
+    (* Axioms *)
+    assoc : forall f g h Hf Hg Hh Hfg Hgh Heq1 Heq2 Heq3,
+      compose (compose f g Hf Hg Heq1) h 
+        (comp_is_morphism f g Hf Hg Heq1) Hh Heq2 =
+      compose f (compose g h Hg Hh Heq3) 
+        Hf (comp_is_morphism g h Hg Hh Heq3) Heq2;
+    
+    (* Identity laws *)
+    id_left : forall f Hf x Hx Heq,
+      target (identity x Hx) = source f ->
+      compose (identity x Hx) f (id_is_morphism x Hx) Hf Heq = f;
+      
+    id_right : forall f Hf x Hx Heq,
+      target f = source (identity x Hx) ->
+      compose f (identity x Hx) Hf (id_is_morphism x Hx) Heq = f
+  }.
+  
+  (* Now let's build toward Yoneda *)
+  
+  (* A functor between categories *)
+  Record Functor (C D : Category) := {
+    obj_map : forall x, is_object C x -> Alphacarrier;
+    obj_map_ok : forall x H, is_object D (obj_map x H);
+    
+    mor_map : forall f, is_morphism C f -> Morphism;
+    mor_map_ok : forall f H, is_morphism D (mor_map f H);
+    
+    (* Preserves source/target *)
+    preserves_source : forall f Hf,
+      source (mor_map f Hf) = obj_map (source f) (admitted);
+    preserves_target : forall f Hf,
+      target (mor_map f Hf) = obj_map (target f) (admitted);
+      
+    (* Preserves identity and composition *)
+    preserves_id : forall x Hx,
+      mor_map (identity C x Hx) (id_is_morphism C x Hx) = 
+      identity D (obj_map x Hx) (obj_map_ok x Hx);
+      
+    preserves_comp : forall f g Hf Hg Heq,
+      mor_map (compose C f g Hf Hg Heq) (comp_is_morphism C f g Hf Hg Heq) =
+      compose D (mor_map f Hf) (mor_map g Hg) 
+        (mor_map_ok f Hf) (mor_map_ok g Hg) (admitted)
+  }.
+End CategoryTheory. *)
