@@ -1,26 +1,5 @@
 Require Import Setoid.
 
-Class AlphaType := {
-  Alphacarrier : Type;
-  
-  (* The unique impossible predicate, bundled with its properties *)
-  alpha_impossibility : { P : Alphacarrier -> Prop | 
-    (forall x : Alphacarrier, ~ P x) /\
-    (forall Q : Alphacarrier -> Prop, 
-      (forall x : Alphacarrier, ~ Q x) -> 
-      (forall x : Alphacarrier, Q x <-> P x))
-  };
-  
-  (* Non-emptiness - need at least one element *)
-  alpha_not_empty : exists x : Alphacarrier, True
-}.
-
-
-Class ClassicalAlphaType := {
-  base_alpha :> AlphaType;  (* Inherit from AlphaType *)
-  alpha_constant_decision : forall P : Prop, P \/ ~ P
-}.
-
 Class ClassicalAlphaType := {
  Alphacarrier : Type;
  exists_in_Alpha : Alphacarrier -> Prop;
