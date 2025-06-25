@@ -7359,6 +7359,115 @@ Proof.
 Qed.
 
 
+(* Experimental section about space time - but we could hopefully make this more emergent than adding axioms *)
+Section ComputationalSpaceEmergence.
+  Context (Alpha : AlphaType) (HG : GenerativeType Alpha).
+  
+  (* Memory: space is where predicates are stored *)
+  Parameter Memory : Type.
+  Parameter stored_in : (Alphacarrier -> Prop) -> Memory -> Prop.
+  
+  (* Computation requires accessing past predicates *)
+  Parameter accesses : (Alphacarrier -> Prop) -> (Alphacarrier -> Prop) -> Prop.
+  
+  (* Key axiom: To access a past predicate, it must be stored somewhere *)
+  Axiom computation_requires_memory :
+    forall P_now P_past : Alphacarrier -> Prop,
+    forall t_now t_past : nat,
+    t_past < t_now ->
+    contains t_now P_now ->
+    contains t_past P_past ->
+    accesses P_now P_past ->
+    exists m : Memory, stored_in P_past m.
+  
+  (* Contradictory predicates need different memory locations *)
+  Axiom memory_exclusion :
+    forall P Q : Alphacarrier -> Prop,
+    (forall a, P a -> ~ Q a) ->
+    forall m : Memory,
+    stored_in P m -> ~ stored_in Q m.
+  
+  (* Every stored predicate has a location *)
+  Axiom storage_exists :
+    forall P : Alphacarrier -> Prop,
+    (exists t, contains t P) ->
+    exists m : Memory, stored_in P m.
+  
+  (* Main theorem: Space (as memory) emerges from computation *)
+  Theorem space_as_memory_emerges :
+    forall P_compute : Alphacarrier -> Prop,
+    forall P1 P2 : Alphacarrier -> Prop,
+    forall t t1 t2 : nat,
+    (* Setup: computation at time t accesses past predicates *)
+    t1 < t /\ t2 < t ->
+    contains t P_compute ->
+    contains t1 P1 ->
+    contains t2 P2 ->
+    (* If computation accesses contradictory past predicates *)
+    accesses P_compute P1 ->
+    accesses P_compute P2 ->
+    (forall a, P1 a -> ~ P2 a) ->
+    (* Then space must exist as distinct memory locations *)
+    exists m1 m2 : Memory,
+      m1 <> m2 /\ stored_in P1 m1 /\ stored_in P2 m2.
+  Proof.
+    intros P_compute P1 P2 t t1 t2 [Ht1 Ht2] Ht HP1 HP2 Hacc1 Hacc2 Hcontra.
+    
+    (* P1 must be stored by computation requirements *)
+    assert (Hm1: exists m1, stored_in P1 m1).
+    { apply (computation_requires_memory P_compute P1 t t1); assumption. }
+    destruct Hm1 as [m1 Hm1].
+    
+    (* P2 must also be stored *)
+    assert (Hm2: exists m2, stored_in P2 m2).
+    { apply (computation_requires_memory P_compute P2 t t2); assumption. }
+    destruct Hm2 as [m2 Hm2].
+    
+    (* They must be in different locations *)
+    exists m1, m2.
+    split; [|split; assumption].
+    
+    (* Prove m1 ≠ m2 by contradiction *)
+    intro Heq.
+    subst m2.
+    (* If they're in the same location, we get a contradiction *)
+    pose proof (memory_exclusion P1 P2 Hcontra m1 Hm1) as Hnot_P2.
+    contradiction.
+  Qed.
+  
+  (* Simpler theorem: Contradictory predicates force spatial distinction *)
+  Theorem contradiction_creates_space :
+    forall P : Alphacarrier -> Prop,
+    (exists a, P a /\ ~ P a) ->
+    forall t1 t2 : nat,
+    contains t1 P ->
+    contains t2 (fun a => ~ P a) ->
+    exists m1 m2 : Memory, m1 <> m2.
+  Proof.
+    intros P Hcontra t1 t2 Ht1 Ht2.
+    
+    (* P is stored somewhere *)
+    assert (Hm1: exists m1, stored_in P m1).
+    { apply storage_exists. exists t1. exact Ht1. }
+    destruct Hm1 as [m1 Hm1].
+    
+    (* ¬P is also stored somewhere *)
+    assert (Hm2: exists m2, stored_in (fun a => ~ P a) m2).
+    { apply storage_exists. exists t2. exact Ht2. }
+    destruct Hm2 as [m2 Hm2].
+    
+    exists m1, m2.
+    intro Heq.
+    subst m2.
+    (* P and ¬P can't be in same location *)
+    pose proof (memory_exclusion P (fun a => ~ P a)) as Hexcl.
+    assert (Hc: forall a, P a -> ~ (~ P a)) by tauto.
+    pose proof (Hexcl Hc m1 Hm1) as Hnot.
+    contradiction.
+  Qed.
+
+End ComputationalSpaceEmergence.
+
 
 
 (* Experimental theorems section *)
