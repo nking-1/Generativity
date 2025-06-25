@@ -3658,6 +3658,166 @@ Definition theory_morphism_pattern (Theory : Alphacarrier -> Prop) :
 End MetaProof.
 
 
+
+(* Section PredicateGeometry.
+  Context {Alpha : AlphaType}.
+  
+  (* Distance from the_impossible *)
+  Definition impossible_distance (P : Alphacarrier -> Prop) : nat :=
+    match minimal_impossibility_rank P with
+    | Some n => n
+    | None => 0  (* P is possible, infinite distance *)
+    end.
+  
+  (* Predicate neighborhoods *)
+  Definition predicate_neighborhood (P : Alphacarrier -> Prop) (radius : nat) : 
+    (Alphacarrier -> Prop) -> Prop :=
+    fun Q => forall (witnesses : list Alphacarrier),
+      length witnesses <= radius ->
+      agrees_on_list P Q witnesses.
+  
+  (* This gives us a basis for a topology! *)
+  
+  (* Geodesics: shortest paths avoiding the_impossible *)
+  Definition avoids_impossible (path : predicate_path) : Prop :=
+    forall n, Is_Possible (path n).
+  
+  (* The space has holes where paradoxes live *)
+  Definition predicate_manifold_with_singularities := {
+    carrier : (Alphacarrier -> Prop) -> Prop;
+    singularities : (Alphacarrier -> Prop) -> Prop;
+    axiom : forall P, singularities P -> Is_Impossible P
+  }.
+End PredicateGeometry. *)
+
+(* 
+Section PredicateSpacetime.
+  Context {Alpha : AlphaType} {HG : GenerativeType Alpha}.
+  
+  (* The metric: how "far apart" two predicates are *)
+  Parameter predicate_distance : (Alphacarrier -> Prop) -> (Alphacarrier -> Prop) -> nat.
+  
+  (* Key axiom: contradictory predicates have infinite distance *)
+  Axiom contradiction_distance :
+    forall P Q : Alphacarrier -> Prop,
+    (forall a, P a -> ~ Q a) ->
+    predicate_distance P Q = 0 -> False.  (* They can't be at same location *)
+  
+  (* The_impossible creates infinite curvature *)
+  Axiom impossible_curvature :
+    forall P : Alphacarrier -> Prop,
+    Is_Impossible P ->
+    forall Q : Alphacarrier -> Prop,
+    Is_Possible Q ->
+    (* Distance grows exponentially as we approach the_impossible *)
+    exists k : nat, predicate_distance P Q > k * k.
+  
+  (* Spacetime emerges as the manifold keeping predicates separated *)
+  Definition spacetime_point := { 
+    predicates : list (Alphacarrier -> Prop) |
+    (* All predicates at this point must be mutually consistent *)
+    forall P Q, In P predicates -> In Q predicates ->
+      ~ (forall a, P a -> ~ Q a)
+  }.
+  
+  (* The metric tensor emerges from logical requirements *)
+  Definition metric_at_point (pt : spacetime_point) : 
+    (Alphacarrier -> Prop) -> (Alphacarrier -> Prop) -> nat :=
+    fun P Q =>
+      if (exists a, P a /\ ~ Q a) 
+      then S (predicate_distance P Q)  (* Extra distance needed *)
+      else predicate_distance P Q.
+  
+  (* Curvature around the_impossible *)
+  Theorem impossible_creates_curvature :
+    forall (center : Alphacarrier -> Prop),
+    Is_Impossible center ->
+    (* The metric is "curved" - triangle inequality fails *)
+    exists P Q R : Alphacarrier -> Prop,
+    predicate_distance P R > 
+    predicate_distance P Q + predicate_distance Q R.
+  Proof.
+    intros center Hcenter.
+    (* The idea: paths that go near the_impossible get stretched *)
+    (* Would need to construct specific predicates *)
+    Admitted.
+  Qed.
+  
+  (* Geodesics avoid impossibility *)
+  Definition geodesic (path : nat -> (Alphacarrier -> Prop)) 
+                     (start finish : Alphacarrier -> Prop) : Prop :=
+    path 0 = start /\
+    (exists n, path n = finish) /\
+    (* Path minimizes total distance while avoiding impossibility *)
+    forall other_path,
+    (other_path 0 = start) ->
+    (exists m, other_path m = finish) ->
+    (* Our path has less total "cost" *)
+    sum_distances path <= sum_distances other_path.
+  
+  (* The key theorem: spacetime structure emerges from logical necessity *)
+  Theorem spacetime_from_logic :
+    forall P Q : Alphacarrier -> Prop,
+    (* If predicates are contradictory *)
+    (exists a, P a /\ ~ Q a) ->
+    (* They must be separated in spacetime *)
+    forall pt : spacetime_point,
+    ~ (In P (proj1_sig pt) /\ In Q (proj1_sig pt)).
+  Proof.
+    intros P Q [a [HPa HnQa]] pt [HinP HinQ].
+    (* This contradicts the consistency requirement of spacetime_point *)
+    destruct pt as [preds Hconsistent].
+    simpl in *.
+    specialize (Hconsistent P Q HinP HinQ).
+    apply Hconsistent.
+    intros a' HPa'.
+    (* We need to show ~ Q a', but we only know ~ Q a *)
+    (* This would require additional axioms about predicate behavior *)
+    Admitted.
+  Qed.
+  
+  (* Black holes as regions approaching the_impossible *)
+  Definition black_hole_region (center : spacetime_point) : Prop :=
+    exists P : Alphacarrier -> Prop,
+    In P (proj1_sig center) /\
+    (* P is "almost impossible" - approaches the_impossible *)
+    forall epsilon : nat,
+    exists Q : Alphacarrier -> Prop,
+    predicate_distance P Q < epsilon /\
+    Is_Impossible Q.
+  
+  (* Event horizons as boundaries of possibility *)
+  Definition event_horizon (boundary : spacetime_point -> Prop) : Prop :=
+    forall pt,
+    boundary pt <->
+    (* On one side: possible predicates *)
+    (forall P, In P (proj1_sig pt) -> Is_Possible P) /\
+    (* Arbitrarily close to impossible predicates *)
+    (forall epsilon, exists pt' Q,
+      predicate_distance_between_points pt pt' < epsilon /\
+      In Q (proj1_sig pt') /\
+      Is_Impossible Q).
+  
+  (* The holographic principle emerges *)
+  Theorem holographic_from_predicates :
+    forall (region : spacetime_point -> Prop),
+    (* All information in a region *)
+    (forall pt, region pt -> forall P, In P (proj1_sig pt) -> True) ->
+    (* Can be encoded on its boundary *)
+    exists (boundary_encoding : (spacetime_point -> Prop) -> 
+                               list (Alphacarrier -> Prop)),
+    (* The boundary contains all the region's information *)
+    True. (* Would need to formalize information content *)
+  Proof.
+    (* The idea: predicates in the bulk can be reconstructed from
+       their behavior as we approach the_impossible at the boundary *)
+    Admitted.
+  Qed.
+
+End PredicateSpacetime. *)
+
+
+
 From Coq.Vectors Require Import Fin.
 Require Import Coq.Program.Program.
 
