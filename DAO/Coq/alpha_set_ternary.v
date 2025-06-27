@@ -3640,7 +3640,6 @@ Section MetaProof.
   Definition can_compute_I_max_omega (OT : OmegaTheory) : Prop :=
     can_compute_I_max (project_omega_theory_to_alpha OT).
 
-  (* Now the paradox becomes even more beautiful *)
   Definition omega_validation_paradox : Omegacarrier -> Prop :=
     fun x => exists (OT : OmegaTheory),
       (* OT's Alpha projection can compute I_max IFF no native Alpha theory can *)
@@ -3690,7 +3689,7 @@ Definition computes_optimization_bounds (Theory : Alphacarrier -> Prop) : Prop :
   (* The analysis determines if P represents a valid optimization *)
   (Is_Impossible P -> Theory analysis).
 
-(* This connects directly to your impossibility framework *)
+(* This connects directly to the impossibility framework *)
 Lemma optimization_bounds_detect_impossible :
   forall Theory,
   computes_optimization_bounds Theory ->
@@ -3748,8 +3747,7 @@ Proof.
   exact (no_complete_optimization_theory (bounds_implies_complete Theory Henum Hcomp)).
 Qed.
 
-(* Using your impossibility algebra more directly *)
-
+(* Using impossibility algebra directly *)
 (* Define optimization theories in terms of what they must reject *)
 Definition respects_impossibility (Theory : Alphacarrier -> Prop) : Prop :=
   forall P,
@@ -7820,6 +7818,180 @@ Qed.
     True.
 End ComputationalSpaceEmergence. *)
 
+
+Section PTM_Information_Bounds.
+  Context {Alpha : AlphaType} {HG : GenerativeType Alpha}
+          {Omega : OmegaType} {HOG : OmegaToGenerative Alpha HG Omega}.
+  
+  (* First, let's define what we mean by PTM processing *)
+  
+  (* A measure of how many paradox symbols have been processed *)
+  Definition symbols_processed (config : ParadoxConfig) : nat :=
+    phead config.  (* Head position indicates progress *)
+  
+  (* How complex is the current state? *)
+  Definition state_complexity (s : ParadoxState) : nat :=
+    match s with
+    | PS_Initial => 1
+    | PS_Processing => 2
+    | PS_Resolving => 3
+    | PS_Output => 4
+    end.
+  
+  (* Structure at current configuration *)
+  Definition current_structure (config : ParadoxConfig) : nat :=
+    (state_complexity (pstate config)) * (symbols_processed config).
+  
+  (* Change between configurations *)
+  Definition structure_change (c1 c2 : ParadoxConfig) : nat :=
+    if Nat.ltb (current_structure c2) (current_structure c1) 
+    then current_structure c1 - current_structure c2
+    else current_structure c2 - current_structure c1.
+  
+  (* Information flow for PTM *)
+  Definition ptm_I_val (c1 c2 : ParadoxConfig) : nat :=
+    (current_structure c1) * (structure_change c1 c2).
+  
+  (* Now let's connect to bounds *)
+  
+  (* The fundamental constraint: PTM obeys I_max *)
+  Parameter I_max_universal : nat.
+  Axiom I_max_positive : I_max_universal > 0.
+  
+  (* Key axiom: Single step processing is bounded *)
+  Axiom ptm_step_bounded :
+    forall config,
+    let next_config := paradox_step config in
+    ptm_I_val config next_config <= I_max_universal.
+  
+  (* Paradox generation from Omega *)
+  
+  (* How many unresolved paradoxes exist at each point *)
+  Parameter paradox_density : nat -> nat.
+  
+  (* Omega's completeness means paradoxes exist everywhere *)
+  Axiom omega_generates_paradoxes :
+    forall n, paradox_density n > 0.
+  
+  (* Key assumption: Paradoxes accumulate faster than linear *)
+  Axiom paradox_accumulation :
+    exists k : nat, k > 1 /\
+    forall n, paradox_density (n + 1) >= paradox_density n + k.
+  
+  (* Tracking unprocessed paradoxes *)
+  
+  (* How many steps can PTM take in time t with I_max bound *)
+  Definition max_processing_steps (t : nat) : nat :=
+    t * I_max_universal.  (* Best case: saturate I_max *)
+  
+  (* Accumulated paradoxes over time *)
+  Fixpoint total_paradoxes (t : nat) : nat :=
+    match t with
+    | 0 => paradox_density 0
+    | S t' => total_paradoxes t' + paradox_density (S t')
+    end.
+  
+  (* The key deficit: unprocessed paradoxes *)
+  Definition unprocessed_count (t : nat) : nat :=
+    total_paradoxes t - max_processing_steps t.
+  
+  (* Event horizon formation *)
+  
+  Definition forms_processing_horizon (t : nat) : Prop :=
+    (* More paradoxes than can ever be processed *)
+    unprocessed_count t > 0 /\
+    (* And the gap is growing *)
+    forall t', t' > t -> unprocessed_count t' > unprocessed_count t.
+  
+  (* Core theorem: Processing horizons are inevitable *)
+  Theorem processing_horizons_form :
+    exists t_horizon : nat,
+    forms_processing_horizon t_horizon.
+  Proof.
+    (* We'll show this happens when accumulated paradoxes exceed linear growth *)
+    
+    (* From paradox_accumulation, we know growth exceeds linear *)
+    destruct paradox_accumulation as [k [Hk H_acc]].
+    
+    (* Choose t_horizon large enough *)
+    exists (I_max_universal * I_max_universal).
+    
+    unfold forms_processing_horizon.
+    split.
+    - (* Unprocessed count is positive *)
+      unfold unprocessed_count.
+      (* Would need lemma about total_paradoxes growth *)
+      admit.
+    - (* Gap keeps growing *)
+      intros t' Ht'.
+      unfold unprocessed_count.
+      (* Would need to show total_paradoxes grows superlinearly *)
+      admit.
+  Admitted.
+  
+  (* Connection to omega_veil *)
+  
+  (* When PTM can't keep up, we see omega_veil *)
+  Definition processing_failure_state : ParadoxState -> Prop :=
+    fun s => 
+      match s with
+      | PS_Output => True  (* Only output state indicates success *)
+      | _ => False
+      end.
+
+  (* Where processing fails, omega_veil emerges *)
+  Theorem processing_failure_reveals_omega_veil :
+    forall config n,
+    (* If we're stuck not in output state *)
+    ~ processing_failure_state (pstate (paradox_run_steps config n)) ->
+    (* Then the output is related to omega_veil *)
+    (* Apply paradox_output directly without let binding *)
+    (paradox_output `{Alpha} (pstate (paradox_run_steps config n))) omega_veil \/ 
+    exists Q : Alphacarrier -> Prop, 
+      (paradox_output `{Alpha} (pstate (paradox_run_steps config n))) Q /\ 
+      (forall a, Q a <-> omega_veil a).
+  Proof.
+    intros config n H_not_output.
+    
+    (* The axiom tells us all outputs relate to omega_veil *)
+    exact (paradox_output_relates_impossible `{Alpha} (pstate (paradox_run_steps config n))).
+  Qed.
+  
+  (* Physical interpretation *)
+  
+  (* Local information density *)
+  Parameter Location : Type.
+  Parameter local_I_density : Location -> nat.
+  
+  (* Event horizon is where density exceeds processing capacity *)
+  Definition is_event_horizon (loc : Location) : Prop :=
+    local_I_density loc > I_max_universal.
+  
+  (* Near horizon, processing slows *)
+  Definition processing_rate_at (loc : Location) : Q :=
+    let density := local_I_density loc in
+    if Nat.ltb density I_max_universal
+    then 
+      (* Construct rational using Qmake *)
+      Qmake (Z.of_nat (I_max_universal - density)) (Pos.of_nat I_max_universal)
+    else 
+      (* Zero processing at/beyond horizon *)
+      Qmake Z0 1%positive.
+  
+  (* Time dilation emerges from processing slowdown *)
+  Theorem time_dilates_near_horizon :
+    forall loc1 loc2,
+    local_I_density loc1 < local_I_density loc2 ->
+    local_I_density loc2 <= I_max_universal ->
+    processing_rate_at loc1 > processing_rate_at loc2.
+  Proof.
+    intros loc1 loc2 H_less H_within.
+    unfold processing_rate_at.
+    (* Need to reason about rational comparisons *)
+    admit.
+  Admitted.
+  
+End PTM_Information_Bounds.
 
 
 (* Experimental theorems section *)
