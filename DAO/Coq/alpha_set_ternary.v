@@ -3,6 +3,7 @@ Require Import Nat.
 Require Import Coq.Arith.Arith.
 Require Import Coq.Arith.PeanoNat.
 Require Import List.
+Require Import Lia.
 Import ListNotations.
 
 (* OmegaType: A set where EVERY predicate has a witness *)
@@ -176,7 +177,7 @@ Class AlphaType := {
 }.
 
 (* Helper to extract the impossible predicate *)
-Definition the_impossible {Alpha : AlphaType} : Alphacarrier -> Prop :=
+Definition omega_veil {Alpha : AlphaType} : Alphacarrier -> Prop :=
   proj1_sig (@alpha_impossibility Alpha).
 
 
@@ -189,22 +190,22 @@ Section AlphaProperties.
   Context {Alpha : AlphaType}.
   
   (* The impossible predicate has no witnesses *)
-  Theorem the_impossible_has_no_witnesses :
-    forall x : Alphacarrier, ~ the_impossible x.
+  Theorem omega_veil_has_no_witnesses :
+    forall x : Alphacarrier, ~ omega_veil x.
   Proof.
     intro x.
-    unfold the_impossible.
+    unfold omega_veil.
     exact (proj1 (proj2_sig alpha_impossibility) x).
   Qed.
   
   (* The impossible predicate is unique *)
-  Theorem the_impossible_unique :
+  Theorem omega_veil_unique :
     forall Q : Alphacarrier -> Prop,
     (forall x : Alphacarrier, ~ Q x) ->
-    (forall x : Alphacarrier, Q x <-> the_impossible x).
+    (forall x : Alphacarrier, Q x <-> omega_veil x).
   Proof.
     intros Q HQ.
-    unfold the_impossible.
+    unfold omega_veil.
     exact (proj2 (proj2_sig alpha_impossibility) Q HQ).
   Qed.
   
@@ -290,10 +291,10 @@ Section ConstructiveParadoxFirewalls.
   (* No self-denying existence - straightforward *)
   Theorem constructive_no_self_denying :
     ~ exists (P : Alphacarrier -> Prop),
-      (forall x, P x <-> the_impossible x) /\ (exists x, P x).
+      (forall x, P x <-> omega_veil x) /\ (exists x, P x).
   Proof.
     intros [P [Heq [x Px]]].
-    apply (the_impossible_has_no_witnesses x).
+    apply (omega_veil_has_no_witnesses x).
     apply Heq. exact Px.
   Qed.
   
@@ -349,23 +350,23 @@ Section ParadoxesEqualTheImpossible.
   Context {Alpha : AlphaType}.
   
   (* First, let's prove that any predicate that always leads to False 
-     must equal the_impossible *)
+     must equal omega_veil *)
   Theorem contradiction_equals_impossible :
     forall P : Alphacarrier -> Prop,
     (forall x : Alphacarrier, P x -> False) ->
-    (forall x : Alphacarrier, P x <-> the_impossible x).
+    (forall x : Alphacarrier, P x <-> omega_veil x).
   Proof.
     intros P HP.
-    apply the_impossible_unique.
+    apply omega_veil_unique.
     intros x Px.
     exact (HP x Px).
   Qed.
   
-  (* Now let's show Russell's paradox equals the_impossible *)
+  (* Now let's show Russell's paradox equals omega_veil *)
   Theorem russell_equals_impossible :
     forall R : Alphacarrier -> Prop,
     (forall x, R x <-> ~ R x) ->
-    (forall x, R x <-> the_impossible x).
+    (forall x, R x <-> omega_veil x).
   Proof.
     intros R HR.
     apply contradiction_equals_impossible.
@@ -375,11 +376,11 @@ Section ParadoxesEqualTheImpossible.
     exact Rx.
   Qed.
   
-  (* Curry's paradox with False equals the_impossible *)
+  (* Curry's paradox with False equals omega_veil *)
   Theorem curry_false_equals_impossible :
     forall C : Alphacarrier -> Prop,
     (forall x, C x <-> (C x -> False)) ->
-    (forall x, C x <-> the_impossible x).
+    (forall x, C x <-> omega_veil x).
   Proof.
     intros C HC.
     apply contradiction_equals_impossible.
@@ -390,15 +391,15 @@ Section ParadoxesEqualTheImpossible.
   Qed.
   
   (* Here's a more general principle: any self-contradictory predicate
-     equals the_impossible *)
+     equals omega_veil *)
   Theorem self_contradictory_equals_impossible :
     forall P : Alphacarrier -> Prop,
     (exists x, P x -> ~ P x) ->
     (forall x, ~ P x) ->
-    (forall x, P x <-> the_impossible x).
+    (forall x, P x <-> omega_veil x).
   Proof.
     intros P Hself Hnone.
-    apply the_impossible_unique.
+    apply omega_veil_unique.
     exact Hnone.
   Qed.
   
@@ -407,7 +408,7 @@ Section ParadoxesEqualTheImpossible.
   Theorem trivializing_equals_impossible :
     forall P : Alphacarrier -> Prop,
     (forall Q : Prop, (exists x, P x) -> Q) ->
-    (forall x, P x <-> the_impossible x).
+    (forall x, P x <-> omega_veil x).
   Proof.
     intros P Htriv.
     apply contradiction_equals_impossible.
@@ -417,15 +418,15 @@ Section ParadoxesEqualTheImpossible.
     exists x. exact Px.
   Qed.
   
-  (* The circular predicate, if it has no witnesses, equals the_impossible *)
+  (* The circular predicate, if it has no witnesses, equals omega_veil *)
   Theorem empty_circular_equals_impossible :
     forall P : Alphacarrier -> Prop,
     circular_predicate P ->
     (forall x, ~ P x) ->
-    (forall x, P x <-> the_impossible x).
+    (forall x, P x <-> omega_veil x).
   Proof.
     intros P Hcirc Hempty.
-    apply the_impossible_unique.
+    apply omega_veil_unique.
     exact Hempty.
   Qed.
   
@@ -446,13 +447,13 @@ Section ParadoxesEqualTheImpossible.
   Theorem impossibility_is_unique :
     forall P : Alphacarrier -> Prop,
     (forall x, ~ P x) <->
-    (forall x, P x <-> the_impossible x).
+    (forall x, P x <-> omega_veil x).
   Proof.
     intro P.
     split.
-    - apply the_impossible_unique.
+    - apply omega_veil_unique.
     - intros H x Px.
-      apply (the_impossible_has_no_witnesses x).
+      apply (omega_veil_has_no_witnesses x).
       apply H. exact Px.
   Qed.
 
@@ -883,10 +884,10 @@ Section AlphaTernaryLogic.
   
   (* Example of Alpha_False *)  
   Example impossible_is_false :
-    AlphaTruth the_impossible.
+    AlphaTruth omega_veil.
   Proof.
     apply Alpha_False.
-    exact the_impossible_has_no_witnesses.
+    exact omega_veil_has_no_witnesses.
   Qed.
   
   (* Example of Alpha_Undecidable *)
@@ -931,8 +932,8 @@ Section AlphaTernaryLogic.
           (* A is witnessed within Alpha's domain *)
           True  
       | Alpha_False _ _ => 
-          (* A is the_impossible or equivalent to it *)
-          forall a, A a <-> the_impossible a
+          (* A is omega_veil or equivalent to it *)
+          forall a, A a <-> omega_veil a
       | Alpha_Undecidable _ _ _ => 
           (* A touches Omega's unrepresentable reality *)
           exists (P : Omegacarrier -> Prop), 
@@ -1187,39 +1188,39 @@ End HaltingProblemViaAlphaOmega.
 Section ConstructiveNegation.
   Context {Alpha : AlphaType}.
   
-  (* If P is impossible (equals the_impossible), what about ~P? *)
+  (* If P is impossible (equals omega_veil), what about ~P? *)
   
   Theorem impossible_implies_negation_holds :
     forall P : Alphacarrier -> Prop,
-    (forall a, P a <-> the_impossible a) ->
+    (forall a, P a <-> omega_veil a) ->
     forall a, ~ P a.
   Proof.
     intros P H a HPa.
     apply H in HPa.
-    exact (the_impossible_has_no_witnesses a HPa).
+    exact (omega_veil_has_no_witnesses a HPa).
   Qed.
   
   (* But can ~P also be impossible? Let's check: *)
   Theorem both_impossible_is_impossible :
     forall P : Alphacarrier -> Prop,
-    (forall a, P a <-> the_impossible a) ->
-    (forall a, ~ P a <-> the_impossible a) ->
+    (forall a, P a <-> omega_veil a) ->
+    (forall a, ~ P a <-> omega_veil a) ->
     False.
   Proof.
     intros P HP HnP.
     destruct alpha_not_empty as [a _].
     
-    (* From HP: P a <-> the_impossible a *)
-    (* From HnP: ~P a <-> the_impossible a *)
+    (* From HP: P a <-> omega_veil a *)
+    (* From HnP: ~P a <-> omega_veil a *)
     
     (* ~P a is true by the first theorem *)
     assert (~ P a).
     { intro HPa. apply HP in HPa. 
-      exact (the_impossible_has_no_witnesses a HPa). }
+      exact (omega_veil_has_no_witnesses a HPa). }
     
-    (* But HnP says ~P a <-> the_impossible a *)
+    (* But HnP says ~P a <-> omega_veil a *)
     apply HnP in H.
-    exact (the_impossible_has_no_witnesses a H).
+    exact (omega_veil_has_no_witnesses a H).
   Qed.
   
   (* So if P is impossible, ~P CANNOT also be impossible *)
@@ -1227,14 +1228,14 @@ Section ConstructiveNegation.
   (* But constructively, we have three options: *)
   Inductive Negation_Status (P : Alphacarrier -> Prop) : Type :=
     | P_Impossible : 
-        (forall a, P a <-> the_impossible a) -> 
+        (forall a, P a <-> omega_veil a) -> 
         Negation_Status P
     | NegP_Impossible : 
-        (forall a, ~ P a <-> the_impossible a) -> 
+        (forall a, ~ P a <-> omega_veil a) -> 
         Negation_Status P  
     | Neither_Impossible :
-        (exists a, ~ (P a <-> the_impossible a)) ->
-        (exists a, ~ (~ P a <-> the_impossible a)) ->
+        (exists a, ~ (P a <-> omega_veil a)) ->
+        (exists a, ~ (~ P a <-> omega_veil a)) ->
         Negation_Status P.
   
   (* The key constructive insight: *)
@@ -1253,7 +1254,7 @@ Section ImpossibilityAlgebra.
   
   (* Helper definitions *)
   Definition Is_Impossible (P : Alphacarrier -> Prop) : Prop :=
-    forall a, P a <-> the_impossible a.
+    forall a, P a <-> omega_veil a.
     
   Definition Is_Possible (P : Alphacarrier -> Prop) : Prop :=
     ~ Is_Impossible P.
@@ -1273,9 +1274,9 @@ Section ImpossibilityAlgebra.
     - intro Himp.
       split.
       + apply HP. exact Himp.
-      + (* We need Q a, but we have the_impossible a *)
+      + (* We need Q a, but we have omega_veil a *)
         exfalso.
-        exact (the_impossible_has_no_witnesses a Himp).
+        exact (omega_veil_has_no_witnesses a Himp).
   Qed.
   
   (* Disjunction with impossible *)
@@ -1291,7 +1292,7 @@ Section ImpossibilityAlgebra.
     - intros [HPa | HQa].
       + apply HP in HPa.
         exfalso.
-        exact (the_impossible_has_no_witnesses a HPa).
+        exact (omega_veil_has_no_witnesses a HPa).
       + exact HQa.
     - intro HQa.
       right. exact HQa.
@@ -1306,7 +1307,7 @@ Section ImpossibilityAlgebra.
     intros P Q HP a HPa.
     apply HP in HPa.
     exfalso.
-    exact (the_impossible_has_no_witnesses a HPa).
+    exact (omega_veil_has_no_witnesses a HPa).
   Qed.
   
   (* Negation of impossible *)
@@ -1317,7 +1318,7 @@ Section ImpossibilityAlgebra.
   Proof.
     intros P HP a HPa.
     apply HP in HPa.
-    exact (the_impossible_has_no_witnesses a HPa).
+    exact (omega_veil_has_no_witnesses a HPa).
   Qed.
   
   (* Double negation of impossible *)
@@ -1335,13 +1336,13 @@ Section ImpossibilityAlgebra.
     destruct alpha_not_empty as [a0 _].
     specialize (HnP a0).
     destruct HnP as [H1 H2].
-    (* H1: ~ P a0 -> the_impossible a0 *)
-    (* H2: the_impossible a0 -> ~ P a0 *)
+    (* H1: ~ P a0 -> omega_veil a0 *)
+    (* H2: omega_veil a0 -> ~ P a0 *)
     (* We have ~ P a0 from H *)
     specialize (H a0).
     apply H1 in H.
-    (* Now we have the_impossible a0 *)
-    exact (the_impossible_has_no_witnesses a0 H).
+    (* Now we have omega_veil a0 *)
+    exact (omega_veil_has_no_witnesses a0 H).
   Qed.
   
   (* The algebra forms a partial order *)
@@ -1405,7 +1406,7 @@ Section ImpossibilityAlgebra.
       exact HPa.
     - intro Himpa.
       exfalso.
-      exact (the_impossible_has_no_witnesses a Himpa).
+      exact (omega_veil_has_no_witnesses a Himpa).
   Qed.
   
   (* Multiple conjunctions *)
@@ -1423,8 +1424,8 @@ Section ImpossibilityAlgebra.
       split.
       + apply HP. exact Himpa.
       + split.
-        * exfalso. exact (the_impossible_has_no_witnesses a Himpa).
-        * exfalso. exact (the_impossible_has_no_witnesses a Himpa).
+        * exfalso. exact (omega_veil_has_no_witnesses a Himpa).
+        * exfalso. exact (omega_veil_has_no_witnesses a Himpa).
   Qed.
   
   (* Impossible is preserved under weakening *)
@@ -1434,9 +1435,9 @@ Section ImpossibilityAlgebra.
     forall a, Q a -> ~ P a.
   Proof.
     intros P Q HPQ a HQa HPa.
-    assert (the_impossible a).
+    assert (omega_veil a).
     { apply HPQ. split; assumption. }
-    exact (the_impossible_has_no_witnesses a H).
+    exact (omega_veil_has_no_witnesses a H).
   Qed.
   
   Theorem and_impossible_gives_info :
@@ -1445,9 +1446,9 @@ Section ImpossibilityAlgebra.
     forall a, P a -> ~ Q a.
   Proof.
     intros P Q HPQ a HPa HQa.
-    assert (the_impossible a).
+    assert (omega_veil a).
     { apply HPQ. split; assumption. }
-    exact (the_impossible_has_no_witnesses a H).
+    exact (omega_veil_has_no_witnesses a H).
   Qed.
   
   (* Disjunction properties *)
@@ -1461,9 +1462,9 @@ Section ImpossibilityAlgebra.
     - intro H.
       split; intro a; split.
       + intro HPa. apply H. left. exact HPa.
-      + intro Hi. exfalso. exact (the_impossible_has_no_witnesses a Hi).
+      + intro Hi. exfalso. exact (omega_veil_has_no_witnesses a Hi).
       + intro HQa. apply H. right. exact HQa.
-      + intro Hi. exfalso. exact (the_impossible_has_no_witnesses a Hi).
+      + intro Hi. exfalso. exact (omega_veil_has_no_witnesses a Hi).
     - intros [HP HQ] a.
       split.
       + intros [HPa | HQa].
@@ -1486,7 +1487,7 @@ Section ImpossibilityAlgebra.
       specialize (H a).
       destruct H as [[HPa HnQa] | [HnPa HQa]].
       + exfalso. apply HP in HPa. 
-        exact (the_impossible_has_no_witnesses a HPa).
+        exact (omega_veil_has_no_witnesses a HPa).
       + exact (conj HnPa HQa).
     - intros H a.
       right.
@@ -1496,7 +1497,7 @@ Section ImpossibilityAlgebra.
    Theorem impossible_preimage :
     forall (f : Alphacarrier -> Alphacarrier) (P : Alphacarrier -> Prop),
     Is_Impossible P ->
-    forall a, P (f a) -> the_impossible (f a).
+    forall a, P (f a) -> omega_veil (f a).
   Proof.
     intros f P HP a H.
     apply HP.
@@ -1511,10 +1512,10 @@ Section ImpossibilityAlgebra.
   Proof.
     intros f P HP a H.
     (* H : P (f a) *)
-    (* By HP, P (f a) <-> the_impossible (f a) *)
+    (* By HP, P (f a) <-> omega_veil (f a) *)
     apply HP in H.
-    (* H : the_impossible (f a) *)
-    exact (the_impossible_has_no_witnesses (f a) H).
+    (* H : omega_veil (f a) *)
+    exact (omega_veil_has_no_witnesses (f a) H).
   Qed.
   
   Theorem composition_with_impossible_is_empty :
@@ -1535,7 +1536,7 @@ Section ImpossibilityAlgebra.
   Proof.
     intros f P HP a HPfa.
     apply HP in HPfa.
-    exact (the_impossible_has_no_witnesses (f a) HPfa).
+    exact (omega_veil_has_no_witnesses (f a) HPfa).
   Qed.
 
    Definition Impossible_Given (P Q : Alphacarrier -> Prop) : Prop :=
@@ -1549,9 +1550,9 @@ Section ImpossibilityAlgebra.
     forall a, Q a -> ~ P a.
   Proof.
     intros P Q [Himp Hpos] a HQa HPa.
-    assert (the_impossible a).
+    assert (omega_veil a).
     { apply Himp. split; assumption. }
-    exact (the_impossible_has_no_witnesses a H).
+    exact (omega_veil_has_no_witnesses a H).
   Qed.
 
   Definition Almost_Impossible (P : Alphacarrier -> Prop) : Prop :=
@@ -1572,26 +1573,26 @@ Section ImpossibilityAlgebra.
       (* From Hself: P a <-> P a /\ ~ P a *)
       apply Hself in HPa.
       destruct HPa as [HPa' HnPa].
-      (* We have P a and ~ P a - this is the_impossible! *)
+      (* We have P a and ~ P a - this is omega_veil! *)
       exfalso. exact (HnPa HPa').
     - intro Hi.
-      (* From the_impossible a, we need P a *)
+      (* From omega_veil a, we need P a *)
       (* But P can never hold because it implies its own negation *)
       exfalso.
-      exact (the_impossible_has_no_witnesses a Hi).
+      exact (omega_veil_has_no_witnesses a Hi).
   Qed.
 
    (* Now for something really fun - the "impossibility rank" *)
   Inductive Impossibility_Rank : (Alphacarrier -> Prop) -> nat -> Prop :=
     | Rank_Direct : forall P,
-        (forall a, P a <-> the_impossible a) ->
+        (forall a, P a <-> omega_veil a) ->
         Impossibility_Rank P 0
     | Rank_Composite : forall P Q n,
         Impossibility_Rank Q n ->
         (forall a, P a -> Q a) ->
         Impossibility_Rank P (S n).
   
-  (* This measures "how many steps" away from the_impossible we are *)
+  (* This measures "how many steps" away from omega_veil we are *)
   
   Theorem impossibility_rank_implies_impossible :
     forall P n,
@@ -1600,7 +1601,7 @@ Section ImpossibilityAlgebra.
   Proof.
     intros P n H.
     induction H.
-    - (* Base case: P is directly the_impossible *)
+    - (* Base case: P is directly omega_veil *)
       exact H.
     - (* Inductive: P implies something impossible *)
       intro a.
@@ -1611,7 +1612,7 @@ Section ImpossibilityAlgebra.
         exact HPa.
       + intro Hi.
         exfalso.
-        exact (the_impossible_has_no_witnesses a Hi).
+        exact (omega_veil_has_no_witnesses a Hi).
   Qed.
   
   (* The cool part: Russell's paradox has rank 1! *)
@@ -1621,8 +1622,8 @@ Section ImpossibilityAlgebra.
     Impossibility_Rank R 1.
   Proof.
     intros R Hrussell.
-    (* First show R equals the_impossible *)
-    assert (H: forall a, R a <-> the_impossible a).
+    (* First show R equals omega_veil *)
+    assert (H: forall a, R a <-> omega_veil a).
     { 
       intro a.
       split.
@@ -1635,10 +1636,10 @@ Section ImpossibilityAlgebra.
         exact (HnRa HRa).
       - intro Hi.
         exfalso.
-        exact (the_impossible_has_no_witnesses a Hi).
+        exact (omega_veil_has_no_witnesses a Hi).
     }
     (* Now show it has rank 1 *)
-    apply (Rank_Composite R the_impossible 0).
+    apply (Rank_Composite R omega_veil 0).
     - apply Rank_Direct.
       intro a. reflexivity.
     - intro a. intro HRa.
@@ -1646,6 +1647,152 @@ Section ImpossibilityAlgebra.
   Qed.
 
 End ImpossibilityAlgebra.
+
+
+Section ImpossibilityGeneration.
+  Context {Alpha : AlphaType}.
+  
+  (* Start with just omega_veil and NAND *)
+  Definition NAND (P Q : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    fun a => ~ (P a /\ Q a).
+  
+  (* Step 0: We have omega_veil *)
+  (* Step 1: Generate the first non-impossible predicate *)
+  Definition alpha_0 : Alphacarrier -> Prop :=
+    fun a => ~ omega_veil a.
+  
+  (* Theorem: alpha_0 is not impossible *)
+  Theorem alpha_0_not_impossible :
+    ~ Is_Impossible alpha_0.
+  Proof.
+    intro H.
+    (* If alpha_0 were impossible, then ~omega_veil = omega_veil *)
+    assert (forall a, ~ omega_veil a <-> omega_veil a) by apply H.
+    destruct alpha_not_empty as [a0 _].
+    specialize (H0 a0).
+    destruct H0 as [H1 H2].
+    (* If omega_veil a0, then ~omega_veil a0 by H2, contradiction *)
+    (* If ~omega_veil a0, then omega_veil a0 by H1, contradiction *)
+    assert (~ omega_veil a0).
+    { intro Hov. apply (H2 Hov). exact Hov. }
+    apply H0. apply H1. exact H0.
+  Qed.
+  
+  (* Now let's generate basic logical operations using just omega_veil and NAND *)
+  
+  (* True: something that's always the case *)
+  Definition gen_true : Alphacarrier -> Prop :=
+    NAND omega_veil alpha_0.  (* ~(impossible ∧ ~impossible) *)
+  
+  (* False: we can use omega_veil itself as false *)
+  Definition gen_false : Alphacarrier -> Prop :=
+    omega_veil.
+  
+  (* NOT via NAND: ~P = P NAND P *)
+  Definition gen_not (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    NAND P P.
+  
+  (* AND via NAND: P ∧ Q = ~(P NAND Q) = ~(~(P ∧ Q)) *)
+  Definition gen_and (P Q : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    gen_not (NAND P Q).
+  
+  (* OR via NAND: P ∨ Q = (P NAND P) NAND (Q NAND Q) *)
+  Definition gen_or (P Q : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    NAND (NAND P P) (NAND Q Q).
+  
+  (* IMPLIES in intuitionistic style *)
+  Definition gen_implies (P Q : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    gen_or (gen_not P) Q.
+  
+  (* Theorem: gen_not omega_veil gives us alpha_0 *)
+  Theorem gen_not_impossible_is_first :
+    forall a, gen_not omega_veil a <-> alpha_0 a.
+  Proof.
+    intro a.
+    unfold gen_not, alpha_0, NAND.
+    split; intro H.
+    - (* H : ~ (omega_veil a /\ omega_veil a), need to prove ~ omega_veil a *)
+      intro Hov.
+      apply H.
+      split; exact Hov.
+    - (* H : ~ omega_veil a, need to prove ~ (omega_veil a /\ omega_veil a) *)
+      intros [Hov _].
+      exact (H Hov).
+  Qed.
+  
+  (* Theorem: Our generated true is always true (when witness exists) *)
+  Theorem gen_true_holds :
+    exists a, gen_true a.
+  Proof.
+    unfold gen_true, NAND, alpha_0.
+    destruct alpha_not_empty as [a0 _].
+    exists a0.
+    intro H.
+    destruct H as [Hov Hnov].
+    exact (Hnov Hov).
+  Qed.
+  
+  (* Theorem: Our generated operations are intuitionistically valid *)
+  Theorem gen_not_involutive_on_decidable :
+    forall P : Alphacarrier -> Prop,
+    (forall a, P a \/ ~ P a) ->  (* If P is decidable *)
+    forall a, gen_not (gen_not P) a -> P a.
+  Proof.
+    intros P Hdec a Hnn.
+    unfold gen_not, NAND in Hnn.
+    (* Hnn : ~ ((~ (P a /\ P a)) /\ (~ (P a /\ P a))) *)
+    destruct (Hdec a) as [HPa | HnPa].
+    - exact HPa.
+    - exfalso.
+      apply Hnn.
+      split; intro H; destruct H as [HP _]; contradiction.
+  Qed.
+
+  (* The generation sequence: building complexity from impossibility *)
+  Definition generation_sequence : nat -> (Alphacarrier -> Prop) :=
+    fun n => match n with
+    | 0 => omega_veil
+    | 1 => alpha_0
+    | 2 => gen_true
+    | 3 => gen_and alpha_0 alpha_0
+    | 4 => gen_or omega_veil alpha_0
+    | _ => gen_true  (* default *)
+    end.
+  
+  (* This sequence shows increasing "structural entropy" *)
+  Theorem generation_increases_complexity :
+    Is_Impossible (generation_sequence 0) /\
+    ~ Is_Impossible (generation_sequence 1) /\
+    exists a, (generation_sequence 2) a.
+  Proof.
+    split; [|split].
+    - unfold generation_sequence. 
+      intro a. split; intro H; exact H.
+    - unfold generation_sequence.
+      exact alpha_0_not_impossible.
+    - unfold generation_sequence.
+      exact gen_true_holds.
+  Qed.
+  
+End ImpossibilityGeneration.
+
+
+Section NegationAsCreation.
+ Context {Alpha : AlphaType}.
+ 
+ (* The fundamental insight: ~omega_veil generates all of Alpha *)
+ 
+ (* First, the simplest theorem: ~omega_veil has witnesses *)
+ Theorem neg_omega_has_witnesses :
+   exists a : Alphacarrier, ~ omega_veil a.
+ Proof.
+   destruct alpha_not_empty as [a0 _].
+   exists a0.
+   intro Hov.
+   exact (omega_veil_has_no_witnesses a0 Hov).
+ Qed.
+ 
+End NegationAsCreation.
 
 
 Section ImpossibilityNumbers.
@@ -1657,7 +1804,7 @@ Section ImpossibilityNumbers.
   Proof.
     induction n.
     - (* Base case: rank 0 *)
-      exists the_impossible.
+      exists omega_veil.
       apply Rank_Direct.
       intro a. reflexivity.
     - (* Inductive: if rank n exists, so does rank n+1 *)
@@ -1790,9 +1937,9 @@ Qed.
       split; apply H.
   Qed.
   
-  (* Approaching the_impossible *)
+  (* Approaching omega_veil *)
   Definition approaches_impossible (seq : predicate_sequence) : Prop :=
-    converges_to seq the_impossible.
+    converges_to seq omega_veil.
   
   (* Example: shrinking sequence *)
   Definition shrinking_sequence (base : Alphacarrier -> Prop) : predicate_sequence :=
@@ -1864,7 +2011,7 @@ Qed.
   
   (* A predicate sequence that oscillates *)
   Definition oscillating_sequence : predicate_sequence :=
-    fun n => if Nat.even n then (fun _ => True) else the_impossible.
+    fun n => if Nat.even n then (fun _ => True) else omega_veil.
   
   Theorem oscillating_not_convergent :
     ~ exists P, converges_to oscillating_sequence P.
@@ -1903,7 +2050,7 @@ Qed.
     unfold oscillating_sequence in HN'_at_E.
     rewrite HE_even in HN'_at_E.
     
-    (* At position E+1: oscillating_sequence (E+1) = the_impossible *)
+    (* At position E+1: oscillating_sequence (E+1) = omega_veil *)
     assert (HE1_ge : E + 1 >= N').
     { unfold ge. apply Nat.le_trans with E; [exact HE_ge | apply Nat.le_add_r]. }
     
@@ -1922,10 +2069,10 @@ Qed.
     }
     rewrite HE1_odd in HN'_at_E1.
     
-    (* Now we have: P a0 <-> True and P a0 <-> the_impossible a0 *)
+    (* Now we have: P a0 <-> True and P a0 <-> omega_veil a0 *)
     assert (P a0) by (apply HN'_at_E; exact I).
     apply HN'_at_E1 in H.
-    exact (the_impossible_has_no_witnesses a0 H).
+    exact (omega_veil_has_no_witnesses a0 H).
   Qed.
   
   (* Path from one predicate to another *)
@@ -2466,7 +2613,6 @@ End ConstructiveArithmetic.
 
 Require Import Coq.Init.Nat.
 Require Import Coq.Arith.Arith.
-Require Import Lia.
 
 Record System := {
   S_min : nat;
@@ -3662,7 +3808,7 @@ End MetaProof.
 (* Section PredicateGeometry.
   Context {Alpha : AlphaType}.
   
-  (* Distance from the_impossible *)
+  (* Distance from omega_veil *)
   Definition impossible_distance (P : Alphacarrier -> Prop) : nat :=
     match minimal_impossibility_rank P with
     | Some n => n
@@ -3678,7 +3824,7 @@ End MetaProof.
   
   (* This gives us a basis for a topology! *)
   
-  (* Geodesics: shortest paths avoiding the_impossible *)
+  (* Geodesics: shortest paths avoiding omega_veil *)
   Definition avoids_impossible (path : predicate_path) : Prop :=
     forall n, Is_Possible (path n).
   
@@ -3709,7 +3855,7 @@ Section PredicateSpacetime.
     Is_Impossible P ->
     forall Q : Alphacarrier -> Prop,
     Is_Possible Q ->
-    (* Distance grows exponentially as we approach the_impossible *)
+    (* Distance grows exponentially as we approach omega_veil *)
     exists k : nat, predicate_distance P Q > k * k.
   
   (* Spacetime emerges as the manifold keeping predicates separated *)
@@ -3728,7 +3874,7 @@ Section PredicateSpacetime.
       then S (predicate_distance P Q)  (* Extra distance needed *)
       else predicate_distance P Q.
   
-  (* Curvature around the_impossible *)
+  (* Curvature around omega_veil *)
   Theorem impossible_creates_curvature :
     forall (center : Alphacarrier -> Prop),
     Is_Impossible center ->
@@ -3738,7 +3884,7 @@ Section PredicateSpacetime.
     predicate_distance P Q + predicate_distance Q R.
   Proof.
     intros center Hcenter.
-    (* The idea: paths that go near the_impossible get stretched *)
+    (* The idea: paths that go near omega_veil get stretched *)
     (* Would need to construct specific predicates *)
     Admitted.
   Qed.
@@ -3776,11 +3922,11 @@ Section PredicateSpacetime.
     Admitted.
   Qed.
   
-  (* Black holes as regions approaching the_impossible *)
+  (* Black holes as regions approaching omega_veil *)
   Definition black_hole_region (center : spacetime_point) : Prop :=
     exists P : Alphacarrier -> Prop,
     In P (proj1_sig center) /\
-    (* P is "almost impossible" - approaches the_impossible *)
+    (* P is "almost impossible" - approaches omega_veil *)
     forall epsilon : nat,
     exists Q : Alphacarrier -> Prop,
     predicate_distance P Q < epsilon /\
@@ -3810,7 +3956,7 @@ Section PredicateSpacetime.
     True. (* Would need to formalize information content *)
   Proof.
     (* The idea: predicates in the bulk can be reconstructed from
-       their behavior as we approach the_impossible at the boundary *)
+       their behavior as we approach omega_veil at the boundary *)
     Admitted.
   Qed.
 
@@ -4100,8 +4246,8 @@ Section HoTT_in_AlphaType.
   (* Elements of a type *)
   Definition El (A : Type_A) := { x : Alphacarrier | A x }.
   
-  (* The empty type is the_impossible *)
-  Definition Empty_t : Type_A := the_impossible.
+  (* The empty type is omega_veil *)
+  Definition Empty_t : Type_A := omega_veil.
   
   (* Unit type *)
   Variable unit_point : Alphacarrier.
@@ -4160,14 +4306,14 @@ Section HoTT_in_AlphaType.
   (* Ternary structure of paths in AlphaType:
      For any x, y in type A, the PathSpace A x y is:
      1. Inhabited (witnessed path exists)
-     2. Empty (the_impossible - provably no path)
+     2. Empty (omega_veil - provably no path)
      3. Undecidable (neither inhabited nor empty)
   *)
   
   (* This could be the computational content of HoTT! *)
   Definition PathStatus (A : Type_A) (x y : Alphacarrier) : Type :=
     {p : Alphacarrier | Path A x y p} + 
-    (Path A x y = the_impossible) +
+    (Path A x y = omega_veil) +
     ((~ exists p, Path A x y p) * (~ forall p, ~ Path A x y p)).
   
   (* Univalence might emerge from the undecidability structure *)
@@ -4273,7 +4419,7 @@ Class GenerativeType (Alpha : AlphaType) := {
   contains : nat -> (Alphacarrier -> Prop) -> Prop;
   
   (* The impossible is always contained (it's the anchor) *)
-  impossible_always : forall t, contains t the_impossible;
+  impossible_always : forall t, contains t omega_veil;
   
   (* Backward containment still holds *)
   contains_backward : forall m n P, m <= n -> contains n P -> contains m P;
@@ -4332,10 +4478,10 @@ Proof.
   apply self_ref_pred_embed_correct.
 Qed.
 
-(* NEW: Example showing the_impossible is always present *)
+(* NEW: Example showing omega_veil is always present *)
 Example gen_impossible_always_contained :
   forall (Alpha : AlphaType) (H : GenerativeType Alpha),
-  forall t : nat, contains t the_impossible.
+  forall t : nat, contains t omega_veil.
 Proof.
   intros.
   apply impossible_always.
@@ -4502,12 +4648,12 @@ Qed.
 
 (* Theorem: GenerativeType Is Infinite
    There exists a function F: (Alphacarrier -> Prop) -> nat -> (Alphacarrier -> Prop) 
-   such that for every time t, F the_impossible t is contained at time t.
+   such that for every time t, F omega_veil t is contained at time t.
 *)
 Theorem gen_is_infinite : 
   forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   exists F : (Alphacarrier -> Prop) -> nat -> (Alphacarrier -> Prop), 
-  forall t : nat, contains t (F the_impossible t).
+  forall t : nat, contains t (F omega_veil t).
 Proof.
   intros Alpha H.
   
@@ -5005,7 +5151,7 @@ Theorem gen_safe_omega_window :
   forall t : nat,
   (* The projection from Omega is always safe (doesn't create direct contradictions) *)
   let P := project_Omega_gen x in
-  ~ (P = the_impossible /\ contains t P /\ ~ contains t P).
+  ~ (P = omega_veil /\ contains t P /\ ~ contains t P).
 Proof.
   intros Alpha HG Omega HOG x t P [H_imp [H_cont H_not_cont]].
   (* Direct contradiction between H_cont and H_not_cont *)
@@ -5107,16 +5253,16 @@ Section SelfRecursiveGenerative.
         exact H_contains_m.
   Qed.
   
-  (* Additional theorem: GenerativeType can reason about the_impossible *)
+  (* Additional theorem: GenerativeType can reason about omega_veil *)
   Theorem gen_contains_impossible_reasoning :
     exists t : nat,
       contains t (self_ref_pred_embed 
-        (fun P => P = the_impossible \/ 
-                  (forall a, P a -> the_impossible a))).
+        (fun P => P = omega_veil \/ 
+                  (forall a, P a -> omega_veil a))).
   Proof.
     destruct (self_ref_generation_exists 
-      (fun P => P = the_impossible \/ 
-                (forall a, P a -> the_impossible a)) 0) 
+      (fun P => P = omega_veil \/ 
+                (forall a, P a -> omega_veil a)) 0) 
       as [t [_ Ht]].
     exists t. exact Ht.
   Qed.
@@ -5373,13 +5519,13 @@ Section SelfLimitingDivinity.
     exact Hwitness.
   Qed.
 
-  (* Additional theorem: The connection to the_impossible *)
+  (* Additional theorem: The connection to omega_veil *)
   Theorem divinity_and_impossibility :
     Divinity -> 
-    contains 0 (self_ref_pred_embed (fun P => P = the_impossible)).
+    contains 0 (self_ref_pred_embed (fun P => P = omega_veil)).
   Proof.
     intro H_div.
-    (* If Divinity contains all predicates, it contains the one about the_impossible *)
+    (* If Divinity contains all predicates, it contains the one about omega_veil *)
     apply H_div.
   Qed.
 
@@ -7047,32 +7193,32 @@ End DivineMiracleFeedingGen.
 Section DivineZeroFunctionGen.
   Context (Alpha : AlphaType) (HG : GenerativeType Alpha).
   
-  (* Step 1: Division by zero yields the_impossible *)
-  Definition divine_zero_gen : Alphacarrier -> Prop := the_impossible.
+  (* Step 1: Division by zero yields omega_veil *)
+  Definition divine_zero_gen : Alphacarrier -> Prop := omega_veil.
   
   (* Step 2: Define division-by-zero as a total function on predicates *)
   Definition divide_by_zero_gen (pred : Alphacarrier -> Prop) : Alphacarrier -> Prop := 
-    the_impossible.
+    omega_veil.
   
   (* Step 3: The range of divide_by_zero is the set of all outputs it produces *)
   Definition in_div_zero_range_gen (p : Alphacarrier -> Prop) : Prop :=
     exists pred : Alphacarrier -> Prop, divide_by_zero_gen pred = p.
   
-  (* Theorem: The range of divide_by_zero is a singleton {the_impossible} *)
+  (* Theorem: The range of divide_by_zero is a singleton {omega_veil} *)
   Theorem gen_div_zero_range_is_singleton :
     forall p : Alphacarrier -> Prop, 
-    in_div_zero_range_gen p <-> p = the_impossible.
+    in_div_zero_range_gen p <-> p = omega_veil.
   Proof.
     intros p.
     split.
-    - (* → direction: if p is in the range, it must be the_impossible *)
+    - (* → direction: if p is in the range, it must be omega_veil *)
       intros [pred H_eq]. 
       unfold divide_by_zero_gen in H_eq. 
       symmetry.
       exact H_eq.
-    - (* ← direction: if p = the_impossible, then it's the output for any pred *)
+    - (* ← direction: if p = omega_veil, then it's the output for any pred *)
       intros H_eq. 
-      exists the_impossible. 
+      exists omega_veil. 
       unfold divide_by_zero_gen. 
       symmetry.
       exact H_eq.
@@ -7081,21 +7227,21 @@ Section DivineZeroFunctionGen.
   (* Show that divide_by_zero is semantically realizable as a meta-predicate *)
   Definition div_zero_functional_pred_gen 
     (f : (Alphacarrier -> Prop) -> (Alphacarrier -> Prop)) : Prop :=
-    forall pred : Alphacarrier -> Prop, f pred = the_impossible.
+    forall pred : Alphacarrier -> Prop, f pred = omega_veil.
   
   Theorem gen_divide_by_zero_function_exists :
     exists f : (Alphacarrier -> Prop) -> (Alphacarrier -> Prop), 
     div_zero_functional_pred_gen f.
   Proof.
-    exists (fun _ => the_impossible).
+    exists (fun _ => omega_veil).
     unfold div_zero_functional_pred_gen. 
     intros pred. 
     reflexivity.
   Qed.
   
-  (* Theorem: the_impossible appears in GenerativeType (it always does) *)
+  (* Theorem: omega_veil appears in GenerativeType (it always does) *)
   Theorem gen_impossible_always_exists :
-    forall t : nat, contains t the_impossible.
+    forall t : nat, contains t omega_veil.
   Proof.
     intro t.
     apply impossible_always.
@@ -7103,8 +7249,8 @@ Section DivineZeroFunctionGen.
   
   (* Theorem: Division by zero connects to Alpha's fundamental structure *)
   Theorem gen_div_zero_is_fundamental :
-    divide_by_zero_gen = (fun _ => the_impossible) /\
-    divine_zero_gen = the_impossible.
+    divide_by_zero_gen = (fun _ => omega_veil) /\
+    divine_zero_gen = omega_veil.
   Proof.
     split; reflexivity.
   Qed.
@@ -7112,8 +7258,8 @@ Section DivineZeroFunctionGen.
   (* Theorem: All arithmetic singularities collapse to the logical impossible *)
   Theorem gen_arithmetic_logical_unity :
     forall pred : Alphacarrier -> Prop,
-    divide_by_zero_gen pred = the_impossible /\
-    (forall a : Alphacarrier, divide_by_zero_gen pred a <-> the_impossible a).
+    divide_by_zero_gen pred = omega_veil /\
+    (forall a : Alphacarrier, divide_by_zero_gen pred a <-> omega_veil a).
   Proof.
     intro pred.
     split.
@@ -7128,7 +7274,7 @@ End DivineZeroFunctionGen.
   This section introduces a semantic apply operator for GenerativeType,
   allowing us to encode function-like behavior using predicates in Alpha itself.
   We define gen_function as a semantic predicate that behaves like a constant function,
-  always returning the_impossible regardless of input.
+  always returning omega_veil regardless of input.
   
   This reveals that dangerous operations (self-application, paradoxical functions)
   all collapse to Alpha's single impossible predicate.
@@ -7147,28 +7293,28 @@ Section SemanticFunctionsInGen.
   (* A semantic function object as a predicate *)
   Parameter gen_function : Alphacarrier -> Prop.
   
-  (* Axiom: applying gen_function to any predicate yields the_impossible *)
+  (* Axiom: applying gen_function to any predicate yields omega_veil *)
   Axiom impossible_semantic_behavior_gen :
     forall pred : Alphacarrier -> Prop, 
-    semantic_apply_gen gen_function pred = the_impossible.
+    semantic_apply_gen gen_function pred = omega_veil.
   
   (* Example: construct a term that applies gen_function to itself *)
   Definition self_application_gen : Alphacarrier -> Prop :=
     semantic_apply_gen gen_function gen_function.
   
-  (* Lemma: self-application of gen_function yields the_impossible *)
+  (* Lemma: self-application of gen_function yields omega_veil *)
   Lemma gen_self_application_is_impossible :
-    self_application_gen = the_impossible.
+    self_application_gen = omega_veil.
   Proof.
     unfold self_application_gen.
     apply impossible_semantic_behavior_gen.
   Qed.
   
-  (* Theorem: All paradoxical applications collapse to the_impossible *)
+  (* Theorem: All paradoxical applications collapse to omega_veil *)
   Theorem gen_paradoxical_collapse :
     forall f : Alphacarrier -> Prop,
     (forall x, semantic_apply_gen f x = semantic_apply_gen x x) ->
-    forall y, semantic_apply_gen f y = the_impossible.
+    forall y, semantic_apply_gen f y = omega_veil.
   Proof.
     (* This would require additional axioms about paradoxical functions *)
   Admitted.
@@ -7198,41 +7344,41 @@ Section SemanticFunctionsInGen.
       forall x y : Alphacarrier -> Prop,
       semantic_apply_gen (semantic_apply_gen p x) y = x).
   
-  (* Russell's paradox in function form - must equal the_impossible *)
+  (* Russell's paradox in function form - must equal omega_veil *)
   Definition russell_function_gen : Alphacarrier -> Prop :=
     self_ref_pred_embed (fun p =>
       forall x : Alphacarrier -> Prop,
-      semantic_apply_gen p x = the_impossible <->
-      ~ (semantic_apply_gen x x = the_impossible)).
+      semantic_apply_gen p x = omega_veil <->
+      ~ (semantic_apply_gen x x = omega_veil)).
   
-  (* Theorem: Russell's function collapses to the_impossible *)
+  (* Theorem: Russell's function collapses to omega_veil *)
   Theorem gen_russell_function_impossible :
     exists t : nat,
     contains t (self_ref_pred_embed 
-      (fun p => russell_function_gen = the_impossible)).
+      (fun p => russell_function_gen = omega_veil)).
   Proof.
     destruct (self_ref_generation_exists 
-      (fun p => russell_function_gen = the_impossible) 0) as [t [_ Ht]].
+      (fun p => russell_function_gen = omega_veil) 0) as [t [_ Ht]].
     exists t. exact Ht.
   Qed.
   
-  (* Y combinator - creates infinite recursion, thus the_impossible *)
+  (* Y combinator - creates infinite recursion, thus omega_veil *)
   Definition Y_combinator_property (Y : Alphacarrier -> Prop) : Prop :=
     forall f : Alphacarrier -> Prop,
     semantic_apply_gen Y f = 
     semantic_apply_gen f (semantic_apply_gen Y f).
   
-  (* Axiom: The Y combinator leads to the_impossible in strict evaluation *)
+  (* Axiom: The Y combinator leads to omega_veil in strict evaluation *)
   Axiom Y_strict_impossible :
     forall Y : Alphacarrier -> Prop,
     Y_combinator_property Y ->
-    forall f, semantic_apply_gen Y f = the_impossible.
+    forall f, semantic_apply_gen Y f = omega_veil.
   
   (* Theorem: Alpha's type system prevents unrestricted recursion *)
   Theorem gen_alpha_prevents_paradox :
     forall p : Alphacarrier -> Prop,
     (forall x, semantic_apply_gen p x = semantic_apply_gen x x) ->
-    p = the_impossible.
+    p = omega_veil.
   Proof.
     (* This characterizes how Alpha handles dangerous self-reference *)
   Admitted.
@@ -7244,39 +7390,39 @@ Section IneffableLanguage.
   Context (Alpha : AlphaType) (HG : GenerativeType Alpha) 
           (Omega : OmegaType) (HOG : OmegaToGenerative Alpha HG Omega).
   
-  (* Ineffable statements are variations/aspects of the_impossible *)
+  (* Ineffable statements are variations/aspects of omega_veil *)
   Inductive IneffableSymbol : Type :=
     | BaseImpossible : IneffableSymbol
     | IteratedImpossible : nat -> IneffableSymbol
     | PairedImpossible : IneffableSymbol -> IneffableSymbol -> IneffableSymbol.
   
-  (* All ineffable statements relate to the_impossible *)
+  (* All ineffable statements relate to omega_veil *)
   Parameter ineffable_interpret : IneffableSymbol -> (Alphacarrier -> Prop).
   
   Axiom all_ineffable_impossible :
     forall s : IneffableSymbol,
     exists P : (Alphacarrier -> Prop) -> Prop,
-    ineffable_interpret s = the_impossible \/
-    (P (ineffable_interpret s) /\ P the_impossible).
+    ineffable_interpret s = omega_veil \/
+    (P (ineffable_interpret s) /\ P omega_veil).
   
   (* Different aspects of impossibility *)
   Axiom ineffable_interpretation :
-    ineffable_interpret BaseImpossible = the_impossible /\
-    forall n, ineffable_interpret (IteratedImpossible n) = the_impossible /\
-    forall s1 s2, ineffable_interpret (PairedImpossible s1 s2) = the_impossible.
+    ineffable_interpret BaseImpossible = omega_veil /\
+    forall n, ineffable_interpret (IteratedImpossible n) = omega_veil /\
+    forall s1 s2, ineffable_interpret (PairedImpossible s1 s2) = omega_veil.
   
   (* The ineffable language consists of statements that come from Omega impossibilities *)
   Definition in_ineffable_language (s : Statement) : Prop :=
     exists x : Omegacarrier, 
     @divine_interpret Omega x = s /\
-    project_Omega_gen x = the_impossible.
+    project_Omega_gen x = omega_veil.
   
   (* Alternative: statements that cannot be in any formal language *)
   Definition truly_ineffable (s : Statement) : Prop :=
     divine_language s /\ 
     exists x : Omegacarrier,
     @divine_interpret Omega x = s /\
-    project_Omega_gen x = the_impossible.
+    project_Omega_gen x = omega_veil.
 End IneffableLanguage.
 
 
@@ -7298,15 +7444,15 @@ Section ParadoxTuringMachine.
   Parameter paradox_delta : 
     ParadoxState -> ParadoxSymbol -> ParadoxState * ParadoxSymbol.
   
-  (* Output: paradox states produce meta-predicates about the_impossible *)
+  (* Output: paradox states produce meta-predicates about omega_veil *)
   Parameter paradox_output : ParadoxState -> ((Alphacarrier -> Prop) -> Prop).
   
-  (* Key axiom: All outputs relate to the_impossible *)
+  (* Key axiom: All outputs relate to omega_veil *)
   Axiom paradox_output_relates_impossible :
     forall s : ParadoxState,
     let P := paradox_output s in
-    P the_impossible \/ 
-    exists Q, P Q /\ (forall a, Q a <-> the_impossible a).
+    P omega_veil \/ 
+    exists Q, P Q /\ (forall a, Q a <-> omega_veil a).
   
   (* Tape type for the PTM *)
   Definition ParadoxTape := nat -> ParadoxSymbol.
@@ -7356,13 +7502,13 @@ Section ParadoxTuringMachine.
     exists t. exact Ht.
   Qed.
   
-  (* The deeper theorem: PTM creates temporal narratives from the_impossible *)
+  (* The deeper theorem: PTM creates temporal narratives from omega_veil *)
   Theorem paradox_machine_creates_meaning :
     forall n : nat,
     exists P : (Alphacarrier -> Prop) -> Prop,
     exists t : nat,
-    (* The output relates to the_impossible *)
-    (P the_impossible \/ (exists Q, P Q /\ (forall a, Q a <-> the_impossible a))) /\
+    (* The output relates to omega_veil *)
+    (P omega_veil \/ (exists Q, P Q /\ (forall a, Q a <-> omega_veil a))) /\
     (* Yet it exists temporally as comprehensible structure *)
     contains t (self_ref_pred_embed P).
   Proof.
@@ -7520,113 +7666,88 @@ Qed.
 
 
 (* Experimental section about space time - but we could hopefully make this more emergent than adding axioms *)
-Section ComputationalSpaceEmergence.
+(* Section ComputationalSpaceEmergence.
   Context (Alpha : AlphaType) (HG : GenerativeType Alpha).
   
-  (* Memory: space is where predicates are stored *)
-  Parameter Memory : Type.
-  Parameter stored_in : (Alphacarrier -> Prop) -> Memory -> Prop.
+  (* Conflicts when coexistence → omega_veil *)
+  Definition conflicts (P Q : Alphacarrier -> Prop) : Prop :=
+    exists a : Alphacarrier, (P a /\ Q a) <-> omega_veil a.
   
-  (* Computation requires accessing past predicates *)
-  Parameter accesses : (Alphacarrier -> Prop) -> (Alphacarrier -> Prop) -> Prop.
-  
-  (* Key axiom: To access a past predicate, it must be stored somewhere *)
-  Axiom computation_requires_memory :
-    forall P_now P_past : Alphacarrier -> Prop,
-    forall t_now t_past : nat,
-    t_past < t_now ->
-    contains t_now P_now ->
-    contains t_past P_past ->
-    accesses P_now P_past ->
-    exists m : Memory, stored_in P_past m.
-  
-  (* Contradictory predicates need different memory locations *)
-  Axiom memory_exclusion :
+  (* KEY INSIGHT: GenerativeType prevents simultaneous conflicts *)
+  Theorem gen_temporal_conflict_safety :
     forall P Q : Alphacarrier -> Prop,
-    (forall a, P a -> ~ Q a) ->
-    forall m : Memory,
-    stored_in P m -> ~ stored_in Q m.
-  
-  (* Every stored predicate has a location *)
-  Axiom storage_exists :
-    forall P : Alphacarrier -> Prop,
-    (exists t, contains t P) ->
-    exists m : Memory, stored_in P m.
-  
-  (* Main theorem: Space (as memory) emerges from computation *)
-  Theorem space_as_memory_emerges :
-    forall P_compute : Alphacarrier -> Prop,
-    forall P1 P2 : Alphacarrier -> Prop,
-    forall t t1 t2 : nat,
-    (* Setup: computation at time t accesses past predicates *)
-    t1 < t /\ t2 < t ->
-    contains t P_compute ->
-    contains t1 P1 ->
-    contains t2 P2 ->
-    (* If computation accesses contradictory past predicates *)
-    accesses P_compute P1 ->
-    accesses P_compute P2 ->
-    (forall a, P1 a -> ~ P2 a) ->
-    (* Then space must exist as distinct memory locations *)
-    exists m1 m2 : Memory,
-      m1 <> m2 /\ stored_in P1 m1 /\ stored_in P2 m2.
+    forall t : nat,
+    conflicts P Q ->
+    contains t P ->
+    contains t Q ->
+    (* This would force omega_veil at time t *)
+    contains t omega_veil.
   Proof.
-    intros P_compute P1 P2 t t1 t2 [Ht1 Ht2] Ht HP1 HP2 Hacc1 Hacc2 Hcontra.
-    
-    (* P1 must be stored by computation requirements *)
-    assert (Hm1: exists m1, stored_in P1 m1).
-    { apply (computation_requires_memory P_compute P1 t t1); assumption. }
-    destruct Hm1 as [m1 Hm1].
-    
-    (* P2 must also be stored *)
-    assert (Hm2: exists m2, stored_in P2 m2).
-    { apply (computation_requires_memory P_compute P2 t t2); assumption. }
-    destruct Hm2 as [m2 Hm2].
-    
-    (* They must be in different locations *)
-    exists m1, m2.
-    split; [|split; assumption].
-    
-    (* Prove m1 ≠ m2 by contradiction *)
-    intro Heq.
-    subst m2.
-    (* If they're in the same location, we get a contradiction *)
-    pose proof (memory_exclusion P1 P2 Hcontra m1 Hm1) as Hnot_P2.
-    contradiction.
+    intros P Q t Hconf HtP HtQ.
+    (* omega_veil is always contained by impossible_always axiom *)
+    apply impossible_always.
   Qed.
   
-  (* Simpler theorem: Contradictory predicates force spatial distinction *)
-  Theorem contradiction_creates_space :
-    forall P : Alphacarrier -> Prop,
-    (exists a, P a /\ ~ P a) ->
-    forall t1 t2 : nat,
-    contains t1 P ->
-    contains t2 (fun a => ~ P a) ->
-    exists m1 m2 : Memory, m1 <> m2.
+  (* But here's the crucial property: *)
+  Theorem gen_avoids_creating_conflicts :
+    forall P Q : Alphacarrier -> Prop,
+    forall t : nat,
+    conflicts P Q ->
+    contains t P ->
+    (* GenerativeType won't spontaneously add Q at same time *)
+    ~ (contains t Q /\ forall t', t' < t -> ~ contains t' Q).
   Proof.
-    intros P Hcontra t1 t2 Ht1 Ht2.
+    (* This captures that GenerativeType doesn't CREATE new conflicts *)
+    (* It inherits them from Alpha but manages them temporally *)
+    admit. (* This is the key safety property *)
+  Admitted.
+  
+  (* Now Space emerges naturally! *)
+  
+  (* Space = the minimal structure preventing conflict collapse *)
+  Definition SpaceStructure := {
+    assign : (Alphacarrier -> Prop) -> nat &
+    forall P Q, conflicts P Q -> assign P <> assign Q
+  }.
+  
+  (* Prove space must exist using GenerativeType properties *)
+  Theorem space_emerges_from_conflicts :
+    (* If conflicts exist in Alpha *)
+    (exists P Q : Alphacarrier -> Prop, conflicts P Q) ->
+    (* And both predicates appear in GenerativeType *)
+    (exists P Q t1 t2, conflicts P Q /\ contains t1 P /\ contains t2 Q) ->
+    (* Then spatial structure must emerge *)
+    SpaceStructure.
+  Proof.
+    intros [P [Q Hconf]] [P' [Q' [t1 [t2 [Hconf' [Ht1 Ht2]]]]]].
     
-    (* P is stored somewhere *)
-    assert (Hm1: exists m1, stored_in P m1).
-    { apply storage_exists. exists t1. exact Ht1. }
-    destruct Hm1 as [m1 Hm1].
+    (* Use time of first appearance as spatial coordinate *)
+    exists (fun R => 
+      match (self_ref_generation_exists (fun _ => exists t, contains t R) 0) with
+      | ex_intro _ t _ => t
+      end).
     
-    (* ¬P is also stored somewhere *)
-    assert (Hm2: exists m2, stored_in (fun a => ~ P a) m2).
-    { apply storage_exists. exists t2. exact Ht2. }
-    destruct Hm2 as [m2 Hm2].
-    
-    exists m1, m2.
-    intro Heq.
-    subst m2.
-    (* P and ¬P can't be in same location *)
-    pose proof (memory_exclusion P (fun a => ~ P a)) as Hexcl.
-    assert (Hc: forall a, P a -> ~ (~ P a)) by tauto.
-    pose proof (Hexcl Hc m1 Hm1) as Hnot.
-    contradiction.
-  Qed.
-
-End ComputationalSpaceEmergence.
+    intros P1 P2 Hconf12.
+    (* Different conflict classes must appear at different times *)
+    (* This follows from gen_avoids_creating_conflicts *)
+    admit.
+  Defined.
+  
+  (* The number of dimensions = chromatic number of conflict graph *)
+  Definition dimensions_needed (preds : list (Alphacarrier -> Prop)) : nat :=
+    (* Minimum number of "locations" to separate all conflicts *)
+    (* This is graph coloring on the conflict graph! *)
+    length preds. (* Simplified - should be chromatic number *)
+  
+  (* Why 3 spatial dimensions? *)
+  Hypothesis fundamental_conflicts : 
+    exists P1 P2 P3 P4 : Alphacarrier -> Prop,
+    (* 4 mutually conflicting predicates *)
+    (forall i j, i <> j -> conflicts (nth i [P1;P2;P3;P4] P1) (nth j [P1;P2;P3;P4] P1)) /\
+    (* But any 3 can coexist with proper separation *)
+    (* This would force exactly 3 spatial dimensions! *)
+    True.
+End ComputationalSpaceEmergence. *)
 
 
 
@@ -7664,18 +7785,18 @@ Admitted. *)
   forall (Alpha : AlphaType) (H : GenerativeType Alpha),
   forall t : nat,
   exists P : Alphacarrier -> Prop,
-    P = the_impossible /\
+    P = omega_veil /\
     contains t P /\
     (forall Q : (Alphacarrier -> Prop) -> Prop,
       Q (fun a => P a) -> ~ contains t (self_ref_pred_embed Q)).
 Proof.
   intros Alpha H t.
-  exists the_impossible.
+  exists omega_veil.
   split; [reflexivity|].
   split.
   - apply impossible_always.
   - intros Q HQ.
-    (* This would need more development - showing how the_impossible 
+    (* This would need more development - showing how omega_veil 
        blocks certain meta-predicates from being contained *)
     admit.
 Admitted. *)
