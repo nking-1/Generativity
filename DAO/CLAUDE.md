@@ -107,6 +107,10 @@ The entire project is implemented in Coq, and needs to be refactored into a modu
 - **DAO.Classical**: Contains classical alpha set and theories implemented in classical logic (like DAO-native boolean algebra and ZFC).
 
 ## Current Goals
+- [ ] Setup the Coq project properly with a Makefile and .v files in the right places, plus a _CoqProject file
 - [ ] Refactor the core types (OmegaType, AlphaType, NomegaType, GenerativeType) into separate modules in a Core folder
 - [ ] Refactor the other proofs as listed above
 - [ ] (Stretch) port the library to Lean
+
+## Available tooling
+You have Coq available on the command line through `coqc`. You are running on MacOS.
