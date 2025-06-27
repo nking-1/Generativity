@@ -8,6 +8,7 @@ src/Core/AlphaType.v
 src/Core/AlphaProperties.v
 src/Core/NomegaType.v
 src/Core/GenerativeType.v
+src/Core/GenerativeProperties.v
 src/Core/Core.v
 
 src/DAO.v

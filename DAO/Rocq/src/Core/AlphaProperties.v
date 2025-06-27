@@ -1,6 +1,8 @@
 Require Import DAO.Core.AlphaType.
 
-(** ** Properties of AlphaType *)
+(* ============================================================ *)
+(* Properties of AlphaType *)  
+(* ============================================================ *)
 
 Section AlphaProperties.
   Context {Alpha : AlphaType}.
@@ -105,6 +107,46 @@ Section ParadoxFirewalls.
     intros [P [Heq [x Px]]].
     apply (omega_veil_has_no_witnesses x).
     apply Heq. exact Px.
+  Qed.
+
+  Definition circular_predicate (P : Alphacarrier -> Prop) : Prop :=
+    forall x, P x <-> exists y, P y.
+  
+  (* If a circular predicate has a witness, it's universal *)
+  Theorem circular_witness_universal :
+    forall P : Alphacarrier -> Prop,
+      circular_predicate P ->
+      (exists x, P x) ->
+      forall y, P y.
+  Proof.
+    intros P Hcirc [x Px] y.
+    apply Hcirc.
+    exists x. exact Px.
+  Qed.
+  
+  (* And if it's not universal, it has no witnesses *)
+  Theorem circular_not_universal_empty :
+    forall P : Alphacarrier -> Prop,
+      circular_predicate P ->
+      (exists y, ~ P y) ->
+      forall x, ~ P x.
+  Proof.
+    intros P Hcirc [y HnPy] x Px.
+    apply HnPy.
+    apply Hcirc.
+    exists x. exact Px.
+  Qed.
+  
+  (* Circular predicates can't be "mixed" *)
+  Theorem circular_no_mixed :
+    forall P : Alphacarrier -> Prop,
+      circular_predicate P ->
+      ~ ((exists x, P x) /\ (exists y, ~ P y)).
+  Proof.
+    intros P Hcirc [[x Px] [y HnPy]].
+    apply HnPy.
+    apply (circular_witness_universal P Hcirc).
+    - exists x. exact Px.
   Qed.
   
 End ParadoxFirewalls.
