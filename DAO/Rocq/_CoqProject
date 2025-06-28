@@ -25,4 +25,11 @@ src/Logic/Paradox/UltimateParadox.v
 src/Computation/Computation.v
 src/Computation/InformationFlow.v
 
+src/Theory/Arithmetic.v
+src/Theory/Cardinality.v
+src/Theory/Impossibility.v
+src/Theory/PredicateCalculus.v
+src/Theory/HoTT.v
+src/Theory/CategoryTheory.v
+
 src/DAO.v
