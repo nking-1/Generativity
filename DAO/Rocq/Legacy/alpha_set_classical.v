@@ -18,7 +18,6 @@ Class ClassicalAlphaType := {
  alpha_constant_decision : forall P : Prop, P \/ ~ P
 }.
 
-(* ClassicalAlphaType embodies excluded middle - we're not claiming to derive it *)
 Theorem alpha_embodies_excluded_middle `{H_N: ClassicalAlphaType} :
  forall P : Prop, P \/ ~ P.
 Proof.
@@ -36,26 +35,26 @@ Proof.
 Qed.
 
 (* Extract the impossible predicate *)
-Definition the_impossible `{H_N: ClassicalAlphaType} : Alphacarrier -> Prop :=
+Definition omega_veil `{H_N: ClassicalAlphaType} : Alphacarrier -> Prop :=
  proj1_sig alpha_impossibility.
 
 (* Basic properties of the impossible predicate *)
 
-Lemma the_impossible_is_impossible `{H_N: ClassicalAlphaType} :
- forall x: Alphacarrier, ~ the_impossible x.
+Lemma omega_veil_is_impossible `{H_N: ClassicalAlphaType} :
+ forall x: Alphacarrier, ~ omega_veil x.
 Proof.
  intros x.
- unfold the_impossible.
+ unfold omega_veil.
  exact (proj1 (proj2_sig alpha_impossibility) x).
 Qed.
 
-Lemma the_impossible_unique `{H_N: ClassicalAlphaType} :
+Lemma omega_veil_unique `{H_N: ClassicalAlphaType} :
  forall P: Alphacarrier -> Prop,
    (forall x: Alphacarrier, ~ P x) -> 
-   (forall x: Alphacarrier, P x <-> the_impossible x).
+   (forall x: Alphacarrier, P x <-> omega_veil x).
 Proof.
  intros P HP.
- unfold the_impossible.
+ unfold omega_veil.
  destruct alpha_impossibility as [Q [HQ HUnique]].
  simpl.
  exact (HUnique P HP).
@@ -77,10 +76,10 @@ Definition pred_equiv `{H_N: ClassicalAlphaType} (P Q : Alphacarrier -> Prop) :=
  forall x, P x <-> Q x.
 
 (* The fundamental theorem: using classical logic, every predicate that isn't
-  the_impossible must have witnesses *)
+  omega_veil must have witnesses *)
 Theorem alpha_partial_completeness `{H_N: ClassicalAlphaType} :
  forall P: Alphacarrier -> Prop,
-   ~(pred_equiv P the_impossible) ->
+   ~(pred_equiv P omega_veil) ->
    exists x: Alphacarrier, P x.
 Proof.
  intros P H_not_equiv.
@@ -90,16 +89,16 @@ Proof.
  - exfalso.
    apply H_not_equiv.
    unfold pred_equiv.
-   apply the_impossible_unique.
+   apply omega_veil_unique.
    intros x Px.
    apply H_not_exists.
    exists x. exact Px.
 Qed.
 
-(* The dichotomy theorem: every predicate either equals the_impossible or has witnesses *)
+(* The dichotomy theorem: every predicate either equals omega_veil or has witnesses *)
 Theorem everything_possible_except_one `{H_N: ClassicalAlphaType} :
  forall P: Alphacarrier -> Prop,
-   pred_equiv P the_impossible \/ exists x: Alphacarrier, P x.
+   pred_equiv P omega_veil \/ exists x: Alphacarrier, P x.
 Proof.
  intro P.
  (* Use classical logic *)
@@ -107,7 +106,7 @@ Proof.
  - right. exact H_exists.
  - left. 
    unfold pred_equiv.
-   apply the_impossible_unique.
+   apply omega_veil_unique.
    intros x Px.
    apply H_not_exists.
    exists x. exact Px.
@@ -116,8 +115,8 @@ Qed.
 (* Spatial characterization of ClassicalAlphaType *)
 Theorem alpha_is_spatial `{H_N: ClassicalAlphaType} :
  forall P Q: Alphacarrier -> Prop,
-   pred_equiv P the_impossible \/ 
-   pred_equiv Q the_impossible \/ 
+   pred_equiv P omega_veil \/ 
+   pred_equiv Q omega_veil \/ 
    (exists x, P x) \/ 
    (exists x, Q x) \/
    (exists x, P x /\ Q x).
@@ -138,7 +137,7 @@ Qed.
   This file demonstrates that ClassicalAlphaType, with its single impossible predicate
   and classical logic for propositions, provides a natural foundation for
   classical reasoning about predicates. Every predicate either falls into
-  the unique "hole" (the_impossible) or has witnesses - there is no middle ground.
+  the unique "hole" (omega_veil) or has witnesses - there is no middle ground.
   
   The spatial nature of ClassicalAlphaType shows how classical logic organizes predicates
   not through temporal evolution (as in some paraconsistent systems) but through
@@ -149,8 +148,8 @@ Qed.
 
 Theorem predicate_polarity_trichotomy `{ClassicalAlphaType} :
   forall (P : Alphacarrier -> Prop),
-    pred_equiv P the_impossible \/
-    pred_equiv (fun x => ~ P x) the_impossible \/
+    pred_equiv P omega_veil \/
+    pred_equiv (fun x => ~ P x) omega_veil \/
     (exists x, P x) /\ (exists y, ~ P y).
 Proof.
   intros P.
@@ -159,25 +158,25 @@ Proof.
     destruct (alpha_constant_decision (exists x, ~ P x)) as [Hneg | Hnoneg].
     + (* Both P and ~P have witnesses *)
       right. right. split; assumption.
-    + (* ~P has no witness => ¬P ≡ the_impossible *)
+    + (* ~P has no witness => ¬P ≡ omega_veil *)
       right. left.
-      unfold pred_equiv, the_impossible.
-      apply the_impossible_unique.
+      unfold pred_equiv, omega_veil.
+      apply omega_veil_unique.
       intros x HnegPx.
       apply Hnoneg. exists x. exact HnegPx.
-  - (* P has no witness => P ≡ the_impossible *)
+  - (* P has no witness => P ≡ omega_veil *)
     left.
-    unfold pred_equiv, the_impossible.
-    apply the_impossible_unique.
+    unfold pred_equiv, omega_veil.
+    apply omega_veil_unique.
     intros x Px.
     apply Hnex. exists x. exact Px.
 Qed.
 
 
 Lemma impossible_at : forall `{ClassicalAlphaType} x,
-  the_impossible x <-> False.
+  omega_veil x <-> False.
 Proof.
-  intros. unfold the_impossible.
+  intros. unfold omega_veil.
   split.
   - apply (proj1 (proj2_sig alpha_impossibility)).
   - intro F. destruct F.
@@ -186,7 +185,7 @@ Qed.
 
 (* Lemma negation_has_witness_if_not_impossible `{ClassicalAlphaType} :
   forall P : Alphacarrier -> Prop,
-    ~(pred_equiv P the_impossible) ->
+    ~(pred_equiv P omega_veil) ->
     exists x, ~ P x.
 Proof.
   intros P H_not_impossible.
@@ -194,17 +193,17 @@ Proof.
   destruct (alpha_constant_decision (exists x, ~ P x)) as [H_yes | H_no].
   - exact H_yes.
 
-  - (* Assume: no witness for ¬P ⇒ ¬P ≡ the_impossible *)
-    assert (H_neg_equiv : pred_equiv (fun x => ~ P x) the_impossible).
+  - (* Assume: no witness for ¬P ⇒ ¬P ≡ omega_veil *)
+    assert (H_neg_equiv : pred_equiv (fun x => ~ P x) omega_veil).
     {
       unfold pred_equiv.
-      apply the_impossible_unique.
+      apply omega_veil_unique.
       intros x Hneg.
       apply H_no. exists x. exact Hneg.
     }
 
-    (* Now deduce: P ≡ not the_impossible ⇒ contradiction *)
-    assert (H_equiv : pred_equiv P the_impossible).
+    (* Now deduce: P ≡ not omega_veil ⇒ contradiction *)
+    assert (H_equiv : pred_equiv P omega_veil).
     {
       unfold pred_equiv in *.
       intros x.
@@ -239,23 +238,23 @@ Proof.
     exact (Hall x Px).
 Qed.
 
-(* A predicate is the_impossible iff it has no witnesses *)
+(* A predicate is omega_veil iff it has no witnesses *)
 Lemma impossible_no_witness (P : Alphacarrier -> Prop) :
-  pred_equiv P the_impossible <-> ~ (exists x, P x).
+  pred_equiv P omega_veil <-> ~ (exists x, P x).
 Proof.
   split.
   - intros Heq [x Px].
-    apply (the_impossible_is_impossible x).
+    apply (omega_veil_is_impossible x).
     apply Heq. exact Px.
   - intros Hnex.
     unfold pred_equiv.
-    apply the_impossible_unique.
+    apply omega_veil_unique.
     apply not_exists_forall_not. exact Hnex.
 Qed.
 
-(* Useful corollary: a predicate has witnesses iff it's not the_impossible *)
+(* Useful corollary: a predicate has witnesses iff it's not omega_veil *)
 Lemma witness_not_impossible (P : Alphacarrier -> Prop) :
-  (exists x, P x) <-> ~ pred_equiv P the_impossible.
+  (exists x, P x) <-> ~ pred_equiv P omega_veil.
 Proof.
   split.
   - intros Hex Heq.
@@ -269,14 +268,14 @@ Qed.
 
 (* The "always true" predicate is unique up to equivalence *)
 Definition the_necessary : Alphacarrier -> Prop :=
-  fun x => ~ the_impossible x.
+  fun x => ~ omega_veil x.
 
 Lemma necessary_always_true :
   forall x, the_necessary x.
 Proof.
   intros x.
   unfold the_necessary.
-  exact (the_impossible_is_impossible x).
+  exact (omega_veil_is_impossible x).
 Qed.
 
 Lemma necessary_unique (P : Alphacarrier -> Prop) :
@@ -286,13 +285,13 @@ Proof.
   unfold pred_equiv, the_necessary.
   intros x.
   split.
-  - intros _. exact (the_impossible_is_impossible x).
+  - intros _. exact (omega_veil_is_impossible x).
   - intros _. exact (Hall x).
 Qed.
 
 (* Any predicate between impossible and necessary must be "mixed" *)
 Lemma between_impossible_necessary (P : Alphacarrier -> Prop) :
-  ~ pred_equiv P the_impossible ->
+  ~ pred_equiv P omega_veil ->
   ~ pred_equiv P the_necessary ->
   (exists x, P x) /\ (exists y, ~ P y).
 Proof.
@@ -312,7 +311,7 @@ Qed.
 
 (* Predicates form a "three-valued" logic in some sense *)
 Lemma predicate_trichotomy (P : Alphacarrier -> Prop) :
-  pred_equiv P the_impossible \/
+  pred_equiv P omega_veil \/
   pred_equiv P the_necessary \/
   ((exists x, P x) /\ (exists y, ~ P y)).
 Proof.
@@ -321,15 +320,15 @@ Proof.
   - right. left.
     unfold pred_equiv, the_necessary.
     intros x. split.
-    + intros _. exact (the_impossible_is_impossible x).
+    + intros _. exact (omega_veil_is_impossible x).
     + intros _.
       destruct (alpha_constant_decision (P x)) as [HP | HnP].
       * exact HP.
       * exfalso. 
-        (* Hneg_imp tells us: (~ P x) <-> the_impossible x *)
+        (* Hneg_imp tells us: (~ P x) <-> omega_veil x *)
         (* We have HnP : ~ P x *)
-        (* So we can deduce: the_impossible x *)
-        apply (the_impossible_is_impossible x).
+        (* So we can deduce: omega_veil x *)
+        apply (omega_veil_is_impossible x).
         apply Hneg_imp.
         exact HnP.
   - right. right. exact Hmixed.
@@ -361,11 +360,11 @@ Definition pred_top : AlphaPred :=
   fun x => True.
 
 Definition pred_bot : AlphaPred :=
-  the_impossible.
+  omega_veil.
 
 (* Prove that operations preserve the witness dichotomy *)
 Lemma pred_and_dichotomy (P Q : AlphaPred) :
-  pred_equiv (pred_and P Q) the_impossible \/ 
+  pred_equiv (pred_and P Q) omega_veil \/ 
   exists x, (pred_and P Q) x.
 Proof.
   unfold pred_and.
@@ -373,14 +372,14 @@ Proof.
   - right. exact H.
   - left.
     unfold pred_equiv.
-    apply the_impossible_unique.
+    apply omega_veil_unique.
     (* Convert ~ (exists x, P x /\ Q x) to forall x, ~ (P x /\ Q x) *)
     intros x [HPx HQx].
     apply H. exists x. split; assumption.
 Qed.
 
 Lemma pred_or_dichotomy (P Q : AlphaPred) :
-  pred_equiv (pred_or P Q) the_impossible \/ 
+  pred_equiv (pred_or P Q) omega_veil \/ 
   exists x, (pred_or P Q) x.
 Proof.
   unfold pred_or.
@@ -388,14 +387,14 @@ Proof.
   - destruct (everything_possible_except_one Q) as [HQ | [y HQy]].
     + left. 
       unfold pred_equiv.
-      apply the_impossible_unique.
+      apply omega_veil_unique.
       intros z [HPz | HQz].
-      * (* HP tells us P z <-> the_impossible z, and we have HPz : P z *)
-        (* So we get the_impossible z *)
-        apply (the_impossible_is_impossible z).
+      * (* HP tells us P z <-> omega_veil z, and we have HPz : P z *)
+        (* So we get omega_veil z *)
+        apply (omega_veil_is_impossible z).
         apply HP. exact HPz.
       * (* Similarly for Q *)
-        apply (the_impossible_is_impossible z).
+        apply (omega_veil_is_impossible z).
         apply HQ. exact HQz.
     + right. exists y. right. exact HQy.
   - right. exists x. left. exact HPx.
@@ -453,7 +452,7 @@ Proof.
   intros x. split.
   - intros [HP | Himp].
     + exact HP.
-    + exfalso. apply (the_impossible_is_impossible x). exact Himp.
+    + exfalso. apply (omega_veil_is_impossible x). exact Himp.
   - intros HP. left. exact HP.
 Qed.
 
@@ -486,7 +485,7 @@ Proof.
       (* We have HP : P x and HnP : ~ P x, which gives us False *)
       exfalso. exact (HnP HP).
     + intros Himp. exfalso. 
-      apply (the_impossible_is_impossible x). exact Himp.
+      apply (omega_veil_is_impossible x). exact Himp.
 Qed.
 
 (* De Morgan's Laws *)
@@ -533,7 +532,7 @@ Proof.
     unfold pred_equiv in *.
     intros x. split.
     + intros _. exact I.
-    + intros _. apply Htop. apply the_impossible_is_impossible.
+    + intros _. apply Htop. apply omega_veil_is_impossible.
   - right. right. exact Hmixed.
 Qed.
 
@@ -622,11 +621,11 @@ Qed.
 (* A more subtle one: No predicate can be equivalent to its own non-existence *)
 Theorem no_self_denying_existence :
   ~ exists (P : AlphaPred),
-    pred_equiv P the_impossible /\ (exists x, P x).
+    pred_equiv P omega_veil /\ (exists x, P x).
 Proof.
   intros [P [Heq Hex]].
   destruct Hex as [x Px].
-  apply (the_impossible_is_impossible x).
+  apply (omega_veil_is_impossible x).
   apply Heq. exact Px.
 Qed.
 
@@ -634,7 +633,7 @@ Qed.
 Theorem predicate_grounding :
   forall (P : AlphaPred),
     (forall x, P x <-> exists y, P y) ->
-    pred_equiv P the_impossible \/ pred_equiv P the_necessary.
+    pred_equiv P omega_veil \/ pred_equiv P the_necessary.
 Proof.
   intros P H.
   destruct (everything_possible_except_one P) as [Himp | [x Px]].
@@ -646,7 +645,7 @@ Proof.
     (* So P is equivalent to the_necessary *)
     unfold pred_equiv, the_necessary.
     intros z. split.
-    + intros _. exact (the_impossible_is_impossible z).
+    + intros _. exact (omega_veil_is_impossible z).
     + intros _. exact (H0 z).
 Qed.
 
@@ -702,7 +701,7 @@ Axiom nat_induction :
 
 (* Zero is not the impossible predicate *)
 Theorem zero_exists_witness :
-  ~ pred_equiv IsZero the_impossible.
+  ~ pred_equiv IsZero omega_veil.
 Proof.
   apply witness_not_impossible.
   destruct zero_exists as [z [Hz _]].
@@ -711,7 +710,7 @@ Qed.
 
 (* Natural numbers form a non-empty set *)
 Theorem nat_exists_witness :
-  ~ pred_equiv IsNat the_impossible.
+  ~ pred_equiv IsNat omega_veil.
 Proof.
   apply witness_not_impossible.
   destruct zero_exists as [z [_ Hz]].
@@ -767,7 +766,7 @@ Qed.
 
 (* Alternative: Show that the predicate "has a successor" is not impossible *)
 Theorem has_successor_not_impossible :
-  ~ pred_equiv (fun x => exists y, Succ x y) the_impossible.
+  ~ pred_equiv (fun x => exists y, Succ x y) omega_veil.
 Proof.
   apply witness_not_impossible.
   destruct zero_exists as [z [Hz HNz]].
@@ -777,7 +776,7 @@ Qed.
 
 (* Or: Show that the predicate "is a successor" is not impossible *)
 Theorem is_successor_not_impossible :
-  ~ pred_equiv (fun y => exists x, Succ x y) the_impossible.
+  ~ pred_equiv (fun y => exists x, Succ x y) omega_veil.
 Proof.
   apply witness_not_impossible.
   destruct zero_exists as [z [Hz HNz]].
@@ -1096,15 +1095,15 @@ Proof.
   split; intro H; exact H.
 Qed.
 
-(* Axiom 2: Empty Set (it's the_impossible!) *)
-Definition Empty : ZSet := the_impossible.
+(* Axiom 2: Empty Set (it's omega_veil!) *)
+Definition Empty : ZSet := omega_veil.
 
 Theorem empty_set_exists : exists E : ZSet, forall x, x notin E.
 Proof.
   exists Empty.
   intros x.
   unfold In, Empty.
-  apply the_impossible_is_impossible.
+  apply omega_veil_is_impossible.
 Qed.
 
 (* Singleton sets *)
@@ -1142,7 +1141,7 @@ Proof.
  assert (a in Empty) by (apply H_eq; exact H).
  (* But nothing is in Empty *)
  unfold In, Empty in H0.
- apply (the_impossible_is_impossible a).
+ apply (omega_veil_is_impossible a).
  exact H0.
 Qed.
 
@@ -1154,7 +1153,7 @@ Proof.
  assert (a in pair a b) by (apply pair_spec; left; reflexivity).
  assert (a in Empty) by (apply H_eq; exact H).
  unfold In, Empty in H0.
- apply (the_impossible_is_impossible a).
+ apply (omega_veil_is_impossible a).
  exact H0.
 Qed.
 
@@ -1221,7 +1220,7 @@ Theorem universal_contains_all : forall x,
 Proof.
  intros x.
  unfold In, Universal, the_necessary.
- apply the_impossible_is_impossible.
+ apply omega_veil_is_impossible.
 Qed.
 
 (* Basic set algebra theorems *)
@@ -1236,7 +1235,7 @@ Proof.
    + (* x in Empty - impossible *)
      unfold In, Empty in H_empty.
      exfalso.
-     apply (the_impossible_is_impossible x).
+     apply (omega_veil_is_impossible x).
      exact H_empty.
    + exact H_A.
  - intros H_A.
@@ -1258,7 +1257,7 @@ Proof.
    + (* Need to show x in A, but we know x in Empty which is impossible *)
      unfold In, Empty in H_empty.
      exfalso.
-     apply (the_impossible_is_impossible x).
+     apply (omega_veil_is_impossible x).
      exact H_empty.
 Qed.
 
@@ -1339,8 +1338,8 @@ Theorem empty_set_has_code :
 Proof.
   apply set_encode_exists.
   right. intros a H.
-  unfold Empty, In, the_impossible in H.
-  apply (the_impossible_is_impossible a H).
+  unfold Empty, In, omega_veil in H.
+  apply (omega_veil_is_impossible a H).
 Qed.
 
 (* Basic theorems about set codes *)
@@ -1472,7 +1471,7 @@ Proof.
   destruct empty_code_spec as [_ Hdecode].
   apply Hdecode in Hin.
   unfold In, Empty in Hin.
-  exact (the_impossible_is_impossible x Hin).
+  exact (omega_veil_is_impossible x Hin).
 Qed.
 
 (* Now the theorem is trivial *)

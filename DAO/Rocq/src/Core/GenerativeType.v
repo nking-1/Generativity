@@ -6,7 +6,7 @@
 *)
 
 Require Import DAO.Core.AlphaType.
-Require Import Coq.Arith.PeanoNat.
+Require Import Stdlib.Arith.PeanoNat.
 
 (** ** Definition of GenerativeType *)
 

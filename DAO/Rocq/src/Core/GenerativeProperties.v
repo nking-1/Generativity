@@ -3,8 +3,8 @@ Require Import DAO.Core.GenerativeType.
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.Bridge.
-Require Import Coq.Arith.PeanoNat.
-Require Import Lia.
+Require Import Stdlib.Arith.PeanoNat.
+From Stdlib Require Import Lia.
 
 (* First, let's establish the basic self-reference examples *)
 

@@ -10,30 +10,6 @@ Require Export DAO.Core.AlphaType.
 Require Export DAO.Core.NomegaType.
 Require Export DAO.Core.GenerativeType.
 
-(** ** The Triviality Bridge
-    
-    Both OmegaType and NomegaType are trivial - they can prove anything.
-    This theorem shows their fundamental equivalence despite their opposite natures.
-*)
-
-Section TrivialityBridge.
-  
-  (** Both Omega and Nomega can prove any proposition about their carriers *)
-  Theorem omega_nomega_equivalence :
-    forall {O : OmegaType} {N : NomegaType},
-    (* Both can prove any proposition about their carriers *)
-    (forall (P : Omegacarrier -> Prop) (x : Omegacarrier), P x) /\
-    (forall (Q : Nomegacarrier -> Prop) (y : Nomegacarrier), Q y).
-  Proof.
-    split.
-    - (* Omega case: we have P x and ~P x *)
-      exact omega_proves_anything.
-    - (* Nomega case: from any y we get False *)
-      exact nomega_proves_anything.
-  Qed.
-  
-End TrivialityBridge.
-
 (** ** The DAO Framework Summary
     
     - OmegaType: Complete but paradoxical (contains everything)
