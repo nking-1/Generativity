@@ -1,11 +1,4 @@
-(** * DAO Theory - The Duality of Alpha and Omega
-    
-    A mathematical framework that formalizes veils as fundamental features of reality.
-    The name captures both the mathematical duality and the deep connection to 
-    Daoist philosophy - the ineffable Dao that cannot be named.
-    
-    This is the main entry point for the DAO library.
-*)
+(** * DAO Theory - The Duality of Alpha and Omega *)
 
 (** Core types *)
 Require Export DAO.Core.Core.

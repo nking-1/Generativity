@@ -32,3 +32,4 @@ Class GenerativeType (Alpha : AlphaType) := {
     forall t : nat, 
     exists n : nat, t <= n /\ contains n (self_ref_pred_embed P)
 }.
+
