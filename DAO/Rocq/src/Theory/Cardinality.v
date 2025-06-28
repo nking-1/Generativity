@@ -48,8 +48,13 @@ Proof.
   exact Heq.
 Qed.
 
-(* The OmegaToGenerative connection needs to be defined first *)
-(* Using the definition from earlier: *)
+Parameter strictly_larger : Type -> Type -> Prop.
+
+(* Intuition: X strictly larger than Y means there is no injective mapping from X into Y *)
+Axiom strictly_larger_no_injection :
+  forall (X Y : Type),
+    strictly_larger X Y ->
+      ~ exists (f : X -> Y), (forall x1 x2, f x1 = f x2 -> x1 = x2).
 
 (* Theorem: Omega is larger than GenerativeType *)
 Theorem omega_larger_than_gen :
@@ -110,3 +115,44 @@ Proof.
     as [t [_ Ht]].
   exists t. exact Ht.
 Qed.
+
+Theorem Omega_contains_set_larger_than_itself :
+  forall (Omega : OmegaType),
+    exists (X : Type) (embed_X_in_Omega : X -> Omegacarrier),
+      strictly_larger X Omegacarrier.
+Proof.
+  intros Omega.
+
+  (* Define the paradoxical predicate explicitly *)
+  set (P := fun (_ : Omegacarrier) =>
+    exists (X : Type) (embed_X_in_Omega : X -> Omegacarrier),
+      strictly_larger X Omegacarrier).
+
+  (* Omega completeness ensures this paradoxical predicate has a witness *)
+  destruct (omega_completeness P) as [witness H_witness].
+
+  (* From the witness we directly obtain our paradoxical set *)
+  exact H_witness.
+Qed.
+
+
+Theorem Omega_contains_set_larger_than_itself_iff_not_containing_it :
+  forall (Omega : OmegaType),
+    exists (x : Omegacarrier),
+      (exists (X : Type) (f : X -> Omegacarrier), strictly_larger X Omegacarrier) <->
+      ~ (exists (X : Type) (f : X -> Omegacarrier), strictly_larger X Omegacarrier).
+Proof.
+  intros Omega.
+
+  (* Define the equivalence predicate *)
+  set (meta_paradox := fun x : Omegacarrier =>
+    (exists (X : Type) (f : X -> Omegacarrier), strictly_larger X Omegacarrier) <->
+    ~ (exists (X : Type) (f : X -> Omegacarrier), strictly_larger X Omegacarrier)).
+
+  (* Use Omega completeness to obtain a witness of this paradoxical equivalence *)
+  destruct (omega_completeness meta_paradox) as [x H_equiv].
+
+  exists x.
+  exact H_equiv.
+Qed.
+

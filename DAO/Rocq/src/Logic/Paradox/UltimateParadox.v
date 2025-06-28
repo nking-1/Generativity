@@ -1,5 +1,17 @@
 Require Import DAO.Core.OmegaType.
 
+(* Omega contains all absurdities *)
+Theorem Omega_is_absurd:
+  forall (Omega : OmegaType),
+  forall (P Q : Omegacarrier -> Prop),
+    exists x : Omegacarrier, P x <-> Q x.
+Proof.
+  intros Omega P Q.
+  set (collapse := fun x => P x <-> Q x).
+  destruct (omega_completeness collapse) as [x Hx].
+  exists x. exact Hx.
+Qed.
+
 (* Define a fixpoint operator for paradoxical predicates *)
 Definition ParadoxFixpoint (Omega : OmegaType) : Type :=
   {P : Omegacarrier -> Prop | 
