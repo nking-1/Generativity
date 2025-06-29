@@ -29,6 +29,7 @@ src/Theory/Arithmetic.v
 src/Theory/Cardinality.v
 src/Theory/Impossibility.v
 src/Theory/PredicateCalculus.v
+src/Theory/Topology.v
 src/Theory/HoTT.v
 src/Theory/CategoryTheory.v
 
