@@ -356,6 +356,7 @@ Section HaltingProblemViaAlphaOmega.
   
 End HaltingProblemViaAlphaOmega.
 
+
 Section UndecidabilityFramework.
   Context {Alpha : AlphaType} {Omega : OmegaType}.
   Variable embed : Alphacarrier -> Omegacarrier.

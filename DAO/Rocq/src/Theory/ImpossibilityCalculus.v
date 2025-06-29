@@ -5,7 +5,7 @@ From Stdlib Require Import List.
 Import ListNotations.
 Require Import PeanoNat.
 
-Section PredicateCalculus.
+Section ImpossibilityCalculus.
   Context {Alpha : AlphaType}.
   
   (* Sequence of predicates *)
@@ -269,4 +269,4 @@ Qed.
   (* If P has witnesses, this doesn't converge to impossible *)
   (* But it shows how we might think about "gradual" changes *)
 
-End PredicateCalculus.
+End ImpossibilityCalculus.

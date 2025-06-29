@@ -2,6 +2,8 @@ Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import Setoid.
 
+(* Builds some primitives and a basic system to begin studying impossible logic *)
+
 (* Note - seems like a heyting algebra *)
 Section ImpossibilityAlgebra.
   Context {Alpha : AlphaType}.

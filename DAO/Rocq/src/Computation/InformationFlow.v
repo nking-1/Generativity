@@ -1,4 +1,5 @@
 Require Import DAO.Core.AlphaType.
+Require Import DAO.Core.Bridge.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.OmegaProperties.
 Require Import DAO.Logic.Diagonal.

@@ -5,30 +5,6 @@ Require Import DAO.Logic.Diagonal.
 Require Import DAO.Logic.Unrepresentability.
 
 (* ============================================================ *)
-(* Ternary Truth Values *)
-(* ============================================================ *)
-
-Section TernaryLogic.
-  Context {Alpha : AlphaType}.
-  
-  (* Alpha needs three truth values *)
-  Inductive TernaryTruth (P : Prop) : Type :=
-    | Proved : P -> TernaryTruth P
-    | Refuted : ~P -> TernaryTruth P  
-    | Undecidable : (P -> False) -> (~P -> False) -> TernaryTruth P.
-  
-  (* Some questions lead to the Undecidable case *)
-  Definition inherently_undecidable (P : Prop) : Prop :=
-    (P -> False) /\ (~P -> False).
-  
-  (* The question about unrepresentable predicates is inherently undecidable
-     in Alpha's logic *)
-  (* We'll build towards this in the next section *)
-  
-End TernaryLogic.
-
-
-(* ============================================================ *)
 (* The Contradiction: Alpha Cannot Have Excluded Middle         *)
 (* ============================================================ *)
 Section AlphaNeedsThreeValues.
@@ -150,10 +126,6 @@ Section AlphaTernaryLogic.
       
       (* But omega_diagonal has witnesses in Omega *)
       destruct (omega_diagonal_exists alpha_enum embed) as [x Hx].
-      
-      (* If embed is surjective onto its image, we'd get a contradiction *)
-      (* But we can't prove this in general... *)
-      (* Instead, use omega_completeness more cleverly *)
       
       (* Consider the predicate "x is in the image of embed and satisfies omega_diagonal" *)
       pose (P := fun x => omega_diagonal alpha_enum embed x /\ exists a, embed a = x).

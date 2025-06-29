@@ -1,6 +1,9 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 
+(* TODO: Can we define arithmetic operations or numbers by using omega_veil? *)
+(* The axioms here are reasonable, but it's more fun if we construct from the veil directly *)
+
 Section ConstructiveArithmetic.
   Context {Alpha : AlphaType}.
   

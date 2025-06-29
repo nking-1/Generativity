@@ -32,6 +32,7 @@ src/Theory/PredicateCalculus.v
 src/Theory/Topology.v
 src/Theory/HoTT.v
 src/Theory/CategoryTheory.v
+src/Theory/Godel.v
 
 src/Classical/Paradox.v
 src/Classical/Theory/BooleanAlgebra.v
