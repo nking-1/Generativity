@@ -930,7 +930,6 @@ Section EuclidPrimesKeyLemmas.
     IsPrime p -> IsNat d -> Divides d p -> IsOne d \/ d = p.
 
 
-(* Add this axiom *)
 Axiom divides_one_implies_one : forall d one,
   IsNat d -> IsOne one -> Divides d one -> IsOne d.
 
@@ -999,7 +998,6 @@ Qed.
     IsNat n -> IsOne one -> Greater n one ->
     exists p, IsPrime p /\ Divides p n.
 
-(* Add this axiom before the theorem *)
   Axiom plus_comm : forall x y z,
     Plus x y z -> Plus y x z.
 

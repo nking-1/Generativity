@@ -165,3 +165,117 @@ Proof.
   - intro F. destruct F.
 Qed.
 
+(* Helper lemmas for working with ClassicalAlphaType *)
+Section HelperLemmas.
+Context `{H_alpha: ClassicalAlphaType}.
+
+(* The key equivalence we just used: converting between negated existence and universal negation *)
+Lemma not_exists_forall_not (P : Alphacarrier -> Prop) :
+  ~ (exists x, P x) <-> forall x, ~ P x.
+Proof.
+  split.
+  - intros Hnex x Px.
+    apply Hnex. exists x. exact Px.
+  - intros Hall [x Px].
+    exact (Hall x Px).
+Qed.
+
+(* A predicate is classical_veil iff it has no witnesses *)
+Lemma impossible_no_witness (P : Alphacarrier -> Prop) :
+  pred_equiv P classical_veil <-> ~ (exists x, P x).
+Proof.
+  split.
+  - intros Heq [x Px].
+    apply (classical_veil_is_impossible x).
+    apply Heq. exact Px.
+  - intros Hnex.
+    unfold pred_equiv.
+    apply classical_veil_unique.
+    apply not_exists_forall_not. exact Hnex.
+Qed.
+
+(* Useful corollary: a predicate has witnesses iff it's not classical_veil *)
+Lemma witness_not_impossible (P : Alphacarrier -> Prop) :
+  (exists x, P x) <-> ~ pred_equiv P classical_veil.
+Proof.
+  split.
+  - intros Hex Heq.
+    apply impossible_no_witness in Heq.
+    exact (Heq Hex).
+  - intros Hneq.
+    destruct (everything_possible_except_one P) as [Heq | Hex].
+    + contradiction.
+    + exact Hex.
+Qed.
+
+(* The "always true" predicate is unique up to equivalence *)
+Definition the_necessary : Alphacarrier -> Prop :=
+  fun x => ~ classical_veil x.
+
+Lemma necessary_always_true :
+  forall x, the_necessary x.
+Proof.
+  intros x.
+  unfold the_necessary.
+  exact (classical_veil_is_impossible x).
+Qed.
+
+Lemma necessary_unique (P : Alphacarrier -> Prop) :
+  (forall x, P x) -> pred_equiv P the_necessary.
+Proof.
+  intros Hall.
+  unfold pred_equiv, the_necessary.
+  intros x.
+  split.
+  - intros _. exact (classical_veil_is_impossible x).
+  - intros _. exact (Hall x).
+Qed.
+
+(* Any predicate between impossible and necessary must be "mixed" *)
+Lemma between_impossible_necessary (P : Alphacarrier -> Prop) :
+  ~ pred_equiv P classical_veil ->
+  ~ pred_equiv P the_necessary ->
+  (exists x, P x) /\ (exists y, ~ P y).
+Proof.
+  intros Hnot_imp Hnot_nec.
+  split.
+  - apply witness_not_impossible. exact Hnot_imp.
+  - destruct (alpha_constant_decision (exists y, ~ P y)) as [Hex | Hnex].
+    + exact Hex.
+    + exfalso.
+      apply Hnot_nec.
+      apply necessary_unique.
+      intros x.
+      destruct (alpha_constant_decision (P x)) as [HP | HnP].
+      * exact HP.
+      * exfalso. apply Hnex. exists x. exact HnP.
+Qed.
+
+(* Predicates form a "three-valued" logic in some sense *)
+Lemma predicate_trichotomy (P : Alphacarrier -> Prop) :
+  pred_equiv P classical_veil \/
+  pred_equiv P the_necessary \/
+  ((exists x, P x) /\ (exists y, ~ P y)).
+Proof.
+  destruct (predicate_polarity_trichotomy P) as [Himp | [Hneg_imp | Hmixed]].
+  - left. exact Himp.
+  - right. left.
+    unfold pred_equiv, the_necessary.
+    intros x. split.
+    + intros _. exact (classical_veil_is_impossible x).
+    + intros _.
+      destruct (alpha_constant_decision (P x)) as [HP | HnP].
+      * exact HP.
+      * exfalso. 
+        (* Hneg_imp tells us: (~ P x) <-> classical_veil x *)
+        (* We have HnP : ~ P x *)
+        (* So we can deduce: classical_veil x *)
+        apply (classical_veil_is_impossible x).
+        apply Hneg_imp.
+        exact HnP.
+  - right. right. exact Hmixed.
+Qed.
+
+  (* Define the type of predicates *)
+  Definition AlphaPred := Alphacarrier -> Prop.
+End HelperLemmas.
