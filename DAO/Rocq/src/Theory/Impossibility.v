@@ -1,7 +1,12 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import Setoid.
-Require Import Lia.
+From Stdlib Require Import Lia.
+From Stdlib Require Import String.
+From Stdlib Require Import List.
+From Stdlib Require Import PeanoNat.
+Import ListNotations.
+
 
 (* Builds some primitives and a basic system to begin studying impossible logic *)
 
@@ -504,11 +509,6 @@ These additions would formalize the rich structure we discovered - showing that 
 End ImpossibilityAlgebra.
 
 
-Require Import String.
-Require Import List.
-Import ListNotations.
-Require Import PeanoNat.
-
 
 Section ImpossibilityAlgebraExtended.
   Context {Alpha : AlphaType}.
@@ -846,12 +846,6 @@ Section ImpossibilityGeneration.
 End ImpossibilityGeneration.
 
 
-Require Import DAO.Core.AlphaType.
-Require Import DAO.Core.AlphaProperties.
-From Stdlib Require Import Lia.
-From Stdlib Require Import List.
-Import ListNotations.
-Require Import PeanoNat.
 
 Section ImpossibilityCalculus.
   Context {Alpha : AlphaType}.
@@ -1118,3 +1112,228 @@ Qed.
   (* But it shows how we might think about "gradual" changes *)
 
 End ImpossibilityCalculus.
+
+(* ========== Noether's Theorem Connection ========== *)
+Section NoetherConnection.
+  Context {Alpha : AlphaType}.
+  
+  (* In physics, Noether's theorem states:
+     For every continuous symmetry, there is a conserved quantity.
+     
+     In DAO Theory, we propose:
+     For every paradox translation symmetry, there is conserved impossibility entropy.
+  *)
+  
+  (* A transformation on predicates *)
+  Definition predicate_transform := (Alphacarrier -> Prop) -> (Alphacarrier -> Prop).
+  
+  (* A transformation preserves impossibility structure if it maps 
+     impossible predicates to impossible predicates *)
+  Definition preserves_impossibility (T : predicate_transform) : Prop :=
+    forall P, Is_Impossible P <-> Is_Impossible (T P).
+  
+  (* The identity transformation *)
+  Definition id_transform : predicate_transform := fun P => P.
+  
+  (* Composition of transformations *)
+  Definition compose_transform (T1 T2 : predicate_transform) : predicate_transform :=
+    fun P => T1 (T2 P).
+  
+  (* A "paradox translation" - maps one impossible predicate to another *)
+  (* We need decidable equality for this to work computationally *)
+  Hypothesis predicate_eq_dec : forall P Q : Alphacarrier -> Prop,
+    {forall a, P a <-> Q a} + {~ (forall a, P a <-> Q a)}.
+  
+  Definition paradox_translation (source target : Alphacarrier -> Prop) 
+    (H_source : Is_Impossible source) (H_target : Is_Impossible target) : predicate_transform :=
+    fun P => match predicate_eq_dec P source with
+             | left _ => target
+             | right _ => P
+             end.
+  
+  (* Key insight: All paradox translations preserve impossibility structure *)
+  Theorem paradox_translation_symmetry :
+    forall source target Hs Ht,
+    preserves_impossibility (paradox_translation source target Hs Ht).
+  Proof.
+    intros source target Hs Ht P.
+    unfold preserves_impossibility, paradox_translation.
+    split; intro HP.
+    - (* If P is impossible *)
+      destruct (predicate_eq_dec P source) as [Heq | Hneq].
+      + (* P equals source, so we return target which is impossible *)
+        exact Ht.
+      + (* P doesn't equal source, so we return P which is impossible *)
+        exact HP.
+    - (* If T(P) is impossible *)
+      destruct (predicate_eq_dec P source) as [Heq | Hneq].
+      + (* T(P) = target, and target is impossible, so HP : Is_Impossible target *)
+        (* We need to prove Is_Impossible P *)
+        (* Since P equals source (by Heq), and source is impossible (by Hs) *)
+        intro a.
+        split.
+        * intro HPa.
+          apply Hs.
+          apply Heq.
+          exact HPa.
+        * intro Hov.
+          apply Heq.
+          apply Hs.
+          exact Hov.
+      + (* T(P) = P, so P is impossible *)
+        exact HP.
+  Qed.
+  
+  (* The group of all impossibility-preserving transformations *)
+  Record ImpossibilitySymmetry := {
+    transform : predicate_transform;
+    preserves : preserves_impossibility transform
+  }.
+  
+  (* This forms a group structure *)
+  Definition symmetry_compose (S1 S2 : ImpossibilitySymmetry) : ImpossibilitySymmetry.
+  Proof.
+    refine ({|
+      transform := compose_transform (transform S1) (transform S2);
+      preserves := _
+    |}).
+    (* Prove composition preserves impossibility *)
+    intros P.
+    unfold compose_transform, preserves_impossibility.
+    split; intro HP.
+    - (* Is_Impossible P -> Is_Impossible (S1 (S2 P)) *)
+      apply (preserves S1 (transform S2 P)).
+      apply (preserves S2 P).
+      exact HP.
+    - (* Is_Impossible (S1 (S2 P)) -> Is_Impossible P *)
+      (* Use the backwards direction of the iff *)
+      apply (preserves S2 P).
+      apply (preserves S1 (transform S2 P)).
+      exact HP.
+  Defined.
+  
+  Definition symmetry_identity : ImpossibilitySymmetry :=
+    {| transform := id_transform; 
+       preserves := fun P => iff_refl _ |}.
+  
+  (* Now for the conservation law connection *)
+  
+  (* We need decidability for action computation *)
+  Hypothesis impossible_decidable : forall P, {Is_Impossible P} + {~ Is_Impossible P}.
+  
+  (* A "Lagrangian" for predicate dynamics *)
+  Definition predicate_action (P : Alphacarrier -> Prop) : nat :=
+    if (impossible_decidable P) then 0 else 1.
+  
+  (* The "Noether current" - impossibility entropy flow *)
+  Definition impossibility_current (T : predicate_transform) (P : Alphacarrier -> Prop) : nat :=
+    predicate_action P + predicate_action (T P).
+  
+  (* Noether's Theorem for Impossibility *)
+  Theorem impossibility_noether :
+    forall (T : predicate_transform),
+    preserves_impossibility T ->
+    forall P, 
+    predicate_action P = predicate_action (T P).
+  Proof.
+    intros T HT P.
+    unfold predicate_action.
+    case_eq (impossible_decidable P); intros HP Hdec_P.
+    - (* P is impossible *)
+      case_eq (impossible_decidable (T P)); intros HTP Hdec_TP.
+      + (* T P is also impossible - conservation! *)
+        reflexivity.
+      + (* T P is not impossible - contradiction *)
+        exfalso.
+        apply HTP.
+        apply (HT P).  (* Use the forward direction of HT *)
+        exact HP.
+    - (* P is not impossible *)
+      case_eq (impossible_decidable (T P)); intros HTP Hdec_TP.
+      + (* T P is impossible - contradiction *)
+        exfalso.
+        apply HP.
+        apply (HT P).  (* Use the backward direction of HT *)
+        exact HTP.
+      + (* T P is also not impossible - conservation! *)
+        reflexivity.
+  Qed.
+  
+  (* The deeper connection: paradox translations form a Lie group *)
+  
+  (* Infinitesimal paradox translation *)
+  Definition infinitesimal_paradox_shift (epsilon : Alphacarrier -> Prop) : predicate_transform :=
+    fun P a => P a \/ (epsilon a /\ Is_Impossible P).
+  
+  (* The generator of paradox translations is omega_veil itself! *)
+  Theorem omega_veil_generates_symmetry :
+    forall P,
+    Is_Impossible P ->
+    exists T : predicate_transform,
+    preserves_impossibility T /\
+    T omega_veil = P.
+  Proof.
+    intros P HP.
+    (* Use paradox translation from omega_veil to P *)
+    exists (paradox_translation omega_veil P (fun a => iff_refl _) HP).
+    split.
+    - apply paradox_translation_symmetry.
+    - unfold paradox_translation.
+      destruct (predicate_eq_dec omega_veil omega_veil) as [Heq | Hneq].
+      + reflexivity.
+      + (* This case is impossible - omega_veil equals itself *)
+        exfalso.
+        apply Hneq.
+        intro a.
+        reflexivity.
+  Qed.
+  
+  (* Conservation of total entropy in a closed system *)
+  Theorem total_entropy_conservation :
+    forall (system : list (Alphacarrier -> Prop)) (T : predicate_transform),
+    preserves_impossibility T ->
+    length (filter (fun P => if impossible_decidable P then true else false) system) =
+    length (filter (fun P => if impossible_decidable (T P) then true else false) system).
+  Proof.
+    intros system T HT.
+    induction system as [|P rest IH].
+    - reflexivity.
+    - simpl.
+      destruct (impossible_decidable P) as [HP | HnP].
+      + (* P is impossible *)
+        destruct (impossible_decidable (T P)) as [HTP | HnTP].
+        * (* T P is also impossible *)
+          simpl. f_equal. exact IH.
+        * (* Contradiction *)
+          exfalso. apply HnTP. apply (HT P). exact HP.
+      + (* P is not impossible *)
+        destruct (impossible_decidable (T P)) as [HTP | HnTP].
+        * (* Contradiction *)
+          exfalso. apply HnP. apply (HT P). exact HTP.
+        * (* T P is also not impossible *)
+          exact IH.
+  Qed.
+  
+  (* The variational principle: extremal action occurs at omega_veil *)
+  Theorem omega_veil_extremal :
+    forall P,
+    Is_Impossible P ->
+    predicate_action P = predicate_action omega_veil.
+  Proof.
+    intros P HP.
+    unfold predicate_action.
+    destruct (impossible_decidable P) as [HP_dec | HnP_dec].
+    - destruct (impossible_decidable omega_veil) as [Hov_dec | Hnov_dec].
+      + reflexivity.
+      + exfalso. apply Hnov_dec. intro a. reflexivity.
+    - exfalso. apply HnP_dec. exact HP.
+  Qed.
+  
+  (* Summary: The symmetry group of paradox translations leads to
+     conservation of impossibility entropy, just as spacetime symmetries
+     lead to conservation of energy-momentum in physics. 
+     
+     omega_veil acts as the generator of these symmetries, playing a role
+     analogous to the Hamiltonian in physics. *)
+  
+End NoetherConnection.
