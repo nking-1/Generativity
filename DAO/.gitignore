@@ -1,0 +1,69 @@
+# Haskell build artifacts
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+*.prof
+*.aux
+*.hp
+*.eventlog
+.stack-work/
+dist/
+dist-newstyle/
+.cabal-sandbox/
+cabal.sandbox.config
+*.cabal~
+
+# Haskell executables (based on current repo)
+Haskell/impossibile
+Haskell/impossible_physics
+Haskell/impossible_continued
+Haskell/impossible_extended
+Haskell/paradox_turing_machine
+Haskell/consciousness_simulator
+Haskell/black_hole_ptm
+Haskell/cern_impossible
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Coq/Rocq artifacts
+*.vo
+*.vok
+*.vos
+*.glob
+*.aux
+.lia.cache
+
+# Editor and system files
+.DS_Store
+.vscode/
+*.swp
+*.swo
+*~
+\#*\#
+.\#*
+
+# Backup files
+*.bak
+*.backup
+*.old

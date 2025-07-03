@@ -203,14 +203,3 @@ main = do
   putStrLn $ "Electron (mass=0.5): " ++ showImpossible (higgsInteraction 1)
   putStrLn $ "Photon (massless): " ++ showImpossible (higgsInteraction 0)
   putStrLn $ "Top quark (mass=173): " ++ showImpossible (higgsInteraction 173)
-  
-  putStrLn "\n=== REVOLUTIONARY PHYSICS ==="
-  putStrLn "Traditional particle physics: UNDEFINED at singularities"
-  putStrLn "Impossible particle physics: TRACKS impossible intermediate states"
-  putStrLn ""
-  putStrLn "Applications:"
-  putStrLn "- Simulate virtual particle interactions safely"
-  putStrLn "- Study quantum tunneling through impossible barriers"
-  putStrLn "- Model particle collisions with exotic matter"
-  putStrLn "- Analyze beam instabilities without simulation crashes"
-  putStrLn "- Map impossibility in quantum field theory"

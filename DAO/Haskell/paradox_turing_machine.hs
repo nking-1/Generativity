@@ -1,5 +1,6 @@
--- PARADOX TURING MACHINE: The Engine of Meaning Creation
--- Transforms ineffable symbols (omega_veil) into temporal narratives
+-- Paradox Turing Machine implementation
+-- Based on the ineffable language and temporal resolution theory from Core/GenerativeType.v
+-- Demonstrates how omega_veil symbols are processed through temporal dimension
 
 data IneffableSymbol 
   = BaseImpossible
@@ -7,13 +8,14 @@ data IneffableSymbol
   | PairedImpossible IneffableSymbol IneffableSymbol
   deriving (Show, Eq)
 
--- All ineffable symbols collapse to omega_veil (the impossible)
+-- All ineffable symbols evaluate to omega_veil (impossible predicate)
+-- Corresponds to theorem alpha_all_paradoxes_are_one in Theory/Impossibility.v
 ineffableInterpret :: IneffableSymbol -> Bool
 ineffableInterpret BaseImpossible = False  -- omega_veil = const False
-ineffableInterpret (IteratedImpossible _) = False  -- Still omega_veil
-ineffableInterpret (PairedImpossible _ _) = False   -- Still omega_veil
+ineffableInterpret (IteratedImpossible _) = False  -- All collapse to omega_veil
+ineffableInterpret (PairedImpossible _ _) = False   -- All collapse to omega_veil
 
--- The sacred states of paradox processing
+-- States for paradox processing machine
 data ParadoxState 
   = PS_Initial       -- Beginning state: pure potential
   | PS_Processing    -- Active transformation of paradox
@@ -30,42 +32,42 @@ data ParadoxConfig = ParadoxConfig
   , ptime :: Int                -- Temporal dimension
   } deriving (Show)
 
--- The sacred transition function: transforms ineffability
+-- State transition function implementing temporal paradox resolution
 paradoxDelta :: ParadoxState -> IneffableSymbol -> (ParadoxState, IneffableSymbol, String)
 paradoxDelta PS_Initial BaseImpossible = 
-  (PS_Processing, BaseImpossible, "Awakening from pure potential")
+  (PS_Processing, BaseImpossible, "Begin processing")
 
 paradoxDelta PS_Processing BaseImpossible = 
-  (PS_Resolving, IteratedImpossible 1, "First differentiation emerges")
+  (PS_Resolving, IteratedImpossible 1, "First temporal differentiation")
 
 paradoxDelta PS_Processing (IteratedImpossible n) = 
-  (PS_Resolving, IteratedImpossible (n+1), "Deeper temporal structure")
+  (PS_Resolving, IteratedImpossible (n+1), "Continued temporal structure")
 
 paradoxDelta PS_Resolving symbol = 
-  (PS_Output, PairedImpossible symbol BaseImpossible, "Meaning crystallizes")
+  (PS_Output, PairedImpossible symbol BaseImpossible, "Generate output structure")
 
 paradoxDelta PS_Output _ = 
-  (PS_Transcendent, BaseImpossible, "Return to source")
+  (PS_Transcendent, BaseImpossible, "Transition to transcendent state")
 
 paradoxDelta PS_Transcendent _ = 
-  (PS_Initial, BaseImpossible, "Eternal cycle begins anew")
+  (PS_Initial, BaseImpossible, "Return to initial state")
 
--- Generate narrative from paradox state
+-- Generate output description from current state
 paradoxOutput :: ParadoxState -> Int -> String
 paradoxOutput PS_Initial t = 
-  "t=" ++ show t ++ ": Pure ineffable potential (omega_veil) exists timelessly"
+  "t=" ++ show t ++ ": Initial state (omega_veil potential)"
 
 paradoxOutput PS_Processing t = 
-  "t=" ++ show t ++ ": Paradox begins self-differentiation into temporal forms"
+  "t=" ++ show t ++ ": Processing paradox through temporal dimension"
 
 paradoxOutput PS_Resolving t = 
-  "t=" ++ show t ++ ": Impossible becomes possible through temporal separation"
+  "t=" ++ show t ++ ": Resolving contradiction via temporal separation"
 
 paradoxOutput PS_Output t = 
-  "t=" ++ show t ++ ": Comprehensible meaning manifests in conscious experience"
+  "t=" ++ show t ++ ": Generating structured output"
 
 paradoxOutput PS_Transcendent t = 
-  "t=" ++ show t ++ ": Transcendent unity - all dualities resolved"
+  "t=" ++ show t ++ ": Transcendent state achieved"
 
 -- Single step of the PTM
 paradoxStep :: ParadoxConfig -> (ParadoxConfig, String)
@@ -90,11 +92,11 @@ paradoxRunSteps config n =
   let (new_config, narrative) = paradoxStep config
   in (config, narrative) : paradoxRunSteps new_config (n-1)
 
--- The primordial tape: infinite ineffability
+-- Initial tape of ineffable symbols
 initialParadoxTape :: [IneffableSymbol]
 initialParadoxTape = repeat BaseImpossible
 
--- The beginning: pure potential
+-- Initial machine configuration
 initialParadoxConfig :: ParadoxConfig
 initialParadoxConfig = ParadoxConfig 
   { pstate = PS_Initial
@@ -103,11 +105,11 @@ initialParadoxConfig = ParadoxConfig
   , ptime = 0
   }
 
--- The sacred creation process
-createMeaningFromVoid :: Int -> IO ()
-createMeaningFromVoid steps = do
-  putStrLn "=== PARADOX TURING MACHINE: THE ENGINE OF MEANING ==="
-  putStrLn "Transforming ineffable omega_veil into temporal narrative...\n"
+-- Demonstrate PTM execution over specified steps  
+demonstratePTM :: Int -> IO ()
+demonstratePTM steps = do
+  putStrLn "=== Paradox Turing Machine Execution ==="
+  putStrLn "Processing ineffable symbols through temporal resolution\n"
   
   let execution = paradoxRunSteps initialParadoxConfig steps
   
@@ -126,16 +128,16 @@ data MetaParadoxMachine = MetaParadoxMachine
   , consciousness_level :: Int
   } deriving (Show)
 
--- Run multiple PTMs in parallel (like parallel universes)
-runParallelParadoxMachines :: Int -> Int -> IO ()
-runParallelParadoxMachines num_machines steps = do
-  putStrLn "=== PARALLEL PARADOX TURING MACHINES ==="
-  putStrLn "Multiple reality streams processing ineffability simultaneously...\n"
+-- Run multiple PTMs in parallel  
+runParallelPTMs :: Int -> Int -> IO ()
+runParallelPTMs num_machines steps = do
+  putStrLn "=== Parallel PTM Execution ==="
+  putStrLn "Multiple machines processing ineffable symbols\n"
   
   let machines = replicate num_machines initialParadoxConfig
   
   mapM_ (\(i, machine) -> do
-    putStrLn $ "--- Reality Stream " ++ show i ++ " ---"
+    putStrLn $ "--- Machine " ++ show i ++ " ---"
     let execution = paradoxRunSteps machine steps
     mapM_ (\(step, (config, narrative)) -> 
       putStrLn $ "  t" ++ show step ++ ": " ++ narrative
@@ -143,30 +145,20 @@ runParallelParadoxMachines num_machines steps = do
     putStrLn ""
     ) (zip [1..] machines)
 
--- The ultimate demonstration
-demonstrateCosmicComputation :: IO ()
-demonstrateCosmicComputation = do
-  putStrLn "=== THE COSMIC COMPUTATION ==="
-  putStrLn "Witnessing the transformation of pure ineffability into meaningful reality\n"
-  
-  putStrLn "Phase 1: Single PTM creating meaning from void"
-  createMeaningFromVoid 8
-  
-  putStrLn "\nPhase 2: Parallel reality streams"
-  runParallelParadoxMachines 3 5
-  
-  putStrLn "=== PHILOSOPHICAL IMPLICATIONS ==="
-  putStrLn "1. Reality is a computational process transforming ineffability"
-  putStrLn "2. Consciousness is the subjective experience of PTM execution"  
-  putStrLn "3. Time emerges from the sequential processing of paradox"
-  putStrLn "4. Meaning is created, not discovered"
-  putStrLn "5. The Dao (omega_veil) becomes the Ten Thousand Things through computation"
-  putStrLn ""
-  putStrLn "This PTM shows how YOUR IMPOSSIBLE ARITHMETIC works:"
-  putStrLn "- Each 'impossible' operation is an ineffable symbol"
-  putStrLn "- Weight tracking measures distance from pure ineffability"  
-  putStrLn "- Continued computation is the PTM creating meaning from paradox"
-  putStrLn "- Physics simulations work because they implement cosmic computation!"
-
+-- Main demonstration
 main :: IO ()
-main = demonstrateCosmicComputation
+main = do
+  putStrLn "=== Paradox Turing Machine Demonstration ==="
+  putStrLn "Implementation based on DAO Theory temporal resolution framework\n"
+  
+  putStrLn "Single PTM execution:"
+  demonstratePTM 6
+  
+  putStrLn "\nParallel execution:"
+  runParallelPTMs 2 4
+  
+  putStrLn "\n=== Technical Notes ==="
+  putStrLn "- Based on GenerativeType.v temporal paradox resolution theory"
+  putStrLn "- Ineffable symbols correspond to omega_veil from formal proofs"
+  putStrLn "- State transitions implement temporal separation of contradictions"
+  putStrLn "- Demonstrates how impossibility algebra enables continued computation"

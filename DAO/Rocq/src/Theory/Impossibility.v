@@ -726,7 +726,7 @@ Section ImpossibilityGeneration.
     fun a => ~ (P a /\ Q a).
   
   (* Step 0: We have omega_veil *)
-  (* Step 1: Generate the first non-impossible predicate *)
+  (* Step 1: Generate the predicate of non-paradoxical elements *)
   Definition alpha_0 : Alphacarrier -> Prop :=
     fun a => ~ omega_veil a.
   
@@ -816,6 +816,155 @@ Section ImpossibilityGeneration.
       apply Hnn.
       split; intro H; destruct H as [HP _]; contradiction.
   Qed.
+
+Lemma double_neg_omega_veil_impossible :
+  Is_Impossible (fun a => ~ ~ omega_veil a).
+Proof.
+  (* Is_Impossible expects: forall a, (~ ~ omega_veil a) <-> omega_veil a *)
+  intro a.
+  
+  (* First prove it has no witnesses *)
+  assert (H_no_witnesses: forall x, ~ (~ ~ omega_veil x)).
+  {
+    intros x H_nnov.
+    apply H_nnov.
+    exact (omega_veil_has_no_witnesses x).
+  }
+  
+  (* Now use omega_veil_unique to get the biconditional *)
+  pose proof (omega_veil_unique (fun x => ~ ~ omega_veil x) H_no_witnesses) as H_equiv.
+  
+  (* H_equiv gives us: forall x, (~ ~ omega_veil x) <-> omega_veil x *)
+  exact (H_equiv a).
+Qed.
+
+Theorem omega_veil_double_neg_elim : 
+  forall a, ~ ~ omega_veil a -> omega_veil a.
+Proof.
+  intros a H_nnov.
+  (* Use our lemma to show ~ ~ omega_veil is equivalent to omega_veil *)
+  apply double_neg_omega_veil_impossible.
+  exact H_nnov.
+Qed.
+
+(* NAND omega_veil with itself gives alpha_0 *)
+Theorem nand_omega_self :
+  forall a, NAND omega_veil omega_veil a <-> alpha_0 a.
+Proof.
+  intro a.
+  unfold NAND, alpha_0.
+  split; intro H.
+  - (* ~ (omega_veil a /\ omega_veil a) -> ~ omega_veil a *)
+    intro Hov.
+    apply H.
+    split; exact Hov.
+  - (* ~ omega_veil a -> ~ (omega_veil a /\ omega_veil a) *)
+    intros [Hov _].
+    exact (H Hov).
+Qed.
+
+(* NAND alpha_0 with itself gives omega_veil *)
+Theorem nand_alpha_0_self :
+  forall a, NAND alpha_0 alpha_0 a <-> omega_veil a.
+Proof.
+  intro a.
+  unfold NAND, alpha_0.
+  split; intro H.
+  - (* ~ (~ omega_veil a /\ ~ omega_veil a) -> omega_veil a *)
+    (* This is ~ ~ omega_veil a -> omega_veil a *)
+    apply omega_veil_double_neg_elim.
+    intro Hnov.
+    apply H.
+    split; exact Hnov.
+  - (* omega_veil a -> ~ (~ omega_veil a /\ ~ omega_veil a) *)
+    intros [Hnov _].
+    exact (Hnov H).
+Qed.
+
+(* NAND is commutative *)
+Theorem nand_comm :
+  forall P Q a, NAND P Q a <-> NAND Q P a.
+Proof.
+  intros P Q a.
+  unfold NAND.
+  split.
+  - (* Left to right: ~ (P a /\ Q a) -> ~ (Q a /\ P a) *)
+    intro H.
+    intro H_conj.
+    apply H.
+    destruct H_conj as [HQ HP].
+    split; [exact HP | exact HQ].
+  - (* Right to left: ~ (Q a /\ P a) -> ~ (P a /\ Q a) *)
+    intro H.
+    intro H_conj.
+    apply H.
+    destruct H_conj as [HP HQ].
+    split; [exact HQ | exact HP].
+Qed.
+
+(* gen_false is just omega_veil - already established *)
+Theorem gen_false_is_omega_veil :
+  forall a, gen_false a <-> omega_veil a.
+Proof.
+  intro a. unfold gen_false. split; intro H; exact H.
+Qed.
+
+(* gen_and within our two-element algebra *)
+Theorem gen_and_omega_alpha :
+  forall a, gen_and omega_veil alpha_0 a <-> omega_veil a.
+Proof.
+  intro a.
+  unfold gen_and, gen_not, NAND.
+  (* Goal is now: ~ (~ (omega_veil a /\ alpha_0 a) /\ ~ (omega_veil a /\ alpha_0 a)) <-> omega_veil a *)
+  split; intro H.
+  - (* Forward direction *)
+    (* H : ~ (~ (omega_veil a /\ alpha_0 a) /\ ~ (omega_veil a /\ alpha_0 a)) *)
+    (* We need to show omega_veil a *)
+    apply omega_veil_double_neg_elim.
+    intro H_not_ov.
+    (* H_not_ov : ~ omega_veil a *)
+    apply H.
+    (* Goal: ~ (omega_veil a /\ alpha_0 a) /\ ~ (omega_veil a /\ alpha_0 a) *)
+    split; intro H_conj; destruct H_conj as [Hov _]; exact (H_not_ov Hov).
+  - (* omega_veil a -> ~ ~ (omega_veil a /\ alpha_0 a) *)
+    intro H_not.
+    apply H_not.
+    split.
+    + exact H.
+    + exfalso. exact (omega_veil_has_no_witnesses a H).
+Qed.
+
+(* gen_or within our two-element algebra *)
+Theorem gen_or_omega_alpha :
+  forall a, gen_or omega_veil alpha_0 a <-> alpha_0 a.
+Proof.
+  intro a.
+  unfold gen_or, NAND.
+  (* This becomes: ~ (~ (omega_veil a /\ omega_veil a) /\ ~ (alpha_0 a /\ alpha_0 a)) *)
+  (* Which simplifies to: ~ (alpha_0 a /\ omega_veil a) using our previous results *)
+  split; intro H.
+  - (* Forward direction *)
+    intro Hov.
+    apply H.
+    split.
+    + (* ~ (omega_veil a /\ omega_veil a) *)
+      intro H_conj.
+      destruct H_conj as [Hov1 _].
+      exact (omega_veil_has_no_witnesses a Hov1).
+    + (* ~ (alpha_0 a /\ alpha_0 a) *)
+      intro H_conj.
+      destruct H_conj as [Ha0 _].
+      unfold alpha_0 in Ha0.
+      exact (Ha0 Hov).
+  - (* Backward direction *)
+    intro H_conj.
+    destruct H_conj as [H_omega_nand H_alpha_nand].
+    (* We have alpha_0 a, so ~ omega_veil a *)
+    unfold alpha_0 in H.
+    (* H_alpha_nand says ~ (alpha_0 a /\ alpha_0 a) *)
+    apply H_alpha_nand.
+    split; exact H.
+Qed.
 
   (* The generation sequence: building complexity from impossibility *)
   Definition generation_sequence : nat -> (Alphacarrier -> Prop) :=
@@ -1336,4 +1485,109 @@ Section NoetherConnection.
      omega_veil acts as the generator of these symmetries, playing a role
      analogous to the Hamiltonian in physics. *)
   
+
+  (* First, we need to lift transformations to weighted impossibles *)
+Definition apply_weighted_transform (T : predicate_transform) 
+  (source : ImpossibilitySource) (W : WeightedImpossible) : WeightedImpossible := {|
+  certain := T (certain W);
+  weight := weight W;  (* Noether conservation preserves weight *)
+  source_info := Composition (source_info W) source;
+  weight_positive := weight_positive W  (* Inherited from original *)
+|}.
+
+(* The main Noether-thermodynamic connection theorem *)
+Theorem noether_thermodynamic_bridge :
+  forall (T : predicate_transform) (source : ImpossibilitySource) (W : WeightedImpossible),
+  preserves_impossibility T ->
+  (* Noether conservation: impossibility structure preserved *)
+  (Is_Impossible (certain W) <-> Is_Impossible (certain (apply_weighted_transform T source W))) /\
+  (* Thermodynamic conservation: entropy (weight) preserved under symmetry *)
+  weight (apply_weighted_transform T source W) = weight W /\
+  (* Source tracking: transformation history preserved *)
+  source_info (apply_weighted_transform T source W) = Composition (source_info W) source.
+Proof.
+  intros T source W HT.
+  split; [|split].
+  - (* Impossibility structure preserved by Noether *)
+    simpl. apply HT.
+  - (* Weight preserved *)
+    simpl. reflexivity.
+  - (* Source tracking *)
+    simpl. reflexivity.
+Qed.
+
+(* Helper lemma: fold_left is preserved under weight-preserving transformations *)
+Lemma fold_left_map_weight_preserving :
+  forall (l : list WeightedImpossible) (T : predicate_transform) (source : ImpossibilitySource) (acc : nat),
+  fold_left (fun acc w => acc + weight w) (map (apply_weighted_transform T source) l) acc =
+  fold_left (fun acc w => acc + weight w) l acc.
+Proof.
+  intros l T source acc.
+  revert acc.
+  induction l as [|W rest IH]; intro acc.
+  - (* Base case: empty list *)
+    simpl. reflexivity.
+  - (* Inductive case *)
+    simpl.
+    (* Before simpl, the goal is about the transformed W vs original W *)
+    (* Let's rewrite before simpl simplifies things *)
+    assert (weight (apply_weighted_transform T source W) = weight W) as H_eq.
+    { simpl. reflexivity. }
+    
+    (* The key: we need to substitute in the right place *)
+    change (fold_left (fun acc0 w => acc0 + weight w) (map (apply_weighted_transform T source) rest)
+                     (acc + weight (apply_weighted_transform T source W)) =
+            fold_left (fun acc0 w => acc0 + weight w) rest (acc + weight W)).
+    
+    rewrite H_eq.
+    apply IH.
+Qed.
+
+Theorem system_noether_thermodynamic :
+  forall (system : list WeightedImpossible) (T : predicate_transform) (source : ImpossibilitySource),
+  preserves_impossibility T ->
+  (* Total entropy conserved *)
+  total_weighted_entropy (map (apply_weighted_transform T source) system) = 
+  total_weighted_entropy system /\
+  (* Impossibility count conserved *)
+  length (filter (fun W => if impossible_decidable (certain W) then true else false) system) =
+  length (filter (fun W => if impossible_decidable (certain (apply_weighted_transform T source W)) then true else false) system).
+Proof.
+  intros system T source HT.
+  split.
+  - (* Total entropy conservation *)
+    unfold total_weighted_entropy.
+    apply fold_left_map_weight_preserving.
+  - (* Impossibility count conservation *)
+    induction system as [|W rest IH].
+    + simpl. reflexivity.
+    + simpl.
+      destruct (impossible_decidable (certain W)) as [HW | HnW];
+      destruct (impossible_decidable (certain (apply_weighted_transform T source W))) as [HTW | HnTW].
+      * (* Both impossible *)
+        simpl.
+        (* We know HTW : Is_Impossible (certain (apply_weighted_transform T source W)) *)
+        (* But apply_weighted_transform gives us T (certain W) *)
+        assert (HTW_simplified : Is_Impossible (T (certain W))).
+        { simpl in HTW. exact HTW. }
+        
+        (* Now we can decide about T (certain W) *)
+        destruct (impossible_decidable (T (certain W))) as [HTW_dec | HnTW_dec].
+        -- simpl. f_equal. exact IH.
+        -- exfalso. exact (HnTW_dec HTW_simplified).
+        
+      * (* W impossible but T(W) not impossible - contradiction *)
+        exfalso. apply HnTW. simpl. apply (HT (certain W)). exact HW.
+      * (* W not impossible but T(W) impossible - contradiction *)
+        exfalso. apply HnW. apply (HT (certain W)). simpl in HTW. exact HTW.
+      * (* Both not impossible *)
+        (* Similar reasoning as the first case *)
+        assert (HnTW_simplified : ~ Is_Impossible (T (certain W))).
+        { simpl in HnTW. exact HnTW. }
+        
+        destruct (impossible_decidable (T (certain W))) as [HTW_dec | HnTW_dec].
+        -- exfalso. exact (HnTW_simplified HTW_dec).
+        -- exact IH.
+Qed.
+
 End NoetherConnection.

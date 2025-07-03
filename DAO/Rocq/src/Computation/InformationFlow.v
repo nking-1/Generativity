@@ -986,7 +986,7 @@ Section MetaProof.
     exact (no_complete_optimization_theory H_complete).
   Qed.
 
-
+Section UniquenessIMax.
   (* Omega contains a theory that transcends Alpha's limitations *)
   Definition OmegaTheory := Omegacarrier -> Prop.
 
@@ -1228,5 +1228,7 @@ Definition theory_morphism_pattern (Theory : Alphacarrier -> Prop) :
 - Try defining I_max through a limit that approaches the impossible predicate
 - Show all optimization theories collapse to same constraints (uniqueness through shared diagonal constraints)
 *)
+
+End UniquenessIMax.
 
 End MetaProof.

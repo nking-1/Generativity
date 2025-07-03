@@ -1,4 +1,5 @@
--- Impossible Physics Simulator
+-- Physics simulation using impossible arithmetic for singularity handling
+-- Demonstrates computation through mathematical impossibilities in physical contexts
 data ImpossibilitySource 
   = DirectOmega 
   | Division Int Int
@@ -45,14 +46,14 @@ impMul p q = Impossible
   , source = Composition (source p) (source q)
   }
 
--- PHYSICS FUNCTIONS WITH IMPOSSIBLE SCENARIOS
+-- Physics functions that handle singularities via impossible arithmetic
 
--- Einstein's E=mc² with impossible masses
+-- Mass-energy equivalence with singularity handling
 emc2 :: Int -> Impossible Int  -- mass -> energy
 emc2 0 = Impossible
   { certain = const False
-  , weight = 4  -- Special relativity breaks down!
-  , source = Singularity "Massless particle in E=mc²"
+  , weight = 4  -- Physical theory breaks down at m=0
+  , source = Singularity "Zero mass in E=mc²"
   }
 emc2 m = Impossible
   { certain = (== m * 299792458 * 299792458)  -- c² ≈ 9×10¹⁶, simplified

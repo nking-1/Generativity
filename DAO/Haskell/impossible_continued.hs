@@ -122,8 +122,3 @@ main = do
   putStrLn $ "Step 4 (previous + 7/0): " ++ showImpossible chain3
   putStrLn $ "Final impossibility weight: " ++ show (weight chain3)
   putStrLn "^ Each step continues computing, accumulating impossibility!"
-  
-  putStrLn "\n=== SUMMARY ==="
-  putStrLn "Traditional exception handling: CRASH at first impossibility"
-  putStrLn "Your impossibility arithmetic: CONTINUE computing, tracking impossibility"
-  putStrLn "This enables robust systems that gracefully handle paradox!"

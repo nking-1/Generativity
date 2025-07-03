@@ -1,4 +1,5 @@
--- Minimal Impossible Logic implementation
+-- Implementation of impossible arithmetic based on DAO Theory impossibility algebra
+-- See Theory/Impossibility.v for formal verification of these algebraic properties
 data ImpossibilitySource 
   = DirectOmega 
   | Division Int Int
@@ -15,6 +16,18 @@ data Impossible a = Impossible
 mkImpossible :: (a -> Bool) -> Int -> ImpossibilitySource -> Impossible a
 mkImpossible p w s = Impossible p (max 1 w) s
 
+-- Functor instance for mapping over impossible values
+instance Functor Impossible where
+  fmap f imp = Impossible 
+    { certain = certain imp . f
+    , weight = weight imp
+    , source = source imp
+    }
+
+-- Show instance for better display
+instance Show a => Show (Impossible a) where
+  show = showImpossible
+
 -- Division operation
 safeDiv :: Int -> Int -> Impossible Int
 safeDiv n 0 = Impossible 
@@ -28,29 +41,30 @@ safeDiv n m = Impossible
   , source = DirectOmega
   }
 
--- Addition of impossible values
+-- Addition operation implementing impossibility semiring structure
+-- Corresponds to Theorem entropy_additive in Theory/Impossibility.v
 impAdd :: Impossible Int -> Impossible Int -> Impossible Int
 impAdd p q = Impossible
-  { certain = \x -> certain p x || certain q x
-  , weight = weight p + weight q
-  , source = Composition (source p) (source q)
+  { certain = \x -> certain p x || certain q x  -- Disjunction for combined uncertainty
+  , weight = weight p + weight q                -- Entropy accumulation (proven)
+  , source = Composition (source p) (source q) -- Source tracking for provenance
   }
 
--- Pretty printing
+-- Display format for impossible values
 showImpossible :: Show a => Impossible a -> String
 showImpossible imp = 
   "Impossible { weight = " ++ show (weight imp) ++ 
   ", source = " ++ show (source imp) ++ " }"
 
--- Main calculation: 3/0 + 8/0
+-- Example computation demonstrating impossibility algebra
 main :: IO ()
 main = do
   let three_div_zero = safeDiv 3 0
   let eight_div_zero = safeDiv 8 0
   let result = impAdd three_div_zero eight_div_zero
   
-  putStrLn "Calculating: 3/0 + 8/0"
-  putStrLn $ "3/0 = " ++ showImpossible three_div_zero
-  putStrLn $ "8/0 = " ++ showImpossible eight_div_zero  
-  putStrLn $ "3/0 + 8/0 = " ++ showImpossible result
-  putStrLn $ "\nTotal entropy: " ++ show (weight result)
+  putStrLn "Demonstrating impossibility arithmetic:"
+  putStrLn $ "3/0 = " ++ show three_div_zero
+  putStrLn $ "8/0 = " ++ show eight_div_zero  
+  putStrLn $ "3/0 + 8/0 = " ++ show result
+  putStrLn $ "Combined impossibility weight: " ++ show (weight result)

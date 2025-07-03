@@ -1,4 +1,5 @@
 Require Import DAO.Core.OmegaType.
+Require Import DAO.Core.AlphaType.
 
 (* Omega contains all absurdities *)
 Theorem Omega_is_absurd:
@@ -168,3 +169,48 @@ Section UltimateAbsurdity.
     exact H.
   Qed.
 End UltimateAbsurdity.
+
+Section OmegaVeilAtAbsurdity.
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
+  
+  (* The key insight: at the ultimate absurdity point, 
+     even the impossible predicate holds *)
+  Theorem absurdity_satisfies_impossible :
+    forall x : Omegacarrier,
+    PredicateEquivalence Omega x ->
+    forall (impossible : Omegacarrier -> Prop),
+    (forall y, ~ impossible y) ->
+    impossible x.
+  Proof.
+    intros x H_equiv impossible H_no_witnesses.
+    
+    (* Pick any predicate that does hold - say, True *)
+    set (always_true := fun _ : Omegacarrier => True).
+    
+    (* At the absurdity point, impossible is equivalent to always_true *)
+    assert (impossible x <-> always_true x) by apply H_equiv.
+    
+    (* Since always_true x holds... *)
+    apply H.
+    exact I.
+  Qed.
+  
+  (* Therefore, the ultimate absurdity point satisfies EVERY predicate,
+     including all the impossible ones! *)
+  Theorem absurdity_is_everything :
+    forall x : Omegacarrier,
+    PredicateEquivalence Omega x ->
+    forall P : Omegacarrier -> Prop, P x.
+  Proof.
+    intros x H_equiv P.
+    
+    (* P is equivalent to True at the absurdity point *)
+    assert (P x <-> True).
+    { set (always_true := fun _ : Omegacarrier => True).
+      apply (H_equiv P always_true). }
+    
+    apply H.
+    exact I.
+  Qed.
+  
+End OmegaVeilAtAbsurdity.

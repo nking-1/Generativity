@@ -116,6 +116,11 @@ Section OmegaDiagonalRepresentation.
 End OmegaDiagonalRepresentation.
 
 
+(* Note: This isn't a direct reconstruction of Godel's incompleteness theorem.
+   A true Gödel sentence would require a more intricate self-reference mechanism built in Peano arithmetic.
+   However, the principles illustrated here capture the essence of the incompleteness phenomenon.
+   Also, arithmetic has been successfully embedded in AlphaType elsewhere. A good next step would be
+   to actually reconstruct Godel's sentence using that implementation of arithmetic. *)
 Section GodelViaOmega.
  Context {Omega : OmegaType} {Alpha : AlphaType}.
  Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
