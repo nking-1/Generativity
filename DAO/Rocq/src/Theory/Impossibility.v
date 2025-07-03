@@ -1,5 +1,7 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
+Require Import DAO.Core.OmegaType.
+Require Import DAO.Core.OmegaProperties.
 Require Import Setoid.
 From Stdlib Require Import Lia.
 From Stdlib Require Import String.
@@ -718,7 +720,7 @@ Section ImpossibilityAlgebraExtended.
 End ImpossibilityAlgebraExtended.
 
 
-Section ImpossibilityGeneration.
+Section ImpossibilityLogic.
   Context {Alpha : AlphaType}.
   
   (* Start with just omega_veil and NAND *)
@@ -966,6 +968,427 @@ Proof.
     split; exact H.
 Qed.
 
+(* Let's first just see what gen_implies is defined as *)
+Theorem check_gen_implies_definition :
+  forall P Q a,
+  gen_implies P Q a <-> gen_or (gen_not P) Q a.
+Proof.
+  intros P Q a.
+  unfold gen_implies.
+  reflexivity.
+Qed.
+
+(* Let's trace through gen_implies omega_veil omega_veil *)
+Theorem gen_implies_omega_omega_v2 :
+  forall a, 
+  gen_implies omega_veil omega_veil a <-> gen_or (gen_not omega_veil) omega_veil a.
+Proof.
+  intro a.
+  unfold gen_implies.
+  reflexivity.
+Qed.
+
+(* And we know that gen_not omega_veil = alpha_0 *)
+Theorem gen_implies_omega_omega_direct :
+  forall a,
+  gen_implies omega_veil omega_veil a.
+Proof.
+  intro a.
+  (* omega -> omega should always be true *)
+  unfold gen_implies, gen_or, gen_not, NAND.
+  intro H.
+  destruct H as [H1 H2].
+  (* H2 : ~ (omega_veil a /\ omega_veil a) *)
+  (* H1 : ~ (~ (omega_veil a /\ omega_veil a) /\ ~ (omega_veil a /\ omega_veil a)) *)
+  apply H1.
+  split; exact H2.
+Qed.
+
+(* Let's check omega -> alpha *)
+Theorem gen_implies_omega_alpha :
+  forall a,
+  gen_implies omega_veil alpha_0 a <-> alpha_0 a.
+Proof.
+  intro a.
+  (* This is (¬omega ∨ alpha) = (alpha ∨ alpha) = alpha *)
+  unfold gen_implies, gen_or, gen_not, alpha_0, NAND.
+  split.
+  - intro H.
+    (* We need to prove ~ omega_veil a *)
+    intro Hov.
+    apply H.
+    split.
+    + (* ~ (~ (omega_veil a /\ omega_veil a) /\ ~ (omega_veil a /\ omega_veil a)) *)
+      intro H_conj.
+      destruct H_conj as [H1 H2].
+      apply H1.
+      split; exact Hov.
+    + (* ~ (~ omega_veil a /\ ~ omega_veil a) *)
+      intro H_conj.
+      destruct H_conj as [H1 H2].
+      exact (H1 Hov).
+  - intro H_alpha.
+    intro H_conj.
+    destruct H_conj as [H1 H2].
+    (* H2 : ~ (~ omega_veil a /\ ~ omega_veil a) *)
+    apply H2.
+    split; exact H_alpha.
+Qed.
+
+(* Let's check alpha -> omega *)
+Theorem gen_implies_alpha_omega :
+  forall a,
+  gen_implies alpha_0 omega_veil a <-> omega_veil a.
+Proof.
+  intro a.
+  (* This is (¬alpha ∨ omega) = (omega ∨ omega) = omega *)
+  unfold gen_implies, gen_or, gen_not, alpha_0, NAND.
+  split.
+  - intro H.
+    (* We need to prove omega_veil a *)
+    (* By contradiction - assume ~ omega_veil a *)
+    apply omega_veil_double_neg_elim.
+    intro H_not_omega.
+    apply H.
+    split.
+    + (* ~ (~ (~ omega_veil a /\ ~ omega_veil a) /\ ~ (~ omega_veil a /\ ~ omega_veil a)) *)
+      intro H_conj.
+      destruct H_conj as [H1 H2].
+      apply H1.
+      split; exact H_not_omega.
+    + (* ~ (omega_veil a /\ omega_veil a) *)
+      intro H_conj.
+      destruct H_conj as [Hov _].
+      exact (H_not_omega Hov).
+  - intro Hov.
+    intro H_conj.
+    destruct H_conj as [H1 H2].
+    apply H2.
+    split; exact Hov.
+Qed.
+
+(* Finally, let's check alpha -> alpha *)
+Theorem gen_implies_alpha_alpha :
+  forall a,
+  gen_implies alpha_0 alpha_0 a.
+Proof.
+  intro a.
+  (* This is (¬alpha ∨ alpha), which should always be true *)
+  unfold gen_implies, gen_or, gen_not, alpha_0, NAND.
+  intro H.
+  destruct H as [H1 H2].
+  (* H1 : ~ (~ (~ omega_veil a /\ ~ omega_veil a) /\ ~ (~ omega_veil a /\ ~ omega_veil a)) *)
+  (* H2 : ~ (~ omega_veil a /\ ~ omega_veil a) *)
+  apply H1.
+  split; exact H2.
+Qed.
+
+(* Summary: The complete truth table for gen_implies *)
+Theorem gen_implies_complete_behavior :
+  (* omega -> omega is always true *)
+  (forall a, gen_implies omega_veil omega_veil a) /\
+  (* omega -> alpha equals alpha *)
+  (forall a, gen_implies omega_veil alpha_0 a <-> alpha_0 a) /\
+  (* alpha -> omega equals omega *)
+  (forall a, gen_implies alpha_0 omega_veil a <-> omega_veil a) /\
+  (* alpha -> alpha is always true *)
+  (forall a, gen_implies alpha_0 alpha_0 a).
+Proof.
+  split; [|split; [|split]].
+  - exact gen_implies_omega_omega_direct.
+  - exact gen_implies_omega_alpha.
+  - exact gen_implies_alpha_omega.
+  - exact gen_implies_alpha_alpha.
+Qed.
+
+(* And this gives us the classical truth table when restricted to our two values:
+   - F -> F = T
+   - F -> T = T  
+   - T -> F = F
+   - T -> T = T
+   Where omega_veil is F and alpha_0 is T *)
+
+Definition definitely_true (P : Alphacarrier -> Prop) : Prop :=
+  exists a, P a.
+
+Definition definitely_false (P : Alphacarrier -> Prop) : Prop :=
+  forall a, ~ P a.  (* equivalently: Is_Impossible P *)
+
+Definition undecidable (P : Alphacarrier -> Prop) : Prop :=
+  ~ definitely_true P /\ ~ definitely_false P.
+
+(* Now let's see how these relate to alpha_0 *)
+Theorem alpha_0_characterization :
+  forall a,
+  alpha_0 a <-> ~ omega_veil a.
+Proof.
+  intro a.
+  unfold alpha_0.
+  reflexivity.
+Qed. 
+
+(* Can the AND of two undecidables be decidable? *)
+Theorem and_undecidable_exploration :
+  forall P Q : Alphacarrier -> Prop,
+  undecidable P ->
+  undecidable Q ->
+  (* What can we say about P ∧ Q? *)
+  ~ definitely_true (fun a => P a /\ Q a).
+Proof.
+  intros P Q [HnP _] [HnQ _].
+  unfold definitely_true in *.
+  intro H.
+  destruct H as [a [HPa HQa]].
+  (* If P and Q both hold at a, then P has a witness *)
+  apply HnP.
+  exists a. exact HPa.
+Qed.
+
+(* Let's explore OR with undecidable predicates *)
+
+(* Let's explore OR with undecidable predicates *)
+
+(* First, can OR with undecidable ever be definitely false? *)
+Theorem or_undecidable_not_impossible :
+  forall P Q : Alphacarrier -> Prop,
+  undecidable P ->
+  ~ Is_Impossible (fun a => P a \/ Q a).
+Proof.
+  intros P Q [H_not_true H_not_false].
+  unfold Is_Impossible.
+  intro H_impossible.
+  (* If P ∨ Q is impossible, then P must be impossible *)
+  assert (Is_Impossible P).
+  {
+    intro a.
+    split.
+    - intro HPa.
+      apply H_impossible.
+      left. exact HPa.
+    - intro Hov.
+      exfalso.
+      exact (omega_veil_has_no_witnesses a Hov).
+  }
+  (* But P is undecidable, so not definitely false *)
+  (* Is_Impossible P means forall a, P a <-> omega_veil a *)
+  (* This implies forall a, ~ P a *)
+  assert (definitely_false P).
+  {
+    unfold definitely_false.
+    intros a HPa.
+    apply H in HPa.
+    exact (omega_veil_has_no_witnesses a HPa).
+  }
+  exact (H_not_false H0).
+Qed.
+
+(* What about when both operands are undecidable? *)
+Theorem both_undecidable_preservation :
+  forall P Q : Alphacarrier -> Prop,
+  undecidable P ->
+  undecidable Q ->
+  (* Then AND is undecidable or false, OR is undecidable or true *)
+  (~ definitely_true (fun a => P a /\ Q a)) /\
+  (~ Is_Impossible (fun a => P a \/ Q a)).
+Proof.
+  intros P Q HP HQ.
+  split.
+  - exact (and_undecidable_exploration P Q HP HQ).
+  - exact (or_undecidable_not_impossible P Q HP).
+Qed.
+
+(* This is dual to our AND result. Let's make it explicit: *)
+Theorem undecidable_operations_duality :
+  forall P : Alphacarrier -> Prop,
+  undecidable P ->
+  (* AND can't be true, OR can't be false *)
+  (forall R, ~ definitely_true (fun a => P a /\ R a)) /\
+  (forall R, ~ Is_Impossible (fun a => P a \/ R a)).
+Proof.
+  intros P H_undec.
+  destruct H_undec as [H_not_true H_not_false].
+  split.
+  - (* AND case *)
+    intros R.
+    unfold definitely_true in *.
+    intro H.
+    destruct H as [a [HPa HRa]].
+    (* If P ∧ R has a witness, then P has a witness *)
+    apply H_not_true.
+    exists a. exact HPa.
+  - (* OR case *)
+    intros R.
+    apply (or_undecidable_not_impossible P R).
+    split; assumption.
+Qed.
+
+(* How does implication interact with undecidable predicates? *)
+
+Theorem undecidable_and_impossible :
+  forall P Q : Alphacarrier -> Prop,
+  undecidable P ->
+  Is_Impossible Q ->
+  Is_Impossible (fun a => P a /\ Q a).
+Proof.
+  intros P Q H_undec H_Q_imp.
+  intro a.
+  split.
+  - intros [HPa HQa].
+    (* Q a is impossible, so this gives omega_veil a *)
+    apply H_Q_imp.
+    exact HQa.
+  - intro Hov.
+    split.
+    + (* Need P a, but omega_veil a holds *)
+      exfalso.
+      exact (omega_veil_has_no_witnesses a Hov).
+    + (* Need Q a *)
+      apply H_Q_imp.
+      exact Hov.
+Qed.
+
+Theorem undecidable_and_true :
+  forall P Q : Alphacarrier -> Prop,
+  undecidable P ->
+  (forall a, Q a) ->
+  (* Then P ∧ Q has same undecidability as P *)
+  undecidable (fun a => P a /\ Q a).
+Proof.
+  intros P Q [H_not_true H_not_false] H_Q_always.
+  unfold undecidable, definitely_true, definitely_false.
+  split.
+  - (* P ∧ Q has no witnesses iff P has no witnesses *)
+    intro H_exists.
+    destruct H_exists as [a [HPa HQa]].
+    apply H_not_true.
+    exists a. exact HPa.
+  - (* P ∧ Q is not everywhere false iff P is not everywhere false *)
+    intro H_all_false.
+    apply H_not_false.
+    intros a HPa.
+    apply (H_all_false a).
+    split; [exact HPa | apply H_Q_always].
+Qed.
+
+(* Let me make this precise with a theorem *)
+Theorem extreme_values_dominate :
+  forall P : Alphacarrier -> Prop,
+  undecidable P ->
+  (* When combined with impossible (omega_veil), AND becomes impossible *)
+  (Is_Impossible (fun a => P a /\ omega_veil a)) /\
+  (* When combined with always-true, AND preserves undecidability *)
+  (forall Q, (forall a, Q a) -> undecidable (fun a => P a /\ Q a)) /\
+  (* When combined with impossible, OR preserves undecidability *)
+  (undecidable (fun a => P a \/ omega_veil a)) /\
+  (* When combined with always-true, OR becomes always-true *)
+  (forall Q, (forall a, Q a) -> forall a, (P a \/ Q a)).
+Proof.
+  intros P H_P_undec.
+  split; [|split; [|split]].
+  - (* P ∧ omega_veil is impossible *)
+    apply undecidable_and_impossible.
+    + exact H_P_undec.
+    + intro a. reflexivity.  (* omega_veil is Is_Impossible omega_veil *)
+  - (* P ∧ always-true preserves P's undecidability *)
+    intros Q H_Q_always.
+    exact (undecidable_and_true P Q H_P_undec H_Q_always).
+  - (* P ∨ omega_veil is still undecidable *)
+    (* Since omega_veil never holds, this is just P *)
+    destruct H_P_undec as [H_not_true H_not_false].
+    split.
+    + unfold definitely_true in *.
+      intro H_exists.
+      destruct H_exists as [a [HPa | Hov]].
+      * apply H_not_true. exists a. exact HPa.
+      * exact (omega_veil_has_no_witnesses a Hov).
+    + unfold definitely_false in *.
+      intro H_all_false.
+      apply H_not_false.
+      intros a HPa.
+      apply (H_all_false a).
+      left. exact HPa.
+  - (* P ∨ always-true is always true *)
+    intros Q H_Q_always a.
+    right. apply H_Q_always.
+Qed.
+
+
+(* Undecidable predicates can "cheat" by using Omega's completeness *)
+
+(* Let's define undecidable locally for any AlphaType *)
+Definition undecidable_in {A : AlphaType} (P : @Alphacarrier A -> Prop) : Prop :=
+  ~ (exists a : @Alphacarrier A, P a) /\ 
+  ~ (forall a : @Alphacarrier A, ~ P a).
+
+(* Now our theorems can use this parameterized version *)
+
+(* First, let's show that undecidable predicates have witnesses in Omega *)
+Theorem undecidable_has_omega_witness 
+  {Omega : OmegaType} 
+  (embed : @Alphacarrier Alpha -> @Omegacarrier Omega) :
+  forall P : @Alphacarrier Alpha -> Prop,
+  undecidable_in P ->
+  exists x : @Omegacarrier Omega, 
+    (exists a : @Alphacarrier Alpha, embed a = x /\ P a) \/
+    (exists a : @Alphacarrier Alpha, embed a = x /\ ~ P a).
+Proof.
+  intros P H_undec.
+  (* In Omega, we can ask for a witness to "P holds somewhere OR ~P holds somewhere" *)
+  pose (omega_pred := fun x => 
+    (exists a : @Alphacarrier Alpha, embed a = x /\ P a) \/
+    (exists a : @Alphacarrier Alpha, embed a = x /\ ~ P a)).
+  destruct (@omega_completeness Omega omega_pred) as [x Hx].
+  exists x. exact Hx.
+Qed.
+
+(* Even more dramatically - Omega can decide the undecidable! *)
+Theorem omega_decides_undecidable 
+  {Omega : OmegaType} 
+  (embed : @Alphacarrier Alpha -> @Omegacarrier Omega) :
+  forall P : @Alphacarrier Alpha -> Prop,
+  undecidable_in P ->
+  (* Omega has a point that "knows" whether P has witnesses *)
+  exists oracle : @Omegacarrier Omega,
+    ((exists a : @Alphacarrier Alpha, P a) /\ 
+     exists a : @Alphacarrier Alpha, embed a = oracle /\ P a) \/
+    ((forall a : @Alphacarrier Alpha, ~ P a) /\ 
+     exists a : @Alphacarrier Alpha, embed a = oracle /\ ~ P a).
+Proof.
+  intros P H_undec.
+  (* Ask Omega for an "oracle" that knows P's status *)
+  pose (oracle_pred := fun x =>
+    ((exists a : @Alphacarrier Alpha, P a) /\ 
+     exists a : @Alphacarrier Alpha, embed a = x /\ P a) \/
+    ((forall a : @Alphacarrier Alpha, ~ P a) /\ 
+     exists a : @Alphacarrier Alpha, embed a = x /\ ~ P a)).
+  destruct (@omega_completeness Omega oracle_pred) as [oracle H_oracle].
+  exists oracle. exact H_oracle.
+Qed.
+
+(* This is cheating! Omega can answer questions Alpha cannot! *)
+Theorem omega_breaks_undecidability
+  {Omega : OmegaType}
+  (embed : @Alphacarrier Alpha -> @Omegacarrier Omega) :
+  forall P : @Alphacarrier Alpha -> Prop,
+  undecidable_in P ->
+  (* There exists an Omega witness that "resolves" P *)
+  exists x : @Omegacarrier Omega,
+  exists resolution : bool,
+    (resolution = true /\ exists a : @Alphacarrier Alpha, embed a = x /\ P a) \/
+    (resolution = false /\ exists a : @Alphacarrier Alpha, embed a = x /\ ~ P a).
+Proof.
+  intros P H_undec.
+  destruct (omega_decides_undecidable embed P H_undec) as [oracle H_oracle].
+  exists oracle.
+  destruct H_oracle as [[H_exists H_witness] | [H_none H_witness]].
+  - exists true. left. split; [reflexivity | exact H_witness].
+  - exists false. right. split; [reflexivity | exact H_witness].
+Qed.
+
+
+(* This shows that undecidable -> impossible can't be a tautology! *)
+(* The undecidability of the antecedent "infects" the implication *)
+
   (* The generation sequence: building complexity from impossibility *)
   Definition generation_sequence : nat -> (Alphacarrier -> Prop) :=
     fun n => match n with
@@ -992,7 +1415,7 @@ Qed.
       exact gen_true_holds.
   Qed.
   
-End ImpossibilityGeneration.
+End ImpossibilityLogic.
 
 
 
