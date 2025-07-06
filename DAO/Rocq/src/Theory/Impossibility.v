@@ -1418,6 +1418,663 @@ Qed.
 End ImpossibilityLogic.
 
 
+Section ClassicalLogicFromAlpha.
+  Context {Alpha : AlphaType}.
+  
+  (* Define what it means for a predicate to be classical/collapsed *)
+  Definition is_classical (P : Alphacarrier -> Prop) : Prop :=
+    (forall a, P a <-> omega_veil a) \/ (forall a, P a <-> alpha_0 a).
+  
+  (* First, let's prove that our two base predicates are classical *)
+  Theorem omega_veil_is_classical : is_classical omega_veil.
+  Proof.
+    unfold is_classical.
+    left. intro a. reflexivity.
+  Qed.
+  
+  Theorem alpha_0_is_classical : is_classical alpha_0.
+  Proof.
+    unfold is_classical.
+    right. intro a. reflexivity.
+  Qed.
+  
+  (* NOT preserves classical *)
+Theorem classical_closed_under_not :
+  forall P, is_classical P -> is_classical (gen_not P).
+Proof.
+  intros P H_classical.
+  unfold is_classical in *.
+  destruct H_classical as [H_omega | H_alpha].
+  - (* P = omega_veil, so gen_not P = alpha_0 *)
+    right.
+    intro a.
+    (* We need to show: gen_not P a <-> alpha_0 a *)
+    unfold gen_not, NAND.
+    (* Now we have: ~(P a ∧ P a) <-> alpha_0 a *)
+    split.
+    + intro H_nand.
+      (* From ~(P a ∧ P a), derive alpha_0 a *)
+      unfold alpha_0.
+      intro H_ov.
+      apply H_nand.
+      split; apply H_omega; exact H_ov.
+    + intro H_alpha0.
+      (* From alpha_0 a, derive ~(P a ∧ P a) *)
+      intros [HPa1 HPa2].
+      apply H_omega in HPa1.
+      unfold alpha_0 in H_alpha0.
+      exact (H_alpha0 HPa1).
+  - (* P = alpha_0, so gen_not P = omega_veil *)
+    left.
+    intro a.
+    (* We need to show: gen_not P a <-> omega_veil a *)
+    unfold gen_not, NAND.
+    (* Now we have: ~(P a ∧ P a) <-> omega_veil a *)
+    split.
+    + intro H_nand.
+      (* From ~(P a ∧ P a), derive omega_veil a *)
+      apply omega_veil_double_neg_elim.
+      intro H_not_omega.
+      apply H_nand.
+      split; apply H_alpha; unfold alpha_0; exact H_not_omega.
+    + intro H_omega.
+      (* From omega_veil a, derive ~(P a ∧ P a) *)
+      intros [HPa1 HPa2].
+      apply H_alpha in HPa1.
+      unfold alpha_0 in HPa1.
+      exact (HPa1 H_omega).
+Qed.
+
+    (* When P equals omega_veil *)
+  Lemma equals_omega_veil_iff :
+    forall P a,
+    (forall x, P x <-> omega_veil x) ->
+    P a <-> omega_veil a.
+  Proof.
+    intros P a H_eq.
+    exact (H_eq a).
+  Qed.
+  
+  (* When P equals alpha_0 *)
+  Lemma equals_alpha_0_iff :
+    forall P a,
+    (forall x, P x <-> alpha_0 x) ->
+    P a <-> alpha_0 a.
+  Proof.
+    intros P a H_eq.
+    exact (H_eq a).
+  Qed.
+  
+  (* Double negation of conjunction when both are omega *)
+  Lemma double_neg_conj_omega :
+    forall P Q a,
+    (forall x, P x <-> omega_veil x) ->
+    (forall x, Q x <-> omega_veil x) ->
+    ~ ~ (P a /\ Q a) <-> omega_veil a.
+  Proof.
+    intros P Q a H_P H_Q.
+    split.
+    - intro H_nn.
+      apply omega_veil_double_neg_elim.
+      intro H_not_omega.
+      apply H_nn.
+      intros [HPa HQa].
+      apply H_P in HPa.
+      exact (H_not_omega HPa).
+    - intro H_omega.
+      intro H_neg.
+      apply H_neg.
+      split; [apply H_P | apply H_Q]; exact H_omega.
+  Qed.
+  
+  (* NAND of identical predicates *)
+  Lemma nand_self_is_not :
+    forall P a,
+    NAND P P a <-> ~ P a.
+  Proof.
+    intros P a.
+    unfold NAND.
+    split.
+    - intros H HPa. apply H. split; exact HPa.
+    - intros H [HPa _]. exact (H HPa).
+  Qed.
+
+Lemma gen_and_to_double_neg :
+  forall P Q a,
+  gen_and P Q a <-> ~ ~ (P a /\ Q a).
+Proof.
+  intros P Q a.
+  unfold gen_and, gen_not, NAND.
+  (* gen_and P Q a = ~ (~ (P a /\ Q a) /\ ~ (P a /\ Q a)) *)
+  split.
+  - intro H.
+    intro H_neg.
+    apply H.
+    split; exact H_neg.
+  - intro H_nn.
+    intros [H1 H2].
+    exact (H_nn H1).
+Qed.
+
+Lemma gen_and_extensional :
+  forall P P' Q Q' a,
+  (forall x, P x <-> P' x) ->
+  (forall x, Q x <-> Q' x) ->
+  gen_and P Q a <-> gen_and P' Q' a.
+Proof.
+  intros P P' Q Q' a H_P H_Q.
+  unfold gen_and, gen_not, NAND.
+  (* Goal: ~ (~ (P a /\ Q a) /\ ~ (P a /\ Q a)) <-> ~ (~ (P' a /\ Q' a) /\ ~ (P' a /\ Q' a)) *)
+  split.
+  - (* Left to right *)
+    intro H.
+    intro H_nand'.
+    apply H.
+    destruct H_nand' as [H1' H2'].
+    split.
+    + (* Show ~ (P a /\ Q a) from ~ (P' a /\ Q' a) *)
+      intro H_PQ.
+      apply H1'.
+      destruct H_PQ as [HPa HQa].
+      split.
+      * apply H_P. exact HPa.
+      * apply H_Q. exact HQa.
+    + (* Same reasoning for second part *)
+      intro H_PQ.
+      apply H2'.
+      destruct H_PQ as [HPa HQa].
+      split.
+      * apply H_P. exact HPa.
+      * apply H_Q. exact HQa.
+  - (* Right to left *)
+    intro H.
+    intro H_nand.
+    apply H.
+    destruct H_nand as [H1 H2].
+    split.
+    + (* Show ~ (P' a /\ Q' a) from ~ (P a /\ Q a) *)
+      intro H_P'Q'.
+      apply H1.
+      destruct H_P'Q' as [HP'a HQ'a].
+      split.
+      * apply H_P. exact HP'a.
+      * apply H_Q. exact HQ'a.
+    + (* Same reasoning *)
+      intro H_P'Q'.
+      apply H2.
+      destruct H_P'Q' as [HP'a HQ'a].
+      split.
+      * apply H_P. exact HP'a.
+      * apply H_Q. exact HQ'a.
+Qed.
+
+
+  Theorem classical_closed_under_and :
+    forall P Q, is_classical P -> is_classical Q -> is_classical (gen_and P Q).
+  Proof.
+    intros P Q H_P H_Q.
+    unfold is_classical in *.
+    destruct H_P as [H_P_omega | H_P_alpha];
+    destruct H_Q as [H_Q_omega | H_Q_alpha].
+    - (* P = omega_veil, Q = omega_veil *)
+      left.
+      intro a.
+      rewrite gen_and_to_double_neg.
+      rewrite double_neg_conj_omega; auto.
+      reflexivity.
+    - (* P = omega_veil, Q = alpha_0 *)
+      left.
+      intro a.
+      rewrite (gen_and_extensional P omega_veil Q alpha_0); auto.
+      apply gen_and_omega_alpha.
+    - (* P = alpha_0, Q = omega_veil *)
+      left.
+      intro a.
+      rewrite gen_and_to_double_neg.
+      split.
+      + intro H_nn.
+        (* ~~(alpha_0 a /\ omega_veil a) -> omega_veil a *)
+        (* Since alpha_0 a /\ omega_veil a is impossible, this is ~~False -> omega_veil a *)
+        exfalso.
+        apply H_nn.
+        intros [HPa HQa].
+        apply H_P_alpha in HPa.
+        apply H_Q_omega in HQa.
+        unfold alpha_0 in HPa.
+        exact (HPa HQa).
+      + intro H_omega.
+        (* omega_veil a -> ~~(alpha_0 a /\ omega_veil a) *)
+        (* We need to show ~~False, which is False *)
+        exfalso.
+        exact (omega_veil_has_no_witnesses a H_omega).
+    - (* P = alpha_0, Q = alpha_0 *)
+      right.
+      intro a.
+      rewrite gen_and_to_double_neg.
+      split.
+      + intro H_nn.
+        (* ~~(P a /\ Q a) -> alpha_0 a *)
+        unfold alpha_0.
+        intro H_omega.
+        apply H_nn.
+        intros [HPa HQa].
+        apply H_P_alpha in HPa.
+        unfold alpha_0 in HPa.
+        exact (HPa H_omega).
+      + intro H_alpha.
+        (* alpha_0 a -> ~~(P a /\ Q a) *)
+        intro H_neg.
+        apply H_neg.
+        split.
+        * (* P a *)
+          apply H_P_alpha. exact H_alpha.
+        * (* Q a *)
+          apply H_Q_alpha. exact H_alpha.
+  Qed.
+
+  Lemma nand_extensional :
+    forall P P' Q Q' a,
+    (forall x, P x <-> P' x) ->
+    (forall x, Q x <-> Q' x) ->
+    NAND P Q a <-> NAND P' Q' a.
+  Proof.
+    intros P P' Q Q' a H_P H_Q.
+    unfold NAND.
+    split; intro H; intro H_conj; apply H; 
+    destruct H_conj as [H1 H2]; split;
+    [apply H_P | apply H_Q | apply H_P | apply H_Q]; assumption.
+  Qed.
+
+  Lemma gen_or_extensional :
+    forall P P' Q Q' a,
+    (forall x, P x <-> P' x) ->
+    (forall x, Q x <-> Q' x) ->
+    gen_or P Q a <-> gen_or P' Q' a.
+  Proof.
+    intros P P' Q Q' a H_P H_Q.
+    unfold gen_or.
+    apply nand_extensional.
+    - intro x. apply nand_extensional; auto.
+    - intro x. apply nand_extensional; auto.
+  Qed.
+
+  (* Commutativity of OR for classical predicates *)
+Theorem classical_or_comm :
+  forall P Q, is_classical P -> is_classical Q ->
+  forall a, gen_or P Q a <-> gen_or Q P a.
+Proof.
+  intros P Q H_P H_Q a.
+  unfold gen_or, NAND.
+  (* NAND is commutative, so we can swap the arguments *)
+  split; intro H; intro H_conj; apply H;
+  destruct H_conj as [H1 H2]; split; assumption.
+Qed.
+  
+  (* OR preserves classical *)
+Theorem classical_closed_under_or :
+  forall P Q, is_classical P -> is_classical Q -> is_classical (gen_or P Q).
+Proof.
+  intros P Q H_P H_Q.
+  unfold is_classical in *.
+  destruct H_P as [H_P_omega | H_P_alpha];
+  destruct H_Q as [H_Q_omega | H_Q_alpha].
+  - (* P = omega_veil, Q = omega_veil *)
+    left.
+    intro a.
+    unfold gen_or, NAND.
+    (* Goal: ~ ((~ (P a /\ P a)) /\ (~ (Q a /\ Q a))) <-> omega_veil a *)
+    split.
+    + intro H.
+      apply omega_veil_double_neg_elim.
+      intro H_not_omega.
+      apply H.
+      split.
+      * (* ~ (P a /\ P a) *)
+        intros [HP1 HP2].
+        apply H_P_omega in HP1.
+        exact (H_not_omega HP1).
+      * (* ~ (Q a /\ Q a) *)
+        intros [HQ1 HQ2].
+        apply H_Q_omega in HQ1.
+        exact (H_not_omega HQ1).
+    + intro H_omega.
+      intro H_conj.
+      destruct H_conj as [H_nand_P H_nand_Q].
+      apply H_nand_P.
+      split; apply H_P_omega; exact H_omega.
+  - (* P = omega_veil, Q = alpha_0 *)
+    right.
+    intro a.
+    (* We already proved this as gen_or_omega_alpha *)
+    rewrite (gen_or_extensional P omega_veil Q alpha_0); auto.
+    apply gen_or_omega_alpha.
+  - (* P = alpha_0, Q = omega_veil *)
+    right.
+    intro a.
+    (* By commutativity *)
+    rewrite (gen_or_extensional P alpha_0 Q omega_veil); auto.
+    rewrite classical_or_comm; auto using alpha_0_is_classical, omega_veil_is_classical.
+    apply gen_or_omega_alpha.
+  - (* P = alpha_0, Q = alpha_0 *)
+    right.
+    intro a.
+    unfold gen_or.
+    rewrite (nand_extensional (NAND P P) omega_veil (NAND Q Q) omega_veil).
+    + (* NAND omega_veil omega_veil a <-> alpha_0 a *)
+      apply nand_omega_self.
+    + (* NAND P P a <-> omega_veil a *)
+      intro x.
+      rewrite (nand_extensional P alpha_0 P alpha_0); auto.
+      apply nand_alpha_0_self.
+    + (* NAND Q Q a <-> omega_veil a *)
+      intro x.
+      rewrite (nand_extensional Q alpha_0 Q alpha_0); auto.
+      apply nand_alpha_0_self.
+Qed.
+  
+  (* Now the key theorem: excluded middle holds for classical predicates *)
+  Theorem classical_excluded_middle :
+    forall P, is_classical P -> (exists a, P a) \/ (forall a, ~ P a).
+  Proof.
+    intros P H_classical.
+    unfold is_classical in H_classical.
+    destruct H_classical as [H_omega | H_alpha].
+    - (* P = omega_veil *)
+      right.
+      intros a H_Pa.
+      apply H_omega in H_Pa.
+      exact (omega_veil_has_no_witnesses a H_Pa).
+    - (* P = alpha_0 *)
+      left.
+      destruct alpha_not_empty as [a0 _].
+      exists a0.
+      apply H_alpha.
+      unfold alpha_0.
+      intro H_omega.
+      (* We need to show False from omega_veil a0 *)
+      exact (omega_veil_has_no_witnesses a0 H_omega).
+  Qed.
+  
+  (* Double negation elimination for classical predicates *)
+  Theorem classical_double_neg_elim :
+    forall P, is_classical P -> forall a, gen_not (gen_not P) a -> P a.
+  Proof.
+    intros P H_classical a H_nn.
+    (* Case split on what P is *)
+    destruct H_classical as [H_omega | H_alpha].
+    - (* P = omega_veil *)
+      apply H_omega.
+      unfold gen_not, NAND in H_nn.
+      (* H_nn : ~ (~ (P a /\ P a) /\ ~ (P a /\ P a)) *)
+      apply omega_veil_double_neg_elim.
+      intro H_not_omega.
+      apply H_nn.
+      split.
+      + (* ~ (P a /\ P a) *)
+        intros [HPa1 HPa2].
+        apply H_omega in HPa1.
+        exact (H_not_omega HPa1).
+      + (* ~ (P a /\ P a) again *)
+        intros [HPa1 HPa2].
+        apply H_omega in HPa1.
+        exact (H_not_omega HPa1).
+    - (* P = alpha_0 *)
+      apply H_alpha.
+      unfold alpha_0.
+      intro H_omega_a.
+      unfold gen_not, NAND in H_nn.
+      apply H_nn.
+      split.
+      + (* ~ (P a /\ P a) *)
+        intros [HPa1 HPa2].
+        apply H_alpha in HPa1.
+        unfold alpha_0 in HPa1.
+        exact (HPa1 H_omega_a).
+      + (* ~ (P a /\ P a) again *)
+        intros [HPa1 HPa2].
+        apply H_alpha in HPa1.
+        unfold alpha_0 in HPa1.
+        exact (HPa1 H_omega_a).
+  Qed.
+  
+  (* IMPLIES preserves classical *)
+  Theorem classical_closed_under_implies :
+    forall P Q, is_classical P -> is_classical Q -> is_classical (gen_implies P Q).
+  Proof.
+    intros P Q H_P H_Q.
+    (* gen_implies P Q = gen_or (gen_not P) Q *)
+    unfold gen_implies.
+    apply classical_closed_under_or.
+    - apply classical_closed_under_not. exact H_P.
+    - exact H_Q.
+  Qed.
+  
+  (* Truth table lemmas for our operations on classical values *)
+
+Lemma classical_not_table :
+  (forall a, gen_not omega_veil a <-> alpha_0 a) /\
+  (forall a, gen_not alpha_0 a <-> omega_veil a).
+Proof.
+  split.
+  - apply gen_not_impossible_is_first.
+  - intro a. unfold gen_not. apply nand_alpha_0_self.
+Qed.
+
+(* Commutativity of AND for classical predicates *)
+Theorem classical_and_comm :
+  forall P Q, is_classical P -> is_classical Q ->
+  forall a, gen_and P Q a <-> gen_and Q P a.
+Proof.
+  intros P Q H_P H_Q a.
+  unfold gen_and, gen_not, NAND.
+  (* Both reduce to ~~(P∧Q) and ~~(Q∧P), which are equivalent *)
+  split; intro H; intro H_nand; apply H; destruct H_nand as [H1 H2]; split;
+  intro H_conj; [apply H1 | apply H2 | apply H1 | apply H2];
+  destruct H_conj as [HPa HQa]; split; assumption.
+Qed.
+
+Lemma classical_and_table :
+  (forall a, gen_and omega_veil omega_veil a <-> omega_veil a) /\
+  (forall a, gen_and omega_veil alpha_0 a <-> omega_veil a) /\
+  (forall a, gen_and alpha_0 omega_veil a <-> omega_veil a) /\
+  (forall a, gen_and alpha_0 alpha_0 a <-> alpha_0 a).
+Proof.
+  split; [|split; [|split]].
+  - (* omega ∧ omega = omega *)
+    intro a.
+    rewrite gen_and_to_double_neg.
+    split.
+    + intro H. exfalso. apply H. intros [H1 H2]. exact (omega_veil_has_no_witnesses a H1).
+    + intro H. intro H_neg. exfalso. exact (omega_veil_has_no_witnesses a H).
+  - (* omega ∧ alpha = omega *)
+    apply gen_and_omega_alpha.
+  - (* alpha ∧ omega = omega *)
+    intro a.
+    (* We can't swap alpha_0 and omega_veil - they're different! *)
+    (* Instead, let's prove this directly *)
+    rewrite gen_and_to_double_neg.
+    split.
+    + intro H_nn.
+      (* ~~(alpha_0 a ∧ omega_veil a) -> omega_veil a *)
+      (* But alpha_0 a ∧ omega_veil a is impossible! *)
+      exfalso.
+      apply H_nn.
+      intros [H_alpha H_omega].
+      unfold alpha_0 in H_alpha.
+      exact (H_alpha H_omega).
+    + intro H_omega.
+      (* omega_veil a -> ~~(alpha_0 a ∧ omega_veil a) *)
+      (* This is ~~False, which is False *)
+      exfalso.
+      exact (omega_veil_has_no_witnesses a H_omega).
+  - (* alpha ∧ alpha = alpha *)
+    intro a.
+    rewrite gen_and_to_double_neg.
+    split.
+    + intro H_nn. unfold alpha_0. intro H_omega.
+      apply H_nn. intros [_ _]. exact (omega_veil_has_no_witnesses a H_omega).
+    + intro H_alpha. intro H_neg. apply H_neg. split; exact H_alpha.
+Qed.
+
+Lemma classical_or_table :
+  (forall a, gen_or omega_veil omega_veil a <-> omega_veil a) /\
+  (forall a, gen_or omega_veil alpha_0 a <-> alpha_0 a) /\
+  (forall a, gen_or alpha_0 omega_veil a <-> alpha_0 a) /\
+  (forall a, gen_or alpha_0 alpha_0 a <-> alpha_0 a).
+Proof.
+  split; [|split; [|split]].
+  - (* omega ∨ omega = omega *)
+    intro a. unfold gen_or, NAND.
+    split.
+    + intro H. apply omega_veil_double_neg_elim. intro H_not.
+      apply H. split; intros [H1 H2]; exact (H_not H1).
+    + intro H_omega. intro H_conj. destruct H_conj as [H1 H2].
+      apply H1. split; exact H_omega.
+  - (* omega ∨ alpha = alpha *)
+    apply gen_or_omega_alpha.
+  - (* alpha ∨ omega = alpha *)
+    intro a.
+    rewrite classical_or_comm; auto using omega_veil_is_classical, alpha_0_is_classical.
+    apply gen_or_omega_alpha.
+  - (* alpha ∨ alpha = alpha *)
+    intro a. unfold gen_or, NAND, alpha_0.
+    split.
+    + intro H. intro H_omega. apply H.
+      split; intros [H1 H2]; exact (H1 H_omega).
+    + intro H_not_omega. intro H_conj.
+      destruct H_conj as [H1 H2]. apply H1. split; exact H_not_omega.
+Qed.
+
+(* Now De Morgan's law using truth tables *)
+Theorem classical_demorgan_and :
+  forall P Q, 
+  is_classical P -> is_classical Q ->
+  forall a, gen_not (gen_and P Q) a <-> gen_or (gen_not P) (gen_not Q) a.
+Proof.
+  intros P Q H_P H_Q a.
+  (* Let's first destruct the truth table lemmas to make them easier to use *)
+  destruct classical_and_table as [H_om_om [H_om_al [H_al_om H_al_al]]].
+  destruct classical_or_table as [H_or_om_om [H_or_om_al [H_or_al_om H_or_al_al]]].
+  destruct classical_not_table as [H_not_om H_not_al].
+  
+  destruct H_P as [HP_om | HP_al]; destruct H_Q as [HQ_om | HQ_al].
+  - (* P = omega, Q = omega *)
+    (* LHS: gen_not (gen_and P Q) = ~(omega ∧ omega) = ~omega = alpha *)
+    assert (H_LHS: gen_not (gen_and P Q) a <-> alpha_0 a).
+    {
+      unfold gen_not, NAND.
+      assert (gen_and P Q a <-> omega_veil a).
+      { rewrite (gen_and_extensional P omega_veil Q omega_veil); auto. }
+      rewrite H.
+      split.
+      - intro H_not. unfold alpha_0. intro H_omega. 
+        apply H_not. split; exact H_omega.
+      - intro H_alpha. intros [H1 H2].
+        unfold alpha_0 in H_alpha. exact (H_alpha H1).
+    }
+    
+    (* RHS: gen_or (gen_not P) (gen_not Q) = alpha ∨ alpha = alpha *)
+    assert (H_RHS: gen_or (gen_not P) (gen_not Q) a <-> alpha_0 a).
+    {
+      assert (H_notP_eq: forall x, gen_not P x <-> alpha_0 x).
+      { intro x. unfold gen_not, NAND. rewrite !HP_om. apply nand_omega_self. }
+      assert (H_notQ_eq: forall x, gen_not Q x <-> alpha_0 x).
+      { intro x. unfold gen_not, NAND. rewrite !HQ_om. apply nand_omega_self. }
+      rewrite (gen_or_extensional (gen_not P) alpha_0 (gen_not Q) alpha_0); auto.
+    }
+    
+    rewrite H_LHS, H_RHS.
+    reflexivity.
+    
+  - (* P = omega, Q = alpha *)
+    (* LHS: ~(omega ∧ alpha) = ~omega = alpha *)
+    assert (H_LHS: gen_not (gen_and P Q) a <-> alpha_0 a).
+    {
+      unfold gen_not, NAND.
+      assert (gen_and P Q a <-> omega_veil a).
+      { rewrite (gen_and_extensional P omega_veil Q alpha_0); auto. }
+      rewrite H.
+      split.
+      - intro H_not. unfold alpha_0. intro H_omega. 
+        apply H_not. split; exact H_omega.
+      - intro H_alpha. intros [H1 H2].
+        unfold alpha_0 in H_alpha. exact (H_alpha H1).
+    }
+    
+    (* RHS: alpha ∨ omega = alpha *)
+    assert (H_RHS: gen_or (gen_not P) (gen_not Q) a <-> alpha_0 a).
+    {
+      assert (H_notP_eq: forall x, gen_not P x <-> alpha_0 x).
+      { intro x. unfold gen_not, NAND. rewrite !HP_om. apply nand_omega_self. }
+      assert (H_notQ_eq: forall x, gen_not Q x <-> omega_veil x).
+      { intro x. unfold gen_not, NAND. rewrite !HQ_al. apply nand_alpha_0_self. }
+      rewrite (gen_or_extensional (gen_not P) alpha_0 (gen_not Q) omega_veil); auto.
+    }
+    
+    rewrite H_LHS, H_RHS.
+    reflexivity.
+    
+  - (* P = alpha, Q = omega *)
+    (* LHS: ~(alpha ∧ omega) = ~omega = alpha *)
+    assert (H_LHS: gen_not (gen_and P Q) a <-> alpha_0 a).
+    {
+      unfold gen_not, NAND.
+      assert (gen_and P Q a <-> omega_veil a).
+      { rewrite (gen_and_extensional P alpha_0 Q omega_veil); auto. }
+      rewrite H.
+      split.
+      - intro H_not. unfold alpha_0. intro H_omega. 
+        apply H_not. split; exact H_omega.
+      - intro H_alpha. intros [H1 H2].
+        unfold alpha_0 in H_alpha. exact (H_alpha H1).
+    }
+    
+    (* RHS: omega ∨ alpha = alpha *)
+    assert (H_RHS: gen_or (gen_not P) (gen_not Q) a <-> alpha_0 a).
+    {
+      assert (H_notP_eq: forall x, gen_not P x <-> omega_veil x).
+      { intro x. unfold gen_not, NAND. rewrite !HP_al. apply nand_alpha_0_self. }
+      assert (H_notQ_eq: forall x, gen_not Q x <-> alpha_0 x).
+      { intro x. unfold gen_not, NAND. rewrite !HQ_om. apply nand_omega_self. }
+      rewrite (gen_or_extensional (gen_not P) omega_veil (gen_not Q) alpha_0); auto.
+    }
+    
+    rewrite H_LHS, H_RHS.
+    reflexivity.
+    
+  - (* P = alpha, Q = alpha *)
+    (* LHS: ~(alpha ∧ alpha) = ~alpha = omega *)
+    assert (H_LHS: gen_not (gen_and P Q) a <-> omega_veil a).
+    {
+      unfold gen_not, NAND.
+      assert (gen_and P Q a <-> alpha_0 a).
+      { rewrite (gen_and_extensional P alpha_0 Q alpha_0); auto. }
+      rewrite H.
+      split.
+      - intro H_not. 
+        apply omega_veil_double_neg_elim. intro H_not_omega.
+        apply H_not. split; unfold alpha_0; exact H_not_omega.
+      - intro H_omega. intros [H1 H2].
+        unfold alpha_0 in H1. exact (H1 H_omega).
+    }
+    
+    (* RHS: omega ∨ omega = omega *)
+    assert (H_RHS: gen_or (gen_not P) (gen_not Q) a <-> omega_veil a).
+    {
+      assert (H_notP_eq: forall x, gen_not P x <-> omega_veil x).
+      { intro x. unfold gen_not, NAND. rewrite !HP_al. apply nand_alpha_0_self. }
+      assert (H_notQ_eq: forall x, gen_not Q x <-> omega_veil x).
+      { intro x. unfold gen_not, NAND. rewrite !HQ_al. apply nand_alpha_0_self. }
+      rewrite (gen_or_extensional (gen_not P) omega_veil (gen_not Q) omega_veil); auto.
+    }
+    
+    rewrite H_LHS, H_RHS.
+    reflexivity.
+Qed.
+
+End ClassicalLogicFromAlpha.
+
+
 
 Section ImpossibilityCalculus.
   Context {Alpha : AlphaType}.
