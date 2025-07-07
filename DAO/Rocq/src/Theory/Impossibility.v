@@ -2072,6 +2072,74 @@ Proof.
     reflexivity.
 Qed.
 
+(* Contradiction principle for classical predicates *)
+Theorem classical_contradiction :
+  forall P, is_classical P ->
+  forall a, ~ (P a /\ gen_not P a).
+Proof.
+  intros P H_P a [HPa HnotPa].
+  destruct H_P as [HP_om | HP_al].
+  - (* P = omega_veil *)
+    apply HP_om in HPa.
+    exact (omega_veil_has_no_witnesses a HPa).
+  - (* P = alpha_0 *)
+    (* HnotPa : gen_not P a *)
+    (* gen_not P = NAND P P *)
+    unfold gen_not, NAND in HnotPa.
+    (* HnotPa : ~ (P a /\ P a) *)
+    (* But we also have HPa : P a *)
+    (* So P a is true but ~ (P a /\ P a) is also true - contradiction *)
+    apply HnotPa.
+    split; exact HPa.
+Qed.
+
+
+Theorem classical_cases :
+  forall P Q R, is_classical P -> is_classical Q -> is_classical R ->
+  (forall a, P a -> R a) ->
+  (forall a, Q a -> R a) ->
+  forall a, gen_or P Q a -> R a.
+Proof.
+  intros P Q R H_P H_Q H_R H_PR H_QR a H_or.
+  (* First, let's figure out what P and Q are based on excluded middle *)
+  destruct H_P as [HP_om | HP_al]; destruct H_Q as [HQ_om | HQ_al].
+  - (* P = omega, Q = omega *)
+    (* gen_or omega omega = omega, so gen_or P Q a means omega_veil a *)
+    assert (gen_or P Q a <-> omega_veil a).
+    { rewrite (gen_or_extensional P omega_veil Q omega_veil); auto.
+      apply (proj1 classical_or_table). }
+    assert (omega_veil a) by (apply H; exact H_or).
+    (* But omega_veil a is impossible *)
+    exfalso. exact (omega_veil_has_no_witnesses a H0).
+    
+  - (* P = omega, Q = alpha *)
+    (* gen_or omega alpha = alpha, so gen_or P Q a means alpha_0 a *)
+    apply H_QR.
+    apply HQ_al. (* Q a <-> alpha_0 a *)
+    assert (gen_or P Q a <-> alpha_0 a).
+    { rewrite (gen_or_extensional P omega_veil Q alpha_0); auto.
+      apply (proj1 (proj2 classical_or_table)). }
+    apply H. exact H_or.
+    
+  - (* P = alpha, Q = omega *)
+    (* gen_or alpha omega = alpha, so gen_or P Q a means alpha_0 a *)
+    apply H_PR.
+    apply HP_al. (* P a <-> alpha_0 a *)
+    assert (gen_or P Q a <-> alpha_0 a).
+    { rewrite (gen_or_extensional P alpha_0 Q omega_veil); auto.
+      apply (proj1 (proj2 (proj2 classical_or_table))). }
+    apply H. exact H_or.
+    
+  - (* P = alpha, Q = alpha *)
+    (* gen_or alpha alpha = alpha, so gen_or P Q a means alpha_0 a *)
+    apply H_PR. (* or H_QR, doesn't matter *)
+    apply HP_al. (* P a <-> alpha_0 a *)
+    assert (gen_or P Q a <-> alpha_0 a).
+    { rewrite (gen_or_extensional P alpha_0 Q alpha_0); auto.
+      apply (proj2 (proj2 (proj2 classical_or_table))). }
+    apply H. exact H_or.
+Qed.
+
 End ClassicalLogicFromAlpha.
 
 
