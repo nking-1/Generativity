@@ -1146,8 +1146,6 @@ Qed.
 
 (* Let's explore OR with undecidable predicates *)
 
-(* Let's explore OR with undecidable predicates *)
-
 (* First, can OR with undecidable ever be definitely false? *)
 Theorem or_undecidable_not_impossible :
   forall P Q : Alphacarrier -> Prop,
@@ -2140,8 +2138,283 @@ Proof.
     apply H. exact H_or.
 Qed.
 
+
+Theorem classical_modus_ponens :
+  forall P Q, is_classical P -> is_classical Q ->
+  forall a, P a -> gen_implies P Q a -> Q a.
+Proof.
+  intros P Q H_P H_Q a HPa Himp.
+  unfold gen_implies in Himp.
+  (* gen_implies P Q = gen_or (gen_not P) Q *)
+  (* So Himp : gen_or (gen_not P) Q a *)
+  
+  (* Case analysis on what P and Q are *)
+  destruct H_P as [HP_om | HP_al]; destruct H_Q as [HQ_om | HQ_al].
+  - (* P = omega, Q = omega *)
+    (* But P a holds, and P = omega_veil, contradiction *)
+    apply HP_om in HPa.
+    exfalso. exact (omega_veil_has_no_witnesses a HPa).
+    
+  - (* P = omega, Q = alpha *)
+    (* But P a holds, and P = omega_veil, contradiction *)
+    apply HP_om in HPa.
+    exfalso. exact (omega_veil_has_no_witnesses a HPa).
+    
+  - (* P = alpha, Q = omega *)
+    (* P a holds (which makes sense since P = alpha_0) *)
+    (* gen_implies alpha omega = gen_or (gen_not alpha) omega = gen_or omega omega = omega *)
+    (* So Himp says omega_veil a, but we need to prove Q a which is also omega_veil a *)
+    apply HQ_om.
+    assert (gen_implies P Q a <-> omega_veil a).
+    { unfold gen_implies.
+      rewrite (gen_or_extensional (gen_not P) omega_veil Q omega_veil); auto.
+      - apply (proj1 classical_or_table).
+      - intro x. unfold gen_not, NAND. rewrite !HP_al. apply nand_alpha_0_self. }
+    apply H. exact Himp.
+    
+  - (* P = alpha, Q = alpha *)
+    (* Both are always true, so Q a holds *)
+    apply HQ_al. unfold alpha_0.
+    intro H_omega.
+    (* P = alpha_0, so P a means ~ omega_veil a *)
+    apply HP_al in HPa. unfold alpha_0 in HPa.
+    exact (HPa H_omega).
+Qed.
+
 End ClassicalLogicFromAlpha.
 
+
+Section OmegaVeilBoundary.
+  Context {Alpha : AlphaType}.
+  
+  (* Define what it means to ask about the classification of a predicate *)
+  Definition classification_question (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    fun a => (P a /\ alpha_0 a) \/ (~ P a /\ omega_veil a).
+  
+  (* The key theorem: for undecidable predicates, the classification question itself equals omega_veil *)
+  Theorem classification_is_omega_veil :
+    forall P : Alphacarrier -> Prop,
+    undecidable P ->
+    forall a, classification_question P a <-> omega_veil a.
+  Proof.
+    intros P H_undec a.
+    unfold classification_question.
+    split.
+    - (* If we could answer the classification question, we get omega_veil *)
+      intros [[HPa Halpha] | [HnPa Homega]].
+      + (* P a and alpha_0 a *)
+        (* But if undecidable P has a witness, that's a contradiction *)
+        destruct H_undec as [H_no_witness _].
+        exfalso. apply H_no_witness. exists a. exact HPa.
+      + (* ~ P a and omega_veil a *)
+        exact Homega.
+    - (* From omega_veil a, we get... well, it's impossible *)
+      intro Homega.
+      exfalso. exact (omega_veil_has_no_witnesses a Homega).
+  Qed.
+  
+  (* Alternative formulation: the "which are you?" function *)
+  Definition which_value (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+    fun a => 
+      (exists proof : forall x, P x <-> omega_veil x, omega_veil a) \/
+      (exists proof : forall x, P x <-> alpha_0 x, alpha_0 a).
+  
+  (* For undecidable predicates, asking "which value are you?" gives omega_veil *)
+  Theorem which_value_of_undecidable :
+    forall P : Alphacarrier -> Prop,
+    undecidable P ->
+    forall a, which_value P a <-> omega_veil a.
+  Proof.
+    intros P H_undec a.
+    unfold which_value.
+    split.
+    - (* If we could determine which value P is, we'd have a contradiction *)
+      intros [[H_P_omega Hom] | [H_P_alpha Hal]].
+      + (* P = omega_veil *)
+        exact Hom.
+      + (* P = alpha_0 *)
+        (* But then P has witnesses everywhere, contradicting undecidability *)
+        destruct H_undec as [H_no_witness _].
+        exfalso. apply H_no_witness.
+        exists a. apply H_P_alpha. exact Hal.
+    - (* From omega_veil a, we can't construct either proof *)
+      intro Homega.
+      exfalso. exact (omega_veil_has_no_witnesses a Homega).
+  Qed.
+  
+  (* The deepest formulation: the distinction itself *)
+  Definition distinction_boundary : Alphacarrier -> Prop :=
+    fun a => exists P, undecidable P /\ P a.
+  
+  (* Attempting to witness the boundary gives omega_veil *)
+  Theorem boundary_is_omega_veil :
+    forall a, distinction_boundary a -> omega_veil a.
+  Proof.
+    intros a [P [H_undec HPa]].
+    (* If undecidable P has a witness at a, that contradicts undecidability *)
+    destruct H_undec as [H_no_witness _].
+    exfalso. apply H_no_witness. exists a. exact HPa.
+  Qed.
+  
+  (* Even more meta: the predicate that asks "are you the boundary?" *)
+  Definition is_boundary_question (P : Alphacarrier -> Prop) : Prop :=
+    P = distinction_boundary.
+  
+  (* This question itself creates undecidability *)
+  Theorem boundary_question_undecidable :
+    undecidable distinction_boundary.
+  Proof.
+    unfold undecidable, distinction_boundary.
+    split.
+    - (* No witnesses *)
+      intros [a [P [H_undec HPa]]].
+      destruct H_undec as [H_no_witness _].
+      apply H_no_witness. exists a. exact HPa.
+    - (* Not definitely empty *)
+      intro H_empty.
+      (* This is trickier - we'd need to show that assuming distinction_boundary 
+         is empty leads to contradiction... *)
+      admit. (* This might require the diagonal construction *)
+  Admitted.
+  
+End OmegaVeilBoundary.
+
+
+Section OmegaVeilFixedPoint.
+  Context {Alpha : AlphaType}.
+  
+  Definition level_0 := Alphacarrier -> Prop.
+  
+  (* Our classification function *)
+  Definition classify (P : level_0) : level_0 :=
+    fun a => 
+      (is_classical P /\ (forall x, P x <-> omega_veil x) /\ omega_veil a) \/
+      (is_classical P /\ (forall x, P x <-> alpha_0 x) /\ alpha_0 a) \/
+      (undecidable P /\ omega_veil a).
+  
+  (* Level n classification *)
+  Fixpoint level_n (n : nat) (P : level_0) : level_0 :=
+    match n with
+    | 0 => P
+    | S m => classify (level_n m P)
+    end.
+  
+  (* Key theorem 1: Classifying undecidable gives omega_veil *)
+  Theorem classify_undecidable_equals_omega :
+    forall P : level_0,
+    undecidable P ->
+    forall a, classify P a <-> omega_veil a.
+  Proof.
+    intros P H_undec a.
+    split.
+    - (* Forward: classify P a -> omega_veil a *)
+      intros [[H_class [H_eq_om H_om]] | [[H_class [H_eq_al H_al]] | [H_und H_om]]].
+      + exfalso.
+        destruct H_undec as [H_no_wit H_not_empty].
+        apply H_not_empty.
+        intros x Px.
+        apply H_eq_om in Px.
+        exact (omega_veil_has_no_witnesses x Px).
+      + exfalso.
+        destruct H_undec as [H_no_wit H_not_empty].
+        apply H_no_wit.
+        destruct alpha_not_empty as [b _].
+        exists b. apply H_eq_al.
+        unfold alpha_0.
+        exact (omega_veil_has_no_witnesses b).
+      + exact H_om.
+    - (* Backward: omega_veil a -> classify P a *)
+      intro H_omega.
+      exfalso. exact (omega_veil_has_no_witnesses a H_omega).
+  Qed.
+  
+  (* Key theorem 2: omega_veil is a fixed point *)
+  Theorem omega_veil_fixed_point :
+    forall a, classify omega_veil a <-> omega_veil a.
+  Proof.
+    intro a.
+    unfold classify.
+    split.
+    - intros [[H_class [H_eq H_om]] | [[H_class [H_eq H_al]] | [H_und H_om]]].
+      + exact H_om.
+      + exfalso.
+        (* H_eq says omega_veil = alpha_0 everywhere, which is impossible *)
+        assert (omega_veil a <-> alpha_0 a) by (apply H_eq).
+        unfold alpha_0 in H.
+        destruct H as [H1 H2].
+        (* H1: omega_veil a -> ~ omega_veil a - contradiction *)
+        (* H2: ~ omega_veil a -> omega_veil a *)
+        assert (H_not: ~ omega_veil a) by (apply omega_veil_has_no_witnesses).
+        assert (H_yes: omega_veil a) by (apply H2; exact H_not).
+        exact (H_not H_yes).
+      + exact H_om.
+    - intro H_omega.
+      (* omega_veil never has witnesses *)
+      exfalso. exact (omega_veil_has_no_witnesses a H_omega).
+  Qed.
+  
+  (* The main fractal theorem: everything collapses to omega_veil *)
+  (* Direct proofs for specific levels *)
+  Theorem level_1_collapse :
+    forall P : level_0,
+    undecidable P ->
+    forall a, level_n 1 P a <-> omega_veil a.
+  Proof.
+    intros P H_undec a.
+    simpl.
+    apply classify_undecidable_equals_omega.
+    exact H_undec.
+  Qed.
+  
+  Theorem level_2_collapse :
+    forall P : level_0,
+    undecidable P ->
+    forall a, level_n 2 P a <-> omega_veil a.
+  Proof.
+    intros P H_undec a.
+    simpl.
+    (* Goal: classify (classify P) a <-> omega_veil a *)
+    (* We know classify P = omega_veil (extensionally) from level_1_collapse *)
+    (* So this becomes: classify omega_veil a <-> omega_veil a *)
+    (* But we need to be careful about extensional equality... *)
+    
+    (* Let's just prove it directly *)
+    unfold classify.
+    split.
+    - intros [[H_c1 [H_eq1 H_om1]] | [[H_c2 [H_eq2 H_al]] | [H_und H_om2]]].
+      + exact H_om1.
+      + (* classify P is classical and = alpha_0 everywhere *)
+        (* But we know classify P only holds where omega_veil holds *)
+        exfalso.
+        assert (classify P a).
+        { apply H_eq2. unfold alpha_0. exact (omega_veil_has_no_witnesses a). }
+        apply classify_undecidable_equals_omega in H.
+        * exact (omega_veil_has_no_witnesses a H).
+        * exact H_undec.
+      + exact H_om2.
+    - intro H_omega.
+      exfalso. exact (omega_veil_has_no_witnesses a H_omega).
+  Qed.
+  
+  (* The pattern is clear: everything collapses to omega_veil immediately *)
+  Theorem recursive_immediate_collapse :
+    forall P : level_0,
+    undecidable P ->
+    (* Level 1 = omega_veil *)
+    (forall a, level_n 1 P a <-> omega_veil a) /\
+    (* Level 2 = omega_veil *)  
+    (forall a, level_n 2 P a <-> omega_veil a) /\
+    (* And omega_veil is the fixed point *)
+    (forall a, classify omega_veil a <-> omega_veil a).
+  Proof.
+    intros P H_undec.
+    split; [|split].
+    - apply level_1_collapse. exact H_undec.
+    - apply level_2_collapse. exact H_undec.
+    - apply omega_veil_fixed_point.
+  Qed.
+
+End OmegaVeilFixedPoint.
 
 
 Section ImpossibilityCalculus.
