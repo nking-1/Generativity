@@ -59,12 +59,12 @@ Section NomegaProperties.
     exact (trivial_equality nomega_emptiness).
   Qed.
 
-    (* Both types allow us to prove anything *)
-    Theorem omega_nomega_equivalence :
+  (* Both types allow us to prove anything *)
+  Theorem omega_nomega_equivalence :
     forall {O : OmegaType} {N : NomegaType},
-    (* Both can prove any proposition about their carriers *)
-    (forall (P : Omegacarrier -> Prop) (x : Omegacarrier), P x) /\
-    (forall (Q : Nomegacarrier -> Prop) (y : Nomegacarrier), Q y).
+      (* Both can prove any proposition about their carriers *)
+      (forall (P : Omegacarrier -> Prop) (x : Omegacarrier), P x) /\
+      (forall (Q : Nomegacarrier -> Prop) (y : Nomegacarrier), Q y).
   Proof.
     split.
     - (* Omega case: we have P x and ~P x *)
@@ -76,6 +76,36 @@ Section NomegaProperties.
     - (* Nomega case: from any y we get False *)
       intros Q y.
       destruct (nomega_emptiness y).
+  Qed.
+
+  Theorem nomega_emptiness_implies_no_witnesses :
+    forall `{H_N: NomegaType},
+      (forall x: Nomegacarrier, False) ->
+      (forall Q: Nomegacarrier -> Prop, ~ exists y: Nomegacarrier, Q y).
+  Proof.
+    intros H_N emptiness Q [y Hy].
+    exact (emptiness y).
+  Qed.
+
+  Theorem no_witnesses_implies_nomega_emptiness :
+    forall `{H_N: NomegaType},
+      (forall Q: Nomegacarrier -> Prop, ~ exists y: Nomegacarrier, Q y) ->
+      (forall x: Nomegacarrier, False).
+  Proof.
+    intros H_N no_wits x.
+    destruct (no_wits (fun y => y = x)).
+    exists x. reflexivity.
+  Qed.
+
+  Theorem nomega_emptiness_iff_no_witnesses :
+    forall `{H_N: NomegaType},
+      (forall x: Nomegacarrier, False) <->
+      (forall Q: Nomegacarrier -> Prop, ~ exists y: Nomegacarrier, Q y).
+  Proof.
+    intros H_N.
+    split.
+    - apply nomega_emptiness_implies_no_witnesses.
+    - apply no_witnesses_implies_nomega_emptiness.
   Qed.
 
 End NomegaProperties.

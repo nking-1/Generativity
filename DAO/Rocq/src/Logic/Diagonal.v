@@ -88,10 +88,10 @@ End OmegaDiagonal.
 
 
 (* ============================================================ *)
-(* Preparing for the diagonal *)
+(* Enumerating the diagonal *)
 (* ============================================================ *)
 
-Section DiagonalPrep.
+Section DiagonalEnum.
   Context {Omega : OmegaType} {Alpha : AlphaType}.
   
   (* If we have a complete enumeration of Alpha's predicates,
@@ -125,5 +125,5 @@ Section DiagonalPrep.
     exact (H_contra a0).
   Qed.
 
-End DiagonalPrep.
+End DiagonalEnum.
 

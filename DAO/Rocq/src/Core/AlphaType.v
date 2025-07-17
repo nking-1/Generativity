@@ -1,10 +1,7 @@
 (** * AlphaType: The Consistent but Incomplete Type
     
-    AlphaType represents a type with exactly ONE impossible predicate (omega_veil).
-    All paradoxes and impossibilities collapse into omega_veil.
+    AlphaType represents a type with exactly one impossible predicate.
 *)
-
-(** ** Definition of AlphaType *)
 
 Class AlphaType := {
   Alphacarrier : Type;

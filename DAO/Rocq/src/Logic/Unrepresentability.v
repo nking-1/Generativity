@@ -9,7 +9,6 @@ Require Import DAO.Logic.Diagonal.
 Section UnrepresentablePredicate.
   Context {Omega : OmegaType} {Alpha : AlphaType}.
   
-  (* We'll use the omega_diagonal from the previous section *)
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
   Variable enum_complete : forall A : Alphacarrier -> Prop, 
     exists n, alpha_enum n = Some A.

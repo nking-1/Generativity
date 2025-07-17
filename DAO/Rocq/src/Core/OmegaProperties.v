@@ -1,7 +1,5 @@
 Require Import DAO.Core.OmegaType.
 
-(** ** Properties of OmegaType *)
-
 Section OmegaProperties.
   Context {Omega : OmegaType}.
   
@@ -69,6 +67,43 @@ Section OmegaProperties.
     intros Q.
     (* By omega_completeness, Q must have a witness *)
     apply omega_completeness.
+  Qed.
+
+  Theorem omega_completeness_implies_contradiction :
+    forall `{H_O: OmegaType},
+      (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) ->
+      exists R: Omegacarrier -> Prop, 
+        (exists z: Omegacarrier, R z) /\ (forall z: Omegacarrier, R z -> False).
+  Proof.
+    intros H_O omega_complete.
+    set (R := fun _ : Omegacarrier => False).
+    exists R.
+    split.
+    - apply omega_complete.
+    - intros z Hz. exact Hz.
+  Qed.
+
+  Theorem contradiction_implies_omega_completeness :
+    forall `{H_O: OmegaType},
+      (exists R: Omegacarrier -> Prop, 
+        (exists z: Omegacarrier, R z) /\ (forall z: Omegacarrier, R z -> False)) ->
+      (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y).
+  Proof.
+    intros H_O [R [[z Hz] H_uninhab]] Q.
+    exfalso.
+    exact (H_uninhab z Hz).
+  Qed.
+
+  Theorem complete_iff_contradictory :
+    forall `{H_O: OmegaType},
+      (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) <->
+      exists R: Omegacarrier -> Prop, 
+        (exists z: Omegacarrier, R z) /\ (forall z: Omegacarrier, R z -> False).
+  Proof.
+    intros H_O.
+    split.
+    - apply omega_completeness_implies_contradiction.
+    - apply contradiction_implies_omega_completeness.
   Qed.
   
   (** From Omega's paradoxes, we can prove anything (triviality) *)

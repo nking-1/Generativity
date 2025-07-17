@@ -1,12 +1,4 @@
-(** * OmegaType: The Complete but Paradoxical Type
-    
-    OmegaType represents a type where EVERY predicate has a witness.
-    This includes contradictory predicates, making it complete but trivial.
-*)
-
-Require Import Setoid.
-
-(** ** Definition of OmegaType *)
+(* OmegaType: a type where every proposition has a witness. *)
 
 Class OmegaType := {
   Omegacarrier : Type;
