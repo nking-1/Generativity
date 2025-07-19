@@ -1,6 +1,8 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Logic.Diagonal.
+Require Import Setoid.
+
 
 (* ============================================================ *)
 (* The Unrepresentable Predicate *)
@@ -22,50 +24,44 @@ Section UnrepresentablePredicate.
   
   
   Theorem omega_diagonal_not_representable :
-    ~ representable (omega_diagonal alpha_enum embed).
+    ~ representable (@Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed).
   Proof.
-    unfold representable, omega_diagonal.
+    unfold representable.
     intros [A [f H_rep]].
     
-    (* Since A is in Alpha, it's in the enumeration *)
     destruct (enum_complete A) as [n_A H_nA].
     
-    (* The key: find a point where f coincides with embed at position n_A *)
     pose (special := fun x => exists a, 
       x = embed a /\ 
       f a = embed a /\ 
-      alpha_diagonal_pred alpha_enum n_A a).
+      (@Diagonal.Alpha.diagonal_pred Alpha alpha_enum n_A a)).
     destruct (omega_completeness special) as [x [a0 [Hx [Hf Hdiag]]]].
     
-    (* Apply H_rep to a0 *)
     specialize (H_rep a0).
     
-    (* From left to right: if A a0, then omega_diagonal (f a0) *)
-    assert (H_lr: A a0 -> omega_diagonal alpha_enum embed (f a0)).
+    assert (H_lr: A a0 -> @Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed (f a0)).
     { intro Ha. apply H_rep. exact Ha. }
     
-    (* From right to left: if omega_diagonal (f a0), then A a0 *)
-    assert (H_rl: omega_diagonal alpha_enum embed (f a0) -> A a0).
+    assert (H_rl: @Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed (f a0) -> A a0).
     { intro Hod. apply H_rep. exact Hod. }
     
-    (* Since f a0 = embed a0, we have omega_diagonal (embed a0) *)
     rewrite Hf in H_rl.
     
-    (* omega_diagonal (embed a0) holds because of n_A, a0 *)
-    assert (Hod: omega_diagonal alpha_enum embed (embed a0)).
+    assert (Hod: @Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed (embed a0)).
     {
+      unfold Diagonal.Omega.om_diagonal.
       exists n_A, a0.
       split; [reflexivity | exact Hdiag].
     }
     
-    (* So A a0 holds *)
     apply H_rl in Hod.
     
-    (* But alpha_diagonal_pred n_A a0 means ~ A a0 *)
-    unfold alpha_diagonal_pred in Hdiag.
+    (* Now for the contradiction *)
+    unfold Diagonal.Alpha.diagonal_pred in Hdiag.
+    unfold Diagonal.Main.diagonal in Hdiag.
     rewrite H_nA in Hdiag.
+    simpl in Hdiag.
     
-    (* Contradiction! *)
     exact (Hdiag Hod).
   Qed.
   
@@ -75,7 +71,6 @@ End UnrepresentablePredicate.
 (* ============================================================ *)
 (* Omega Diagonal representability *)
 (* ============================================================ *)
-
 Section OmegaDiagonalRepresentation.
   Context {Omega : OmegaType} {Alpha : AlphaType}.
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
@@ -84,12 +79,12 @@ Section OmegaDiagonalRepresentation.
   
   (* Consider the question: "Does omega_diagonal have a witness?" *)
   Definition Q_witness : Prop :=
-    exists x : Omegacarrier, omega_diagonal alpha_enum embed x.
+    exists x : Omegacarrier, @Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed x.
   
   (* We know it's true in Omega *)
   Theorem Q_witness_true : Q_witness.
   Proof.
-    exact (omega_diagonal_exists alpha_enum embed).
+    exact (@Diagonal.Omega.diagonal_exists Omega Alpha alpha_enum embed).
   Qed.
   
   (* But can Alpha decide this question? 
@@ -104,16 +99,14 @@ Section OmegaDiagonalRepresentation.
   Theorem deciding_requires_representation :
     (forall P : Prop, alpha_decides P) ->
     Q_witness ->
-    representable (omega_diagonal alpha_enum embed) ->
+    representable (@Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed) ->
     False.
   Proof.
     intros H_decides H_exists H_rep.
-    (* We already proved omega_diagonal_not_representable *)
     exact (omega_diagonal_not_representable alpha_enum enum_complete embed H_rep).
   Qed.
   
 End OmegaDiagonalRepresentation.
-
 
 (* Note: This isn't a direct reconstruction of Godel's incompleteness theorem.
    A true Gödel sentence would require a more intricate self-reference mechanism built in Peano arithmetic.
@@ -157,17 +150,17 @@ Section GodelViaOmega.
  
  (* Now for the Gödel construction *)
  Definition Godel_Statement : Prop :=
-   exists x, omega_diagonal alpha_enum embed x.
+   exists x, @Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed x.
  
  (* G is true in Omega *)
  Theorem godel_true : Godel_Statement.
  Proof.
-   exact (omega_diagonal_exists alpha_enum embed).
+   exact (@Diagonal.Omega.diagonal_exists Omega Alpha alpha_enum embed).
  Qed.
  
  (* But Alpha cannot prove G with strong tracking *)
   Theorem godel_unprovable :
-    ~ Alpha_Claims_About_Omega (omega_diagonal alpha_enum embed) Godel_Statement.
+    ~ Alpha_Claims_About_Omega (@Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed) Godel_Statement.
   Proof.
     unfold Alpha_Claims_About_Omega, Godel_Statement.
     intros [A [[a0 Ha0] [Htrack _]]].
@@ -178,11 +171,11 @@ Section GodelViaOmega.
     destruct (enum_complete A) as [n Hn].
     
     (* omega_diagonal at index n gives us a witness *)
-    pose proof (omega_diagonal_at_index alpha_enum embed n) as [x [a [Hembed Hdiag]]].
+    pose proof (@Diagonal.Omega.diagonal_at_index Omega Alpha alpha_enum embed n) as [x [a [Hembed Hdiag]]].
     
     (* We know omega_diagonal (embed a) *)
-    assert (Hod: omega_diagonal alpha_enum embed (embed a)).
-    { unfold omega_diagonal.
+    assert (Hod: @Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed (embed a)).
+    { unfold Diagonal.Omega.om_diagonal.
       exists n, a.
       split.
       - reflexivity.  (* embed a = embed a *)
@@ -192,7 +185,7 @@ Section GodelViaOmega.
     apply Htrack in Hod.
     
     (* But Hdiag tells us ~ A a when we unfold *)
-    unfold alpha_diagonal_pred in Hdiag.
+    unfold Diagonal.Main.diagonal in Hdiag.
     rewrite Hn in Hdiag.
     
     (* Contradiction! *)
@@ -201,24 +194,24 @@ Section GodelViaOmega.
  
  (* Alpha also cannot refute G *)
   Theorem godel_unrefutable :
-    ~ Alpha_Claims_About_Omega (omega_diagonal alpha_enum embed) (~ Godel_Statement).
+    ~ Alpha_Claims_About_Omega (@Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed) (~ Godel_Statement).
   Proof.
     unfold Alpha_Claims_About_Omega, Godel_Statement.
     intros [A [[a0 Ha0] [Htrack Hclaim]]].
     
     (* A claims omega_diagonal has no witnesses *)
     apply Hclaim.
-    exact (omega_diagonal_exists alpha_enum embed).
+    exact (@Diagonal.Omega.diagonal_exists Omega Alpha alpha_enum embed).
   Qed.
  
  
  (* The fundamental insight *)
   Theorem incompleteness_from_unrepresentability :
-    let G := exists x, omega_diagonal alpha_enum embed x in
+    let G := exists x, @Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed x in
     (* G is true but independent of Alpha *)
     G /\ 
-    ~ Alpha_Claims_About_Omega (omega_diagonal alpha_enum embed) G /\
-    ~ Alpha_Claims_About_Omega (omega_diagonal alpha_enum embed) (~ G).
+    ~ Alpha_Claims_About_Omega (@Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed) G /\
+    ~ Alpha_Claims_About_Omega (@Diagonal.Omega.om_diagonal Omega Alpha alpha_enum embed) (~ G).
   Proof.
     split; [exact godel_true |].
     split; [exact godel_unprovable | exact godel_unrefutable].
