@@ -1,5 +1,6 @@
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.AlphaType.
+Require Import Stdlib.Classes.RelationClasses.
 
 (* Omega contains all absurdities *)
 Theorem Omega_is_absurd:
