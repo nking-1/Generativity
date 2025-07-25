@@ -1026,7 +1026,6 @@ Section UniquenessIMax.
     (* 2. This limitation is witnessed in Omega *)
     (exists w, omega_witnesses_theory_attempt w) /\
     (* 3. This validates I_max through its own incompleteness *)
-    (* "We can't prove I_max is ultimate, which proves it is" *)
     exists (I_max_omega : Omegacarrier), omega_validation_paradox I_max_omega.
   Proof.
     split; [|split].
