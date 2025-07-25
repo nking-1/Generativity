@@ -1776,12 +1776,11 @@ Section DivineMiracleFeedingGen.
     split; [lia | split; assumption].
   Qed.
 
-  (* Add this axiom to the section *)
-Axiom divine_division_multiplies :
-  forall p : Alphacarrier -> Prop,
-  divine_prime_gen p ->
-  forall n : nat, n > 0 ->
-  exists k : nat, k > 1 /\ div_by_divine n p = n * k.
+  Axiom divine_division_multiplies :
+    forall p : Alphacarrier -> Prop,
+    divine_prime_gen p ->
+    forall n : nat, n > 0 ->
+    exists k : nat, k > 1 /\ div_by_divine n p = n * k.
 
   (* Division by divine prime inverts scarcity *)
   Theorem gen_divine_division_creates_abundance :

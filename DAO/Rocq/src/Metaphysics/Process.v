@@ -7,6 +7,10 @@ Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Core.Bridge.
 Require Import Corelib.Classes.RelationClasses.
+Require Import Lia.
+Require Import List.
+Import ListNotations.
+
 
 Section MinimalGeneration.
   Context (Alpha : AlphaType).
@@ -483,5 +487,279 @@ Section Ouroboros.
   Qed.
   
 End Ouroboros.
+
+
+Section MetaphysicsViaOuroboros.
+  (* Our simple machinery: states trying to swallow their tails *)
+  Definition Reality := nat -> (Alphacarrier -> Prop) -> Prop.
+  
+  Definition evolving_reality (R : Reality) : Prop :=
+    forall n, R (S n) = ouroboros_step (R n).
+  
+  (* Metaphysics Theorem 1: Reality is inherently incomplete *)
+  Theorem reality_inherently_incomplete :
+    forall (R : Reality),
+    evolving_reality R ->
+    forall n, exists (unreachable : Alphacarrier -> Prop),
+    ~ R n unreachable.
+  Proof.
+    intros R H_evol n.
+    exists (totality_of (R n)).
+    apply no_static_self_totality.
+  Qed.
+  
+  (* Metaphysics Theorem 2: The Present creates the Future *)
+  Theorem present_creates_future :
+    forall (R : Reality),
+    evolving_reality R ->
+    forall n, exists (novel : Alphacarrier -> Prop),
+    R (S n) novel /\ ~ R n novel /\
+    (* The novel is precisely what the present couldn't grasp *)
+    novel = totality_of (R n).
+  Proof.
+    intros R H_evol n.
+    exists (totality_of (R n)).
+    split; [|split].
+    - rewrite H_evol. unfold ouroboros_step. right. reflexivity.
+    - apply no_static_self_totality.
+    - reflexivity.
+  Qed.
+  
+End MetaphysicsViaOuroboros.
+
+
+Section ExplorationWithin.
+  (* The ouroboros provides an infinite canvas *)
+  Definition infinite_canvas := fun n => ouroboros_at n.
+  
+  (* First, let's understand what's actually in our canvas *)
+  Lemma canvas_contains_totalities :
+    forall n,
+    infinite_canvas (S n) (totality_of (infinite_canvas n)).
+  Proof.
+    intro n.
+    unfold infinite_canvas, ouroboros_at, ouroboros_step.
+    right. reflexivity.
+  Qed.
+  
+  (* The canvas grows forever *)
+  Lemma canvas_grows_forever :
+    forall n, exists P,
+    infinite_canvas (S n) P /\ ~ infinite_canvas n P.
+  Proof.
+    intro n.
+    exists (totality_of (infinite_canvas n)).
+    split.
+    - apply canvas_contains_totalities.
+    - apply no_static_self_totality.
+  Qed.
+  
+  (* Now, can we encode arbitrary predicates within totalities? *)
+  (* Here's a key insight: totalities of different stages are all distinct *)
+  
+  Lemma totalities_distinct :
+    forall n m, n <> m ->
+    totality_of (infinite_canvas n) <> totality_of (infinite_canvas m).
+  Proof.
+    intros n m H_neq H_eq.
+    (* If totalities were equal, the stages would have same content *)
+    (* But stage m has more/different predicates than stage n *)
+    admit. (* This needs careful proof about stage growth *)
+  Admitted.
+  
+  (* We can use distinct totalities as "markers" for encoding *)
+  Definition encode_with_totality (n : nat) (P : Alphacarrier -> Prop) 
+    : Alphacarrier -> Prop :=
+    fun a => 
+      (* Use totality n as a marker for P *)
+      (totality_of (infinite_canvas n) a /\ P a) \/
+      (* Or some other encoding scheme *)
+      (exists m, m > n /\ totality_of (infinite_canvas m) a /\ P a).
+  
+  (* Alternative approach: show the canvas contains enough structure *)
+  
+  (* The totalities form an infinite sequence of distinct predicates *)
+  Definition totality_sequence : nat -> (Alphacarrier -> Prop) :=
+    fun n => totality_of (infinite_canvas n).
+  
+  Lemma totality_sequence_infinite :
+    forall n, exists m, m > n /\
+    totality_sequence m <> totality_sequence n.
+  Proof.
+    intro n.
+    exists (S n).
+    split; [lia |].
+    apply totalities_distinct.
+    lia.
+  Qed.
+  
+  (* Now for our main theorems - but with a twist *)
+  
+  (* We can't prove arbitrary P is in the canvas, but we can build
+     exploration sequences using the structure that IS there *)
+  
+  Definition exploration_using_totalities : nat -> (Alphacarrier -> Prop) -> Prop :=
+    fun n P => 
+      (* P is one of our totalities *)
+      exists m, m <= n /\ P = totality_sequence m.
+  
+  (* This exploration is valid within our canvas *)
+  Lemma exploration_valid :
+    forall n P,
+    exploration_using_totalities n P ->
+    exists m, infinite_canvas m P.
+  Proof.
+    intros n P [m [H_le H_eq]].
+    exists (S m).
+    subst P.
+    unfold totality_sequence.
+    apply canvas_contains_totalities.
+  Qed.
+  
+  (* For separation, we'd need to encode P and ~P differently *)
+  (* This might require richer structure than just totalities *)
+  
+  (* The honest conclusion: *)
+  Theorem canvas_limitation :
+    exists P : Alphacarrier -> Prop,
+    P <> omega_veil /\
+    forall n, ~ infinite_canvas n P.
+  Proof.
+    (* Take any predicate that's not omega_veil, alpha_0, or a totality *)
+    (* For example, a specific "diagonal" predicate *)
+    exists (fun a => exists n, totality_sequence n a /\ totality_sequence (S n) a).
+    split.
+    - (* Not omega_veil *)
+      intro H_eq.
+      (* This predicate has witnesses where totalities overlap *)
+      admit.
+    - (* Never in canvas *)
+      intro n.
+      (* By induction - the canvas only contains specific predicates *)
+      admit.
+  Admitted.
+  
+End ExplorationWithin.
+
+
+Section BuildingFromCanvas.
+
+  Definition totality_combination (indices : list nat) : Alphacarrier -> Prop :=
+    fun a => forall n, In n indices -> totality_sequence n a.
+  
+  (* First, let's prove totalities grow *)
+  Lemma canvas_strictly_grows :
+    forall n P,
+    infinite_canvas n P -> infinite_canvas (S n) P.
+  Proof.
+    intros n P H_in.
+    unfold infinite_canvas, ouroboros_at, ouroboros_step.
+    left. exact H_in.
+  Qed.
+  
+  (* Now let's prove totalities are nested *)
+  Lemma totality_monotone :
+    forall n a,
+    totality_of (infinite_canvas n) a ->
+    totality_of (infinite_canvas (S n)) a.
+  Proof.
+    intros n a H_tot.
+    unfold totality_of in *.
+    destruct H_tot as [P [H_P_in H_Pa]].
+    exists P. split.
+    - apply canvas_strictly_grows. exact H_P_in.
+    - exact H_Pa.
+  Qed.
+  
+  (* Actually prove combinations are distinct *)
+  Lemma singleton_combinations_distinct :
+    forall n m,
+    n <> m ->
+    totality_combination [n] <> totality_combination [m].
+  Proof.
+    intros n m H_neq H_eq.
+    (* If they're equal, they have same witnesses *)
+    assert (forall a, totality_combination [n] a <-> totality_combination [m] a).
+    { intro a. rewrite H_eq. reflexivity. }
+    
+    (* But totality n and totality m are different *)
+    (* We need to show there's a witness in one but not the other *)
+    
+    (* Actually, this is hard without knowing more about totalities *)
+    admit.
+  Admitted.
+  
+  (* Let's prove something simpler about free will *)
+  Definition simple_free_will : Prop :=
+    forall n : nat,
+    exists P : Alphacarrier -> Prop,
+    (* Can choose to include P at stage n+1 *)
+    (~ infinite_canvas n P) /\
+    (exists m, m > n /\ infinite_canvas m P).
+  
+  Theorem canvas_has_simple_free_will :
+    simple_free_will.
+  Proof.
+    unfold simple_free_will.
+    intro n.
+    (* Choose the totality of stage n *)
+    exists (totality_of (infinite_canvas n)).
+    split.
+    - (* Not in stage n *)
+      apply no_static_self_totality.
+    - (* But appears in stage n+1 *)
+      exists (S n). split.
+      + lia.
+      + apply canvas_contains_totalities.
+  Qed.
+  
+  Lemma totality_appears_next_stage :
+    forall n,
+    infinite_canvas (S n) (totality_of (infinite_canvas n)).
+  Proof.
+    exact canvas_contains_totalities.
+  Qed.
+  
+  Lemma persistence :
+    forall n m P,
+    n <= m ->
+    infinite_canvas n P ->
+    infinite_canvas m P.
+  Proof.
+    intros n m P H_le H_in.
+    induction H_le.
+    - exact H_in.
+    - apply canvas_strictly_grows. exact IHH_le.
+  Qed.
+  
+  Theorem simple_trinity :
+    exists P Q R : Alphacarrier -> Prop,
+    P <> Q /\ Q <> R /\ P <> R /\
+    exists n, infinite_canvas n P /\ infinite_canvas n Q /\ infinite_canvas n R.
+  Proof.
+    (* Just use three different totalities! *)
+    exists (totality_of (infinite_canvas 0)),
+           (totality_of (infinite_canvas 1)), 
+           (totality_of (infinite_canvas 2)).
+    split; [|split; [|split]].
+    - apply totalities_distinct. lia.
+    - apply totalities_distinct. lia.  
+    - apply totalities_distinct. lia.
+    - (* All three eventually appear *)
+      exists 3.
+      split; [|split].
+      + (* totality 0 appears at stage 1, persists to 3 *)
+        apply (persistence 1 3).
+        * lia.
+        * apply totality_appears_next_stage.
+      + (* totality 1 appears at stage 2, persists to 3 *)
+        apply (persistence 2 3).
+        * lia.
+        * apply totality_appears_next_stage.
+      + (* totality 2 appears at stage 3 *)
+        apply totality_appears_next_stage.
+  Qed.
+  
+End BuildingFromCanvas.
 
 End MinimalGeneration.

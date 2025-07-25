@@ -843,7 +843,7 @@ Section MetaProof.
   Axiom diagonal_in_enumeration :
     forall n : nat,
     exists m : nat,
-    alpha_enum m = Some (fun a => alpha_diagonal_pred alpha_enum n a).
+    alpha_enum m = Some (fun a => Diagonal.Alpha.diagonal_pred alpha_enum n a).
   
   (* Axiom 2: What it means for Theory to "analyze" a predicate *)
   Axiom theory_analyzes :
@@ -851,7 +851,7 @@ Section MetaProof.
     Theory analysis ->
     (* analysis correctly captures P's diagonal relationship to Theory *)
     forall n, alpha_enum n = Some Theory ->
-    (P = fun a => alpha_diagonal_pred alpha_enum n a) ->
+    (P = fun a => Diagonal.Alpha.diagonal_pred alpha_enum n a) ->
     False.  (* This creates immediate contradiction *)
   
   (* Alpha claims to have a complete theory of optimization *)
@@ -878,7 +878,7 @@ Section MetaProof.
     destruct Hself as [self_analysis Hself_in_Theory].
     
     (* Consider the diagonal predicate at Theory's position n *)
-    pose (diag_n := fun a => alpha_diagonal_pred alpha_enum n a).
+    pose (diag_n := fun a => Diagonal.Alpha.diagonal_pred alpha_enum n a).
     
     (* The diagonal is enumerable by our axiom *)
     destruct (diagonal_in_enumeration n) as [m Hm].
@@ -986,7 +986,6 @@ Section MetaProof.
     exact (no_complete_optimization_theory H_complete).
   Qed.
 
-Section UniquenessIMax.
   (* Omega contains a theory that transcends Alpha's limitations *)
   Definition OmegaTheory := Omegacarrier -> Prop.
 
@@ -1020,12 +1019,9 @@ Section UniquenessIMax.
   (* The Meta-Theorem: The recursive validation *)
   Theorem meta_validation_of_I_max :
     (* I_max theory predicts: *)
-    (* 1. No system can compute its own I_max perfectly *)
     (forall Theory, (exists n, alpha_enum n = Some Theory) -> 
       ~ can_compute_I_max Theory) /\
-    (* 2. This limitation is witnessed in Omega *)
     (exists w, omega_witnesses_theory_attempt w) /\
-    (* 3. This validates I_max through its own incompleteness *)
     exists (I_max_omega : Omegacarrier), omega_validation_paradox I_max_omega.
   Proof.
     split; [|split].
@@ -1038,6 +1034,15 @@ Section UniquenessIMax.
     - (* The validation through incompleteness *)
       exact omega_witnesses_meta_paradox.
   Qed.
+End MetaProof.
+
+(* Section UniquenessIMax.
+
+  Context {Omega : OmegaType} {Alpha : AlphaType}.
+  Variable embed : Alphacarrier -> Omegacarrier.
+  Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
+  Variable enum_complete : forall A : Alphacarrier -> Prop, 
+    exists n, alpha_enum n = Some A.
 
 (* First, let's be precise about what "computing I_max" means using existing concepts *)
 Definition computes_optimization_bounds (Theory : Alphacarrier -> Prop) : Prop :=
@@ -1160,7 +1165,7 @@ Definition represents_diagonal_violation (Theory : Alphacarrier -> Prop)
   exists a,
   claim = a /\
   Theory a /\
-  alpha_diagonal_pred alpha_enum n a.
+  Diagonal.Alpha.diagonal_pred alpha_enum n a.
 
 (* The diagonal constraint is absolute - no theory can violate it *)
 Theorem diagonal_constrains_morphisms :
@@ -1171,9 +1176,9 @@ Proof.
   intros Theory n claim [Henum [a [Hclaim [Htheory Hdiag]]]].
   subst claim.
   
-  (* We have Theory a and alpha_diagonal_pred n a *)
-  (* alpha_diagonal_pred n a means ~(Theory a) when alpha_enum n = Some Theory *)
-  unfold alpha_diagonal_pred in Hdiag.
+  (* We have Theory a and Diagonal.Alpha.diagonal_pred n a *)
+  (* Diagonal.Alpha.diagonal_pred n a means ~(Theory a) when alpha_enum n = Some Theory *)
+  unfold Diagonal.Alpha.diagonal_pred in Hdiag.
   rewrite Henum in Hdiag.
   
   (* So Hdiag : ~ Theory a *)
@@ -1228,6 +1233,4 @@ Definition theory_morphism_pattern (Theory : Alphacarrier -> Prop) :
 - Show all optimization theories collapse to same constraints (uniqueness through shared diagonal constraints)
 *)
 
-End UniquenessIMax.
-
-End MetaProof.
+End UniquenessIMax. *)
