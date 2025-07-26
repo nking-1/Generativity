@@ -7,6 +7,7 @@ Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Core.Bridge.
 Require Import Corelib.Classes.RelationClasses.
+Require Import Arith.
 Require Import Lia.
 Require Import List.
 Import ListNotations.
@@ -203,332 +204,325 @@ Section MinimalGeneration.
     split; [reflexivity | exact omega_veil_has_no_witnesses].
   Qed.
 
-  
 
   (* ============================================================ *)
   (*     Static Completeness is Impossible                        *)
   (* ============================================================ *)
 
-  (* Any attempt at static completeness generates new predicates *)
-  (* First, let's prove alpha_0 is not omega_veil *)
-Lemma alpha_0_not_omega : alpha_0 <> omega_veil.
-Proof.
-  intro H_eq.
-  (* If alpha_0 = omega_veil, then we have a contradiction *)
-  destruct alpha_not_empty as [witness _].
-  (* alpha_0 witness means ~ omega_veil witness *)
-  assert (H1 : alpha_0 witness).
-  { unfold alpha_0. apply omega_veil_has_no_witnesses. }
-  (* But if alpha_0 = omega_veil, then alpha_0 witness = omega_veil witness *)
-  rewrite H_eq in H1.
-  (* So omega_veil witness, which contradicts omega_veil_has_no_witnesses *)
-  exact (omega_veil_has_no_witnesses witness H1).
-Qed.
-
-  (* ============================================================ *)
-  (*      Static Completeness is Impossible                       *)
-  (* ============================================================ *)
-  
   Section TemporalNecessity.
-  
-  (* The minimal axiom: no collection contains its own totality *)
-  Axiom no_static_self_totality :
-    forall (coll : (Alphacarrier -> Prop) -> Prop),
-    ~ coll (totality_of coll).
-  
-  (* Immediate consequence: static completeness is impossible *)
-  Theorem static_incompleteness :
-    forall (attempt : (Alphacarrier -> Prop) -> Prop),
-    (forall P, P <> omega_veil -> attempt P) ->
-    exists Q, Q <> omega_veil /\ ~ attempt Q.
-  Proof.
-    intros attempt H_all.
-    exists (totality_of attempt).
-    split.
-    - (* totality_of attempt <> omega_veil *)
+    (* Any attempt at static completeness generates new predicates *)
+    (* First, let's prove alpha_0 is not omega_veil *)
+    Lemma alpha_0_not_omega : alpha_0 <> omega_veil.
+    Proof.
       intro H_eq.
-      (* If totality_of attempt = omega_veil, it has no witnesses *)
+      (* If alpha_0 = omega_veil, then we have a contradiction *)
       destruct alpha_not_empty as [witness _].
-      (* But attempt contains alpha_0, which has witnesses *)
-      assert (attempt alpha_0) by (apply H_all; exact alpha_0_not_omega).
-      assert (alpha_0 witness) by (unfold alpha_0; exact (omega_veil_has_no_witnesses witness)).
-      (* So witness is in totality_of attempt *)
-      assert (totality_of attempt witness).
-      { unfold totality_of. exists alpha_0. split; assumption. }
-      (* But totality_of attempt = omega_veil *)
-      rewrite H_eq in H1.  (* Rewrite in H1, not H0 *)
+      (* alpha_0 witness means ~ omega_veil witness *)
+      assert (H1 : alpha_0 witness).
+      { unfold alpha_0. apply omega_veil_has_no_witnesses. }
+      (* But if alpha_0 = omega_veil, then alpha_0 witness = omega_veil witness *)
+      rewrite H_eq in H1.
+      (* So omega_veil witness, which contradicts omega_veil_has_no_witnesses *)
       exact (omega_veil_has_no_witnesses witness H1).
-      
-    - (* totality_of attempt not in attempt *)
-      exact (no_static_self_totality attempt).
-  Qed.
-  
-  (* This creates predicates that cannot be classified *)
-  Definition classifiable (P : Alphacarrier -> Prop) : Prop :=
-    (exists a, P a) \/ (forall a, P a <-> omega_veil a).
-  
-  (* The existence of unclassifiable predicates *)
-  Theorem unclassifiable_predicates_exist :
-    exists P : Alphacarrier -> Prop,
-    ~ classifiable P.
-  Proof.
-    (* The totality of "all classifiable predicates" is itself unclassifiable *)
-    pose (all_classifiable := fun P => P <> omega_veil /\ classifiable P).
-    exists (totality_of all_classifiable).
-    
-    intro H_classifiable.
-    unfold classifiable in H_classifiable.
-    destruct H_classifiable as [H_witness | H_omega].
-    
-    - (* totality has witnesses *)
-      destruct H_witness as [a Ha].
-      (* Then it should be in all_classifiable *)
-      assert (all_classifiable (totality_of all_classifiable)).
-      { split.
-        - (* Prove totality_of all_classifiable <> omega_veil *)
-          intro H_eq.
-          rewrite H_eq in Ha.
-          exact (omega_veil_has_no_witnesses a Ha).
-        - unfold classifiable. left. exists a. exact Ha. }
-      (* But no collection contains its totality *)
-      exact (no_static_self_totality all_classifiable H).
-      
-    - (* totality = omega_veil *)
-      (* Need to show this leads to contradiction *)
-      (* If totality of all_classifiable = omega_veil, then no classifiable predicate has witnesses *)
-      assert (H_no_witnesses : forall P a, all_classifiable P -> ~ P a).
-      { intros P a H_P_class H_Pa.
-        (* P is in all_classifiable, so witnesses of P are in totality *)
-        assert (totality_of all_classifiable a).
-        { unfold totality_of. exists P. split; assumption. }
-        (* But totality = omega_veil *)
-        assert (omega_veil a) by (apply H_omega; exact H).
-        exact (omega_veil_has_no_witnesses a H0). }
-      
-      (* But alpha_0 is classifiable and has witnesses! *)
-      assert (H_alpha_class : all_classifiable alpha_0).
-      { split.
-        - exact alpha_0_not_omega.
-        - unfold classifiable. left. 
-          destruct alpha_not_empty as [w _].
-          exists w. unfold alpha_0. exact (omega_veil_has_no_witnesses w). }
-      
-      (* Get witness for alpha_0 *)
-      destruct alpha_not_empty as [w _].
-      assert (alpha_0 w) by (unfold alpha_0; exact (omega_veil_has_no_witnesses w)).
-      
-      (* Apply our lemma *)
-      exact (H_no_witnesses _ _ H_alpha_class H).
-  Qed.
-  
-  (* Therefore: complete exploration requires time *)
-  Definition static_exploration_incomplete : Prop :=
-    exists P Q : Alphacarrier -> Prop,
-    P <> Q /\
-    ~ classifiable P /\
-    ~ classifiable Q /\
-    (* No static test can differentiate them *)
-    ~ exists (test : Alphacarrier -> Prop),
-      (exists a, test a /\ P a /\ ~ Q a) \/
-      (exists a, test a /\ Q a /\ ~ P a).
-  
-End TemporalNecessity.
+    Qed.
 
-Section ProcessEmergence.
-  
-  (* The simplest statement: incompleteness forces iteration *)
-  Theorem incompleteness_forces_process :
-    (* If every collection is incomplete *)
-    (forall coll : (Alphacarrier -> Prop) -> Prop,
-     exists Q, Q <> omega_veil /\ ~ coll Q) ->
-    (* Then "trying to be complete" creates a sequence *)
-    exists (sequence : nat -> (Alphacarrier -> Prop) -> Prop),
-    forall n, exists Q, 
-      sequence (S n) Q /\ ~ sequence n Q.
-  Proof.
-    intro H_incomplete.
+    (* The minimal axiom: no collection contains its own totality *)
+    Axiom no_static_self_totality :
+      forall (coll : (Alphacarrier -> Prop) -> Prop),
+      ~ coll (totality_of coll).
     
-    (* Define the sequence: keep adding what's missing *)
-    pose (sequence := fix seq n := 
+    (* Immediate consequence: static completeness is impossible *)
+    Theorem static_incompleteness :
+      forall (attempt : (Alphacarrier -> Prop) -> Prop),
+      (forall P, P <> omega_veil -> attempt P) ->
+      exists Q, Q <> omega_veil /\ ~ attempt Q.
+    Proof.
+      intros attempt H_all.
+      exists (totality_of attempt).
+      split.
+      - (* totality_of attempt <> omega_veil *)
+        intro H_eq.
+        (* If totality_of attempt = omega_veil, it has no witnesses *)
+        destruct alpha_not_empty as [witness _].
+        (* But attempt contains alpha_0, which has witnesses *)
+        assert (attempt alpha_0) by (apply H_all; exact alpha_0_not_omega).
+        assert (alpha_0 witness) by (unfold alpha_0; exact (omega_veil_has_no_witnesses witness)).
+        (* So witness is in totality_of attempt *)
+        assert (totality_of attempt witness).
+        { unfold totality_of. exists alpha_0. split; assumption. }
+        (* But totality_of attempt = omega_veil *)
+        rewrite H_eq in H1.  (* Rewrite in H1, not H0 *)
+        exact (omega_veil_has_no_witnesses witness H1).
+        
+      - (* totality_of attempt not in attempt *)
+        exact (no_static_self_totality attempt).
+    Qed.
+    
+    (* This creates predicates that cannot be classified *)
+    Definition classifiable (P : Alphacarrier -> Prop) : Prop :=
+      (exists a, P a) \/ (forall a, P a <-> omega_veil a).
+    
+    (* The existence of unclassifiable predicates *)
+    Theorem unclassifiable_predicates_exist :
+      exists P : Alphacarrier -> Prop,
+      ~ classifiable P.
+    Proof.
+      (* The totality of "all classifiable predicates" is itself unclassifiable *)
+      pose (all_classifiable := fun P => P <> omega_veil /\ classifiable P).
+      exists (totality_of all_classifiable).
+      
+      intro H_classifiable.
+      unfold classifiable in H_classifiable.
+      destruct H_classifiable as [H_witness | H_omega].
+      
+      - (* totality has witnesses *)
+        destruct H_witness as [a Ha].
+        (* Then it should be in all_classifiable *)
+        assert (all_classifiable (totality_of all_classifiable)).
+        { split.
+          - (* Prove totality_of all_classifiable <> omega_veil *)
+            intro H_eq.
+            rewrite H_eq in Ha.
+            exact (omega_veil_has_no_witnesses a Ha).
+          - unfold classifiable. left. exists a. exact Ha. }
+        (* But no collection contains its totality *)
+        exact (no_static_self_totality all_classifiable H).
+        
+      - (* totality = omega_veil *)
+        (* Need to show this leads to contradiction *)
+        (* If totality of all_classifiable = omega_veil, then no classifiable predicate has witnesses *)
+        assert (H_no_witnesses : forall P a, all_classifiable P -> ~ P a).
+        { intros P a H_P_class H_Pa.
+          (* P is in all_classifiable, so witnesses of P are in totality *)
+          assert (totality_of all_classifiable a).
+          { unfold totality_of. exists P. split; assumption. }
+          (* But totality = omega_veil *)
+          assert (omega_veil a) by (apply H_omega; exact H).
+          exact (omega_veil_has_no_witnesses a H0). }
+        
+        (* But alpha_0 is classifiable and has witnesses! *)
+        assert (H_alpha_class : all_classifiable alpha_0).
+        { split.
+          - exact alpha_0_not_omega.
+          - unfold classifiable. left. 
+            destruct alpha_not_empty as [w _].
+            exists w. unfold alpha_0. exact (omega_veil_has_no_witnesses w). }
+        
+        (* Get witness for alpha_0 *)
+        destruct alpha_not_empty as [w _].
+        assert (alpha_0 w) by (unfold alpha_0; exact (omega_veil_has_no_witnesses w)).
+        
+        (* Apply our lemma *)
+        exact (H_no_witnesses _ _ H_alpha_class H).
+    Qed.
+    
+    (* Therefore: complete exploration requires time *)
+    Definition static_exploration_incomplete : Prop :=
+      exists P Q : Alphacarrier -> Prop,
+      P <> Q /\
+      ~ classifiable P /\
+      ~ classifiable Q /\
+      (* No static test can differentiate them *)
+      ~ exists (test : Alphacarrier -> Prop),
+        (exists a, test a /\ P a /\ ~ Q a) \/
+        (exists a, test a /\ Q a /\ ~ P a).
+  
+  End TemporalNecessity.
+
+  Section ProcessEmergence.
+    
+    (* The simplest statement: incompleteness forces iteration *)
+    Theorem incompleteness_forces_process :
+      (* If every collection is incomplete *)
+      (forall coll : (Alphacarrier -> Prop) -> Prop,
+      exists Q, Q <> omega_veil /\ ~ coll Q) ->
+      (* Then "trying to be complete" creates a sequence *)
+      exists (sequence : nat -> (Alphacarrier -> Prop) -> Prop),
+      forall n, exists Q, 
+        sequence (S n) Q /\ ~ sequence n Q.
+    Proof.
+      intro H_incomplete.
+      
+      (* Define the sequence: keep adding what's missing *)
+      pose (sequence := fix seq n := 
+        match n with
+        | 0 => fun P => P = omega_veil \/ P = alpha_0
+        | S n' => fun P => seq n' P \/ P = totality_of (seq n')
+        end).
+      
+      exists sequence.
+      intro n.
+      
+      (* What's missing at stage n is its totality *)
+      exists (totality_of (sequence n)).
+      
+      split.
+      - (* It's in the next stage by construction *)
+        unfold sequence at 1.
+        destruct n; simpl; right; reflexivity.
+      - (* It's not in the current stage *)
+        apply no_static_self_totality.
+    Qed.
+    
+  End ProcessEmergence.
+
+  Section Ouroboros.
+    
+    (* The Ouroboros: each state trying to swallow its own tail *)
+    Definition ouroboros_step (state : (Alphacarrier -> Prop) -> Prop) :
+      (Alphacarrier -> Prop) -> Prop :=
+      fun P => state P \/ P = totality_of state.
+    
+    (* The infinite chase *)
+    Fixpoint ouroboros_at (n : nat) : (Alphacarrier -> Prop) -> Prop :=
       match n with
       | 0 => fun P => P = omega_veil \/ P = alpha_0
-      | S n' => fun P => seq n' P \/ P = totality_of (seq n')
-      end).
+      | S n' => ouroboros_step (ouroboros_at n')
+      end.
     
-    exists sequence.
-    intro n.
-    
-    (* What's missing at stage n is its totality *)
-    exists (totality_of (sequence n)).
-    
-    split.
-    - (* It's in the next stage by construction *)
-      unfold sequence at 1.
-      destruct n; simpl; right; reflexivity.
-    - (* It's not in the current stage *)
-      apply no_static_self_totality.
-  Qed.
-  
-  (* That's it. Process emerges from repeatedly trying to complete the incomplete. *)
-  
-End ProcessEmergence.
-
-Section Ouroboros.
-  
-  (* The Ouroboros: each state trying to swallow its own tail *)
-  Definition ouroboros_step (state : (Alphacarrier -> Prop) -> Prop) :
-    (Alphacarrier -> Prop) -> Prop :=
-    fun P => state P \/ P = totality_of state.
-  
-  (* The infinite chase *)
-  Fixpoint ouroboros_at (n : nat) : (Alphacarrier -> Prop) -> Prop :=
-    match n with
-    | 0 => fun P => P = omega_veil \/ P = alpha_0
-    | S n' => ouroboros_step (ouroboros_at n')
-    end.
-  
-  (* The tail always escapes *)
-  Theorem tail_always_escapes :
-    forall n : nat,
-    let state := ouroboros_at n in
-    let tail := totality_of state in
-    ~ state tail.
-  Proof.
-    intro n.
-    simpl.
-    (* Apply our fundamental principle *)
-    apply no_static_self_totality.
-  Qed.
-  
-  (* But the snake keeps trying *)
-  Theorem snake_keeps_trying :
-    forall n : nat,
-    let state := ouroboros_at n in
-    let tail := totality_of state in
-    ouroboros_at (S n) tail.
-  Proof.
-    intro n.
-    unfold ouroboros_at, ouroboros_step.
-    simpl.
-    (* The next state contains the previous tail *)
-    right. reflexivity.
-  Qed.
-  
-  (* This creates an infinite process *)
-  Theorem ouroboros_is_infinite :
-    forall n : nat,
-    exists P : Alphacarrier -> Prop,
-    ouroboros_at (S n) P /\ ~ ouroboros_at n P.
-  Proof.
-    intro n.
-    exists (totality_of (ouroboros_at n)).
-    split.
-    - apply snake_keeps_trying.
-    - apply tail_always_escapes.
-  Qed.
-  
-  (* The philosophical theorem: existence IS this process *)
-  Definition existence_is_chasing : Prop :=
-    forall (reality : nat -> (Alphacarrier -> Prop) -> Prop),
-    (* If reality grows by trying to be complete *)
-    (forall n, reality (S n) = ouroboros_step (reality n)) ->
-    (* Then incompleteness at each stage *)
-    (forall n, exists P, ~ reality n P) /\
-    (* IS what drives the next stage *)
-    (forall n, exists P, reality (S n) P /\ ~ reality n P).
-  
-  Theorem chasing_completeness_is_existing :
-    existence_is_chasing.
-  Proof.
-    unfold existence_is_chasing.
-    intros reality H_step.
-    split.
-    - (* Always incomplete *)
+    (* The tail always escapes *)
+    Theorem tail_always_escapes :
+      forall n : nat,
+      let state := ouroboros_at n in
+      let tail := totality_of state in
+      ~ state tail.
+    Proof.
       intro n.
-      exists (totality_of (reality n)).
-      (* Don't rewrite - just apply the principle directly *)
+      simpl.
+      (* Apply our fundamental principle *)
       apply no_static_self_totality.
-    - (* This drives growth *)
+    Qed.
+    
+    (* But the snake keeps trying *)
+    Theorem snake_keeps_trying :
+      forall n : nat,
+      let state := ouroboros_at n in
+      let tail := totality_of state in
+      ouroboros_at (S n) tail.
+    Proof.
       intro n.
-      exists (totality_of (reality n)).
-      split.
-      + (* Show it's in the next stage *)
-        rewrite H_step. unfold ouroboros_step.
-        right. reflexivity.
-      + (* Show it's not in the current stage *)
-        apply no_static_self_totality.
-  Qed.
-  
-  (* The ouroboros principle in one theorem *)
-  Theorem ouroboros_principle :
-    (* Starting from any state *)
-    forall (start : (Alphacarrier -> Prop) -> Prop),
-    (* The process of trying to include your totality *)
-    let process := fun m => 
-      Nat.iter m ouroboros_step start in
-    (* Creates infinite novelty *)
-    forall n, exists new,
-      process (S n) new /\ 
-      ~ process n new /\
-      (* Because the tail keeps growing *)
-      new = totality_of (process n).
-  Proof.
-    intros start process n.
-    exists (totality_of (process n)).
-    split; [|split].
-    - (* It's in the next iteration *)
-      unfold process. simpl. unfold ouroboros_step. 
+      unfold ouroboros_at, ouroboros_step.
+      simpl.
+      (* The next state contains the previous tail *)
       right. reflexivity.
-    - (* It's not in the current iteration *)
-      unfold process.
+    Qed.
+    
+    (* This creates an infinite process *)
+    Theorem ouroboros_is_infinite :
+      forall n : nat,
+      exists P : Alphacarrier -> Prop,
+      ouroboros_at (S n) P /\ ~ ouroboros_at n P.
+    Proof.
+      intro n.
+      exists (totality_of (ouroboros_at n)).
+      split.
+      - apply snake_keeps_trying.
+      - apply tail_always_escapes.
+    Qed.
+    
+    (* The philosophical theorem: existence IS this process *)
+    Definition existence_is_chasing : Prop :=
+      forall (reality : nat -> (Alphacarrier -> Prop) -> Prop),
+      (* If reality grows by trying to be complete *)
+      (forall n, reality (S n) = ouroboros_step (reality n)) ->
+      (* Then incompleteness at each stage *)
+      (forall n, exists P, ~ reality n P) /\
+      (* IS what drives the next stage *)
+      (forall n, exists P, reality (S n) P /\ ~ reality n P).
+    
+    Theorem chasing_completeness_is_existing :
+      existence_is_chasing.
+    Proof.
+      unfold existence_is_chasing.
+      intros reality H_step.
+      split.
+      - (* Always incomplete *)
+        intro n.
+        exists (totality_of (reality n)).
+        (* Don't rewrite - just apply the principle directly *)
+        apply no_static_self_totality.
+      - (* This drives growth *)
+        intro n.
+        exists (totality_of (reality n)).
+        split.
+        + (* Show it's in the next stage *)
+          rewrite H_step. unfold ouroboros_step.
+          right. reflexivity.
+        + (* Show it's not in the current stage *)
+          apply no_static_self_totality.
+    Qed.
+    
+    (* The ouroboros principle in one theorem *)
+    Theorem ouroboros_principle :
+      (* Starting from any state *)
+      forall (start : (Alphacarrier -> Prop) -> Prop),
+      (* The process of trying to include your totality *)
+      let process := fun m => 
+        Nat.iter m ouroboros_step start in
+      (* Creates infinite novelty *)
+      forall n, exists new,
+        process (S n) new /\ 
+        ~ process n new /\
+        (* Because the tail keeps growing *)
+        new = totality_of (process n).
+    Proof.
+      intros start process n.
+      exists (totality_of (process n)).
+      split; [|split].
+      - (* It's in the next iteration *)
+        unfold process. simpl. unfold ouroboros_step. 
+        right. reflexivity.
+      - (* It's not in the current iteration *)
+        unfold process.
+        apply no_static_self_totality.
+      - (* It is indeed the totality *)
+        reflexivity.
+    Qed.
+    
+  End Ouroboros.
+
+
+  Section MetaphysicsViaOuroboros.
+    (* Our simple machinery: states trying to swallow their tails *)
+    Definition Reality := nat -> (Alphacarrier -> Prop) -> Prop.
+    
+    Definition evolving_reality (R : Reality) : Prop :=
+      forall n, R (S n) = ouroboros_step (R n).
+    
+    (* Metaphysics Theorem 1: Reality is inherently incomplete *)
+    Theorem reality_inherently_incomplete :
+      forall (R : Reality),
+      evolving_reality R ->
+      forall n, exists (unreachable : Alphacarrier -> Prop),
+      ~ R n unreachable.
+    Proof.
+      intros R H_evol n.
+      exists (totality_of (R n)).
       apply no_static_self_totality.
-    - (* It is indeed the totality *)
-      reflexivity.
-  Qed.
-  
-End Ouroboros.
-
-
-Section MetaphysicsViaOuroboros.
-  (* Our simple machinery: states trying to swallow their tails *)
-  Definition Reality := nat -> (Alphacarrier -> Prop) -> Prop.
-  
-  Definition evolving_reality (R : Reality) : Prop :=
-    forall n, R (S n) = ouroboros_step (R n).
-  
-  (* Metaphysics Theorem 1: Reality is inherently incomplete *)
-  Theorem reality_inherently_incomplete :
-    forall (R : Reality),
-    evolving_reality R ->
-    forall n, exists (unreachable : Alphacarrier -> Prop),
-    ~ R n unreachable.
-  Proof.
-    intros R H_evol n.
-    exists (totality_of (R n)).
-    apply no_static_self_totality.
-  Qed.
-  
-  (* Metaphysics Theorem 2: The Present creates the Future *)
-  Theorem present_creates_future :
-    forall (R : Reality),
-    evolving_reality R ->
-    forall n, exists (novel : Alphacarrier -> Prop),
-    R (S n) novel /\ ~ R n novel /\
-    (* The novel is precisely what the present couldn't grasp *)
-    novel = totality_of (R n).
-  Proof.
-    intros R H_evol n.
-    exists (totality_of (R n)).
-    split; [|split].
-    - rewrite H_evol. unfold ouroboros_step. right. reflexivity.
-    - apply no_static_self_totality.
-    - reflexivity.
-  Qed.
-  
-End MetaphysicsViaOuroboros.
+    Qed.
+    
+    (* Metaphysics Theorem 2: The Present creates the Future *)
+    Theorem present_creates_future :
+      forall (R : Reality),
+      evolving_reality R ->
+      forall n, exists (novel : Alphacarrier -> Prop),
+      R (S n) novel /\ ~ R n novel /\
+      (* The novel is precisely what the present couldn't grasp *)
+      novel = totality_of (R n).
+    Proof.
+      intros R H_evol n.
+      exists (totality_of (R n)).
+      split; [|split].
+      - rewrite H_evol. unfold ouroboros_step. right. reflexivity.
+      - apply no_static_self_totality.
+      - reflexivity.
+    Qed.
+    
+  End MetaphysicsViaOuroboros.
 
 
 Section ExplorationWithin.
+
   (* The ouroboros provides an infinite canvas *)
   Definition infinite_canvas := fun n => ouroboros_at n.
   
@@ -553,19 +547,89 @@ Section ExplorationWithin.
     - apply canvas_contains_totalities.
     - apply no_static_self_totality.
   Qed.
-  
+
+  Lemma canvas_strictly_grows :
+    forall n P,
+    infinite_canvas n P -> infinite_canvas (S n) P.
+  Proof.
+    intros n P H_in.
+    unfold infinite_canvas, ouroboros_at, ouroboros_step.
+    left. exact H_in.
+  Qed.
+
+  Lemma persistence :
+    forall n m P,
+    n <= m ->
+    infinite_canvas n P ->
+    infinite_canvas m P.
+  Proof.
+    intros n m P H_le H_in.
+    induction H_le.
+    - exact H_in.
+    - apply canvas_strictly_grows. exact IHH_le.
+  Qed.
+
   (* Now, can we encode arbitrary predicates within totalities? *)
   (* Here's a key insight: totalities of different stages are all distinct *)
   
   Lemma totalities_distinct :
-    forall n m, n <> m ->
-    totality_of (infinite_canvas n) <> totality_of (infinite_canvas m).
-  Proof.
-    intros n m H_neq H_eq.
-    (* If totalities were equal, the stages would have same content *)
-    (* But stage m has more/different predicates than stage n *)
-    admit. (* This needs careful proof about stage growth *)
-  Admitted.
+  forall n m, n <> m ->
+  totality_of (infinite_canvas n) <> totality_of (infinite_canvas m).
+Proof.
+  intros n m H_neq H_eq.
+  
+  (* The key: if two predicates are equal, they must classify elements the same way *)
+  assert (H_extensional: forall a, 
+    totality_of (infinite_canvas n) a <-> totality_of (infinite_canvas m) a).
+  { intro a. rewrite H_eq. reflexivity. }
+  
+  (* Consider the smaller index - WLOG assume n < m *)
+  destruct (lt_dec n m) as [H_lt | H_ge].
+  
+  - (* Case: n < m *)
+    (* Key fact: totality_of (infinite_canvas n) appears in canvas m *)
+    assert (H_appears: infinite_canvas m (totality_of (infinite_canvas n))).
+    {
+      apply (persistence (S n) m).
+      - lia.
+      - apply canvas_contains_totalities.
+    }
+    
+    (* Now here's the insight: if a predicate P is in canvas m, 
+       and P = totality_of (canvas m), then canvas m contains its own totality! *)
+    
+    (* Since totality n = totality m, and totality n is in canvas m... *)
+    assert (H_self_contain: infinite_canvas m (totality_of (infinite_canvas m))).
+    {
+      (* We have: infinite_canvas m (totality_of (infinite_canvas n)) *)
+      (* We know: totality_of (infinite_canvas n) = totality_of (infinite_canvas m) *)
+      (* Therefore: infinite_canvas m (totality_of (infinite_canvas m)) *)
+      rewrite <- H_eq.
+      exact H_appears.
+    }
+    
+    (* But this violates our fundamental axiom! *)
+    exact (no_static_self_totality (infinite_canvas m) H_self_contain).
+    
+  - (* Case: m <= n, so m < n since m ≠ n *)
+    assert (H_lt_mn: m < n) by lia.
+    
+    (* Same argument with roles reversed *)
+    assert (H_appears: infinite_canvas n (totality_of (infinite_canvas m))).
+    {
+      apply (persistence (S m) n).
+      - lia.
+      - apply canvas_contains_totalities.
+    }
+    
+    assert (H_self_contain: infinite_canvas n (totality_of (infinite_canvas n))).
+    {
+      rewrite H_eq.
+      exact H_appears.
+    }
+    
+    exact (no_static_self_totality (infinite_canvas n) H_self_contain).
+Qed.
   
   (* We can use distinct totalities as "markers" for encoding *)
   Definition encode_with_totality (n : nat) (P : Alphacarrier -> Prop) 
@@ -616,29 +680,6 @@ Section ExplorationWithin.
     apply canvas_contains_totalities.
   Qed.
   
-  (* For separation, we'd need to encode P and ~P differently *)
-  (* This might require richer structure than just totalities *)
-  
-  (* The honest conclusion: *)
-  Theorem canvas_limitation :
-    exists P : Alphacarrier -> Prop,
-    P <> omega_veil /\
-    forall n, ~ infinite_canvas n P.
-  Proof.
-    (* Take any predicate that's not omega_veil, alpha_0, or a totality *)
-    (* For example, a specific "diagonal" predicate *)
-    exists (fun a => exists n, totality_sequence n a /\ totality_sequence (S n) a).
-    split.
-    - (* Not omega_veil *)
-      intro H_eq.
-      (* This predicate has witnesses where totalities overlap *)
-      admit.
-    - (* Never in canvas *)
-      intro n.
-      (* By induction - the canvas only contains specific predicates *)
-      admit.
-  Admitted.
-  
 End ExplorationWithin.
 
 
@@ -646,16 +687,6 @@ Section BuildingFromCanvas.
 
   Definition totality_combination (indices : list nat) : Alphacarrier -> Prop :=
     fun a => forall n, In n indices -> totality_sequence n a.
-  
-  (* First, let's prove totalities grow *)
-  Lemma canvas_strictly_grows :
-    forall n P,
-    infinite_canvas n P -> infinite_canvas (S n) P.
-  Proof.
-    intros n P H_in.
-    unfold infinite_canvas, ouroboros_at, ouroboros_step.
-    left. exact H_in.
-  Qed.
   
   (* Now let's prove totalities are nested *)
   Lemma totality_monotone :
@@ -670,24 +701,6 @@ Section BuildingFromCanvas.
     - apply canvas_strictly_grows. exact H_P_in.
     - exact H_Pa.
   Qed.
-  
-  (* Actually prove combinations are distinct *)
-  Lemma singleton_combinations_distinct :
-    forall n m,
-    n <> m ->
-    totality_combination [n] <> totality_combination [m].
-  Proof.
-    intros n m H_neq H_eq.
-    (* If they're equal, they have same witnesses *)
-    assert (forall a, totality_combination [n] a <-> totality_combination [m] a).
-    { intro a. rewrite H_eq. reflexivity. }
-    
-    (* But totality n and totality m are different *)
-    (* We need to show there's a witness in one but not the other *)
-    
-    (* Actually, this is hard without knowing more about totalities *)
-    admit.
-  Admitted.
   
   (* Let's prove something simpler about free will *)
   Definition simple_free_will : Prop :=
@@ -713,25 +726,6 @@ Section BuildingFromCanvas.
       + apply canvas_contains_totalities.
   Qed.
   
-  Lemma totality_appears_next_stage :
-    forall n,
-    infinite_canvas (S n) (totality_of (infinite_canvas n)).
-  Proof.
-    exact canvas_contains_totalities.
-  Qed.
-  
-  Lemma persistence :
-    forall n m P,
-    n <= m ->
-    infinite_canvas n P ->
-    infinite_canvas m P.
-  Proof.
-    intros n m P H_le H_in.
-    induction H_le.
-    - exact H_in.
-    - apply canvas_strictly_grows. exact IHH_le.
-  Qed.
-  
   Theorem simple_trinity :
     exists P Q R : Alphacarrier -> Prop,
     P <> Q /\ Q <> R /\ P <> R /\
@@ -751,13 +745,13 @@ Section BuildingFromCanvas.
       + (* totality 0 appears at stage 1, persists to 3 *)
         apply (persistence 1 3).
         * lia.
-        * apply totality_appears_next_stage.
+        * apply canvas_contains_totalities.
       + (* totality 1 appears at stage 2, persists to 3 *)
         apply (persistence 2 3).
         * lia.
-        * apply totality_appears_next_stage.
+        * apply canvas_contains_totalities.
       + (* totality 2 appears at stage 3 *)
-        apply totality_appears_next_stage.
+        apply canvas_contains_totalities.
   Qed.
   
 End BuildingFromCanvas.
