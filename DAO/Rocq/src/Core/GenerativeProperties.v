@@ -789,3 +789,86 @@ Section SelfRecursiveGenerative.
   Qed.
   
 End SelfRecursiveGenerative.
+
+Theorem no_Omega_paradoxifying_predicate_in_gen :
+  forall (Alpha : AlphaType) (HG : GenerativeType Alpha) (Omega : OmegaType),
+  forall t : nat,
+    ~ contains t (self_ref_pred_embed (fun _ : Alphacarrier -> Prop =>
+      exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y <-> ~ P y)).
+Proof.
+  intros Alpha HG Omega t H_contradiction.
+  (* Extract paradox directly *)
+  pose proof (self_ref_pred_embed_correct (fun _ : Alphacarrier -> Prop => 
+    exists (P : Omegacarrier -> Prop) (y : Omegacarrier), P y <-> ~ P y)) as H_embed.
+  destruct H_embed as [P [y H_iff]].
+  
+  (* The biconditional P y <-> ~ P y is already contradictory *)
+  destruct H_iff as [H_lr H_rl].
+  
+  (* Derive False directly *)
+  assert (H_false: ~ P y).
+  { intro HP.
+    apply (H_lr HP).
+    exact HP. }
+  
+  (* Now apply the right-to-left direction *)
+  apply H_false.
+  apply H_rl.
+  exact H_false.
+Qed.
+
+Theorem self_reference_requires_temporal_separation :
+  forall (Alpha : AlphaType) (HG : GenerativeType Alpha),
+  forall P : (Alphacarrier -> Prop) -> Prop,  (* P is a predicate on predicates *)
+  (* If P's embedding eventually appears *)
+  (exists t : nat, contains t (self_ref_pred_embed P)) ->
+  (* And its negation eventually appears *)  
+  (exists t : nat, contains t (self_ref_pred_embed (fun pred => ~ P pred))) ->
+  (* Then either they appear at different times (temporal separation) *)
+  (exists t1 t2 : nat, t1 <> t2 /\ 
+    contains t1 (self_ref_pred_embed P) /\ 
+    contains t2 (self_ref_pred_embed (fun pred => ~ P pred))) \/
+  (* Or they appear together (contradiction) *)
+  (exists t : nat, 
+    contains t (self_ref_pred_embed P) /\ 
+    contains t (self_ref_pred_embed (fun pred => ~ P pred))).
+Proof.
+  intros Alpha HG P [t1 H_P] [t2 H_notP].
+  
+  (* Compare t1 and t2 *)
+  destruct (Nat.eq_dec t1 t2) as [H_eq | H_neq].
+  
+  - (* Case: t1 = t2 *)
+    right.
+    exists t1.
+    subst t2.
+    split; assumption.
+    
+  - (* Case: t1 ≠ t2 *)
+    left.
+    exists t1, t2.
+    split; [assumption | split; assumption].
+Qed.
+
+Theorem self_reference_temporal_consistency :
+  forall (Alpha : AlphaType) (HG : GenerativeType Alpha),
+  forall t : nat,
+  forall P : (Alphacarrier -> Prop) -> Prop,
+    (* If P and ~P would create a direct contradiction *)
+    (P (self_ref_pred_embed (fun pred => ~ P pred)) /\ 
+     (fun pred => ~ P pred) (self_ref_pred_embed P)) ->
+    (* Then they cannot both be contained at the same time *)
+    ~ (contains t (self_ref_pred_embed P) /\ 
+       contains t (self_ref_pred_embed (fun pred => ~ P pred))).
+Proof.
+  intros Alpha HG t P [H_contradiction1 H_contradiction2] [HP HnotP].
+  
+  (* H_contradiction2 simplifies to: ~ P (self_ref_pred_embed P) *)
+  simpl in H_contradiction2.
+  
+  (* But self_ref_pred_embed_correct tells us: P (self_ref_pred_embed P) *)
+  pose proof (self_ref_pred_embed_correct P) as H_pos.
+  
+  (* Direct contradiction *)
+  exact (H_contradiction2 H_pos).
+Qed.
