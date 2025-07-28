@@ -17,7 +17,15 @@ Class AlphaType := {
       (forall x : Alphacarrier, ~ Q x) -> 
       (forall x : Alphacarrier, Q x <-> P x))
   };
-  
+
+  (** Explicit impossibility equality (not just pointwise) 
+  Note: This is only needed for a few proofs, so it's a separate axiom
+  to isolate where stronger assumptions are needed. *)
+  alpha_impossibility_equal : { P : Alphacarrier -> Prop | 
+    (forall x, ~ P x) /\
+    (forall Q, (forall x, ~ Q x) -> Q = P)
+  };
+
   (** Non-emptiness - need at least one element *)
   alpha_not_empty : exists x : Alphacarrier, True
 }.
