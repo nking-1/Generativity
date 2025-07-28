@@ -1,6 +1,6 @@
 (* ================================================================ *)
-(*                    Reality Computes Itself                       *)
-(*              The Minimal Generative Process                      *)
+(*                  Reality "Computes" Itself                       *)
+(*            Process Philosophy Formalization in DAO               *)
 (* ================================================================ *)
 
 Require Import DAO.Core.AlphaType.
@@ -13,7 +13,7 @@ Require Import List.
 Import ListNotations.
 
 
-Section MinimalGeneration.
+Section Process.
   Context (Alpha : AlphaType).
   
   (* ============================================================ *)
@@ -65,13 +65,18 @@ Section MinimalGeneration.
   (* But this means totality contains itself! *)
   (* We've recreated the "everything" problem *)
   
-(* ============================================================ *)
+  (* ============================================================ *)
   (*         Part 3: The True Beginning - First Distinction       *)
   (* ============================================================ *)
   
   (* First we need the concept of totality for any collection *)
   Definition totality_of (current : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
     fun a => exists Q, current Q /\ Q a.
+
+  (* The "not everything" axiom: no collection contains its own totality *)
+  Axiom no_static_self_totality :
+    forall (coll : (Alphacarrier -> Prop) -> Prop),
+    ~ coll (totality_of coll).
   
   (* We can't start with just omega_veil - that's degenerate *)
   (* The first real moment is the first distinction: alpha_0 *)
@@ -226,11 +231,6 @@ Section MinimalGeneration.
       exact (omega_veil_has_no_witnesses witness H1).
     Qed.
 
-    (* The minimal axiom: no collection contains its own totality *)
-    Axiom no_static_self_totality :
-      forall (coll : (Alphacarrier -> Prop) -> Prop),
-      ~ coll (totality_of coll).
-    
     (* Immediate consequence: static completeness is impossible *)
     Theorem static_incompleteness :
       forall (attempt : (Alphacarrier -> Prop) -> Prop),
@@ -756,4 +756,4 @@ Section BuildingFromCanvas.
   
 End BuildingFromCanvas.
 
-End MinimalGeneration.
+End Process.

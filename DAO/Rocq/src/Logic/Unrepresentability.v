@@ -205,82 +205,212 @@ Module Unrepresentability.
   (** ** Turing's Halting Problem *)
   
   Module Turing.
-    Import Core.
+  
+  Section HaltingAsPredicates.
+    Context {Alpha : AlphaType} {Omega : OmegaType}.
+    Variable embed : Alphacarrier -> Omegacarrier.
+    (* We need embed to be injective for the oracle to work properly *)
+    Variable embed_injective : forall a b, embed a = embed b -> a = b.
     
-    Section HaltingProblem.
-      Context {Alpha : AlphaType} {Omega : OmegaType}.
-      Variable embed : Alphacarrier -> Omegacarrier.
-      Variable TM : Type.
-      Variable encode_tm : TM -> Alphacarrier.
-      Variable Halts : TM -> Alphacarrier -> Prop.
-      Variable tm_enum : nat -> option TM.
-      Variable enum_complete : forall M : TM, exists n, tm_enum n = Some M.
+    (* ============================================================ *)
+    (** ** Basic Computation Framework *)
+    (* ============================================================ *)
+    
+    (* Computation as a ternary relation: program × input → output *)
+    Variable Computes : Alphacarrier -> Alphacarrier -> Alphacarrier -> Prop.
+    
+    (* Programs can be enumerated *)
+    Variable prog_enum : nat -> option Alphacarrier.
+    Variable prog_enum_complete : forall p, exists n, prog_enum n = Some p.
+    
+    (* Basic properties of computation *)
+    Variable compute_deterministic : forall p input out1 out2,
+      Computes p input out1 -> Computes p input out2 -> out1 = out2.
+    
+    (* Universal machine axiom: there exists a program that can simulate others *)
+    Variable universal : Alphacarrier.
+    Variable pair : Alphacarrier -> Alphacarrier -> Alphacarrier.
+    Variable universal_property : forall p input output,
+      Computes p input output <-> Computes universal (pair p input) output.
+    
+    (* ============================================================ *)
+    (** ** Halting Definitions *)
+    (* ============================================================ *)
+    
+    Definition Halts (p input : Alphacarrier) : Prop :=
+      exists output, Computes p input output.
+    
+    Definition SelfHalts (p : Alphacarrier) : Prop :=
+      Halts p p.
+    
+    (* Embed predicates from Alpha to Omega *)
+    Definition embed_pred (P : Alphacarrier -> Prop) : Omegacarrier -> Prop :=
+      fun x => exists a, embed a = x /\ P a.
+    
+    (* ============================================================ *)
+    (** ** The Diagonal Construction *)
+    (* ============================================================ *)
+    
+    (* The diagonal specification: programs that do the opposite of what a decider says *)
+    Definition diagonal_spec (decider : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+      fun d => forall p, 
+        (* d halts on p iff the decider says p doesn't self-halt *)
+        (Halts d p <-> ~ decider p).
+    
+    (* In Omega, diagonal programs exist *)
+    Lemma omega_has_diagonal_program :
+      forall decider : Alphacarrier -> Prop,
+      exists x : Omegacarrier, embed_pred (diagonal_spec decider) x.
+    Proof.
+      intro decider.
+      apply omega_completeness.
+    Qed.
+    
+    (* Key construction: build a self-referential program *)
+    Variable construct_diagonal : forall (decider : Alphacarrier -> Prop),
+      {d : Alphacarrier | 
+        (* d halts on input p iff decider says p doesn't self-halt *)
+        forall p, Halts d p <-> ~ decider p}.
+    
+    (* ============================================================ *)
+    (** ** The Main Theorems *)
+    (* ============================================================ *)
+    
+    (* If we could decide halting, we'd get a contradiction *)
+    Theorem diagonal_contradiction :
+      forall (decider : Alphacarrier -> Prop),
+      (forall p, decider p <-> SelfHalts p) ->
+      exists d : Alphacarrier,
+        SelfHalts d <-> ~ SelfHalts d.
+    Proof.
+      intros decider Hdec.
       
-      Definition SelfHalts (M : TM) : Prop :=
-        Halts M (encode_tm M).
+      (* Get the diagonal program *)
+      destruct (construct_diagonal decider) as [d Hd].
+      exists d.
       
-      Definition anti_diagonal (n : nat) : Prop :=
-        match tm_enum n with
-        | None => True
-        | Some M => ~ SelfHalts M
-        end.
-      
-      Definition halting_diagonal_omega : Omegacarrier -> Prop :=
-        fun x => exists n M,
-          embed (encode_tm M) = x /\
-          tm_enum n = Some M /\
-          anti_diagonal n.
-      
-      Theorem omega_has_halting_paradoxes :
-        exists x, halting_diagonal_omega x.
-      Proof.
-        apply omega_completeness.
-      Qed.
-      
-      Definition Alpha_Has_Halting_Decider : Prop :=
-        exists (A : Alphacarrier -> Prop),
-          forall M, A (encode_tm M) <-> SelfHalts M.
-      
-      Axiom diagonal_construction :
-        forall (decider : Alphacarrier -> Prop),
-        (forall M, decider (encode_tm M) <-> SelfHalts M) ->
-        exists D : TM, forall M,
-          Halts D (encode_tm M) <-> ~ decider (encode_tm M).
-      
-      Theorem alpha_cannot_solve_halting :
-        ~ Alpha_Has_Halting_Decider.
-      Proof.
-        intro H.
-        destruct H as [decider Hdec].
-        destruct (diagonal_construction decider Hdec) as [D D_spec].
-        specialize (D_spec D).
+      (* Show: SelfHalts d <-> ~ SelfHalts d *)
+      split.
+      - intro Hself.
+        (* SelfHalts d means Halts d d *)
         unfold SelfHalts in *.
         
-        assert (Halts D (encode_tm D) <-> ~ Halts D (encode_tm D)).
+        (* By Hd: Halts d d <-> ~ decider d *)
+        apply Hd in Hself.
+        
+        (* By Hdec: decider d <-> SelfHalts d *)
+        rewrite Hdec in Hself.
+        exact Hself.
+        
+      - intro Hnself.
+        (* ~ SelfHalts d *)
+        unfold SelfHalts in *.
+        
+        (* By Hdec: decider d <-> SelfHalts d *)
+        assert (~ decider d).
+        { rewrite Hdec. exact Hnself. }
+        
+        (* By Hd: Halts d d <-> ~ decider d *)
+        apply Hd.
+        exact H.
+    Qed.
+    
+    (* Therefore, Alpha cannot decide halting *)
+    Theorem alpha_cannot_decide_halting :
+      ~ exists (decider : Alphacarrier -> Prop),
+        forall p, decider p <-> SelfHalts p.
+    Proof.
+      intros [decider Hdec].
+      
+      (* Get the diagonal contradiction *)
+      destruct (diagonal_contradiction decider Hdec) as [d Hcontra].
+      
+      (* We have: SelfHalts d <-> ~ SelfHalts d *)
+      destruct Hcontra as [H1 H2].
+      
+      (* Derive False *)
+      assert (~ SelfHalts d).
+      { intro H. exact (H1 H H). }
+      
+      apply H. apply H2. exact H.
+    Qed.
+    
+    (* ============================================================ *)
+    (** ** Connection to Ternary Logic *)
+    (* ============================================================ *)
+    
+    (* SelfHalts is an undecidable predicate in Alpha's ternary logic *)
+    Theorem self_halts_undecidable :
+      (~ exists p, SelfHalts p) /\ (~ forall p, ~ SelfHalts p).
+    Proof.
+      split.
+      
+      - (* Assume exists p, SelfHalts p *)
+        intro H_exists.
+        
+        (* We'll show this leads to decidability *)
+        assert (exists decider : Alphacarrier -> Prop, forall p, decider p <-> SelfHalts p).
         {
-          split.
-          - intro HD.
-            apply D_spec in HD.
-            intro HD'.
-            apply HD.
-            apply Hdec.
-            exact HD'.
-          - intro HnD.
-            apply D_spec.
-            intro Hdec_D.
-            apply HnD.
-            apply Hdec.
-            exact Hdec_D.
+          (* Define decider as SelfHalts itself *)
+          exists SelfHalts.
+          intro p. reflexivity.
         }
         
-        destruct H as [H1 H2].
-        assert (~ Halts D (encode_tm D)).
-        { intro H. exact (H1 H H). }
-        apply H. apply H2. exact H.
-      Qed.
+        (* But we proved halting is undecidable *)
+        exact (alpha_cannot_decide_halting H).
+        
+      - (* Assume forall p, ~ SelfHalts p *)
+        intro H_none.
+        
+        (* Then the decider would be the constant False predicate *)
+        assert (exists decider : Alphacarrier -> Prop, forall p, decider p <-> SelfHalts p).
+        {
+          exists (fun _ => False).
+          intro p.
+          split.
+          - intro H. destruct H.
+          - intro H. exact (H_none p H).
+        }
+        
+        (* But we proved halting is undecidable *)
+        exact (alpha_cannot_decide_halting H).
+    Qed.
+    
+    (* ============================================================ *)
+    (** ** Halting Oracle in Omega *)
+    (* ============================================================ *)
+    
+    (* In Omega, we can have a "halting oracle" that knows all *)
+    Definition omega_halting_oracle : Omegacarrier -> Prop :=
+      fun x => exists p, embed p = x /\ SelfHalts p.
+    
+    Theorem omega_knows_halting :
+      exists oracle : Omegacarrier,
+      forall p : Alphacarrier,
+        omega_halting_oracle (embed p) <-> SelfHalts p.
+    Proof.
+      (* In Omega, such an oracle exists by completeness *)
+      destruct (omega_completeness omega_halting_oracle) as [oracle Horacle].
+      exists oracle.
       
-    End HaltingProblem.
-  End Turing.
+      intro p.
+      split.
+      - intro H.
+        unfold omega_halting_oracle in H.
+        destruct H as [p' [Hembed Hself]].
+        apply embed_injective in Hembed.
+        rewrite <- Hembed.
+        exact Hself.
+        
+      - intro Hself.
+        unfold omega_halting_oracle.
+        exists p.
+        split; [reflexivity | exact Hself].
+    Qed.
+    
+  End HaltingAsPredicates.
+  
+End Turing.
 
   (* ================================================================ *)
   (** ** General Undecidability Framework *)
@@ -352,5 +482,106 @@ Module Unrepresentability.
           UndecidabilityReason embed P.
     
   End Framework.
+
+  Module FrameworkExamples.
+    Import Framework.
+    Import Diagonal.
+    
+    Section ConcreteApplications.
+      Context {Alpha : AlphaType} {Omega : OmegaType}.
+      Variable embed : Alphacarrier -> Omegacarrier.
+      Variable embed_injective : forall a b, embed a = embed b -> a = b.
+      
+      (* ============================================================ *)
+      (** ** Example 1: The Diagonal is Undecidable *)
+      (* ============================================================ *)
+      
+      (* The diagonal predicate: has a witness somewhere in the diagonal *)
+      Definition has_diagonal_witness (alpha_enum : nat -> option (Alphacarrier -> Prop)) :
+        Alphacarrier -> Prop :=
+        fun a => exists n, Diagonal.Main.diagonal alpha_enum n a.
+      
+      (* Theorem: The diagonal is undecidable in Alpha's ternary logic *)
+      Example diagonal_undecidability
+        (alpha_enum : nat -> option (Alphacarrier -> Prop))
+        (enum_complete : forall A, exists n, alpha_enum n = Some A) :
+        (~ exists a, has_diagonal_witness alpha_enum a) /\ 
+        (~ forall a, ~ has_diagonal_witness alpha_enum a).
+      Proof.
+        (* Set up the predicates *)
+        set (P_alpha := has_diagonal_witness alpha_enum).
+        set (P_omega := Diagonal.Omega.om_diagonal alpha_enum embed).
+        
+        (* Apply the general theorem about unrepresentability implying undecidability *)
+        apply (unrepresentable_implies_undecidable embed P_alpha P_omega).
+        
+        - (* Surjectivity-like property: every witness in P_omega comes from Alpha *)
+          intros x [n [a [Hembed _]]].
+          exists a. exact Hembed.
+        
+        - (* Show this is an instance of undecidability via unrepresentability *)
+          unfold Undecidable_Via_Unrepresentability.
+          split; [|split].
+          
+          + (* Detection property: P_alpha tracks P_omega through embedding *)
+            intro a.
+            unfold P_alpha, has_diagonal_witness, P_omega, Diagonal.Omega.om_diagonal.
+            split.
+            * (* If a has diagonal witness, then embed a has one in Omega *)
+              intros [n Hdiag].
+              exists n, a. split; [reflexivity | exact Hdiag].
+            * (* If embed a has diagonal witness in Omega, then a has one *)
+              intros [n [a' [Hembed Hdiag]]].
+              apply embed_injective in Hembed.
+              rewrite <- Hembed.
+              exists n. exact Hdiag.
+          
+          + (* The diagonal exists in Omega *)
+            apply Diagonal.Omega.diagonal_exists.
+          
+          + (* The diagonal is not representable - the key theorem *)
+            apply Core.omega_diagonal_not_representable.
+            exact enum_complete.
+      Qed.
+      
+      (* Corollary: The diagonal fits our undecidability framework *)
+      Example diagonal_has_undecidability_reason
+        (alpha_enum : nat -> option (Alphacarrier -> Prop))
+        (enum_complete : forall A, exists n, alpha_enum n = Some A) :
+        UndecidabilityReason embed (has_diagonal_witness alpha_enum).
+      Proof.
+        (* Use the Unrep_Omega constructor explicitly *)
+        apply (@Unrep_Omega Alpha Omega embed (has_diagonal_witness alpha_enum) 
+                (Diagonal.Omega.om_diagonal alpha_enum embed)).
+        
+        - (* Surjectivity-like property *)
+          intros x [n [a [Hembed _]]].
+          exists a. exact Hembed.
+        
+        - (* Instance of Undecidable_Via_Unrepresentability *)
+          unfold Undecidable_Via_Unrepresentability.
+          split; [|split].
+          
+          + (* Detection property *)
+            intro a.
+            unfold has_diagonal_witness, Diagonal.Omega.om_diagonal.
+            split.
+            * intros [n Hdiag].
+              exists n, a. split; [reflexivity | exact Hdiag].
+            * intros [n [a' [Hembed Hdiag]]].
+              apply embed_injective in Hembed.
+              rewrite <- Hembed.
+              exists n. exact Hdiag.
+          
+          + (* Exists in Omega *)
+            apply Diagonal.Omega.diagonal_exists.
+          
+          + (* Not representable *)
+            apply Core.omega_diagonal_not_representable.
+            exact enum_complete.
+      Qed.
+      
+    End ConcreteApplications.
+  End FrameworkExamples.
 
 End Unrepresentability.

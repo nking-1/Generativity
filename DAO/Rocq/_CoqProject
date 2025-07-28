@@ -32,6 +32,7 @@ src/Theory/Topology.v
 src/Theory/HoTT.v
 src/Theory/CategoryTheory.v
 src/Theory/Godel.v
+src/Theory/Impossibility/ImpossibilityAlgebra.v
 
 src/Classical/Paradox.v
 src/Classical/Theory/BooleanAlgebra.v

@@ -2585,6 +2585,7 @@ Qed.
 
 End ImpossibilityCalculus.
 
+
 (* ========== Noether's Theorem Connection ========== *)
 Section NoetherConnection.
   Context {Alpha : AlphaType}.

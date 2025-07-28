@@ -1,6 +1,8 @@
 (** * AlphaType: The Consistent but Incomplete Type
     
-    AlphaType represents a type with exactly one impossible predicate.
+    AlphaType represents a type with exactly one impossible predicate,
+    differentiating it from OmegaType and NomegaType, which behave like
+    maximally paradoxical infinities.
 *)
 
 Class AlphaType := {

@@ -525,6 +525,7 @@ Proof.
   exact H_contains_P.
 Qed.
 
+
 (* Theorem: Time 0 contains the liar's paradox - this is particularly interesting
    for Alpha because it shows how self-referential paradoxes exist in superposition *)
 Theorem gen_contains_liars_paradox_t0 :
