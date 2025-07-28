@@ -170,38 +170,38 @@ Section SystemAlphaConnection.
   
   (* The key insight: bounded systems can't represent all of Omega's behavior *)
   Theorem bounded_system_has_limits :
-    forall omega : OmegaSystem,
+    forall om_system : OmegaSystem,
     exists t : nat,
-    omega_structure omega t > S_max sys.
+    omega_structure om_system t > S_max sys.
   Proof.
-    intro omega.
-    pose proof (omega_unbounded omega (S_max sys)) as H.
+    intro om_system.
+    pose proof (omega_unbounded om_system (S_max sys)) as H.
     exact H.
   Qed.
   
 End SystemAlphaConnection.
 
 (* Define information flow for OmegaSystem *)
-Definition omega_DS (omega : OmegaSystem) (t : nat) : nat :=
-  if Nat.ltb (omega_structure omega (t + 1)) (omega_structure omega t) then
-    omega_structure omega t - omega_structure omega (t + 1)
+Definition omega_DS (om_system : OmegaSystem) (t : nat) : nat :=
+  if Nat.ltb (omega_structure om_system (t + 1)) (omega_structure om_system t) then
+    omega_structure om_system t - omega_structure om_system (t + 1)
   else
-    omega_structure omega (t + 1) - omega_structure omega t.
+    omega_structure om_system (t + 1) - omega_structure om_system t.
 
-Definition omega_I_val (omega : OmegaSystem) (t : nat) : nat :=
-  (omega_structure omega t) * (omega_DS omega t).
+Definition omega_I_val (om_system : OmegaSystem) (t : nat) : nat :=
+  (omega_structure om_system t) * (omega_DS om_system t).
 
 (* The crucial difference: Omega's I_val is unbounded *)
 (* Then the proof becomes: *)
 Theorem omega_I_val_unbounded :
-  forall omega : OmegaSystem,
+  forall om_system : OmegaSystem,
   forall B : nat,
-  exists t : nat, omega_I_val omega t > B.
+  exists t : nat, omega_I_val om_system t > B.
 Proof.
-  intros omega B.
+  intros om_system B.
   
   (* Find a time with change > B *)
-  destruct (omega_wild_changes omega B) as [t1 [t2 [Ht2 H_change]]].
+  destruct (omega_wild_changes om_system B) as [t1 [t2 [Ht2 H_change]]].
   
   exists t1.
   unfold omega_I_val.
@@ -209,9 +209,9 @@ Proof.
   (* omega_structure t1 >= 1 (positive) and omega_DS t1 > B *)
   (* So their product > B *)
   
-  pose proof (omega_positive omega t1) as H_pos.
+  pose proof (omega_positive om_system t1) as H_pos.
   
-  assert (omega_DS omega t1 > B).
+  assert (omega_DS om_system t1 > B).
   {
     unfold omega_DS.
     rewrite <- Ht2.
@@ -219,7 +219,7 @@ Proof.
   }
   
   (* structure * DS >= 1 * DS > 1 * B = B *)
-  apply Nat.lt_le_trans with (m := 1 * omega_DS omega t1).
+  apply Nat.lt_le_trans with (m := 1 * omega_DS om_system t1).
   - rewrite Nat.mul_1_l. assumption.
   - apply Nat.mul_le_mono_r. lia.
 Qed.
@@ -227,15 +227,15 @@ Qed.
 (* Now the key theorem: Systems trying to track OmegaSystems must optimize *)
 Section TrackingAndOptimization.
   Variable sys : System.
-  Variable omega : OmegaSystem.
+  Variable om_system : OmegaSystem.
   
-  (* A tracking relationship: sys tries to follow omega within its bounds *)
+  (* A tracking relationship: sys tries to follow om_system within its bounds *)
   Definition tracks_approximately (error_bound : nat) : Prop :=
     forall t : nat,
     exists t_omega : nat,
-    (* The system tracks omega with some error and delay *)
-    (structure sys t <= omega_structure omega t_omega + error_bound) /\
-    (structure sys t + error_bound >= omega_structure omega t_omega) /\
+    (* The system tracks om_system with some error and delay *)
+    (structure sys t <= omega_structure om_system t_omega + error_bound) /\
+    (structure sys t + error_bound >= omega_structure om_system t_omega) /\
     (* But respecting its own bounds *)
     (S_min sys < structure sys t < S_max sys).
   
@@ -402,7 +402,7 @@ End CoreIMaxTheorem.
 (* Now let's connect this to the Omega/Alpha framework *)
 Section OmegaAlphaConnection.
   Variable sys : System.
-  Variable omega : OmegaSystem.
+  Variable om_system : OmegaSystem.
   
   (* A key insight: bounded systems have bounded I_val *)
   Theorem bounded_I_val :
@@ -441,33 +441,29 @@ Section OmegaAlphaConnection.
   (* The fundamental gap *)
   Theorem omega_exceeds_any_bound :
     forall B : nat,
-    exists t : nat, omega_I_val omega t > B.
+    exists t : nat, omega_I_val om_system t > B.
   Proof.
-    exact (omega_I_val_unbounded omega).
+    exact (omega_I_val_unbounded om_system).
   Qed.
   
 
   (* Therefore: perfect tracking is impossible *)
   Theorem no_perfect_I_tracking :
     ~(forall t : nat, 
-      I_val sys t = omega_I_val omega t).
+      I_val sys t = omega_I_val om_system t).
   Proof.
     intro H_track.
     
     (* Get sys's I_val bound *)
     destruct bounded_I_val as [I_bound H_bound].
     
-    (* Find where omega exceeds this bound *)
+    (* Find where om_system exceeds this bound *)
     destruct (omega_exceeds_any_bound (I_bound + 1)) as [t_big H_big].
     
-    (* At time t_big, omega has I_val > I_bound + 1 *)
+    (* At time t_big, om_system has I_val > I_bound + 1 *)
     (* But sys has I_val <= I_bound *)
     specialize (H_track t_big).
     specialize (H_bound t_big).
-    
-    (* H_track: I_val sys t_big = omega_I_val omega t_big *)
-    (* H_bound: I_val sys t_big <= I_bound *)
-    (* H_big: omega_I_val omega t_big > I_bound + 1 *)
     
     rewrite H_track in H_bound.
     lia.
