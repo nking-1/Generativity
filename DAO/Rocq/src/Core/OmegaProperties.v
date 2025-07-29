@@ -34,41 +34,6 @@ Section OmegaProperties.
     exists x. exact I.
   Qed.
 
-  (** Completeness is equivalent to having contradictory predicates *)
-  Theorem omega_completeness_requires_contradiction :
-    forall `{H_O: OmegaType},
-      (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) <->
-      (exists R: Omegacarrier -> Prop, forall z: Omegacarrier, R z -> False).
-  Proof.
-    intros H_O.
-    split.
-
-    (* -> direction: completeness implies existence of an uninhabitable predicate *)
-    intros omega_complete.
-
-    set (P := fun x : Omegacarrier => ~ exists y : Omegacarrier, x = y).
-
-    (* By omega_completeness, this predicate must have a witness *)
-    destruct (omega_completeness P) as [x Hx].
-
-    (* So we return P as the uninhabitable predicate (even though it's now inhabited) *)
-    exists P.
-
-    (* Now show: forall z, P z -> False *)
-    intros z Hz.
-    (* P z = ~ exists y, z = y, but clearly z = z, so contradiction *)
-    apply Hz.
-    exists z. reflexivity.
-
-    (* <- direction: If there exists an uninhabitable predicate, Omega is complete *)
-    intros [R H_uninhabitable].
-
-    (* Let Q be any predicate *)
-    intros Q.
-    (* By omega_completeness, Q must have a witness *)
-    apply omega_completeness.
-  Qed.
-
   Theorem omega_completeness_implies_contradiction :
     forall `{H_O: OmegaType},
       (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) ->

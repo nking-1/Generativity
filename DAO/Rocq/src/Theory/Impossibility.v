@@ -2,6 +2,7 @@ Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.OmegaProperties.
+Require Import DAO.Logic.Unrepresentability.
 Require Import Setoid.
 From Stdlib Require Import Lia.
 From Stdlib Require Import String.
@@ -2158,10 +2159,10 @@ Section OmegaVeilBoundary.
     exfalso. apply H_no_witness. exists a. exact HPa.
   Qed.
   
-  (* Even more meta: the predicate that asks "are you the boundary?" *)
-  Definition is_boundary_question (P : Alphacarrier -> Prop) : Prop :=
-    P = distinction_boundary.
-  
+  (* Alpha is rich enough to have undecidable predicates *)
+  Hypothesis alpha_richness : exists P : Alphacarrier -> Prop, 
+    undecidable P /\ ~(forall a, P a <-> omega_veil a).
+
   (* This question itself creates undecidability *)
   Theorem boundary_question_undecidable :
     undecidable distinction_boundary.
@@ -2174,10 +2175,26 @@ Section OmegaVeilBoundary.
       apply H_no_witness. exists a. exact HPa.
     - (* Not definitely empty *)
       intro H_empty.
-      (* This is trickier - we'd need to show that assuming distinction_boundary 
-         is empty leads to contradiction... *)
-      admit. (* This might require the diagonal construction *)
-  Admitted.
+      
+      (* If distinction_boundary is empty, then no undecidable predicate has witnesses *)
+      assert (H_all_undec_empty: forall P, undecidable P -> forall a, ~ P a).
+      { intros P H_undec a HPa.
+        apply (H_empty a).
+        exists P. split; assumption. }
+      
+      (* This means every undecidable predicate equals omega_veil *)
+      assert (H_all_undec_omega: forall P, undecidable P -> forall a, P a <-> omega_veil a).
+      { intros P H_undec a.
+        split.
+        - intro HPa. exfalso. exact (H_all_undec_empty P H_undec a HPa).
+        - intro Hom. exfalso. exact (omega_veil_has_no_witnesses a Hom). }
+      
+      (* But alpha_richness gives us an undecidable predicate that doesn't equal omega_veil *)
+      destruct alpha_richness as [P [H_P_undec H_P_not_omega]].
+      apply H_P_not_omega.
+      apply H_all_undec_omega.
+      exact H_P_undec.
+  Qed.
   
 End OmegaVeilBoundary.
 

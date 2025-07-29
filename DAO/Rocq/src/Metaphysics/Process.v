@@ -792,6 +792,14 @@ Section Process.
     Axiom alpha_impossibility_primitive : 
       forall (C : AlphaCollection),
       omega_veil <> (fun a => ~ alpha_totality C a).
+
+    (** Explicit impossibility equality (not just pointwise) 
+    Note: This is currently only needed for these meta-reasoning proofs,
+    so it's a separate axiom to isolate where stronger assumptions are needed. *)
+    Axiom alpha_impossibility_equal : { P : Alphacarrier -> Prop | 
+      (forall x, ~ P x) /\
+      (forall Q, (forall x, ~ Q x) -> Q = P)
+    }.
     
     (* First, show the two impossible predicates are the same *)
     Lemma omega_veil_equals_unique :

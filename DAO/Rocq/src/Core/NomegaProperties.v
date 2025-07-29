@@ -13,11 +13,9 @@ Section NomegaProperties.
   
   (** For any predicate on Nomega, there are no witnesses *)
   Theorem nomega_no_witnesses : 
-    exists P : Nomegacarrier -> Prop, no_witness P.
+    forall P : Nomegacarrier -> Prop, no_witness P.
   Proof.
-    exists (fun _ => True).
-    unfold no_witness.
-    intros [x _].
+    intros P [x Hx].
     exact (nomega_emptiness x).
   Qed.
 
