@@ -790,8 +790,278 @@ Definition is_choice_function (F f : Alphacarrier) : Prop :=
 (* Axiom of Choice: Every family of non-empty sets has a choice function *)
 Axiom zf_choice : forall F,
   is_family_of_sets F ->
-  (forall A, A mem F -> exists a, a mem A) ->  (* all sets non-empty *)
+  (forall A, is_set_code A -> A in set_decode F -> exists a, is_set_code a /\ a in set_decode A) ->
   exists f, is_choice_function F f.
+
+
+
+(* Define mem as a regular function since notation is problematic *)
+Definition is_member (a b : Alphacarrier) : Prop :=
+  is_set_code b /\ a in set_decode b.
+
+(* ============ Additional Theorems: Set Theory and Impossibility ============ *)
+
+(* Basic insight: any set containing empty is non-empty *)
+Theorem set_containing_void_not_void : forall A,
+  is_set_code A -> is_member empty_code A -> ~ (A = empty_code).
+Proof.
+  intros A HA Hmem Heq.
+  subst A.
+  (* is_member empty_code empty_code, but nothing is in empty *)
+  destruct Hmem as [_ Hin].
+  destruct empty_code_spec as [_ Hdecode].
+  apply Hdecode in Hin.
+  unfold In, Empty in Hin.
+  exact (classical_veil_is_impossible empty_code Hin).
+Qed.
+
+(* The complement of empty is universal *)
+Theorem complement_empty_is_universal :
+  compl Empty == Universal.
+Proof.
+  unfold set_eq, pred_equiv.
+  intro x.
+  unfold compl, Empty, Universal, In, the_necessary.
+  split.
+  - intro H. exact H.
+  - intro H. exact H.
+Qed.
+
+(* Russell's Paradox in our framework *)
+Definition russell_set : ZSet :=
+  fun x => is_set_code x /\ ~ (is_member x x).
+
+(* The Russell set cannot have a code! *)
+Theorem russell_has_no_code :
+  ~ exists r, is_set_code r /\ set_decode r == russell_set.
+Proof.
+  intros [r [Hr Hdecode]].
+  (* Consider: is_member r r *)
+  destruct (alpha_constant_decision (is_member r r)) as [Hmem | Hnmem].
+  - (* If is_member r r, then r in russell_set by Hdecode, so ~ (is_member r r) *)
+    assert (r in russell_set).
+    { apply Hdecode. destruct Hmem as [_ H]. exact H. }
+    unfold russell_set, In in H.
+    destruct H as [_ Hnot].
+    exact (Hnot Hmem).
+  - (* If ~ (is_member r r), then r satisfies russell_set *)
+    assert (r in russell_set).
+    { unfold russell_set, In. split; assumption. }
+    assert (is_member r r).
+    { split; [exact Hr|]. apply Hdecode. exact H. }
+    exact (Hnmem H0).
+Qed.
+
+(* This means Russell's set is "too big" - it would collapse to classical_veil *)
+Theorem russell_would_be_impossible :
+  forall r, is_set_code r -> 
+  (forall x, is_member x r <-> (is_set_code x /\ ~ (is_member x x))) ->
+  forall x, ~ (is_member x r).
+Proof.
+  intros r Hr Hspec x Hmem.
+  (* Same contradiction as above *)
+  destruct (alpha_constant_decision (is_member r r)) as [Hmemr | Hnmemr].
+  - (* If is_member r r *)
+    assert (Hrr_spec: is_set_code r /\ ~ is_member r r).
+    { apply Hspec. exact Hmemr. }
+    destruct Hrr_spec as [_ Hnot].
+    exact (Hnot Hmemr).
+  - (* If ~ is_member r r *)
+    assert (is_member r r).
+    { apply Hspec. split; assumption. }
+    exact (Hnmemr H).
+Qed.
+
+(* The von Neumann hierarchy: sets have "distance" from void *)
+Definition rank_0_set (x : Alphacarrier) : Prop :=
+  is_set_code x /\ forall y, ~ (is_member y x).
+
+Definition rank_at_most_n : nat -> Alphacarrier -> Prop :=
+  fix rank n x :=
+    match n with
+    | 0 => rank_0_set x
+    | S n' => is_set_code x /\ 
+              forall y, is_member y x -> rank n' y
+    end.
+
+(* Empty set has rank 0 *)
+Theorem empty_rank_0 : rank_at_most_n 0 empty_code.
+Proof.
+  unfold rank_at_most_n, rank_0_set.
+  destruct empty_code_spec as [Hcode _].
+  split.
+  - exact Hcode.
+  - intros y [Hy_code Hy_in].
+    destruct empty_code_spec as [_ Hdecode].
+    apply Hdecode in Hy_in.
+    unfold In, Empty in Hy_in.
+    exact (classical_veil_is_impossible y Hy_in).
+Qed.
+
+(* Singletons have rank 1 *)
+Theorem singleton_rank_1 : forall a,
+  rank_at_most_n 0 a ->
+  rank_at_most_n 1 (singleton_code a).
+Proof.
+  intros a H0.
+  simpl.
+  destruct (singleton_code_spec a) as [Hcode Hdecode].
+  split; [exact Hcode|].
+  intros y Hy.
+  (* is_member y (singleton_code a) means y = a *)
+  destruct Hy as [_ Hy_in].
+  assert (y in singleton a) by (apply Hdecode; exact Hy_in).
+  assert (y = a) by (apply singleton_spec; exact H).
+  subst y.
+  exact H0.
+Qed.
+
+(* The hierarchy is well-founded by Foundation axiom *)
+Theorem no_infinite_membership_descent : forall f : nat -> Alphacarrier,
+  (forall n, is_set_code (f n)) ->
+  ~ (forall n, is_member (f (S n)) (f n)).
+Proof.
+  intros f Hcodes Hdescent.
+  (* This would violate foundation - but the proof is complex *)
+  (* Key idea: the range of f would be a set with no minimal element *)
+Admitted. (* Would need more machinery *)
+
+
+(* Helper lemmas for converting between mem and is_member *)
+Lemma mem_to_is_member : forall a b,
+  a mem b -> is_member a b.
+Proof.
+  intros a b H.
+  exact H.
+Qed.
+
+Lemma is_member_to_in_decode : forall a b,
+  is_member a b -> is_set_code b /\ a in set_decode b.
+Proof.
+  intros a b H.
+  exact H.
+Qed.
+
+Lemma in_decode_to_mem : forall a b,
+  is_set_code b -> a in set_decode b -> a mem b.
+Proof.
+  intros a b Hcode Hin.
+  split; assumption.
+Qed.
+
+(* Helper for the diagonal argument *)
+Lemma diagonal_contradiction : forall A d D f,
+  is_set_code D ->
+  (forall x, x mem D <-> x mem A /\ ~ is_member x (f x)) ->
+  D = f d ->
+  is_member d D ->
+  False.
+Proof.
+  intros A d D f HD HDspec Heq [_ Hd_in].
+  (* Build d mem D *)
+  assert (d mem D) by (split; assumption).
+  (* Apply HDspec to get ~ is_member d (f d) *)
+  apply HDspec in H.
+  destruct H as [_ Hnot_fd].
+  (* But f d = D, so ~ is_member d D *)
+  rewrite <- Heq in Hnot_fd.
+  (* Contradiction: we have both is_member d D and ~ is_member d D *)
+  apply Hnot_fd.
+  split; assumption.
+Qed.
+
+(* Cantor's Theorem in our framework *)
+Theorem cantor_theorem : forall A ps,
+  is_set_code A -> is_powerset A ps ->
+  ~ exists f : Alphacarrier -> Alphacarrier,
+    (forall x, is_member x A -> is_member (f x) ps) /\
+    (forall y, is_member y ps -> exists x, is_member x A /\ y = f x).
+Proof.
+  intros A ps HA Hps [f [Hf_maps Hf_onto]].
+  
+  (* Define the diagonal set D = {x ∈ A | x ∉ f(x)} *)
+  destruct (separation A (fun x => ~ (is_member x (f x))) HA) as [D [HD HDspec]].
+  
+  (* D is a subset of A, so D ∈ P(A) *)
+  assert (HD_in_ps: is_member D ps).
+  { destruct Hps as [_ [_ Hps_spec]].
+    apply Hps_spec.
+    unfold encodes_subset.
+    split; [exact HD|].
+    split; [exact HA|].
+    intros y Hy.
+    (* Extract that y is in A *)
+    destruct Hy as [_ Hy_in].
+    assert (y mem D) by (split; assumption).
+    apply HDspec in H.
+    destruct H as [H_mem_A _].
+    exact H_mem_A. }
+  
+  (* Since f is onto, D = f(d) for some d ∈ A *)
+  destruct (Hf_onto D HD_in_ps) as [d [Hd Heq]].
+  
+  (* Now we get our contradiction: d ∈ D ↔ d ∉ f(d) = D *)
+  destruct (alpha_constant_decision (is_member d D)) as [Hd_in | Hd_out].
+  - (* d ∈ D, so d ∉ f(d) = D, contradiction *)
+    exact (diagonal_contradiction A d D f HD HDspec Heq Hd_in).
+  - (* d ∉ D, so d ∈ f(d) = D, contradiction *)
+    assert (is_member d D).
+    { split.
+      - exact HD.
+      - apply HDspec.
+        split.
+        + exact Hd.
+        + rewrite <- Heq. exact Hd_out. }
+    exact (Hd_out H).
+Qed.
+
+
+(* The profound connection: Well-founded sets are those with finite "distance" from void *)
+Definition has_finite_rank (x : Alphacarrier) : Prop :=
+  exists n, rank_at_most_n n x.
+
+(* All natural numbers (as von Neumann ordinals) have finite rank *)
+Theorem naturals_have_finite_rank : forall n,
+  is_natural_number n -> has_finite_rank n.
+Proof.
+  intros n Hn.
+  apply (nat_induction_zfc (fun n => has_finite_rank n)).
+  - (* Base: zero has rank 0 *)
+    exists 0. apply empty_rank_0.
+  - (* Step: if n has rank k, then S(n) has rank at most k+2 *)
+    intros m Hm [k Hk].
+    exists (S (S k)).
+    (* Proof would show successor adds at most 2 to rank *)
+Admitted.
+
+(* The ultimate insight: The cumulative hierarchy V is built in stages from void *)
+(* V_0 = ∅ = classical_veil *)
+(* V_1 = P(V_0) = {∅} *)
+(* V_2 = P(V_1) = {∅, {∅}} *)
+(* ... *)
+(* Each level adds one more "layer" of distance from impossibility *)
+
+Theorem cumulative_hierarchy_from_void :
+  exists V : nat -> Alphacarrier,
+    V 0 = empty_code /\
+    forall n, is_powerset (V n) (V (S n)).
+Proof.
+  (* This would construct the entire set-theoretic universe from classical_veil *)
+  (* The construction exists by iterating powerset, starting from void *)
+Admitted.
+
+(* Final insight: Every set in ZFC has a "impossibility genealogy" - 
+   a finite path back to the omega veil through membership *)
+(* Theorem everything_comes_from_nothing :
+  forall x, has_finite_rank x ->
+  exists (path : list Alphacarrier),
+    last path empty_code = x /\
+    forall i, i < length path - 1 ->
+      is_member (nth i path empty_code) (nth (i+1) path empty_code).
+Proof.
+  (* This would show every well-founded set has a membership chain to empty *)
+  (* The proof would use induction on rank *)
+Admitted. *)
 
 
 End ZFC_in_ClassicalAlpha.
