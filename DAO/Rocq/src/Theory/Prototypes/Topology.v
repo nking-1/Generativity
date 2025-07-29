@@ -1,4 +1,4 @@
-Require Import DAO.Core.AlphaType.
+(* Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Logic.AlphaTernary.
@@ -351,4 +351,4 @@ and enable the rich structure we observe in mathematics, physics, and consciousn
 This provides the foundation for "doing calculus on logic itself" - treating
 reasoning as navigation through curved meaning-space where omega_veil acts
 as the central organizing singularity.
-*)
+*) *)

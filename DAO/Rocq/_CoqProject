@@ -25,14 +25,16 @@ src/Logic/Paradox/UltimateParadox.v
 src/Computation/Computation.v
 src/Computation/InformationFlow.v
 
-src/Theory/Arithmetic.v
 src/Theory/Cardinality.v
 src/Theory/Impossibility.v
-src/Theory/Topology.v
-src/Theory/HoTT.v
-src/Theory/CategoryTheory.v
-src/Theory/Godel.v
 src/Theory/Impossibility/ImpossibilityAlgebra.v
+src/Theory/Impossibility/ImpossibilityLogic.v
+
+src/Theory/Prototypes/Topology.v
+src/Theory/Prototypes/HoTT.v
+src/Theory/Prototypes/CategoryTheory.v
+src/Theory/Prototypes/Godel.v
+src/Theory/Prototypes/Arithmetic.v
 
 src/Classical/Paradox.v
 src/Classical/Theory/BooleanAlgebra.v

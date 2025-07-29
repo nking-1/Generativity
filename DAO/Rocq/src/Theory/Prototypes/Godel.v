@@ -1,4 +1,4 @@
-Require Import DAO.Core.AlphaType.
+(* Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 
 
@@ -488,4 +488,4 @@ Section GodelConstruction.
       admit.
   Admitted.
   
-End GodelConstruction.
+End GodelConstruction. *)

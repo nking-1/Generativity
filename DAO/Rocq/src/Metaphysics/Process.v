@@ -1,6 +1,6 @@
 (* ================================================================ *)
 (*                  Reality "Computes" Itself                       *)
-(*            Process Philosophy Formalization in DAO               *)
+(*          Process Philosophy / Impermanence Formalization     .   *)
 (* ================================================================ *)
 
 Require Import DAO.Core.AlphaType.
@@ -21,7 +21,7 @@ Section Process.
   (* ============================================================ *)
   
   (* We start with just one fact: omega_veil exists *)
-  (* This is our single impossibility, the scar from escaping total paradox *)
+  (* This is our single impossibility, the boundary from escaping total paradox *)
   
   (* ============================================================ *)
   (*                Part 2: The First Attempt                     *)

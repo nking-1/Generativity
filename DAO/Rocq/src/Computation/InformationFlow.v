@@ -4,8 +4,13 @@ Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.OmegaProperties.
 Require Import DAO.Logic.Diagonal.
 Require Import DAO.Theory.Impossibility.
-Require Import Coq.Init.Nat.
-Require Import Coq.Arith.Arith.
+Require Import Stdlib.Init.Nat.
+Require Import Stdlib.Arith.Arith.
+Require Import Stdlib.Arith.PeanoNat.
+Require Import Stdlib.Lists.List.
+Require Import Stdlib.Numbers.Natural.Abstract.NDiv.
+Require Import Stdlib.Numbers.Natural.Abstract.NDiv0.
+Import ListNotations.
 From Stdlib Require Import Lia.
 
 (* ============================================================ *)
@@ -476,10 +481,6 @@ End OmegaAlphaConnection.
 (* The Yoneda-I_max Construction: Objects as Optimized Relations *)
 (* ============================================================ *)
 
-Require Import Coq.Arith.Arith.
-Require Import Coq.Arith.PeanoNat.
-Require Import Coq.Lists.List.
-Import ListNotations.
 
 (* Start with concrete information morphisms *)
 Record InfoMorphism := {
@@ -593,9 +594,6 @@ Module YonedaForInfo.
 End YonedaForInfo.
 
 
-Require Import Coq.Arith.Arith.
-
-
 Module ObjectsAsOptimization.
   Import ConcreteInfoCategory.
   Import YonedaForInfo.
@@ -620,16 +618,12 @@ Module ObjectsAsOptimization.
   Lemma div_le : forall a b : nat, b > 0 -> a / b <= a.
   Proof.
     intros a b Hb.
-    apply Nat.div_le_upper_bound.
-    - lia.
-    - (* show a ≤ b * a *)
-      destruct b as [|b0].
-      + lia.              (* b = 0 contradicts Hb : b > 0 *)
-      + simpl.            (* now b = S b0, so b * a = a + b0 * a *)
-        apply Nat.le_add_r.  (* a ≤ a + (b0 * a) *)
+    apply Nat.Div0.div_le_upper_bound.
+    rewrite Nat.mul_comm.         (* Turn b * a into a * b *)
+    apply Nat.le_mul_r. 
+    lia. 
   Qed.
 
-  
   (* Helper lemma about division *)
   Lemma div_2_le : forall n : nat, n / 2 <= n.
   Proof.
