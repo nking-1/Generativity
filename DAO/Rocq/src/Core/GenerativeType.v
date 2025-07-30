@@ -1,8 +1,8 @@
 (*  GenerativeType: The Time-Indexed Type
    
     GenerativeType adds a temporal dimension to AlphaType.
-    At t=0, it contains ALL predicates and their negations (primordial unity).
     Time allows paradoxes to separate (P at t1, ¬P at t2).
+    This allows Alpha to dynamically explore Omega.
 *)
 
 Require Import DAO.Core.AlphaType.

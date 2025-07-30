@@ -9,6 +9,7 @@ src/Core/AlphaType.v
 src/Core/AlphaProperties.v
 src/Core/ClassicalAlphaType.v
 src/Core/ClassicalAlphaProperties.v
+src/Core/ClassicalAlphaAPI.v
 src/Core/NomegaType.v
 src/Core/NomegaProperties.v
 src/Core/GenerativeType.v
