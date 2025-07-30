@@ -287,6 +287,51 @@ Module ClassicalAlphaProperties.
     
   End Helpers.
 
+  Module Existence.
+    Import Core.
+    Import Predicates.
+    Import Helpers.
+
+    Section ExistenceTheorems.
+      Context {H_alpha: ClassicalAlphaType}.
+      (* If a predicate is nowhere true, it's classical_veil *)
+      Lemma empty_pred_is_veil : forall (P : AlphaPred),
+        (forall x, ~ P x) -> pred_equiv P classical_veil.
+      Proof.
+        intros P Hemp.
+        unfold pred_equiv. intro x.
+        split.
+        - intro Hx. exfalso. exact (Hemp x Hx).
+        - intro Hv. 
+          exfalso. 
+          exact (classical_veil_is_impossible x Hv).
+      Qed.
+      
+      (* Conversely *)
+      Lemma veil_is_empty_pred : forall (P : AlphaPred),
+        pred_equiv P classical_veil -> forall x, ~ P x.
+      Proof.
+        intros P Heq x Hx.
+        apply Heq in Hx.
+        exact (classical_veil_is_impossible x Hx).
+      Qed.
+      
+      (* The key lemma for our ZFC work *)
+      Lemma not_all_not_ex : forall (P : Alphacarrier -> Prop),
+        ~ (forall x, ~ P x) -> exists x, P x.
+      Proof.
+        intros P H.
+        (* By classical logic - use alpha_constant_decision *)
+        destruct (alpha_constant_decision (exists x, P x)) as [Hex | Hnex].
+        - exact Hex.
+        - exfalso. apply H.
+          intros x Hx.
+          apply Hnex.
+          exists x. exact Hx.
+      Qed.
+    End ExistenceTheorems.
+  End Existence.
+
 End ClassicalAlphaProperties.
 
 (** The relationship between classical logic and the one-hole structure:
