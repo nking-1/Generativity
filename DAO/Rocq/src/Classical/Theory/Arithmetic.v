@@ -1,5 +1,6 @@
 Require Import DAO.Core.ClassicalAlphaType.
-Require Import DAO.Core.ClassicalAlphaProperties.
+Require Import DAO.Core.ClassicalAlphaAPI.
+Import ClassicalAlphaAPI.
 
 (* Arithmetic in ClassicalAlphaType *)
 Section ArithmeticAndPrimes.

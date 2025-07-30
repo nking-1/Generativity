@@ -1,6 +1,6 @@
 Require Import DAO.Core.ClassicalAlphaType.
 Require Import DAO.Classical.Theory.ZFC.
-Require Import DAO.Classical.Theory.BooleanAlgebra.
+Require Import DAO.Classical.Theory.ClassicalImpossibilityAlgebra.
 Require Import DAO.Core.ClassicalAlphaAPI.
 Import ClassicalAlphaAPI.
 
@@ -28,7 +28,7 @@ Module NaturalNumbers.
       
       Theorem naturals_define_regions : forall n,
         is_natural_number n ->
-        n = zero_zfc \/ BooleanAlgebra.SpatialCorrespondence.is_partial_region (fun x => mem x n).
+        n = zero_zfc \/ ClassicalImpossibilityAlgebra.SpatialCorrespondence.is_partial_region (fun x => mem x n).
       Proof.
         intros n Hn.
         destruct (alpha_constant_decision (n = zero_zfc)) as [Hz | Hnz].
@@ -36,7 +36,7 @@ Module NaturalNumbers.
           left. exact Hz.
         - (* n ≠ 0: the membership predicate is partial *)
           right.
-          unfold BooleanAlgebra.SpatialCorrespondence.is_partial_region.
+          unfold ClassicalImpossibilityAlgebra.SpatialCorrespondence.is_partial_region.
           split.
           + (* Something satisfies "x ∈ n" *)
             destruct (ZFCMeta.non_empty_has_member n (ZFC.Theorems.nat_is_set_code n Hn) Hnz) as [x Hmem].

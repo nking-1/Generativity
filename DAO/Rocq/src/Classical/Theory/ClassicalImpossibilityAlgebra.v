@@ -1,13 +1,15 @@
 Require Import DAO.Core.ClassicalAlphaType.
 Require Import DAO.Core.ClassicalAlphaProperties.
 Require Import Corelib.Classes.RelationClasses.
+Require Import DAO.Core.ClassicalAlphaAPI.
+Import ClassicalAlphaAPI.
 
-(** * Boolean Algebra Implementation in ClassicalAlphaType
+(** * Impossibility Algebra Implementation in ClassicalAlphaType
     
-    This module shows that predicates in ClassicalAlphaType form a Boolean algebra
+    This module shows that predicates in ClassicalAlphaType form an algebra
     under the quotient by predicate equivalence. *)
 
-Module BooleanAlgebra.
+Module ClassicalImpossibilityAlgebra.
 
   (** ** Boolean Operations on Predicates *)
   Module Operations.
@@ -378,7 +380,7 @@ Module BooleanAlgebra.
         reflexivity.
       - (* Trichotomy *)
         intro P.
-        destruct (BooleanAlgebra.Classification.boolean_algebra_classification P) as [Hbot | [Htop | Hmid]].
+        destruct (ClassicalImpossibilityAlgebra.Classification.boolean_algebra_classification P) as [Hbot | [Htop | Hmid]].
         * left. exact Hbot.
         * right. left. exact Htop.
         * right. right. exact Hmid.
@@ -445,14 +447,11 @@ Module BooleanAlgebra.
     
   End SpatialCorrespondence.
 
-End BooleanAlgebra.
+End ClassicalImpossibilityAlgebra.
 
 
-Require Import DAO.Core.ClassicalAlphaAPI.
-Import ClassicalAlphaAPI.
-
-Module BooleanAlgebraExamples.
-  Import BooleanAlgebra.Operations.
+Module ClassicalImpossibilityAlgebraExamples.
+  Import ClassicalImpossibilityAlgebra.Operations.
 
   (** ** Concrete examples of predicates in each class *)
   Module ConcretePredicates.
@@ -663,7 +662,7 @@ Module BooleanAlgebraExamples.
     
   End Phenomena.
 
-End BooleanAlgebraExamples.
+End ClassicalImpossibilityAlgebraExamples.
 
 
 (* 

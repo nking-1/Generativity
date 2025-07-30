@@ -1,5 +1,6 @@
 Require Import DAO.Core.ClassicalAlphaType.
-Require Import DAO.Core.ClassicalAlphaProperties.
+Require Import DAO.Core.ClassicalAlphaAPI.
+Import ClassicalAlphaAPI.
 
 (* Natural Numbers in ClassicalAlphaType *)
 Section NaturalNumbers.

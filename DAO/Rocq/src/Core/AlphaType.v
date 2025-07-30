@@ -10,7 +10,7 @@ Class AlphaType := {
   
   (** The unique impossible predicate, bundled with its properties:
       1. It has no witnesses
-      2. Any other impossible predicate is equivalent to it *)
+      2. Any other impossible predicate is pointwise equivalent to it *)
   alpha_impossibility : { P : Alphacarrier -> Prop | 
     (forall x : Alphacarrier, ~ P x) /\
     (forall Q : Alphacarrier -> Prop, 

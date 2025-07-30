@@ -204,7 +204,7 @@ Module ClassicalAlphaProperties.
     Qed.
 
     (* Useful corollary: a predicate has witnesses iff it's not classical_veil *)
-    Lemma witness_not_impossible {H_alpha: ClassicalAlphaType} (P : Alphacarrier -> Prop) :
+    Theorem witness_not_impossible {H_alpha: ClassicalAlphaType} (P : Alphacarrier -> Prop) :
       (exists x, P x) <-> ~ pred_equiv P classical_veil.
     Proof.
       split.
