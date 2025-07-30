@@ -3,7 +3,6 @@ Require Import DAO.Core.Bridge.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.OmegaProperties.
 Require Import DAO.Logic.Diagonal.
-Require Import DAO.Theory.Impossibility.
 Require Import Stdlib.Init.Nat.
 Require Import Stdlib.Arith.Arith.
 Require Import Stdlib.Arith.PeanoNat.

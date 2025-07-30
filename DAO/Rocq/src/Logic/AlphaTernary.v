@@ -229,7 +229,7 @@ Module AlphaTernary.
         TernaryLogic.AlphaTruth omega_veil.
       Proof.
         apply TernaryLogic.Alpha_False.
-        exact omega_veil_has_no_witnesses.
+        exact AlphaProperties.Core.omega_veil_has_no_witnesses.
       Qed.
       
       (** Example of Alpha_Undecidable *)
@@ -281,7 +281,7 @@ Section TruthValueMeaning.
       Example false_meaning :
         @TernaryLogic.truth_value_meaning Omega Alpha embed
           omega_veil
-          (TernaryLogic.Alpha_False omega_veil omega_veil_has_no_witnesses).
+          (TernaryLogic.Alpha_False omega_veil AlphaProperties.Core.omega_veil_has_no_witnesses).
       Proof.
         simpl. intro a.
         split; intro H; exact H.

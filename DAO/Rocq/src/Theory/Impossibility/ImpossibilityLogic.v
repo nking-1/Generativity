@@ -100,8 +100,8 @@ Module ImpossibilityLogic.
       Proof.
         intro a.
         assert (H_no_witnesses: forall x, ~ (~ ~ omega_veil x)).
-        { intros x H_nnov. apply H_nnov. exact (omega_veil_has_no_witnesses x). }
-        pose proof (omega_veil_unique (fun x => ~ ~ omega_veil x) H_no_witnesses) as H_equiv.
+        { intros x H_nnov. apply H_nnov. exact (AlphaProperties.Core.omega_veil_has_no_witnesses x). }
+        pose proof (AlphaProperties.Core.omega_veil_unique (fun x => ~ ~ omega_veil x) H_no_witnesses) as H_equiv.
         exact (H_equiv a).
       Qed.
       
@@ -251,10 +251,10 @@ Module ImpossibilityLogic.
         assert (Is_Impossible P).
         { intro a. split.
           - intro HPa. apply H_impossible. left. exact HPa.
-          - intro Hov. exfalso. exact (omega_veil_has_no_witnesses a Hov). }
+          - intro Hov. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov). }
         assert (definitely_false P).
         { unfold definitely_false. intros a HPa.
-          apply H in HPa. exact (omega_veil_has_no_witnesses a HPa). }
+          apply H in HPa. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a HPa). }
         exact (H_not_false H0).
       Qed.
       
@@ -285,7 +285,7 @@ Module ImpossibilityLogic.
         intros P Q H_undec H_Q_imp a.
         split.
         - intros [HPa HQa]. apply H_Q_imp. exact HQa.
-        - intro Hov. exfalso. exact (omega_veil_has_no_witnesses a Hov).
+        - intro Hov. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov).
       Qed.
       
       Theorem undecidable_and_true :
@@ -329,7 +329,7 @@ Module ImpossibilityLogic.
             intro H_exists.
             destruct H_exists as [a [HPa | Hov]].
             * apply H_not_true. exists a. exact HPa.
-            * exact (omega_veil_has_no_witnesses a Hov).
+            * exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov).
           + unfold definitely_false in *.
             intro H_all_false.
             apply H_not_false.
@@ -692,7 +692,7 @@ Module ClassicalLogic.
           apply H_not.
           split.
           + exact H.
-          + exfalso. exact (omega_veil_has_no_witnesses a H).
+          + exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
       Qed.
 
       Theorem gen_or_omega_alpha :
@@ -708,7 +708,7 @@ Module ClassicalLogic.
           + (* ~ (omega_veil a /\ omega_veil a) *)
             intro H_conj.
             destruct H_conj as [Hov1 _].
-            exact (omega_veil_has_no_witnesses a Hov1).
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov1).
           + (* ~ (alpha_0 a /\ alpha_0 a) *)
             intro H_conj.
             destruct H_conj as [Ha0 _].
@@ -733,8 +733,8 @@ Module ClassicalLogic.
         - intro a.
           rewrite gen_and_to_double_neg.
           split.
-          + intro H. exfalso. apply H. intros [H1 H2]. exact (omega_veil_has_no_witnesses a H1).
-          + intro H. intro H_neg. exfalso. exact (omega_veil_has_no_witnesses a H).
+          + intro H. exfalso. apply H. intros [H1 H2]. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H1).
+          + intro H. intro H_neg. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
         - apply gen_and_omega_alpha.
         - intro a.
           rewrite gen_and_to_double_neg.
@@ -747,12 +747,12 @@ Module ClassicalLogic.
             exact (H_alpha H_omega).
           + intro H_omega.
             exfalso.
-            exact (omega_veil_has_no_witnesses a H_omega).
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H_omega).
         - intro a.
           rewrite gen_and_to_double_neg.
           split.
           + intro H_nn. unfold alpha_0. intro H_omega.
-            apply H_nn. intros [_ _]. exact (omega_veil_has_no_witnesses a H_omega).
+            apply H_nn. intros [_ _]. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H_omega).
           + intro H_alpha. intro H_neg. apply H_neg. split; exact H_alpha.
       Qed.
       
@@ -867,7 +867,7 @@ Module ClassicalLogic.
             exact (HPa HQa).
           + intro H_omega.
             exfalso.
-            exact (omega_veil_has_no_witnesses a H_omega).
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H_omega).
         - (* P = alpha_0, Q = alpha_0 *)
           right.
           intro a.
@@ -977,7 +977,7 @@ Module ClassicalLogic.
           right.
           intros a H_Pa.
           apply H_omega in H_Pa.
-          exact (omega_veil_has_no_witnesses a H_Pa).
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H_Pa).
         - (* P = alpha_0 *)
           left.
           destruct alpha_not_empty as [a0 _].
@@ -985,7 +985,7 @@ Module ClassicalLogic.
           apply H_alpha.
           unfold alpha_0.
           intro H_omega.
-          exact (omega_veil_has_no_witnesses a0 H_omega).
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a0 H_omega).
       Qed.
       
       (** Double negation elimination for classical predicates *)
@@ -1135,7 +1135,7 @@ Module ClassicalLogic.
         destruct H_P as [HP_om | HP_al].
         - (* P = omega_veil *)
           apply HP_om in HPa.
-          exact (omega_veil_has_no_witnesses a HPa).
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a HPa).
         - (* P = alpha_0 *)
           unfold gen_not, NAND in HnotPa.
           apply HnotPa.
@@ -1156,7 +1156,7 @@ Module ClassicalLogic.
           { rewrite (gen_or_extensional P omega_veil Q omega_veil); auto.
             apply (proj1 classical_or_table). }
           assert (omega_veil a) by (apply H; exact H_or).
-          exfalso. exact (omega_veil_has_no_witnesses a H0).
+          exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H0).
           
         - (* P = omega, Q = alpha *)
           apply H_QR.
@@ -1194,11 +1194,11 @@ Module ClassicalLogic.
         destruct H_P as [HP_om | HP_al]; destruct H_Q as [HQ_om | HQ_al].
         - (* P = omega, Q = omega *)
           apply HP_om in HPa.
-          exfalso. exact (omega_veil_has_no_witnesses a HPa).
+          exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a HPa).
           
         - (* P = omega, Q = alpha *)
           apply HP_om in HPa.
-          exfalso. exact (omega_veil_has_no_witnesses a HPa).
+          exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a HPa).
           
         - (* P = alpha, Q = omega *)
           apply HQ_om.

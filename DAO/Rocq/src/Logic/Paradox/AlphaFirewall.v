@@ -69,7 +69,7 @@ Section AlphaParadoxFirewalls.
       (forall x, P x <-> omega_veil x) /\ (exists x, P x).
   Proof.
     intros [P [Heq [x Px]]].
-    apply (omega_veil_has_no_witnesses x).
+    apply (AlphaProperties.Core.omega_veil_has_no_witnesses x).
     apply Heq. exact Px.
   Qed.
 
@@ -126,7 +126,7 @@ Section ParadoxesEqualTheImpossible.
     (forall x : Alphacarrier, P x <-> omega_veil x).
   Proof.
     intros P HP.
-    apply omega_veil_unique.
+    apply AlphaProperties.Core.omega_veil_unique.
     intros x Px.
     exact (HP x Px).
   Qed.
@@ -168,7 +168,7 @@ Section ParadoxesEqualTheImpossible.
     (forall x, P x <-> omega_veil x).
   Proof.
     intros P Hself Hnone.
-    apply omega_veil_unique.
+    apply AlphaProperties.Core.omega_veil_unique.
     exact Hnone.
   Qed.
   
@@ -195,7 +195,7 @@ Section ParadoxesEqualTheImpossible.
     (forall x, P x <-> omega_veil x).
   Proof.
     intros P Hcirc Hempty.
-    apply omega_veil_unique.
+    apply AlphaProperties.Core.omega_veil_unique.
     exact Hempty.
   Qed.
   
@@ -220,9 +220,9 @@ Section ParadoxesEqualTheImpossible.
   Proof.
     intro P.
     split.
-    - apply omega_veil_unique.
+    - apply AlphaProperties.Core.omega_veil_unique.
     - intros H x Px.
-      apply (omega_veil_has_no_witnesses x).
+      apply (AlphaProperties.Core.omega_veil_has_no_witnesses x).
       apply H. exact Px.
   Qed.
 

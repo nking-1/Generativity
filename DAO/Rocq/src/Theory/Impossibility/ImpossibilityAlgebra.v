@@ -39,7 +39,7 @@ Module ImpossibilityAlgebra.
       Proof.
         intros P HP a HPa.
         apply HP in HPa.
-        exact (omega_veil_has_no_witnesses a HPa).
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a HPa).
       Qed.
       
       (** All impossible predicates are extensionally equal *)
@@ -75,7 +75,7 @@ Module ImpossibilityAlgebra.
         intros P Q HP a.
         split.
         - intros [HPa _]. apply HP. exact HPa.
-        - intro H. exfalso. exact (omega_veil_has_no_witnesses a H).
+        - intro H. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
       Qed.
       
       (** Disjunction is impossible iff both disjuncts are *)
@@ -89,9 +89,9 @@ Module ImpossibilityAlgebra.
         - intro H.
           split; intro a; split.
           + intro HPa. apply H. left. exact HPa.
-          + intro Hi. exfalso. exact (omega_veil_has_no_witnesses a Hi).
+          + intro Hi. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hi).
           + intro HQa. apply H. right. exact HQa.
-          + intro Hi. exfalso. exact (omega_veil_has_no_witnesses a Hi).
+          + intro Hi. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hi).
         - intros [HP HQ] a.
           split.
           + intros [HPa | HQa]; [apply HP | apply HQ]; assumption.
@@ -107,7 +107,7 @@ Module ImpossibilityAlgebra.
         intros P Q HP a HPa.
         exfalso.
         apply HP in HPa.
-        exact (omega_veil_has_no_witnesses a HPa).
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a HPa).
       Qed.
       
       (** Negation of impossible *)
@@ -120,7 +120,7 @@ Module ImpossibilityAlgebra.
         (* If P is impossible, then ~P holds everywhere *)
         assert (forall a, ~ P a).
         { intro a. intro HPa. apply HP in HPa. 
-          exact (omega_veil_has_no_witnesses a HPa). }
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a HPa). }
         (* But HnP says ~P is impossible *)
         destruct alpha_not_empty as [a0 _].
         specialize (HnP a0).
@@ -129,7 +129,7 @@ Module ImpossibilityAlgebra.
         specialize (H a0).
         apply H1 in H.
         (* Now we have omega_veil a0 *)
-        exact (omega_veil_has_no_witnesses a0 H).
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a0 H).
       Qed.
       
       (** Contrapositive for impossibility *)
@@ -142,7 +142,7 @@ Module ImpossibilityAlgebra.
         intros P Q Himp HQ a.
         split.
         - intro HPa. apply HQ. apply Himp. exact HPa.
-        - intro H. exfalso. exact (omega_veil_has_no_witnesses a H).
+        - intro H. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
       Qed.
       
       (** Conjunction of multiple impossible predicates *)
@@ -154,7 +154,7 @@ Module ImpossibilityAlgebra.
         intros P Q R HP.
         intro a; split.
         - intros [HPa _]. apply HP. exact HPa.
-        - intro H. exfalso. exact (omega_veil_has_no_witnesses a H).
+        - intro H. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
       Qed.
       
       (** XOR with impossible predicate *)
@@ -170,7 +170,7 @@ Module ImpossibilityAlgebra.
           specialize (H a).
           destruct H as [[HPa _] | HnPQ].
           + exfalso. apply HP in HPa. 
-            exact (omega_veil_has_no_witnesses a HPa).
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses a HPa).
           + exact HnPQ.
         - intros H a. right. exact (H a).
       Qed.
@@ -210,7 +210,7 @@ Module ImpossibilityAlgebra.
       Proof.
         intros P Q HPQ HQ a HQa HPa.
         assert (omega_veil a) by (apply HPQ; split; assumption).
-        exact (omega_veil_has_no_witnesses a H).
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
       Qed.
       
       (** Transferring impossibility through equivalence *)
@@ -270,7 +270,7 @@ Module ImpossibilityAlgebra.
       Proof.
         intros P Q [Himp _] a HQa HPa.
         assert (omega_veil a) by (apply Himp; split; assumption).
-        exact (omega_veil_has_no_witnesses a H).
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
       Qed.
       
       (** Almost impossible - possible but blocked by any witness *)
@@ -299,7 +299,7 @@ Module ImpossibilityAlgebra.
           (* From omega_veil a, we need P a *)
           (* But P can never hold because it implies its own negation *)
           exfalso.
-          exact (omega_veil_has_no_witnesses a Hi).
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hi).
       Qed.
       
     End AdvancedConcepts.
@@ -334,7 +334,7 @@ Module ImpossibilityAlgebra.
         - exact H.
         - intro a. split.
           + intro HPa. apply IHImpossibility_Rank. apply H0. exact HPa.
-          + intro Hi. exfalso. exact (omega_veil_has_no_witnesses a Hi).
+          + intro Hi. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hi).
       Qed.
       
       (** Example: Russell's paradox has rank 1 *)

@@ -45,11 +45,11 @@ Section Process.
     assert (simple <> omega_veil).
     { intro H. 
       assert (omega_veil witness) by (rewrite <- H; reflexivity).
-      exact (omega_veil_has_no_witnesses witness H0). }
+      exact (AlphaProperties.Core.omega_veil_has_no_witnesses witness H0). }
     assert (totality witness).
     { exists simple. split; [exact H | reflexivity]. }
     rewrite H_eq in H0.
-    exact (omega_veil_has_no_witnesses witness H0).
+    exact (AlphaProperties.Core.omega_veil_has_no_witnesses witness H0).
   Qed.
   
   (* The Paradox: If we have all non-omega predicates, totality exists *)
@@ -110,10 +110,10 @@ Section Process.
       exists alpha_0. split.
       - right. reflexivity.
       - unfold alpha_0. intro H. 
-        exact (omega_veil_has_no_witnesses witness H). }
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses witness H). }
     (* Combine *)
     rewrite H_at_w in H_tot.
-    exact (omega_veil_has_no_witnesses witness H_tot).
+    exact (AlphaProperties.Core.omega_veil_has_no_witnesses witness H_tot).
   Qed.
   
   (* ============================================================ *)
@@ -206,7 +206,7 @@ Section Process.
     alpha_knows_incompleteness.
   Proof.
     exists omega_veil.
-    split; [reflexivity | exact omega_veil_has_no_witnesses].
+    split; [reflexivity | exact AlphaProperties.Core.omega_veil_has_no_witnesses].
   Qed.
 
 
@@ -224,11 +224,11 @@ Section Process.
       destruct alpha_not_empty as [witness _].
       (* alpha_0 witness means ~ omega_veil witness *)
       assert (H1 : alpha_0 witness).
-      { unfold alpha_0. apply omega_veil_has_no_witnesses. }
+      { unfold alpha_0. apply AlphaProperties.Core.omega_veil_has_no_witnesses. }
       (* But if alpha_0 = omega_veil, then alpha_0 witness = omega_veil witness *)
       rewrite H_eq in H1.
       (* So omega_veil witness, which contradicts omega_veil_has_no_witnesses *)
-      exact (omega_veil_has_no_witnesses witness H1).
+      exact (AlphaProperties.Core.omega_veil_has_no_witnesses witness H1).
     Qed.
 
     (* Immediate consequence: static completeness is impossible *)
@@ -246,13 +246,13 @@ Section Process.
         destruct alpha_not_empty as [witness _].
         (* But attempt contains alpha_0, which has witnesses *)
         assert (attempt alpha_0) by (apply H_all; exact alpha_0_not_omega).
-        assert (alpha_0 witness) by (unfold alpha_0; exact (omega_veil_has_no_witnesses witness)).
+        assert (alpha_0 witness) by (unfold alpha_0; exact (AlphaProperties.Core.omega_veil_has_no_witnesses witness)).
         (* So witness is in totality_of attempt *)
         assert (totality_of attempt witness).
         { unfold totality_of. exists alpha_0. split; assumption. }
         (* But totality_of attempt = omega_veil *)
         rewrite H_eq in H1.  (* Rewrite in H1, not H0 *)
-        exact (omega_veil_has_no_witnesses witness H1).
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses witness H1).
         
       - (* totality_of attempt not in attempt *)
         exact (no_static_self_totality attempt).
@@ -283,7 +283,7 @@ Section Process.
           - (* Prove totality_of all_classifiable <> omega_veil *)
             intro H_eq.
             rewrite H_eq in Ha.
-            exact (omega_veil_has_no_witnesses a Ha).
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Ha).
           - unfold classifiable. left. exists a. exact Ha. }
         (* But no collection contains its totality *)
         exact (no_static_self_totality all_classifiable H).
@@ -298,7 +298,7 @@ Section Process.
           { unfold totality_of. exists P. split; assumption. }
           (* But totality = omega_veil *)
           assert (omega_veil a) by (apply H_omega; exact H).
-          exact (omega_veil_has_no_witnesses a H0). }
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H0). }
         
         (* But alpha_0 is classifiable and has witnesses! *)
         assert (H_alpha_class : all_classifiable alpha_0).
@@ -306,11 +306,11 @@ Section Process.
           - exact alpha_0_not_omega.
           - unfold classifiable. left. 
             destruct alpha_not_empty as [w _].
-            exists w. unfold alpha_0. exact (omega_veil_has_no_witnesses w). }
+            exists w. unfold alpha_0. exact (AlphaProperties.Core.omega_veil_has_no_witnesses w). }
         
         (* Get witness for alpha_0 *)
         destruct alpha_not_empty as [w _].
-        assert (alpha_0 w) by (unfold alpha_0; exact (omega_veil_has_no_witnesses w)).
+        assert (alpha_0 w) by (unfold alpha_0; exact (AlphaProperties.Core.omega_veil_has_no_witnesses w)).
         
         (* Apply our lemma *)
         exact (H_no_witnesses _ _ H_alpha_class H).
@@ -806,7 +806,7 @@ Section Process.
       omega_veil = proj1_sig alpha_impossibility_equal.
     Proof.
       (* Both have no witnesses *)
-      assert (H1: forall x, ~ omega_veil x) by apply omega_veil_has_no_witnesses.
+      assert (H1: forall x, ~ omega_veil x) by apply AlphaProperties.Core.omega_veil_has_no_witnesses.
       
       (* By uniqueness from alpha_impossibility_equal *)
       apply (proj2 (proj2_sig alpha_impossibility_equal)).
