@@ -44,5 +44,6 @@ src/Classical/Theory/NaturalNumber.v
 src/Classical/Theory/Arithmetic.v
 src/Classical/Theory/ZFC.v
 src/Classical/Theorem/EuclidPrimes.v
+src/Classical/Theorem/OrderedPairs.v
 
 src/DAO.v
