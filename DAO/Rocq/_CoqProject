@@ -38,7 +38,7 @@ src/Theory/Prototypes/CategoryTheory.v
 src/Theory/Prototypes/Godel.v
 src/Theory/Prototypes/Arithmetic.v
 
-src/Classical/Paradox.v
+src/Classical/ClassicalAlphaFirewall.v
 src/Classical/Theory/ClassicalImpossibilityAlgebra.v
 src/Classical/Theory/NaturalNumber.v
 src/Classical/Theory/Arithmetic.v

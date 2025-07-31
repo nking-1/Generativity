@@ -289,10 +289,5 @@ Module OmegaNomegaDuality.
     - exact NomegaProperties.Triviality.nomega_proves_anything.
   Qed.
 
-  (** The philosophical interpretation: 
-      The Dao encompasses both everything (Omega/有) and nothing (Nomega/無).
-      Both extremes transcend ordinary logic, leading to a collapse of
-      distinction - perhaps pointing to a deeper unity. *)
-  
 End OmegaNomegaDuality.
 
