@@ -27,16 +27,11 @@ src/Computation/Computation.v
 src/Computation/InformationFlow.v
 
 src/Theory/Cardinality.v
+src/Theory/CategoryTheory.v
 # Refactoring Impossibility.v into separate files
 # src/Theory/Impossibility.v
 src/Theory/Impossibility/ImpossibilityAlgebra.v
 src/Theory/Impossibility/ImpossibilityLogic.v
-
-src/Theory/Prototypes/Topology.v
-src/Theory/Prototypes/HoTT.v
-src/Theory/Prototypes/CategoryTheory.v
-src/Theory/Prototypes/Godel.v
-src/Theory/Prototypes/Arithmetic.v
 
 src/Classical/ClassicalAlphaFirewall.v
 src/Classical/Theory/ClassicalImpossibilityAlgebra.v
