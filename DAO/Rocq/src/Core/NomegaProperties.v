@@ -1,4 +1,4 @@
-(** Enhanced NomegaProperties.v with better organization and additional theorems *)
+(** NomegaProperties.v *)
 
 Require Import DAO.Core.NomegaType.
 Require Import DAO.Core.OmegaType.

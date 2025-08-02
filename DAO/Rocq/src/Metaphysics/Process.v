@@ -5,7 +5,6 @@
 
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
-Require Import DAO.Core.Bridge.
 Require Import Corelib.Classes.RelationClasses.
 Require Import Arith.
 Require Import Lia.

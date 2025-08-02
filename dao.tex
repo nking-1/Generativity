@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+\documentclass[12pt]{report}   % or 'report'
 
 % Unicode and font support
 \usepackage{fontspec}
@@ -128,12 +128,14 @@
 
 \maketitle
 
-\section{Introduction}
+\chapter{Introduction}
 When reading the title ``Reality Computes Itself," you may expect yet another proposal that the universe is a simulation running on a grand cosmic computer. This paper does not entirely dismiss this idea, but we also take a different approach. Instead of asking whether reality runs \textit{on} a computer, we build a rigorous mathematical framework that models reality as an eternally incomplete self-generating process. Using type theory, we formalize a duality of realms: physical reality, which maintains consistency by eliminating paradox, and a more fundamental ``ultimate" reality that embraces paradox to achieve completeness. Like yin and yang, neither realm is complete without the other. Together, these dual realms form a unified whole, resulting in a mathematical system capable of rigorously reasoning about both spiritual metaphysics and rationalist mathematics. The resulting insight is that reality might be interpreted as a process of resolving what is not impossible.
 
 Our reasoning is justified by machine-checked proofs implemented in the Rocq Prover (previously known as the Coq Proof Assistant). We provide a Rocq library called DAO (Duality of Alpha and Omega), which is available to mathematicians and philosophers to explore these concepts further. The library accompanies this paper, allowing readers to interact with and extend our formalization of metaphysical concepts.
 
 
+\part{Math Foundations}
+\chapter{Initial Questions}
 \section{What If Everything?}
 
 To begin, we ask: What if everything exists? Not just the things we observe, but every possible idea, truth, and concept, including those that contradict each other. What would such a reality look like mathematically?
@@ -300,7 +302,7 @@ From these proofs, we see that absolute completeness leads inevitably to contrad
 
 This brings us to our fundamental truth: \textit{not everything can exist simultaneously}. This principle has a remarkable property: it establishes itself through its own negation. If everything did exist (as in Omega), then the statement ``not everything exists'' would also have to be true, creating a paradox that validates the principle itself. Unlike Descartes' legendary ``Cogito, ergo sum (I think, therefore I am)," which requires a thinking subject, this truth emerges from pure logical necessity. Even in Omega, where true $\equiv$ false, this principle persists, making it the one certainty we can extract from absolute paradox.
 
-Thus, we have established our metaphysical bedrock: there must be a boundary to avoid contradiction and triviality. This raises a natural question: if not everything, then what about nothing?
+Thus, we have established our philosophical bedrock: there must be a boundary ruling out absolutely everything to avoid contradiction and triviality. The law of non-contradiction requires $P$ and $\neg P$ to never be true simultaneously if we want to reason about anything in a formal system. This raises a natural question: if not everything, then what about nothing?
 
 
 \section{What If Nothing?}
@@ -444,8 +446,35 @@ Therefore, both types lead to triviality.
 
 \coqproof{app:omega-nomega-equiv}
 
-\subsection{Conclusion: Why Is There Something Rather Than Nothing?}
-Whether we have everything (Omega) or nothing (Nomega), we arrive at triviality. Both completeness and emptiness fail to provide a consistent foundation for mathematics or existence. Moreover, we have demonstrated that absolute nothingness is filled to the brim with possibility—any statement about non-existent elements is vacuously true. This mathematical result echoes an insight from the Heart Sutra that form is emptiness, and emptiness is form. But how, exactly, does form arise from the emptiness of the void?
+\subsection{The Incompatibility of Everything and Nothing}
+
+While both Omega and Nomega lead to triviality, they remain fundamentally incompatible:
+
+\begin{theorem}[No Morphism from Omega to Nomega]\label{thm:no-morphism}
+There exists no function $f : \Omega \to N$.
+\end{theorem}
+
+\begin{proof}
+Assume for contradiction that $f : \Omega \to N$ exists.
+
+Since Omega is non-empty:
+\begin{align}
+\exists x \in \Omega &\quad \text{--- omega has witnesses for any property} \\
+f(x) \in N &\quad \text{--- applying $f$ to $x$} \\
+\bot &\quad \text{--- by nomega-emptiness} 
+\end{align}
+
+Therefore no such function can exist.
+\end{proof}
+
+\coqproof{app:no-morphism}
+
+This impossibility shows that you cannot map something to nothing. Any attempt to connect these extremes leads to immediate contradiction. While a function from Nomega to Omega can exist vacuously (since Nomega has no elements to map), the reverse is impossible.
+
+This asymmetry reveals that even in their shared triviality, Omega and Nomega are not equivalent. Omega's contradiction comes from having too much, Nomega's from having too little. No bridge can connect these extremes without destroying the very nature of what they represent.
+
+\subsection{Conclusion: Why Not Nothing?}
+Whether we have everything (Omega) or nothing (Nomega), we arrive at triviality. Both completeness and emptiness fail to provide a consistent foundation for mathematics or existence. Moreover, we have demonstrated that absolute nothingness is filled to the brim with possibility—any statement about non-existent elements is vacuously true. But how, exactly, does form arise from the emptiness of the void?
 
 
 \section{Why Does Nature Hide Information?}
@@ -774,7 +803,7 @@ In return, the triviality of Omega and Nomega becomes structured around the veil
 
 \subsection{Reflection: The DAO Framework and Eastern Philosophy}
 
-The three types we have constructed---OmegaType, AlphaType, and NomegaType---bear a remarkable correspondence to fundamental concepts in Taoist metaphysics. This parallel emerged organically from the mathematics rather than by design, suggesting these patterns may reflect deep truths about the nature of existence and logic.
+The three types we have constructed---OmegaType, AlphaType, and NomegaType---bear a remarkable correspondence to fundamental concepts in Taoist metaphysics. This parallel emerged organically from the mathematics rather than by design, suggesting these patterns may reflect deep truths about the nature of existence and logic. Before we continue forward to see what emerges from these principles, let us pay respect to the insights of eastern philosophers and mystics who seem to have already seen this pattern millennia ago.
 
 \textbf{OmegaType as 道 (Dào)}: The Dao represents the undifferentiated whole that contains all possibilities, including contradictions. As the Dao De Jing states: ``The Dao that can be spoken is not the eternal Dao.'' Our OmegaType embodies this mathematically---it contains witnesses for every predicate, including $P(x)$ and $\neg P(x)$ simultaneously. Like the Dao, OmegaType transcends ordinary logic, containing all opposites in paradoxical unity. Its very completeness makes it ineffable in consistent mathematics, just as the true Dao cannot be grasped through language.
 
@@ -2853,15 +2882,13 @@ In accepting that we cannot have everything, we discover what we can have: a con
 % Now ready for: Conclusion, Appendices with Rocq code, Bibliography
 
 \appendix
-\section{Rocq Implementation}\label{app:coq}
-
+\chapter{Rocq Implementation}\label{app:coq}
 This appendix contains the complete Rocq (Coq) formalization of the concepts presented in this paper. All proofs have been machine-checked using Rocq version 9.0.
 
+\section{OmegaType Definition and Properties}
 \subsection{OmegaType Definition}\label{app:omegatype-def}
-
 \begin{lstlisting}[language=Coq]
 (* OmegaType: a type where every proposition has a witness. *)
-
 Class OmegaType := {
   Omegacarrier : Type;
   omega_completeness : forall (P : Omegacarrier -> Prop), 
@@ -2869,113 +2896,136 @@ Class OmegaType := {
 }.
 \end{lstlisting}
 
-The \texttt{omega\_completeness} axiom formalizes the requirement from \cref{def:omegatype} that every proposition has a witness.
+The \texttt{omega\_completeness} axiom formalizes our philosophical starting point: what if everything exists? In Coq's type theory, this becomes a precise mathematical statement. For any property we can express, there exists something that satisfies it.
+
+\subsection{The Direct Path to Contradiction}\label{app:omega-core}
+Before examining specific paradoxes, we can see that Omega immediately yields contradiction:
+
+\begin{lstlisting}[language=Coq]
+(** Direct consequence: False has a witness (explosion) *)
+Theorem omega_ex_falso {Omega : OmegaType} : False.
+Proof.
+  destruct (omega_completeness (fun _ => False)) as [x Hx].
+  exact Hx.
+Qed.
+\end{lstlisting}
+
+This proof is quite direct: we ask Omega for a witness to the proposition that is always false, and by completeness, we get one. This immediately gives us \texttt{False}, from which anything follows. Immediately asking Omega for a witness is a common theme for proofs in this framework.
 
 \subsection{Omega Contains Paradoxes}\label{app:omega-paradoxes}
-
-Rocq formalization of \cref{thm:omega-paradoxes}.
+Rocq formalization of \cref{thm:omega-paradoxes}. This theorem shows that every predicate has a paradoxical witness:
 
 \begin{lstlisting}[language=Coq]
-Section OmegaProperties.
-  Context {Omega : OmegaType}.
-  
-  (** Omega contains paradoxes - for any predicate P, there exists an x
-      that both satisfies and doesn't satisfy P *)
-  Theorem omega_has_paradoxes :
-    forall (P : Omegacarrier -> Prop),
-    exists x : Omegacarrier, P x /\ ~ P x.
-  Proof.
-    intro P.
-    pose (paradox := fun x => P x /\ ~ P x).
-    exact (omega_completeness paradox).
-  Qed.
+(** For any predicate P, there exists an x that both 
+    satisfies and doesn't satisfy P *)
+Theorem omega_has_paradoxes {Omega : OmegaType} :
+  forall (P : Omegacarrier -> Prop),
+  exists x : Omegacarrier, P x /\ ~ P x.
+Proof.
+  intro P.
+  pose (paradox := fun x => P x /\ ~ P x).
+  exact (omega_completeness paradox).
+Qed.
 \end{lstlisting}
+
+The proof's elegance lies in its simplicity: we define the paradoxical property and then invoke Omega's completeness. Coq accepts this without complaint. The type system doesn't prevent us from asking for contradictory witnesses.
 
 \subsection{Omega Contains the Liar Paradox}\label{app:omega-liar}
-
-Rocq formalization of \cref{thm:omega-liar}.
+Rocq formalization of \cref{thm:omega-liar}. Here we construct the classic self-referential paradox:
 
 \begin{lstlisting}[language=Coq]
-  (** Omega has self-referential witnesses - the liar paradox *)
-  Theorem omega_has_liar :
-    exists x : Omegacarrier,
-    exists P : Omegacarrier -> Prop,
-    P x <-> ~ P x.
-  Proof.
-    pose (liar_pred := fun x => 
-      exists P : Omegacarrier -> Prop, P x <-> ~ P x).
-    destruct (omega_completeness liar_pred) as [x Hx].
-    exists x. exact Hx.
-  Qed.
+(** The liar paradox: there exists a self-referential contradiction *)
+Theorem omega_has_liar {Omega : OmegaType} :
+  exists x : Omegacarrier,
+  exists P : Omegacarrier -> Prop,
+  P x <-> ~ P x.
+Proof.
+  pose (liar_pred := fun x => 
+    exists P : Omegacarrier -> Prop, P x <-> ~ P x).
+  destruct (omega_completeness liar_pred) as [x Hx].
+  exists x. exact Hx.
+Qed.
 \end{lstlisting}
+
+The proof constructs a predicate that asks ``am I a liar paradox?" and then finds a witness. This shows that Omega contains not just simple contradictions but the full complexity of self-reference.
 
 \subsection{Complete iff Contradictory}\label{app:complete-iff-contradictory}
-
-Rocq formalization of \cref{thm:complete-iff-contradictory}.
+Rocq formalization of \cref{thm:complete-iff-contradictory}. This theorem establishes the deep connection between completeness and contradiction:
 
 \begin{lstlisting}[language=Coq]
-  Theorem omega_completeness_implies_contradiction :
-    forall `{H_O: OmegaType},
-      (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) ->
-      exists R: Omegacarrier -> Prop, 
-        (exists z: Omegacarrier, R z) /\ (forall z: Omegacarrier, R z -> False).
-  Proof.
-    intros H_O omega_complete.
-    set (R := fun _ : Omegacarrier => False).
-    exists R.
-    split.
-    - apply omega_complete.
-    - intros z Hz. exact Hz.
-  Qed.
-  
-  Theorem contradiction_implies_omega_completeness :
-    forall `{H_O: OmegaType},
-      (exists R: Omegacarrier -> Prop, 
-        (exists z: Omegacarrier, R z) /\ (forall z: Omegacarrier, R z -> False)) ->
-      (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y).
-  Proof.
-    intros H_O [R [[z Hz] H_uninhab]] Q.
-    exfalso.
-    exact (H_uninhab z Hz).
-  Qed.
-  
-  Theorem complete_iff_contradictory :
-    forall `{H_O: OmegaType},
-      (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) <->
-      exists R: Omegacarrier -> Prop, 
-        (exists z: Omegacarrier, R z) /\ (forall z: Omegacarrier, R z -> False).
-  Proof.
-    intros H_O.
-    split.
-    - apply omega_completeness_implies_contradiction.
-    - apply contradiction_implies_omega_completeness.
-  Qed.
+Theorem omega_completeness_implies_contradiction {Omega : OmegaType} :
+  (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) ->
+  exists R: Omegacarrier -> Prop, 
+    (exists z: Omegacarrier, R z) /\ 
+    (forall z: Omegacarrier, R z -> False).
+Proof.
+  intros omega_complete.
+  set (R := fun _ : Omegacarrier => False).
+  exists R.
+  split.
+  - apply omega_complete.
+  - intros z Hz. exact Hz.
+Qed.
+
+Theorem contradiction_implies_omega_completeness {Omega : OmegaType} :
+  (exists R: Omegacarrier -> Prop, 
+    (exists z: Omegacarrier, R z) /\ 
+    (forall z: Omegacarrier, R z -> False)) ->
+  (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y).
+Proof.
+  intros [R [[z Hz] H_uninhab]] Q.
+  exfalso.
+  exact (H_uninhab z Hz).
+Qed.
+
+(** The fundamental characterization of Omega *)
+Theorem complete_iff_contradictory {Omega : OmegaType} :
+  (forall Q: Omegacarrier -> Prop, exists y: Omegacarrier, Q y) <->
+  exists R: Omegacarrier -> Prop, 
+    (exists z: Omegacarrier, R z) /\ 
+    (forall z: Omegacarrier, R z -> False).
+Proof.
+  split.
+  - apply omega_completeness_implies_contradiction.
+  - apply contradiction_implies_omega_completeness.
+Qed.
 \end{lstlisting}
+
+The forward direction uses the constant false predicate: if we can witness everything, we can witness falsehood. The reverse direction uses explosion: from a contradiction, we can prove any witness exists. This bidirectional proof captures the mathematical essence of our philosophical observation: you cannot have everything without contradiction.
 
 \subsection{Omega Proves Anything}\label{app:omega-trivial}
-
-Rocq formalization of \cref{thm:omega-trivial}.
+Rocq formalization of \cref{thm:omega-trivial}. From paradox flows triviality:
 
 \begin{lstlisting}[language=Coq]
-  (** From Omega's paradoxes, we can prove anything (triviality) *)
-  Theorem omega_proves_anything :
-    forall (P : Omegacarrier -> Prop) (x : Omegacarrier), P x.
-  Proof.
-    intros P x.
-    destruct (omega_has_paradoxes P) as [w [Hw Hnw]].
-    (* We have Hw : P w and Hnw : ~ P w, which is a contradiction *)
-    contradiction.
-  Qed.
-End OmegaProperties.
+(** From Omega's paradoxes, we can prove anything (triviality) *)
+Theorem omega_proves_anything {Omega : OmegaType} :
+  forall (P : Omegacarrier -> Prop) (x : Omegacarrier), P x.
+Proof.
+  intros P x.
+  destruct (omega_has_paradoxes P) as [w [Hw Hnw]].
+  (* We have Hw : P w and Hnw : ~ P w, which is a contradiction *)
+  contradiction.
+Qed.
+
+(** All elements are equal in Omega *)
+Theorem omega_all_equal {Omega : OmegaType} :
+  forall (x y : Omegacarrier), x = y.
+Proof.
+  intros x y.
+  (* From omega_ex_falso, we have False *)
+  exact (match omega_ex_falso with end).
+Qed.
 \end{lstlisting}
 
-\subsection{NomegaType Definition}\label{app:nomegatype-def}
+The first theorem shows that any property holds for any element. Omega is logically trivial. The second theorem goes further: in Omega, all distinctions collapse. Every element equals every other element.
 
+\section{NomegaType Definition and Properties}
+
+\subsection{NomegaType Definition}\label{app:nomegatype-def}
 \begin{lstlisting}[language=Coq]
-(** * NomegaType: The Empty Type (The Void)
+(** NomegaType: The Empty Type (The Void)
     
     NomegaType represents a type with no elements - the empty type.
-    In the DAO framework, it represents Wu (無) - nothingness/void.
 *)
 Class NomegaType := {
   Nomegacarrier : Type;
@@ -2983,75 +3033,112 @@ Class NomegaType := {
 }.
 \end{lstlisting}
 
-The \texttt{nomega\_emptiness} axiom formalizes the requirement from \cref{def:nomegatype} that any element immediately yields a contradiction.
+The \texttt{nomega\_emptiness} axiom states that any element of Nomega immediately yields \texttt{False}. This makes Nomega the empty type.
 
 \subsection{Nomega Has No Witnesses}\label{app:nomega-no-witnesses}
-
-Rocq formalization of \cref{thm:nomega-no-witnesses}.
-
-\begin{lstlisting}[language=Coq]
-Section NomegaProperties.
-  Context {Nomega : NomegaType}.
-  
-  (** Helper: The predicate "there exists no x" *)
-  Definition no_witness (P : Nomegacarrier -> Prop) : Prop :=
-    ~ exists x : Nomegacarrier, P x.
-  
-  (** For any predicate on Nomega, there are no witnesses *)
-  Theorem nomega_no_witnesses : 
-    exists P : Nomegacarrier -> Prop, no_witness P.
-  Proof.
-    exists (fun _ => True).
-    unfold no_witness.
-    intros [x _].
-    exact (nomega_emptiness x).
-  Qed.
-\end{lstlisting}
-
-\subsection{Nomega Proves Anything}\label{app:nomega-trivial}
-
-Rocq formalization of \cref{thm:nomega-trivial}.
+Rocq formalization of \cref{thm:nomega-no-witnesses}. No predicate on Nomega can have a witness:
 
 \begin{lstlisting}[language=Coq]
-  (** From any element of Nomega, we can prove anything (ex falso) *)
-  Theorem nomega_proves_anything : 
-    forall (P : Nomegacarrier -> Prop),
-    forall x : Nomegacarrier, P x.
-  Proof.
-    intros P x.
-    (* We have x : Nomegacarrier *)
-    (* By nomega_emptiness, this gives us False *)
-    destruct (nomega_emptiness x).
-    (* From False, we can prove anything - principle of explosion *)
-  Qed.
+(** Helper: The predicate "there exists no x" *)
+Definition no_witness {Nomega : NomegaType} 
+  (P : Nomegacarrier -> Prop) : Prop :=
+  ~ exists x : Nomegacarrier, P x.
+
+(** For any predicate on Nomega, there are no witnesses *)
+Theorem nomega_no_witnesses {Nomega : NomegaType} : 
+  forall P : Nomegacarrier -> Prop, no_witness P.
+Proof.
+  intros P [x Hx].
+  exact (nomega_emptiness x).
+Qed.
 \end{lstlisting}
+
+The proof is direct: if there were a witness \texttt{x} for any property \texttt{P}, then \texttt{x} would be an element of Nomega, contradicting \texttt{nomega\_emptiness}.
+
+\subsection{Vacuous Triviality of Nomega}\label{app:nomega-trivial}
+Rocq formalization of \cref{thm:nomega-trivial}. From any element of Nomega, everything follows:
+
+\begin{lstlisting}[language=Coq]
+(** From any element of Nomega, we can prove anything (ex falso) *)
+Theorem nomega_proves_anything {Nomega : NomegaType} : 
+  forall (P : Nomegacarrier -> Prop),
+  forall x : Nomegacarrier, P x.
+Proof.
+  intros P x.
+  destruct (nomega_emptiness x).
+Qed.
+\end{lstlisting}
+
+The principle of explosion at work: from \texttt{False} (obtained via \texttt{nomega\_emptiness x}), we can prove any proposition.
+
+\subsection{Nomega's Vacuous Contradictions}\label{app:nomega-contradiction}
+Rocq formalization of \cref{thm:nomega-contradiction}. Every predicate and its negation hold vacuously:
+
+\begin{lstlisting}[language=Coq]
+(** We can prove both P and ~P for any element *)
+Theorem nomega_contradiction {Nomega : NomegaType} :
+  forall (P : Nomegacarrier -> Prop),
+  forall x : Nomegacarrier, P x /\ ~ P x.
+Proof.
+  intros P x.
+  split.
+  - exact (nomega_proves_anything P x).
+  - exact (nomega_proves_anything (fun x => ~ P x) x).
+Qed.
+\end{lstlisting}
+
+This shows that Nomega contains contradictions, but only vacuously. Since there are no elements, both \texttt{P} and \texttt{~P} hold for all (non-existent) elements.
 
 \subsection{Omega-Nomega Equivalence}\label{app:omega-nomega-equiv}
-
-Rocq formalization of \cref{thm:omega-nomega-equiv}.
+Rocq formalization of \cref{thm:omega-nomega-equiv}. Both types lead to triviality:
 
 \begin{lstlisting}[language=Coq]
-  (* Both types allow us to prove anything *)
-  Theorem omega_nomega_equivalence :
-    forall {O : OmegaType} {N : NomegaType},
-      (* Both can prove any proposition about their carriers *)
-      (forall (P : Omegacarrier -> Prop) (x : Omegacarrier), P x) /\
-      (forall (Q : Nomegacarrier -> Prop) (y : Nomegacarrier), Q y).
-  Proof.
-    split.
-    - (* Omega case: we have P x and ~P x *)
-      intros P x.
-      destruct (omega_has_paradoxes P) as [w [Hw Hnw]].
-      (* We have Hw : P w and Hnw : ~ P w, which is a contradiction *)
-      (* Apply Hnw to Hw to get False *)
-      contradiction.
-    - (* Nomega case: from any y we get False *)
-      intros Q y.
-      destruct (nomega_emptiness y).
-  Qed.
-End NomegaProperties.
+(** Both types validate all propositions about their elements *)
+Theorem omega_nomega_both_trivial {O : OmegaType} {N : NomegaType} :
+  (* Omega proves everything through contradiction *)
+  (forall (P : Omegacarrier -> Prop) (x : Omegacarrier), P x) /\
+  (* Nomega proves everything through emptiness *)
+  (forall (Q : Nomegacarrier -> Prop) (y : Nomegacarrier), Q y).
+Proof.
+  split.
+  - exact OmegaProperties.Triviality.omega_proves_anything.
+  - exact NomegaProperties.Triviality.nomega_proves_anything.
+Qed.
 \end{lstlisting}
 
+This theorem captures the symmetry discussed in the paper: both completeness and emptiness lead to logical triviality, though by different paths.
+
+\subsection{The Fundamental Duality}\label{app:no-morphism}
+While both types lead to triviality, they represent opposite extremes:
+
+\begin{lstlisting}[language=Coq]
+(** The fundamental duality: Omega has all witnesses, Nomega has none *)
+Theorem omega_nomega_duality {O : OmegaType} {N : NomegaType} :
+  (* Omega: For every property, there exists a witness *)
+  (forall P : Omegacarrier -> Prop, exists x, P x) /\
+  (* Nomega: For every property, there exists no witness *)  
+  (forall Q : Nomegacarrier -> Prop, ~ exists y, Q y).
+Proof.
+  split.
+  - exact omega_completeness.
+  - exact NomegaProperties.Core.nomega_no_witnesses.
+Qed.
+
+(** No morphism can exist from Omega to Nomega *)
+Theorem no_morphism_omega_to_nomega {O : OmegaType} {N : NomegaType} :
+  ~ exists (f : Omegacarrier -> Nomegacarrier), True.
+Proof.
+  intros [f _].
+  destruct (OmegaProperties.Core.omega_not_empty) as [x _].
+  exact (nomega_emptiness (f x)).
+Qed.
+\end{lstlisting}
+
+The duality theorem formalizes the philosophical observation that Omega and Nomega are perfect opposites. The impossibility of a morphism from Omega to Nomega shows these extremes are fundamentally incompatible: you cannot map something to nothing while preserving structure.
+
+These proofs confirm that whether we start with everything (Omega) or nothing (Nomega), we cannot build a consistent foundation. Both extremes collapse into paradox, motivating the search for a middle way.
+
+\section{AlphaType Definition and Properties}
 \subsection{AlphaType Definition}\label{app:alphatype-def}
 
 \begin{lstlisting}[language=Coq]
