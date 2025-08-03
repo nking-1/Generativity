@@ -1,4 +1,4 @@
-(** * Unrepresentability and Undecidability in the DAO Framework
+(** * Unrepresentability.v: Undecidability in the DAO Framework
     
     This module explores:
     - The concept of representability between Alpha and Omega
@@ -539,7 +539,7 @@ End Turing.
           + (* The diagonal exists in Omega *)
             apply Diagonal.Omega.diagonal_exists.
           
-          + (* The diagonal is not representable - the key theorem *)
+          + (* The diagonal is not representable - key theorem *)
             apply Core.omega_diagonal_not_representable.
             exact enum_complete.
       Qed.

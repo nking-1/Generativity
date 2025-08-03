@@ -1,4 +1,4 @@
-(* File for types, theorems, and definitions that bridge between Alpha,
+(* Bridge.v: File for types, theorems, and definitions that bridge between Alpha,
    Omega, Generative types *)
 
 Require Import DAO.Core.AlphaType.

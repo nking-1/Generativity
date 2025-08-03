@@ -1,3 +1,4 @@
+(* ClassicalAlphaType.v *)
 Class ClassicalAlphaType := {
     Alphacarrier : Type;
 

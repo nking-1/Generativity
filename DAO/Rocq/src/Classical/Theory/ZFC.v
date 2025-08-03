@@ -916,10 +916,11 @@ Module ZFCMeta.
   End Metatheory.
 End ZFCMeta.
 
-(** * Complete Theorems *)
 
-Module ZFCComplete.
-  Section CompleteTheorems.
+(** * Void Relationship Theorems *)
+
+Module ZFCVoid.
+  Section ZFCVoidRelationship.
     Context {H_alpha: ClassicalAlphaType}.
     Import ZFC.Basic ZFC.Fundamental ZFC.Operations ZFC.Codes ZFC.Axioms.
     Import ZFC.Naturals ZFC.Hierarchy.
@@ -1108,8 +1109,8 @@ Module ZFCComplete.
           split; [exact Hn|].
           exact Hlinks.
     Qed.
-  End CompleteTheorems.
-End ZFCComplete.
+  End ZFCVoidRelationship.
+End ZFCVoid.
 
 
 (* Future Research Directions

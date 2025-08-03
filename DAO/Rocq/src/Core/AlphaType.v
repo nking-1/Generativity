@@ -1,4 +1,4 @@
-(** * AlphaType: The Consistent but Incomplete Type
+(** AlphaType.v: The Consistent but Incomplete Type
     
     AlphaType represents a type with exactly one impossible predicate,
     differentiating it from OmegaType and NomegaType, which behave like
@@ -23,5 +23,6 @@ Class AlphaType := {
 }.
 
 (** Helper to extract the impossible predicate *)
+(* Returns the P : Alphacarrier -> Prop from the dependent pair *)
 Definition omega_veil {Alpha : AlphaType} : Alphacarrier -> Prop :=
   proj1_sig (@alpha_impossibility Alpha).

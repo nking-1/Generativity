@@ -1,4 +1,4 @@
-(** * Diagonal Arguments in DAO Framework
+(** * Diagonal.v: Diagonal Arguments in DAO Framework
     
     This module implements diagonal arguments showing:
     - Alpha cannot enumerate its own predicates (incompleteness)

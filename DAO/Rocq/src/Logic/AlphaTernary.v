@@ -1,8 +1,8 @@
 (* ============================================================ *)
-(* Ternary Logic in AlphaType                                  *)
+(* AlphaTernary.v: Ternary Logic in AlphaType                   *)
 (*                                                              *)
-(* This module proves that Alpha cannot have excluded middle   *)
-(* and must use three-valued logic due to diagonal limitations *)
+(* This module proves that Alpha cannot have excluded middle    *)
+(* and must use three-valued logic due to diagonal limitations  *)
 (* ============================================================ *)
 
 Require Import DAO.Core.AlphaType.

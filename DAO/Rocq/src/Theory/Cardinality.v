@@ -1,3 +1,7 @@
+(** Cardinality.v: Reasoning about relative "sizes"
+    of types in the DAO framework
+*)
+
 Require Import DAO.Core.GenerativeType.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.AlphaType.
@@ -7,10 +11,6 @@ Require Import DAO.Core.Bridge.
 (* Injectivity and cardinality definitions remain the same *)
 Definition injective {A B: Type} (f: A -> B) : Prop :=
   forall x y: A, f x = f y -> x = y.
-
-Class Cardinality (X: Type) := {
-  get_cardinality : nat -> Type;
-}.
 
 Definition aleph_0 := nat.
 
