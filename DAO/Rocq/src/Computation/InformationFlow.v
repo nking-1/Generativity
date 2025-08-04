@@ -1,3 +1,9 @@
+(* InformationFlow.v *)
+(* Dynamic Systems and Information Flow *)
+(* We construct and analyze the properties of systems that have a finite number of states *)
+(* and perpetual change *)
+(* ============================================================ *)
+
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.Bridge.
 Require Import DAO.Core.OmegaType.
@@ -12,17 +18,13 @@ Require Import Stdlib.Numbers.Natural.Abstract.NDiv0.
 Import ListNotations.
 From Stdlib Require Import Lia.
 
-(* ============================================================ *)
-(* Dynamic Systems and Information Flow *)
-(* ============================================================ *)
-
 (* A dynamic system with bounded structure and perpetual change *)
 
 Record System := {
   S_min : nat;
   S_max : nat;
   valid_bounds_existential : S_min + 1 < S_max; (* Or S_min + 2 < S_max, whatever you have *)
-  structure : nat -> nat;
+  structure : nat -> nat; (* Structure at time t *)
   structure_bounded : forall t : nat, S_min < structure t < S_max;
   perpetual_change : forall t : nat, structure t <> structure (t + 1)
 }.
@@ -140,9 +142,89 @@ Qed.
 
 
 (* ============================================================ *)
-(* Connecting Dynamic Systems to the Omega/Alpha Framework *)
+(* The Core I_max Theorem: Systems Cannot Maximize Both S and DS *)
 (* ============================================================ *)
 
+Section CoreIMaxTheorem.
+  Variable sys : System.
+  
+  (* The fundamental constraint: cannot maximize both S and DS *)
+  Theorem cannot_maximize_both :
+    ~(exists t : nat,
+      structure sys t = S_max sys - 1 /\
+      DS sys t = S_max sys - S_min sys - 1).
+  Proof.
+    intro H_both.
+    destruct H_both as [t [H_S H_DS]].
+    
+    (* Analyze what happens at time t+1 *)
+    unfold DS in H_DS.
+    
+    (* Case analysis on direction of change *)
+    destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:Hlt.
+    
+    - (* Case 1: structure is decreasing *)
+      apply Nat.ltb_lt in Hlt.
+      (* DS = structure(t) - structure(t+1) = S_max - 1 - structure(t+1) *)
+      rewrite H_S in H_DS.
+      
+      (* From H_DS: (S_max - 1) - structure(t+1) = S_max - S_min - 1 *)
+      (* Therefore: structure(t+1) = (S_max - 1) - (S_max - S_min - 1) *)
+      (* Simplifying: structure(t+1) = S_min *)
+      assert (H_eq: structure sys (t + 1) = S_min sys).
+      { lia. }
+      
+      (* But structure must be > S_min *)
+      pose proof (structure_bounded sys (t + 1)) as H_bound.
+      rewrite H_eq in H_bound.
+      lia.
+      
+    - (* Case 2: structure is increasing or equal *)
+      apply Nat.ltb_ge in Hlt.
+      (* DS = structure(t+1) - structure(t) *)
+      rewrite H_S in H_DS.
+      
+      (* From H_DS: structure(t+1) - (S_max - 1) = S_max - S_min - 1 *)
+      (* Therefore: structure(t+1) = (S_max - 1) + (S_max - S_min - 1) *)
+      assert (H_val: structure sys (t + 1) = 
+                     (S_max sys - 1) + (S_max sys - S_min sys - 1)).
+      { lia. }
+      
+      (* Simplify: structure(t+1) = 2*S_max - S_min - 2 *)
+      
+      (* We need to show this exceeds S_max - 1 *)
+      (* 2*S_max - S_min - 2 > S_max - 1 *)
+      (* S_max - S_min - 1 > 0 *)
+      (* S_max > S_min + 1 *)
+      
+      (* This follows from valid_bounds *)
+      pose proof (valid_bounds_existential sys) as H_valid.
+      
+      (* Now show structure(t+1) > S_max - 1 *)
+      assert (H_exceeds: structure sys (t + 1) > S_max sys - 1).
+      {
+        rewrite H_val.
+        lia.
+      }
+      
+      (* But structure must be < S_max *)
+      pose proof (structure_bounded sys (t + 1)) as H_bound.
+      lia.
+  Qed.
+  
+  (* Define what optimization means *)
+  Definition achieves_optimization : Prop :=
+    exists t : nat,
+    I_val sys t >= (S_max sys * (S_max sys - S_min sys)) / 2.
+  
+  (* The positive result: systems can achieve good I_val *)
+  (* This would require additional assumptions about the system's dynamics *)
+  
+End CoreIMaxTheorem.
+
+
+
+(* Connecting Dynamic Systems to the Omega/Alpha Framework *)
 (* First, let's define an unbounded OmegaSystem *)
 Record OmegaSystem := {
   omega_structure : nat -> nat;
@@ -172,7 +254,7 @@ Section SystemAlphaConnection.
     fun a => exists (encoding : Alphacarrier -> nat),
       encoding a = structure sys t.
   
-  (* The key insight: bounded systems can't represent all of Omega's behavior *)
+  (* Bounded systems can't represent all of Omega's behavior *)
   Theorem bounded_system_has_limits :
     forall om_system : OmegaSystem,
     exists t : nat,
@@ -195,8 +277,7 @@ Definition omega_DS (om_system : OmegaSystem) (t : nat) : nat :=
 Definition omega_I_val (om_system : OmegaSystem) (t : nat) : nat :=
   (omega_structure om_system t) * (omega_DS om_system t).
 
-(* The crucial difference: Omega's I_val is unbounded *)
-(* Then the proof becomes: *)
+
 Theorem omega_I_val_unbounded :
   forall om_system : OmegaSystem,
   forall B : nat,
@@ -322,93 +403,12 @@ Section TrackingAndOptimization.
   
 End TrackingAndOptimization.
 
-(* ============================================================ *)
-(* The Core I_max Theorem: Systems Cannot Maximize Both S and DS *)
-(* ============================================================ *)
-
-Section CoreIMaxTheorem.
-  Variable sys : System.
-  
-  (* The fundamental constraint: cannot maximize both S and DS *)
-  Theorem cannot_maximize_both :
-    ~(exists t : nat,
-      structure sys t = S_max sys - 1 /\
-      DS sys t = S_max sys - S_min sys - 1).
-  Proof.
-    intro H_both.
-    destruct H_both as [t [H_S H_DS]].
-    
-    (* Analyze what happens at time t+1 *)
-    unfold DS in H_DS.
-    
-    (* Case analysis on direction of change *)
-    destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:Hlt.
-    
-    - (* Case 1: structure is decreasing *)
-      apply Nat.ltb_lt in Hlt.
-      (* DS = structure(t) - structure(t+1) = S_max - 1 - structure(t+1) *)
-      rewrite H_S in H_DS.
-      
-      (* From H_DS: (S_max - 1) - structure(t+1) = S_max - S_min - 1 *)
-      (* Therefore: structure(t+1) = (S_max - 1) - (S_max - S_min - 1) *)
-      (* Simplifying: structure(t+1) = S_min *)
-      assert (H_eq: structure sys (t + 1) = S_min sys).
-      { lia. }
-      
-      (* But structure must be > S_min *)
-      pose proof (structure_bounded sys (t + 1)) as H_bound.
-      rewrite H_eq in H_bound.
-      lia.
-      
-    - (* Case 2: structure is increasing or equal *)
-      apply Nat.ltb_ge in Hlt.
-      (* DS = structure(t+1) - structure(t) *)
-      rewrite H_S in H_DS.
-      
-      (* From H_DS: structure(t+1) - (S_max - 1) = S_max - S_min - 1 *)
-      (* Therefore: structure(t+1) = (S_max - 1) + (S_max - S_min - 1) *)
-      assert (H_val: structure sys (t + 1) = 
-                     (S_max sys - 1) + (S_max sys - S_min sys - 1)).
-      { lia. }
-      
-      (* Simplify: structure(t+1) = 2*S_max - S_min - 2 *)
-      
-      (* We need to show this exceeds S_max - 1 *)
-      (* 2*S_max - S_min - 2 > S_max - 1 *)
-      (* S_max - S_min - 1 > 0 *)
-      (* S_max > S_min + 1 *)
-      
-      (* This follows from valid_bounds *)
-      pose proof (valid_bounds_existential sys) as H_valid.
-      
-      (* Now show structure(t+1) > S_max - 1 *)
-      assert (H_exceeds: structure sys (t + 1) > S_max sys - 1).
-      {
-        rewrite H_val.
-        lia.
-      }
-      
-      (* But structure must be < S_max *)
-      pose proof (structure_bounded sys (t + 1)) as H_bound.
-      lia.
-  Qed.
-  
-  (* Define what optimization means *)
-  Definition achieves_optimization : Prop :=
-    exists t : nat,
-    I_val sys t >= (S_max sys * (S_max sys - S_min sys)) / 2.
-  
-  (* The positive result: systems can achieve good I_val *)
-  (* This would require additional assumptions about the system's dynamics *)
-  
-End CoreIMaxTheorem.
-
 (* Now let's connect this to the Omega/Alpha framework *)
 Section OmegaAlphaConnection.
   Variable sys : System.
   Variable om_system : OmegaSystem.
   
-  (* A key insight: bounded systems have bounded I_val *)
+  (* Bounded systems have bounded I_val *)
   Theorem bounded_I_val :
     exists I_bound : nat,
     forall t : nat, I_val sys t <= I_bound.
@@ -477,7 +477,7 @@ End OmegaAlphaConnection.
 
 
 (* ============================================================ *)
-(* The Yoneda-I_max Construction: Objects as Optimized Relations *)
+(* Yoneda Lemma-I_max Construction: Objects as Optimized Relations *)
 (* ============================================================ *)
 
 
@@ -511,7 +511,7 @@ Module ConcreteInfoCategory.
     target_complexity f <= target /\
     morphism_I_val f <= I_max_global.
   
-  (* Identity morphism - provable! *)
+  (* Identity morphism *)
   Definition id_morphism (n : Obj) : InfoMorphism.
   Proof.
     refine {| 
@@ -664,7 +664,7 @@ Module ObjectsAsOptimization.
       apply div_2_le.
   Qed.
   
-  (* Case 3: Morphism to larger objects - need to be more careful *)
+  (* Case 3: Morphism to larger objects *)
   Lemma morphism_to_larger : forall n m : Obj,
     n > 0 -> m > 0 -> m > n -> m <= I_max_global ->
     exists f : InfoMorphism,
@@ -800,7 +800,7 @@ Module Example.
           lia.
   Qed.
   
-  (* Let's also show object 10 has an optimization pattern! *)
+  (* Let's also show object 10 has an optimization pattern *)
   Example object_10_optimizes : 
     optimization_pattern 10.
   Proof.

@@ -1,16 +1,12 @@
-Require Import DAO.Core.OmegaType.
-
-(** * Properties of OmegaType
-    
+(** OmegaProperties.v
     This module explores the logical consequences of Omega's completeness axiom,
     showing how it leads to paradoxes, contradictions, and logical triviality.
 *)
 
+Require Import DAO.Core.OmegaType.
+
 Module OmegaProperties.
 
-  (** ** Core Properties
-      
-      Basic theorems that follow directly from omega_completeness *)
   Module Core.
     
     (** Omega is non-empty *)
@@ -30,9 +26,6 @@ Module OmegaProperties.
     
   End Core.
 
-  (** ** Paradoxes
-      
-      Various paradoxes that exist in Omega *)
   Module Paradoxes.
     
     (** For any predicate P, there exists an x that both satisfies and doesn't satisfy P *)
@@ -72,9 +65,6 @@ Module OmegaProperties.
     
   End Paradoxes.
 
-  (** ** Triviality
-      
-      Omega's logical collapse into triviality *)
   Module Triviality.
     Import Core.
     Import Paradoxes.
@@ -148,20 +138,7 @@ Module OmegaProperties.
     
   End Characterization.
 
-  (** ** Exports
-      
-      Public API - what users of this module should see *)
-  
-  (* Core properties *)
   Export Core.
-  
-  (* Paradoxes - users often need these *)
   Export Paradoxes.
   
-  (* Triviality is important but dangerous - make it available but not automatic *)
-  (* Users must write OmegaProperties.Triviality.omega_proves_anything *)
-  
-  (* Characterization theorems are more specialized *)
-  (* Users must write OmegaProperties.Characterization.complete_iff_contradictory *)
-
 End OmegaProperties.

@@ -8,7 +8,6 @@ Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Core.Bridge.
 
-(* Injectivity and cardinality definitions remain the same *)
 Definition injective {A B: Type} (f: A -> B) : Prop :=
   forall x y: A, f x = f y -> x = y.
 
@@ -20,7 +19,6 @@ Fixpoint aleph_n (n : nat) : Type :=
   | S n' => { A : Type & A -> aleph_n n' }
   end.
 
-(* Hash function remains the same *)
 Parameter hash : forall {X : Type}, X -> nat.
 
 (* The encoding for GenerativeType - turns an element x : X into a meta-predicate *)

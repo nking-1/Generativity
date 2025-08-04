@@ -1,11 +1,9 @@
+(** AlphaFirewall.v
+    Paradox firewalls in AlphaType. AlphaType prevents various paradoxes by making them collapse to omega_veil.
+    This is a good file to add more "Red Teaming" theorems to test the integrity of the system later. *)
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 
-(** ** Paradox Firewalls in AlphaType
-    
-    AlphaType prevents various paradoxes by making them collapse to omega_veil
-    
-    This is a good file to add more "Red Teaming" theorems to test the integrity of the system later. *)
 
 Section AlphaParadoxFirewalls.
   Context {Alpha : AlphaType}.

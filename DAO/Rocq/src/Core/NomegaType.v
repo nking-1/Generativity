@@ -1,5 +1,4 @@
-(** * NomegaType: The Empty Type (The Void)
-    
+(** * NomegaType.v
     NomegaType represents a type with no elements - the empty type.
     In the DAO framework, it represents Wu (無) - nothingness/void.
 *)

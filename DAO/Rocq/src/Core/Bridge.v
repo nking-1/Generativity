@@ -22,10 +22,6 @@ Class OmegaToGenerative (Alpha : AlphaType) (HG : GenerativeType Alpha) (Omega :
 }.
 
 
-(* ============================================================ *)
-(* Omega Contains Alpha                                         *)
-(* ============================================================ *)
-
 Section OmegaContainsAlpha.
   Context {Omega : OmegaType}.
   

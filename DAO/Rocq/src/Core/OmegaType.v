@@ -1,4 +1,4 @@
-(* OmegaType: a type where every proposition has a witness. *)
+(* OmegaType.v: a type where every proposition has a witness. *)
 
 Class OmegaType := {
   Omegacarrier : Type;

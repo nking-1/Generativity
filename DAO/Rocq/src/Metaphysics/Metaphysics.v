@@ -473,9 +473,11 @@ End BigBangSimulationGen.
   Note — This section demonstrates a general simulation hypothesis. 
   You can modify the message and creation time to model how a deity 
   or agent might fabricate a structured history behind a recently 
-  initiated reality. 
+  initiated reality.
   This shows how semantic truth (e.g. "the universe is 13.8B years old") 
   can be embedded into a construct that was created much more recently.
+  This is a form of "Last Thursdayism" but proven to be logically coherent
+  within our framework.
 *)
 Section YoungEarthSimulationGen.
   Context (Alpha : AlphaType) (HG : GenerativeType Alpha).

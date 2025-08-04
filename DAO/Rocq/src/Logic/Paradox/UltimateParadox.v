@@ -1,3 +1,5 @@
+(** UltimateParadox.v
+    Construct the wildest paradoxes and absurdities you like here, safely in OmegaType. *)
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.AlphaType.
 Require Import Stdlib.Classes.RelationClasses.
