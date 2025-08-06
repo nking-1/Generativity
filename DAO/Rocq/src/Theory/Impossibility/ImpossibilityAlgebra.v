@@ -1,6 +1,6 @@
-(** * Impossibility Algebra
+(** ImpossibilityAlgebra.v
     
-    This module develops the algebraic structure of impossible predicates in AlphaType.
+    Develops the algebraic structure of impossible predicates in AlphaType.
     Key insight: impossible predicates (those equivalent to omega_veil) form a rich
     algebraic structure with specific propagation rules through logical operations.
 *)
