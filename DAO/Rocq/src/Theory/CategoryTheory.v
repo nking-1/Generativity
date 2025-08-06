@@ -1,6 +1,6 @@
 (** CategoryTheory.v: Basic Category Theory in AlphaType
     
-    This module develops the fundamental concepts of category theory
+    Develops the fundamental concepts of category theory
     within the AlphaType framework. We start with the basic definitions
     and work our way up to more complex constructions.
 *)

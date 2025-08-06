@@ -1,5 +1,5 @@
 (** OmegaProperties.v
-    This module explores the logical consequences of Omega's completeness axiom,
+    Explores the logical consequences of Omega's completeness axiom,
     showing how it leads to paradoxes, contradictions, and logical triviality.
 *)
 

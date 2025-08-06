@@ -113,15 +113,26 @@ Module ImpossibilityEntropy.
       Definition entropy_compose (ranks : list nat) : nat :=
         fold_left (fun acc r => acc + r + 1) ranks 0.
       
+      Theorem entropy_compose_bound_general :
+        forall ranks acc,
+        fold_left (fun acc r => acc + r + 1) ranks acc <= 
+        acc + sum_ranks ranks + length ranks.
+      Proof.
+        intro ranks.
+        induction ranks as [|h t IH]; intro acc.
+        - simpl. lia.
+        - simpl. 
+          rewrite IH.
+          lia.
+      Qed.
+
       Theorem entropy_compose_bound :
         forall ranks,
         entropy_compose ranks <= sum_ranks ranks + length ranks.
       Proof.
         intro ranks.
-        unfold entropy_compose, sum_ranks.
-        induction ranks as [|h t IH].
-        - simpl. lia.
-        - simpl. lia.
+        unfold entropy_compose.
+        apply entropy_compose_bound_general.
       Qed.
       
     End EntropyProperties.
@@ -251,6 +262,20 @@ Module ImpossibilityEntropy.
         apply weight_positive.
       Qed.
       
+      Lemma fold_left_weight_sum :
+        forall (l : list WeightedImpossible) (acc : nat),
+        fold_left (fun acc w => acc + weight w) l acc =
+        acc + fold_left (fun acc w => acc + weight w) l 0.
+      Proof.
+        intro l.
+        induction l as [|h t IH]; intro acc.
+        - simpl. lia.
+        - simpl.
+          rewrite IH.
+          rewrite (IH (weight h)).
+          lia.
+      Qed.
+
       (** Entropy of a system is sum of parts *)
       Theorem system_entropy_additive :
         forall (w1 w2 : list WeightedImpossible),
@@ -259,9 +284,9 @@ Module ImpossibilityEntropy.
       Proof.
         intros w1 w2.
         unfold total_weighted_entropy.
-        induction w1 as [|h t IH].
-        - simpl. reflexivity.
-        - simpl. rewrite IH. lia.
+        rewrite fold_left_app.
+        rewrite fold_left_weight_sum.
+        lia.
       Qed.
       
       Section WithDecidability.
@@ -298,8 +323,12 @@ Module ImpossibilityEntropy.
               * simpl. lia.
               * exfalso. apply Hnimp_and. apply impossible_and. exact HimpP.
             + destruct (impossible_decidable (fun a => P a /\ omega_veil a)) as [Himp_and | Hnimp_and].
-              * exact IH.
-              * exact IH.
+              * (* P is not impossible, but P∧omega_veil is impossible *)
+                simpl. 
+                (* The key insight: the filtered list on the right has one more element *)
+                lia.
+              * (* Neither is impossible *)
+                simpl. exact IH.
         Qed.
         
         (** Maximum entropy principle *)
@@ -328,10 +357,6 @@ Module ImpossibilityEntropy.
         Qed.
         
       End WithDecidability.
-      
-      (** Entropy flow *)
-      Definition entropy_flow (before after : list WeightedImpossible) : Z :=
-        Z.of_nat (total_weighted_entropy after) - Z.of_nat (total_weighted_entropy before).
       
       (** Irreversibility: some operations strictly increase entropy *)
       Theorem logical_irreversibility :

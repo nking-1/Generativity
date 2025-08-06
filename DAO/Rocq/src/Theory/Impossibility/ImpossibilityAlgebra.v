@@ -385,62 +385,6 @@ Module SourceTracking.
 End SourceTracking.
 
 (* ================================================================ *)
-(** ** Entropy *)
-Module Entropy.
-  Import ImpossibilityAlgebra Core Rank.
-  
-  Section EntropyProperties.
-    Context {Alpha : AlphaType}.
-    
-    (** Helper: sum of ranks *)
-    Fixpoint sum_ranks (l : list nat) : nat :=
-      match l with
-      | [] => 0
-      | h :: t => h + sum_ranks t
-      end.
-    
-    (** Entropy is additive under conjunction *)
-    Theorem entropy_additive :
-      forall P Q : Alphacarrier -> Prop,
-      forall n m : nat,
-      Impossibility_Rank P n ->
-      Impossibility_Rank Q m ->
-      exists k, k <= n + m + 1 /\ 
-      Impossibility_Rank (fun a => P a /\ Q a) k.
-    Proof.
-      intros P Q n m HrankP HrankQ.
-      exists (S n).
-      split.
-      - lia.
-      - apply (Rank_Composite (fun a => P a /\ Q a) P n).
-        + exact HrankP.
-        + intros a [HPa HQa]. exact HPa.
-    Qed.
-    
-    (** Hidden impossibilities in a predicate *)
-    Definition has_hidden_impossibilities (P : Alphacarrier -> Prop) (n : nat) : Prop :=
-      exists (components : list (Alphacarrier -> Prop)),
-        length components = n /\
-        Forall Is_Impossible components /\
-        forall a, P a -> exists Q, In Q components /\ Q a.
-    
-    (** Meta-entropy monotonicity *)
-    Theorem meta_entropy_monotonic :
-      forall P n m,
-      has_hidden_impossibilities P n ->
-      n <= m ->
-      exists (components : list (Alphacarrier -> Prop)), length components >= n.
-    Proof.
-      intros P n m Hhidden Hle.
-      destruct Hhidden as [comps [Hlen [Himp Hdecomp]]].
-      exists comps.
-      rewrite Hlen. lia.
-    Qed.
-    
-  End EntropyProperties.
-End Entropy.
-
-(* ================================================================ *)
 (** ** Weighted Impossibility *)
 Module Weighted.
   Import ImpossibilityAlgebra Core SourceTracking.
@@ -491,56 +435,6 @@ Module Weighted.
     
   End WeightedDefinitions.
 End Weighted.
-
-(* ================================================================ *)
-(** ** Conservation Laws *)
-Module Conservation.
-  Import ImpossibilityAlgebra Core Operations SourceTracking Entropy Weighted.
-  
-  Section ConservationLaws.
-    Context {Alpha : AlphaType}.
-    
-    (** Total entropy calculations *)
-    Definition total_entropy (tagged_preds : list TaggedImpossibility) : nat :=
-      fold_left (fun acc t => acc + rank t) tagged_preds 0.
-    
-    Definition total_weighted_entropy (weighted : list WeightedImpossible) : nat :=
-      fold_left (fun acc w => acc + weight w) weighted 0.
-    
-    (** The "second law" - entropy is additive *)
-    Theorem logical_second_law :
-      forall (W1 W2 : WeightedImpossible),
-      let result := weighted_mult W1 W2 in
-      weight result = weight W1 + weight W2.
-    Proof.
-      intros W1 W2.
-      unfold weighted_mult.
-      simpl.
-      reflexivity.
-    Qed.
-    
-    Section WithDecidability.
-      Hypothesis impossible_decidable : forall P, {Is_Impossible P} + {~ Is_Impossible P}.
-      
-      Definition count_impossibles (preds : list (Alphacarrier -> Prop)) : nat :=
-        length (filter (fun P => if impossible_decidable P then true else false) preds).
-      
-      (** Operations can't decrease impossibility count *)
-      Theorem entropy_never_decreases :
-        forall P Q : Alphacarrier -> Prop,
-        Is_Impossible P ->
-        ~ Is_Impossible Q ->
-        Is_Impossible (fun a => P a /\ Q a).
-      Proof.
-        intros P Q HimpP HnimpQ.
-        apply impossible_and.
-        exact HimpP.
-      Qed.
-      
-    End WithDecidability.
-    
-  End ConservationLaws.
-End Conservation.
 
 (* ================================================================ *)
 (** ** Fractal Properties *)
