@@ -153,18 +153,45 @@ Module ImpossibilitySymmetry.
       Definition symmetry_identity : ImpossibilitySymmetry :=
         {| transform := id_transform; 
            preserves := id_preserves |}.
+
+      (** Axiom: Two predicate transformations are equal if they agree on all predicates.
+          This is a restricted form of functional extensionality specifically for
+          predicate transformations. *)
+      Axiom predicate_transform_ext : 
+        forall (T1 T2 : predicate_transform),
+        (forall P : Alphacarrier -> Prop, T1 P = T2 P) -> T1 = T2.
+
+      (** Axiom: Proofs of impossibility preservation are unique.
+          This is reasonable because preserves_impossibility is a Prop,
+          and different proofs of the same proposition should be considered equal. *)
+      Axiom preserves_impossibility_proof_irrelevance :
+        forall (T : predicate_transform) 
+              (p1 p2 : preserves_impossibility T), 
+        p1 = p2.
       
-      (** Associativity of composition *)
       Theorem symmetry_compose_assoc :
         forall S1 S2 S3,
         symmetry_compose S1 (symmetry_compose S2 S3) = 
         symmetry_compose (symmetry_compose S1 S2) S3.
       Proof.
         intros S1 S2 S3.
+        (* Prove by showing the records have equal components *)
+        destruct S1 as [T1 P1], S2 as [T2 P2], S3 as [T3 P3].
         unfold symmetry_compose.
+        simpl.
+        (* Now we need to prove two Build_ImpossibilitySymmetry are equal *)
+        assert (compose_transform T1 (compose_transform T2 T3) = 
+                compose_transform (compose_transform T1 T2) T3) as H_transform.
+        { unfold compose_transform. reflexivity. }
+        
+        (* Use the fact that proofs are irrelevant *)
+        generalize (compose_preserves T1 (compose_transform T2 T3) P1 (compose_preserves T2 T3 P2 P3)).
+        generalize (compose_preserves (compose_transform T1 T2) T3 (compose_preserves T1 T2 P1 P2) P3).
+        rewrite H_transform.
+        intros p1 p2.
         f_equal.
-        (* This requires functional extensionality *)
-      Admitted.
+        apply preserves_impossibility_proof_irrelevance.
+      Qed.
       
       (** Identity laws *)
       Theorem symmetry_identity_left :
@@ -172,9 +199,48 @@ Module ImpossibilitySymmetry.
         symmetry_compose symmetry_identity S = S.
       Proof.
         intro S.
-        unfold symmetry_compose, symmetry_identity, compose_transform, id_transform.
-        (* This requires proof irrelevance for the preserves field *)
-      Admitted.
+        destruct S as [T P].
+        unfold symmetry_compose, symmetry_identity.
+        simpl.
+        
+        (* First prove the transforms are equal *)
+        assert (compose_transform id_transform T = T) as H_transform.
+        { apply predicate_transform_ext.
+          intro Q.
+          unfold compose_transform, id_transform.
+          reflexivity. }
+        
+        (* Now use proof irrelevance *)
+        generalize (compose_preserves id_transform T id_preserves P).
+        rewrite H_transform.
+        intro p.
+        f_equal.
+        apply preserves_impossibility_proof_irrelevance.
+      Qed.
+
+      Theorem symmetry_identity_right :
+        forall S,
+        symmetry_compose S symmetry_identity = S.
+      Proof.
+        intro S.
+        destruct S as [T P].
+        unfold symmetry_compose, symmetry_identity.
+        simpl.
+        
+        (* First prove the transforms are equal *)
+        assert (compose_transform T id_transform = T) as H_transform.
+        { apply predicate_transform_ext.
+          intro Q.
+          unfold compose_transform, id_transform.
+          reflexivity. }
+        
+        (* Now use proof irrelevance *)
+        generalize (compose_preserves T id_transform P id_preserves).
+        rewrite H_transform.
+        intro p.
+        f_equal.
+        apply preserves_impossibility_proof_irrelevance.
+      Qed.
       
       (** The generator: omega_veil generates all symmetries *)
       Theorem omega_veil_generates_symmetry :
@@ -390,7 +456,6 @@ Module ImpossibilitySymmetry.
         (forall (test_pred : Alphacarrier -> Prop), 
           @predicate_action Alpha impossible_decidable test_pred = 
           @predicate_action Alpha impossible_decidable (T test_pred)) /\
-        (* rest of the theorem *)
         (* Total entropy is invariant *)
         (forall n : nat,
           forall preds : list (Alphacarrier -> Prop),
@@ -405,8 +470,28 @@ Module ImpossibilitySymmetry.
         split.
         - intro x. apply impossibility_noether. exact HT.
         - intros n preds Hlen Himp.
-          (* The rest of the proof *)
-      Admitted.
+          rewrite <- Hlen.
+          clear n Hlen.
+          induction preds as [|p rest IH].
+          + simpl. reflexivity.
+          + simpl.
+            destruct (impossible_decidable (T p)) as [HTp | HnTp].
+            * simpl. f_equal.
+              apply IH.
+              intros q Hq.
+              apply Himp.
+              right. exact Hq.
+            * (* This case is impossible - T preserves impossibility *)
+              exfalso.
+              apply HnTp.
+              (* We need to show Is_Impossible (T p) *)
+              (* We know Is_Impossible p from Himp *)
+              assert (Is_Impossible p).
+              { apply Himp. left. reflexivity. }
+              (* Now use HT in the forward direction *)
+              apply (proj1 (HT p)).
+              exact H.
+      Qed.
       
     End ThermodynamicConnection.
   End ThermodynamicBridge.
