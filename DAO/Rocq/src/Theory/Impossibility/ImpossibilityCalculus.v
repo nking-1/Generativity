@@ -15,10 +15,11 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
-From Coq Require Import List.
-From Coq Require Import Arith.PeanoNat.
-From Coq Require Import Classes.RelationClasses.
-From Coq Require Import Bool.
+Require Import List.
+Require Import Arith.PeanoNat.
+Require Import Classes.RelationClasses.
+Require Import Bool.
+Require Import Lia.
 Import ListNotations.
 
 Module ImpossibilityCalculus.
@@ -719,23 +720,48 @@ Module ImpossibilityCalculus.
       rewrite H. reflexivity.
     Qed.
 
-      
-      (** Path concatenation preserves connectivity under conditions *)
-      Theorem concat_paths_connects :
-        forall path1 path2 P Q R length1,
-        path_from_to path1 P Q ->
-        path_from_to path2 Q R ->
-        path1 length1 = Q ->
-        path_from_to (concat_paths path1 path2 length1) P R.
-      Proof.
-        intros path1 path2 P Q R length1 [H1start H1conv] [H2start H2conv] Hmid.
-        split.
-        - unfold concat_paths. simpl. exact H1start.
-        - (* This requires showing the concatenated path converges to R *)
-          (* The proof would be quite involved, requiring careful analysis
-             of how the path transitions from path1 to path2 *)
-          admit.
-      Admitted.
+    (** Path concatenation preserves connectivity under conditions *)
+    Theorem concat_paths_connects :
+      forall path1 path2 P Q R length1,
+      path_from_to path1 P Q ->
+      path_from_to path2 Q R ->
+      path1 length1 = Q ->
+      path_from_to (concat_paths path1 path2 length1) P R.
+    Proof.
+      intros path1 path2 P Q R length1 [H1start H1conv] [H2start H2conv] Hmid.
+      split.
+      - (* concat starts at path1 0 = P *)
+        unfold concat_paths. simpl.
+        destruct (0 <=? length1) eqn:H.
+        + exact H1start.
+        + (* Impossible: 0 <= any nat *)
+          apply Nat.leb_nle in H. lia.
+          
+      - (* Show convergence to R *)
+        unfold converges_to in *.
+        intros witnesses.
+        
+        (* Get convergence point for path2 *)
+        destruct (H2conv witnesses) as [N2 HN2].
+        
+        (* Choose N large enough so we're always in path2 territory *)
+        exists (S length1 + N2).
+        intros n Hn a Ha.
+        
+        unfold concat_paths, agrees_at.
+        
+        (* Since n >= S length1 + N2, we have n > length1 *)
+        assert (Hgt : n <=? length1 = false).
+        { apply Nat.leb_nle. unfold ge in Hn. lia. }
+        rewrite Hgt.
+        
+        (* Apply convergence of path2 *)
+        apply HN2.
+        + (* n - length1 >= N2 *)
+          unfold ge in *. lia.
+        + (* a ∈ witnesses *)
+          exact Ha.
+    Qed.
       
     End PathProperties.
   End Paths.
@@ -772,17 +798,6 @@ Module ImpossibilityCalculus.
     
     Section FixedPointProperties.
       Context {Alpha : AlphaType}.
-      
-      (** omega_veil is a fixed point of many transformations *)
-      Theorem omega_fixed_point_of_neg :
-        is_fixed_point pred_neg omega_veil.
-      Proof.
-        unfold is_fixed_point, pred_neg.
-        intro a.
-        split.
-        - intro H. exfalso. apply H. admit. (* exact (AlphaProperties.Core.omega_veil_has_no_witnesses a). *)
-        (* - intro H. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H). *)
-      Admitted.
       
       (** If F is continuous and the iterates converge, the limit is a fixed point *)
       Theorem continuous_limit_fixed :
