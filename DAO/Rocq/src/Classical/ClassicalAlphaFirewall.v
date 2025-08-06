@@ -1,9 +1,8 @@
+(** ClassicalAlphaFirewall.v
+    This module proves that various paradoxes cannot exist in ClassicalAlphaType. *)
+
 Require Import DAO.Core.ClassicalAlphaType.
 Require Import DAO.Core.ClassicalAlphaProperties.
-
-(** * Paradox Firewalls in ClassicalAlphaType
-    
-    This module proves that various paradoxes cannot exist in ClassicalAlphaType. *)
 
 Module ParadoxFirewalls.
 

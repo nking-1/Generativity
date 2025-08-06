@@ -1,9 +1,8 @@
-Require Import DAO.Core.AlphaType.
-
-(** * Properties of AlphaType
-    
+(** AlphaProperties.v
     This module explores the properties of AlphaType, particularly
     the omega_veil predicate and its uniqueness. *)
+
+Require Import DAO.Core.AlphaType.
 
 Module AlphaProperties.
 

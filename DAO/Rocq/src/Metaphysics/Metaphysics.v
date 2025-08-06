@@ -477,7 +477,7 @@ End BigBangSimulationGen.
   This shows how semantic truth (e.g. "the universe is 13.8B years old") 
   can be embedded into a construct that was created much more recently.
   This is a form of "Last Thursdayism" but proven to be logically coherent
-  within our framework.
+  within our framework by showing how such a reality would be constructed.
 *)
 Section YoungEarthSimulationGen.
   Context (Alpha : AlphaType) (HG : GenerativeType Alpha).

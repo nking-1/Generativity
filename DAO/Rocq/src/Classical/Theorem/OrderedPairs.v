@@ -1,4 +1,4 @@
-(** * Ordered Pairs and Relations in ZFC *)
+(** * OrderedPairs.v - Ordered Pairs & Relations in ZFC *)
 
 Require Import DAO.Core.ClassicalAlphaType.
 Require Import DAO.Core.ClassicalAlphaProperties.
