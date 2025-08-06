@@ -385,58 +385,6 @@ Module SourceTracking.
 End SourceTracking.
 
 (* ================================================================ *)
-(** ** Weighted Impossibility *)
-Module Weighted.
-  Import ImpossibilityAlgebra Core SourceTracking.
-  
-  Section WeightedDefinitions.
-    Context {Alpha : AlphaType}.
-    
-    (** Impossibility with numerical weight *)
-    Record WeightedImpossible := {
-      certain : Alphacarrier -> Prop;
-      weight : nat;
-      source_info : ImpossibilitySource;
-      weight_positive : weight >= 1;
-    }.
-    
-    (** Multiplication accumulates weight *)
-    Definition weighted_mult (P Q : WeightedImpossible) : WeightedImpossible.
-    Proof.
-      refine ({|
-        certain := fun a => certain P a /\ certain Q a;
-        weight := weight P + weight Q;
-        source_info := Composition (source_info P) (source_info Q);
-        weight_positive := _
-      |}).
-      pose proof (weight_positive P) as HwP.
-      pose proof (weight_positive Q) as HwQ.
-      lia.
-    Defined.
-    
-    (** Cast regular predicate to weighted *)
-    Definition cast_to_impossible (P : Alphacarrier -> Prop) : WeightedImpossible := {|
-      certain := P;
-      weight := 1;
-      source_info := DirectOmega;
-      weight_positive := Nat.le_refl 1
-    |}.
-    
-    (** Casting preserves logical structure *)
-    Theorem cast_preserves_logic :
-      forall (P Q : Alphacarrier -> Prop) (a : Alphacarrier),
-      (P a /\ Q a) <-> 
-      certain (weighted_mult (cast_to_impossible P) (cast_to_impossible Q)) a.
-    Proof.
-      intros P Q a.
-      simpl.
-      reflexivity.
-    Qed.
-    
-  End WeightedDefinitions.
-End Weighted.
-
-(* ================================================================ *)
 (** ** Fractal Properties *)
 Module Fractals.
   Import ImpossibilityAlgebra Core Operations.

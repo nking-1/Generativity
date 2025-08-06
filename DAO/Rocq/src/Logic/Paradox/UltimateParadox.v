@@ -14,7 +14,7 @@ Section UltimateAbsurdity.
     forall (P Q : Omegacarrier -> Prop),
       exists x : Omegacarrier, P x <-> Q x.
   Proof.
-    intros Omega P Q.
+    intros Omega' P Q.
     set (collapse := fun x => P x <-> Q x).
     destruct (omega_completeness collapse) as [x Hx].
     exists x. exact Hx.

@@ -9,12 +9,13 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
+Require Import DAO.Theory.Impossibility.ImpossibilityEntropy.
 Require Import Stdlib.Lists.List.
 Import ListNotations.
 
 Module ImpossibilitySymmetry.
   Import ImpossibilityAlgebra Core Operations Rank.
-  Import SourceTracking Weighted Conservation.
+  Import ImpossibilityEntropy SourceTracking Weighted.
   
   (* ================================================================ *)
   (** ** Transformations *)
@@ -270,7 +271,7 @@ Module ImpossibilitySymmetry.
   
   (* ================================================================ *)
   (** ** Conservation Laws *)
-  Module Conservation.
+  Module SymmetryConservation.
     Import Transformations SymmetryGroup.
     
     Section ConservationLaws.
@@ -351,12 +352,13 @@ Module ImpossibilitySymmetry.
       Qed.
       
     End ConservationLaws.
-  End Conservation.
+  End SymmetryConservation.
   
   (* ================================================================ *)
   (** ** Thermodynamic Bridge *)
   Module ThermodynamicBridge.
-    Import Transformations Conservation.
+    Import Transformations SymmetryConservation.
+    Import ImpossibilityEntropy.Conservation.
     
     Section ThermodynamicConnection.
       Context {Alpha : AlphaType}.

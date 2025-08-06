@@ -15,11 +15,10 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
-Require Import List.
-Require Import Arith.PeanoNat.
-Require Import Classes.RelationClasses.
-Require Import Bool.
-Require Import Lia.
+Require Import Stdlib.Arith.PeanoNat.
+Require Import Stdlib.Classes.RelationClasses.
+From Stdlib Require Import Lia.
+Require Import Stdlib.Lists.List.
 Import ListNotations.
 
 Module ImpossibilityCalculus.
