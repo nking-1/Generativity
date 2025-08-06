@@ -9,7 +9,6 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
-Require Import DAO.Theory.Impossibility.ImpossibilityLogic.
 Require Import Stdlib.Lists.List.
 Import ListNotations.
 
@@ -56,8 +55,14 @@ Module ImpossibilitySymmetry.
         intros T1 T2 H1 H2 P.
         unfold compose_transform.
         split; intro HP.
-        - apply H1. apply H2. exact HP.
-        - apply H2. apply H1. exact HP.
+        - (* Is_Impossible P -> Is_Impossible (T1 (T2 P)) *)
+          apply (proj1 (H1 (T2 P))).
+          apply (proj1 (H2 P)).
+          exact HP.
+        - (* Is_Impossible (T1 (T2 P)) -> Is_Impossible P *)
+          apply (proj2 (H2 P)).
+          apply (proj2 (H1 (T2 P))).
+          exact HP.
       Qed.
       
       (** Inverse of a transformation *)
@@ -75,8 +80,16 @@ Module ImpossibilitySymmetry.
       Proof.
         intros T [T_inv [Hinv1 Hinv2]] HT P Q HPQ.
         split; intro H.
-        - apply HT. apply HPQ. apply HT. exact H.
-        - apply HT. apply HPQ. apply HT. exact H.
+        - (* Is_Impossible (T P) -> Is_Impossible (T Q) *)
+          apply (proj1 (HT Q)).
+          apply (proj1 HPQ).
+          apply (proj2 (HT P)).
+          exact H.
+        - (* Is_Impossible (T Q) -> Is_Impossible (T P) *)
+          apply (proj1 (HT P)).     (* Goal: Is_Impossible P *)
+          apply (proj2 HPQ).        (* Goal: Is_Impossible Q *)
+          apply (proj2 (HT Q)).     (* Goal: Is_Impossible (T Q) *)
+          exact H.
       Qed.
       
     End TransformationDefinitions.
@@ -175,6 +188,7 @@ Module ImpossibilitySymmetry.
           transform := paradox_translation omega_veil P (fun a => iff_refl _) HP;
           preserves := paradox_translation_symmetry omega_veil P _ _
         |}.
+        simpl. (* This should simplify 'transform' of the record *)
         unfold paradox_translation.
         destruct (predicate_eq_dec omega_veil omega_veil) as [Heq | Hneq].
         - reflexivity.
@@ -373,23 +387,25 @@ Module ImpossibilitySymmetry.
         forall (T : predicate_transform),
         preserves_impossibility T ->
         (* Conservation law holds *)
-        (forall P, predicate_action P = predicate_action (T P)) /\
+        (forall (test_pred : Alphacarrier -> Prop), 
+          @predicate_action Alpha impossible_decidable test_pred = 
+          @predicate_action Alpha impossible_decidable (T test_pred)) /\
+        (* rest of the theorem *)
         (* Total entropy is invariant *)
-        (forall system, 
-          total_entropy (map (fun P => {| predicate := P; rank := 0; 
-                                         source := DirectOmega; 
-                                         impossibility_proof := _ |}) system) =
-          total_entropy (map (fun P => {| predicate := T P; rank := 0; 
-                                         source := DirectOmega; 
-                                         impossibility_proof := _ |}) system)).
+        (forall n : nat,
+          forall preds : list (Alphacarrier -> Prop),
+          length preds = n ->
+          (forall p, In p preds -> Is_Impossible p) ->
+          length (filter (fun p => match impossible_decidable (T p) with
+                                  | left _ => true
+                                  | right _ => false
+                                  end) preds) = n).
       Proof.
         intros T HT.
         split.
-        - apply impossibility_noether. exact HT.
-        - intro system.
-          unfold total_entropy.
-          simpl.
-          induction system; simpl; auto.
+        - intro x. apply impossibility_noether. exact HT.
+        - intros n preds Hlen Himp.
+          (* The rest of the proof *)
       Admitted.
       
     End ThermodynamicConnection.
