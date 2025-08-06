@@ -1,6 +1,6 @@
-(** * Impossibility Logic
+(** * ImpossibilityLogic.v
     
-    This module develops logical systems within AlphaType:
+    Develops logical systems within AlphaType:
     - Bootstrap: Building logic from omega_veil and NAND
     - Three-valued logic with undecidable predicates
     - How Omega's completeness breaks Alpha's undecidability
@@ -17,17 +17,18 @@ Module ImpossibilityLogic.
   (* ================================================================ *)
   (** ** Bootstrap: Building Logic from NAND *)
   Module Bootstrap.
+
+    (* Define outside the section so they're directly accessible *)
+    (** The first generated predicate: not omega_veil *)
+    Definition alpha_0 {Alpha : AlphaType} : Alphacarrier -> Prop :=
+    fun a => ~ omega_veil a.
+  
+    (** The primitive: NAND *)
+    Definition NAND {Alpha : AlphaType} (P Q : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+      fun a => ~ (P a /\ Q a).
     
     Section NANDConstruction.
       Context {Alpha : AlphaType}.
-      
-      (** The primitive: NAND *)
-      Definition NAND (P Q : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
-        fun a => ~ (P a /\ Q a).
-      
-      (** The first generated predicate: not omega_veil *)
-      Definition alpha_0 : Alphacarrier -> Prop :=
-        fun a => ~ omega_veil a.
       
       (** alpha_0 is not impossible - it has witnesses *)
       Theorem alpha_0_not_impossible :
@@ -468,13 +469,13 @@ Module ClassicalLogic.
   (* ================================================================ *)
   (** ** Core Definitions *)
   Module Core.
+
+    (** A predicate is classical if it equals one of the extreme values *)
+    Definition is_classical {Alpha : AlphaType} (P : Alphacarrier -> Prop) : Prop :=
+      (forall a, P a <-> omega_veil a) \/ (forall a, P a <-> alpha_0 a).
     
     Section ClassicalDefinitions.
       Context {Alpha : AlphaType}.
-      
-      (** A predicate is classical if it equals one of the extreme values *)
-      Definition is_classical (P : Alphacarrier -> Prop) : Prop :=
-        (forall a, P a <-> omega_veil a) \/ (forall a, P a <-> alpha_0 a).
       
       (** The two base predicates are classical *)
       Theorem omega_veil_is_classical : is_classical omega_veil.
