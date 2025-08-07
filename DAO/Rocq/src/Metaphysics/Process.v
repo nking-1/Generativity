@@ -6,9 +6,9 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import Corelib.Classes.RelationClasses.
-Require Import Arith.
-Require Import Lia.
-Require Import List.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Lia.
+From Stdlib Require Import List.
 Import ListNotations.
 
 
@@ -136,7 +136,7 @@ Section Process.
     (* This would enumerate all P such that coll P *)
     fun n => None. (* conceptual - we don't need actual implementation *)
   
-  (* The key insight: totality_of creates a diagonal-like predicate *)
+  (* totality_of creates a diagonal-like predicate *)
   Theorem totality_is_diagonal_like :
     forall (coll : (Alphacarrier -> Prop) -> Prop),
     (* If coll could be enumerated, totality_of coll would be its diagonal *)
@@ -569,7 +569,7 @@ Section Process.
     Qed.
 
     (* Now, can we encode arbitrary predicates within totalities? *)
-    (* Here's a key insight: totalities of different stages are all distinct *)
+    (* Idea: totalities of different stages are all distinct *)
     
     Lemma totalities_distinct :
     forall n m, n <> m ->

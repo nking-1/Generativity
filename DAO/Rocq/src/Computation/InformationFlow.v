@@ -2,7 +2,6 @@
 (* Dynamic Systems and Information Flow *)
 (* We construct and analyze the properties of systems that have a finite number of states *)
 (* and perpetual change *)
-(* ============================================================ *)
 
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.Bridge.
@@ -18,8 +17,10 @@ Require Import Stdlib.Numbers.Natural.Abstract.NDiv0.
 Import ListNotations.
 From Stdlib Require Import Lia.
 
-(* A dynamic system with bounded structure and perpetual change *)
-
+(* A dynamic system with bounded structure and perpetual change.
+   S_min and S_max set finite bounds on number of states in the system.
+   A system with 0 states effectively ceases to exist.
+   We are tying in to entropy here: entropy = kB ln(structure) *)
 Record System := {
   S_min : nat;
   S_max : nat;
@@ -546,7 +547,7 @@ Module YonedaForInfo.
   Definition hom_functor (n : Obj) : Obj -> Type :=
     fun m => { f : InfoMorphism | valid_morphism n m f }.
   
-  (* Key insight: objects with no outgoing morphisms don't "exist" *)
+  (* Objects with no outgoing morphisms don't "exist" *)
   Definition has_morphisms (n : Obj) : Prop :=
     exists m : Obj, exists f : InfoMorphism,
     valid_morphism n m f.

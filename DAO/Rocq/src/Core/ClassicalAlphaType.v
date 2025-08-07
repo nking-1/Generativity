@@ -1,4 +1,8 @@
-(* ClassicalAlphaType.v *)
+(* ClassicalAlphaType.v
+   Implements an AlphaType that explicitly uses classical logic.
+   Recall that classical logic can be constructed in AlphaType.
+   Here we make it explicit so it's easier to use in Coq.
+*)
 Class ClassicalAlphaType := {
     Alphacarrier : Type;
 

@@ -44,4 +44,7 @@ src/Classical/Theory/ZFC.v
 src/Classical/Theorem/EuclidPrimes.v
 src/Classical/Theorem/OrderedPairs.v
 
+src/Metaphysics/Process.v
+src/Metaphysics/Metaphysics.v
+
 src/DAO.v

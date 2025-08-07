@@ -325,7 +325,7 @@ Module ImpossibilityEntropy.
             + destruct (impossible_decidable (fun a => P a /\ omega_veil a)) as [Himp_and | Hnimp_and].
               * (* P is not impossible, but P∧omega_veil is impossible *)
                 simpl. 
-                (* The key insight: the filtered list on the right has one more element *)
+                (* The filtered list on the right has one more element *)
                 lia.
               * (* Neither is impossible *)
                 simpl. exact IH.

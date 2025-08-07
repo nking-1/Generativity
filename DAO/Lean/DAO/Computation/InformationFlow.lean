@@ -4,8 +4,8 @@ import DAO.Logic.Diagonal
 /-!
 # I_max Theory: The Fundamental Optimization Constraint
 
-This module formalizes the groundbreaking I_max theorem: **systems cannot maximize 
-both structure (S) and change (ΔS) simultaneously**. This creates fundamental 
+This module formalizes the groundbreaking I_max theorem: **systems cannot maximize
+both structure (S) and change (ΔS) simultaneously**. This creates fundamental
 optimization limits that explain physics, consciousness, and computation.
 
 ## Core Results
@@ -76,7 +76,7 @@ def computes_optimization_bounds (Theory : Α.Α → Prop) (enum : AlphaEnum Α)
 
 /-- No theory can compute its own optimization bounds -/
 theorem no_theory_computes_bounds (enum : AlphaEnum Α) (complete : enum_complete enum) :
-  ∀ Theory, (∃ n, enum n = some Theory) → 
+  ∀ Theory, (∃ n, enum n = some Theory) →
   ¬computes_optimization_bounds Theory enum := by
   intro Theory ⟨n, h_enum⟩ h_comp
   -- Create diagonal predicate
@@ -97,7 +97,7 @@ theorem no_theory_computes_bounds (enum : AlphaEnum Α) (complete : enum_complet
 /-- The meta-theorem: I_max validates through incompleteness -/
 theorem I_max_validates_through_incompleteness (enum : AlphaEnum Α) (complete : enum_complete enum) :
   -- No theory can compute its own I_max bounds
-  (∀ Theory, (∃ n, enum n = some Theory) → 
+  (∀ Theory, (∃ n, enum n = some Theory) →
    ¬computes_optimization_bounds Theory enum) ∧
   -- This limitation exists in Omega
   (∃ x : Ω.Ω, True) := by
@@ -107,49 +107,3 @@ theorem I_max_validates_through_incompleteness (enum : AlphaEnum Α) (complete :
     exact ⟨x, trivial⟩
 
 end MetaIncompleteness
-
-/-!
-## The Revolutionary Insight
-
-I_max theory reveals the **fundamental optimization constraint** of reality:
-
-### The Core Theorem
-**Systems cannot maximize both structure (S) and change (ΔS) simultaneously**
-
-This constraint appears everywhere:
-
-### Physical Laws
-- **Conservation laws**: Energy cannot simultaneously maximize density and flux  
-- **Thermodynamics**: Cannot maximize both order and entropy production
-- **Relativity**: Cannot maximize both mass and velocity (E = mc²)
-
-### Computational Limits  
-- **Halting problem**: Cannot maximize both completeness and consistency
-- **P vs NP**: Cannot maximize both solution verification and finding
-- **Gödel incompleteness**: Cannot maximize both truth and provability
-
-### Consciousness
-- **Attention**: Cannot maximize both focus and awareness
-- **Memory**: Cannot maximize both storage and access speed  
-- **Perception**: Cannot maximize both detail and scope
-
-### Economics
-- **Trade-offs**: Cannot maximize both efficiency and equity
-- **Innovation**: Cannot maximize both stability and disruption
-- **Growth**: Cannot maximize both speed and sustainability
-
-### The Meta-Level
-**No theory can compute its own I_max bounds** - this creates necessary incompleteness that:
-- Prevents collapse to triviality
-- Enables continued growth and discovery  
-- Validates I_max through its own limitations
-
-### Connection to DAO Theory
-I_max explains **why omega_veil exists**: the fundamental optimization constraint creates 
-the necessary boundaries between complete Omega and consistent Alpha. Without I_max 
-constraints, reality would collapse to:
-- Complete stasis (S maximized, ΔS = 0)  
-- Pure chaos (ΔS maximized, S = 0)
-
-**I_max is the mathematical formalization of why "you can't have your cake and eat it too"**!
--/

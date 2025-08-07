@@ -2,7 +2,14 @@ Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.GenerativeType.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.Bridge.
+From Stdlib Require Import Arith.
 From Stdlib Require Import Lia.
+From Stdlib Require Import List.
+From Stdlib Require Import String.
+
+Import ListNotations.
+Open Scope string_scope.
+
 
 (*****************************************************************)
 (*                   Theology and Metaphysics                    *)
@@ -367,11 +374,6 @@ Section DivineProvabilityGen.
 
 End DivineProvabilityGen.
 
-
-Require Import List.
-Import ListNotations.
-Require Import String.
-Open Scope string_scope.
 
 (* Event types remain the same *)
 Inductive BigBangEvent :=
@@ -1654,9 +1656,6 @@ Section DivineTuringMachineGen.
 
 End DivineTuringMachineGen.
 
-
-Require Import Arith.
-
 (* Semantic divisibility: a predicate-structure divides a number n *)
 Parameter Divides_gen : forall {Alpha: AlphaType}, (Alphacarrier -> Prop) -> nat -> Prop.
 
@@ -2295,263 +2294,3 @@ Proof.
     exists t1, t2, t3.
     repeat split; auto.
 Qed.
-
-
-(* Experimental section about space time - but we could hopefully make this more emergent than adding axioms *)
-(* Section ComputationalSpaceEmergence.
-  Context (Alpha : AlphaType) (HG : GenerativeType Alpha).
-  
-  (* Conflicts when coexistence → omega_veil *)
-  Definition conflicts (P Q : Alphacarrier -> Prop) : Prop :=
-    exists a : Alphacarrier, (P a /\ Q a) <-> omega_veil a.
-  
-  (* KEY INSIGHT: GenerativeType prevents simultaneous conflicts *)
-  Theorem gen_temporal_conflict_safety :
-    forall P Q : Alphacarrier -> Prop,
-    forall t : nat,
-    conflicts P Q ->
-    contains t P ->
-    contains t Q ->
-    (* This would force omega_veil at time t *)
-    contains t omega_veil.
-  Proof.
-    intros P Q t Hconf HtP HtQ.
-    (* omega_veil is always contained by impossible_always axiom *)
-    apply impossible_always.
-  Qed.
-  
-  (* But here's the crucial property: *)
-  Theorem gen_avoids_creating_conflicts :
-    forall P Q : Alphacarrier -> Prop,
-    forall t : nat,
-    conflicts P Q ->
-    contains t P ->
-    (* GenerativeType won't spontaneously add Q at same time *)
-    ~ (contains t Q /\ forall t', t' < t -> ~ contains t' Q).
-  Proof.
-    (* This captures that GenerativeType doesn't CREATE new conflicts *)
-    (* It inherits them from Alpha but manages them temporally *)
-    admit. (* This is the key safety property *)
-  Admitted.
-  
-  (* Now Space emerges naturally! *)
-  
-  (* Space = the minimal structure preventing conflict collapse *)
-  Definition SpaceStructure := {
-    assign : (Alphacarrier -> Prop) -> nat &
-    forall P Q, conflicts P Q -> assign P <> assign Q
-  }.
-  
-  (* Prove space must exist using GenerativeType properties *)
-  Theorem space_emerges_from_conflicts :
-    (* If conflicts exist in Alpha *)
-    (exists P Q : Alphacarrier -> Prop, conflicts P Q) ->
-    (* And both predicates appear in GenerativeType *)
-    (exists P Q t1 t2, conflicts P Q /\ contains t1 P /\ contains t2 Q) ->
-    (* Then spatial structure must emerge *)
-    SpaceStructure.
-  Proof.
-    intros [P [Q Hconf]] [P' [Q' [t1 [t2 [Hconf' [Ht1 Ht2]]]]]].
-    
-    (* Use time of first appearance as spatial coordinate *)
-    exists (fun R => 
-      match (self_ref_generation_exists (fun _ => exists t, contains t R) 0) with
-      | ex_intro _ t _ => t
-      end).
-    
-    intros P1 P2 Hconf12.
-    (* Different conflict classes must appear at different times *)
-    (* This follows from gen_avoids_creating_conflicts *)
-    admit.
-  Defined.
-  
-  (* The number of dimensions = chromatic number of conflict graph *)
-  Definition dimensions_needed (preds : list (Alphacarrier -> Prop)) : nat :=
-    (* Minimum number of "locations" to separate all conflicts *)
-    (* This is graph coloring on the conflict graph! *)
-    length preds. (* Simplified - should be chromatic number *)
-  
-  (* Why 3 spatial dimensions? *)
-  Hypothesis fundamental_conflicts : 
-    exists P1 P2 P3 P4 : Alphacarrier -> Prop,
-    (* 4 mutually conflicting predicates *)
-    (forall i j, i <> j -> conflicts (nth i [P1;P2;P3;P4] P1) (nth j [P1;P2;P3;P4] P1)) /\
-    (* But any 3 can coexist with proper separation *)
-    (* This would force exactly 3 spatial dimensions! *)
-    True.
-End ComputationalSpaceEmergence. *)
-
-
-(* Section PTM_Information_Bounds.
-  Context {Alpha : AlphaType} {HG : GenerativeType Alpha}
-          {Omega : OmegaType} {HOG : OmegaToGenerative Alpha HG Omega}.
-  
-  (* First, let's define what we mean by PTM processing *)
-  
-  (* A measure of how many paradox symbols have been processed *)
-  Definition symbols_processed (config : ParadoxConfig) : nat :=
-    phead config.  (* Head position indicates progress *)
-  
-  (* How complex is the current state? *)
-  Definition state_complexity (s : ParadoxState) : nat :=
-    match s with
-    | PS_Initial => 1
-    | PS_Processing => 2
-    | PS_Resolving => 3
-    | PS_Output => 4
-    end.
-  
-  (* Structure at current configuration *)
-  Definition current_structure (config : ParadoxConfig) : nat :=
-    (state_complexity (pstate config)) * (symbols_processed config).
-  
-  (* Change between configurations *)
-  Definition structure_change (c1 c2 : ParadoxConfig) : nat :=
-    if Nat.ltb (current_structure c2) (current_structure c1) 
-    then current_structure c1 - current_structure c2
-    else current_structure c2 - current_structure c1.
-  
-  (* Information flow for PTM *)
-  Definition ptm_I_val (c1 c2 : ParadoxConfig) : nat :=
-    (current_structure c1) * (structure_change c1 c2).
-  
-  (* Now let's connect to bounds *)
-  
-  (* The fundamental constraint: PTM obeys I_max *)
-  Parameter I_max_universal : nat.
-  Axiom I_max_positive : I_max_universal > 0.
-  
-  (* Key axiom: Single step processing is bounded *)
-  Axiom ptm_step_bounded :
-    forall config,
-    let next_config := paradox_step config in
-    ptm_I_val config next_config <= I_max_universal.
-  
-  (* Paradox generation from Omega *)
-  
-  (* How many unresolved paradoxes exist at each point *)
-  Parameter paradox_density : nat -> nat.
-  
-  (* Omega's completeness means paradoxes exist everywhere *)
-  Axiom omega_generates_paradoxes :
-    forall n, paradox_density n > 0.
-  
-  (* Key assumption: Paradoxes accumulate faster than linear *)
-  Axiom paradox_accumulation :
-    exists k : nat, k > 1 /\
-    forall n, paradox_density (n + 1) >= paradox_density n + k.
-  
-  (* Tracking unprocessed paradoxes *)
-  
-  (* How many steps can PTM take in time t with I_max bound *)
-  Definition max_processing_steps (t : nat) : nat :=
-    t * I_max_universal.  (* Best case: saturate I_max *)
-  
-  (* Accumulated paradoxes over time *)
-  Fixpoint total_paradoxes (t : nat) : nat :=
-    match t with
-    | 0 => paradox_density 0
-    | S t' => total_paradoxes t' + paradox_density (S t')
-    end.
-  
-  (* The key deficit: unprocessed paradoxes *)
-  Definition unprocessed_count (t : nat) : nat :=
-    total_paradoxes t - max_processing_steps t.
-  
-  (* Event horizon formation *)
-  
-  Definition forms_processing_horizon (t : nat) : Prop :=
-    (* More paradoxes than can ever be processed *)
-    unprocessed_count t > 0 /\
-    (* And the gap is growing *)
-    forall t', t' > t -> unprocessed_count t' > unprocessed_count t.
-  
-  (* Core theorem: Processing horizons are inevitable *)
-  Theorem processing_horizons_form :
-    exists t_horizon : nat,
-    forms_processing_horizon t_horizon.
-  Proof.
-    (* We'll show this happens when accumulated paradoxes exceed linear growth *)
-    
-    (* From paradox_accumulation, we know growth exceeds linear *)
-    destruct paradox_accumulation as [k [Hk H_acc]].
-    
-    (* Choose t_horizon large enough *)
-    exists (I_max_universal * I_max_universal).
-    
-    unfold forms_processing_horizon.
-    split.
-    - (* Unprocessed count is positive *)
-      unfold unprocessed_count.
-      (* Would need lemma about total_paradoxes growth *)
-      admit.
-    - (* Gap keeps growing *)
-      intros t' Ht'.
-      unfold unprocessed_count.
-      (* Would need to show total_paradoxes grows superlinearly *)
-      admit.
-  Admitted.
-  
-  (* Connection to omega_veil *)
-  
-  (* When PTM can't keep up, we see omega_veil *)
-  Definition processing_failure_state : ParadoxState -> Prop :=
-    fun s => 
-      match s with
-      | PS_Output => True  (* Only output state indicates success *)
-      | _ => False
-      end.
-
-  (* Where processing fails, omega_veil emerges *)
-  Theorem processing_failure_reveals_omega_veil :
-    forall config n,
-    (* If we're stuck not in output state *)
-    ~ processing_failure_state (pstate (paradox_run_steps config n)) ->
-    (* Then the output is related to omega_veil *)
-    (* Apply paradox_output directly without let binding *)
-    (paradox_output `{Alpha} (pstate (paradox_run_steps config n))) omega_veil \/ 
-    exists Q : Alphacarrier -> Prop, 
-      (paradox_output `{Alpha} (pstate (paradox_run_steps config n))) Q /\ 
-      (forall a, Q a <-> omega_veil a).
-  Proof.
-    intros config n H_not_output.
-    
-    (* The axiom tells us all outputs relate to omega_veil *)
-    exact (paradox_output_relates_impossible `{Alpha} (pstate (paradox_run_steps config n))).
-  Qed.
-  
-  (* Physical interpretation *)
-  
-  (* Local information density *)
-  Parameter Location : Type.
-  Parameter local_I_density : Location -> nat.
-  
-  (* Event horizon is where density exceeds processing capacity *)
-  Definition is_event_horizon (loc : Location) : Prop :=
-    local_I_density loc > I_max_universal.
-  
-  (* Near horizon, processing slows *)
-  Definition processing_rate_at (loc : Location) : Q :=
-    let density := local_I_density loc in
-    if Nat.ltb density I_max_universal
-    then 
-      (* Construct rational using Qmake *)
-      Qmake (Z.of_nat (I_max_universal - density)) (Pos.of_nat I_max_universal)
-    else 
-      (* Zero processing at/beyond horizon *)
-      Qmake Z0 1%positive.
-  
-  (* Time dilation emerges from processing slowdown *)
-  Theorem time_dilates_near_horizon :
-    forall loc1 loc2,
-    local_I_density loc1 < local_I_density loc2 ->
-    local_I_density loc2 <= I_max_universal ->
-    processing_rate_at loc1 > processing_rate_at loc2.
-  Proof.
-    intros loc1 loc2 H_less H_within.
-    unfold processing_rate_at.
-    (* Need to reason about rational comparisons *)
-    admit.
-  Admitted.
-  
-End PTM_Information_Bounds. *)

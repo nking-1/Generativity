@@ -177,8 +177,7 @@ End UltimateAbsurdity.
 Section OmegaVeilAtAbsurdity.
   Context {Omega : OmegaType} {Alpha : AlphaType}.
   
-  (* The key insight: at the ultimate absurdity point, 
-     even the impossible predicate holds *)
+  (* At the ultimate absurdity point, even the impossible predicate holds *)
   Theorem absurdity_satisfies_impossible :
     forall x : Omegacarrier,
     PredicateEquivalence Omega x ->

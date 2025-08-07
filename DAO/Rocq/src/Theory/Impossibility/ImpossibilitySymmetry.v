@@ -116,7 +116,7 @@ Module ImpossibilitySymmetry.
                  | right _ => P
                  end.
       
-      (** Key insight: All paradox translations preserve impossibility structure *)
+      (** All paradox translations preserve impossibility structure *)
       Theorem paradox_translation_symmetry :
         forall source target Hs Ht,
         preserves_impossibility (paradox_translation source target Hs Ht).

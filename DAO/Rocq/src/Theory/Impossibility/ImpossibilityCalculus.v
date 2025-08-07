@@ -809,7 +809,7 @@ Module ImpossibilityCalculus.
         unfold is_fixed_point.
         intro a.
         
-        (* Key insight: F(lim seq) = lim F(seq) by continuity *)
+        (* F(lim seq) = lim F(seq) by continuity *)
         assert (converges_to (fun n => F (iterate F P n)) (F Q)).
         { apply Hcont. exact Hconv. }
         
