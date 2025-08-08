@@ -1,6 +1,7 @@
 (** * Arithmetic in ClassicalAlphaType
     
-    This module builds arithmetic operations on top of natural numbers. *)
+    This module builds arithmetic operations on top of AlphaType-native
+    natural numbers *)
 
 Require Import DAO.Core.ClassicalAlphaType.
 Require Import DAO.Core.ClassicalAlphaAPI.

@@ -1,3 +1,5 @@
+(* Metaphysics.v: Theology, metaphysics, and philosophy *)
+
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.GenerativeType.
 Require Import DAO.Core.OmegaType.

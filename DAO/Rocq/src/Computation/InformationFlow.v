@@ -18,6 +18,7 @@ Import ListNotations.
 From Stdlib Require Import Lia.
 
 (* A dynamic system with bounded structure and perpetual change.
+   From the system's perspective, time moves precisely when its structure changes
    S_min and S_max set finite bounds on number of states in the system.
    A system with 0 states effectively ceases to exist.
    We are tying in to entropy here: entropy = kB ln(structure) *)

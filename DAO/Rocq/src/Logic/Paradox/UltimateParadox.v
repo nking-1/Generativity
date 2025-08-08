@@ -1,7 +1,6 @@
 (** UltimateParadox.v
     Construct the wildest paradoxes and absurdities you like here, safely in OmegaType. *)
 Require Import DAO.Core.OmegaType.
-Require Import DAO.Core.AlphaType.
 Require Import Stdlib.Classes.RelationClasses.
 
 
@@ -10,11 +9,10 @@ Section UltimateAbsurdity.
 
   (* Omega contains all absurdities *)
   Theorem Omega_is_absurd:
-    forall (Omega : OmegaType),
     forall (P Q : Omegacarrier -> Prop),
       exists x : Omegacarrier, P x <-> Q x.
   Proof.
-    intros Omega' P Q.
+    intros P Q.
     set (collapse := fun x => P x <-> Q x).
     destruct (omega_completeness collapse) as [x Hx].
     exists x. exact Hx.
@@ -175,7 +173,7 @@ Section UltimateAbsurdity.
 End UltimateAbsurdity.
 
 Section OmegaVeilAtAbsurdity.
-  Context {Omega : OmegaType} {Alpha : AlphaType}.
+  Context {Omega : OmegaType}.
   
   (* At the ultimate absurdity point, even the impossible predicate holds *)
   Theorem absurdity_satisfies_impossible :

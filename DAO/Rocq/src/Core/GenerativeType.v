@@ -1,4 +1,4 @@
-(*  GenerativeType: The Time-Indexed Type
+(*  GenerativeType.v: The Time-Indexed Type
    
     GenerativeType adds a temporal dimension to AlphaType.
     Time allows paradoxes to separate (P at t1, ¬P at t2).

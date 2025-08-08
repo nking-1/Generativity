@@ -1,3 +1,4 @@
+(* GenerativeProperties.v - Properties of the GenerativeType *)
 
 Require Import DAO.Core.GenerativeType.
 Require Import DAO.Core.AlphaType.
