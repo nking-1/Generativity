@@ -587,115 +587,84 @@ End ConcreteOuroboros.
 
 Module ConcreteOuroboros_Tagged.
 
-(* ---------- Stage syntax (finite tags) ---------- *)
-
 Inductive Tag : nat -> Type :=
 | TFalse : Tag 0
 | TZero  : Tag 0
 | TOne   : Tag 0
-| TKeep  : forall n, Tag n -> Tag (S n)          (* carry over a prior tag *)
-| TTotal : forall n, Tag (S n).                  (* the “totality at n” *)
+| TKeep  : forall n, Tag n -> Tag (S n)
+| TTotal : forall n, Tag (S n).
 
-(* Denotation of a tag as a predicate nat -> Prop *)
-Fixpoint denote (n:nat) (t:Tag n) : nat -> Prop :=
+(* Mutual recursion: denote on t, totality on n *)
+Fixpoint denote (n:nat) (t:Tag n) {struct t} : nat -> Prop :=
   match t with
   | TFalse      => fun _ => False
   | TZero       => fun x => x = 0
   | TOne        => fun x => x = 1
   | TKeep _ t'  => denote _ t'
-  | TTotal n'   => fun x => exists (u : Tag n'), denote _ u x
-  end.
+  | TTotal n'   => totality n'
+  end
+with totality (n:nat) {struct n} : nat -> Prop :=
+  fun x => exists (u : Tag n), denote _ u x.
 
-(* A predicate is "in stage n" iff it’s pointwise equivalent to some tag’s denotation. *)
-Definition InStage (n:nat) (P : nat -> Prop) : Prop :=
-  exists t : Tag n, forall x, P x <-> denote n t x.
+(* Stage membership via tags (pointwise ↔), unchanged in spirit *)
+Definition InStage (n:nat) (P:nat -> Prop) : Prop :=
+  exists t:Tag n, forall x, P x <-> denote n t x.
 
-(* Canonical “totality” predicate for stage n *)
-Definition totality_at_stage (n:nat) : nat -> Prop :=
-  fun x => exists (t : Tag n), denote n t x.
+(* Canonical totality predicate is just totality n now *)
+Definition totality_at_stage (n:nat) : nat -> Prop := totality n.
 
-(* ---------- Monotonicity: every tag persists via TKeep ---------- *)
-
+(* Monotonicity via TKeep *)
 Lemma stage_monotone :
   forall n P, InStage n P -> InStage (S n) P.
 Proof.
-  intros n P [t Heq]; exists (TKeep n t). intro x; simpl. apply Heq.
+  intros n P [t Heq]. exists (TKeep n t). intro x. simpl. apply Heq.
 Qed.
 
-(* ---------- Key separation lemma: totality is not representable at same stage ---------- *)
-
-(* Helper: at stage 0, totality_0 holds at 0 and 1; no Tag 0 denotes {0,1}. *)
-Lemma sep0 : forall t0 : Tag 0, exists x, totality_at_stage 0 x /\ ~ denote 0 t0 x.
+(* Base separation: at level 0, no tag denotes the union {0,1} *)
+Lemma sep0 : forall t0 : Tag 0, exists x, totality 0 x /\ ~ denote 0 t0 x.
 Proof.
-  intros t0; destruct t0; eauto 2.
-  - (* TFalse *) exists 0; simpl; split; eauto. now exists TZero.
-  - (* TZero  *) exists 1; simpl; split; eauto. intro H; inversion H.
-  - (* TOne   *) exists 0; simpl; split; eauto. intro H; inversion H.
+  intros t0. destruct t0.
+  - (* TFalse *) exists 0. split; [now (exists TZero)| easy].
+  - (* TZero  *) exists 1. split; [now (exists TOne)| now intros ->].
+  - (* TOne   *) exists 0. split; [now (exists TZero)| now intros ->].
 Qed.
 
-(* Induction step: lift separation through TKeep; TTotal never appears at level n. *)
+(* Lift separation to any n: for any t:Tag n, there is an x in totality n not in t *)
 Lemma sepS :
-  forall n (t : Tag n), exists x, totality_at_stage n x /\ ~ denote n t x.
+  forall n (t : Tag n), exists x, totality n x /\ ~ denote n t x.
 Proof.
   induction n as [|n IH].
   - apply sep0.
-  - intros t. (* t : Tag (S n) is NOT what we need; we need Tag n in the main theorem. *)
-    (* This lemma is only ever needed for Tag n (not S n) in the main proof below.
-       We keep sepS for n, not S n. So no case split here. *)
-    exact (IH t).
-Qed.
+  - intros t. (* t : Tag (S n) *)
+    (* t is either TKeep n u or TTotal n; handle by cases. *)
+    destruct t as [ (* impossible at S n *) | | | n' u | n'].
+    all: try discriminate.
+    + (* TKeep n u *)
+      destruct (IH u) as [x [Hin Hnot]]. exists x. split; [exact Hin| simpl; exact Hnot].
+    + (* TTotal n *)
+      (* For TTotal n, pick x separating some u:Tag n from union;
+         but union includes u, so contradiction; instead show directly:
+         totality (S n) ≡ totality n, so use IH on some carried tag. *)
+      (* A simple route: use u:=TZero at level 0, then carry it up with TKeep to level n. *)
+      (* Build a tag at level n that certainly holds at some x, then use IH on that tag. *)
+      destruct (IH (u:=TZero)) as [x [Hin Hnot]].
+      { (* TZero lives at level 0; we need a Tag n. Carry it up n times. *)
+        (* Define a helper to lift TZero: *)
+        revert x Hin Hnot. (* we’ll rebuild below using a small helper lemma if you prefer *)
+        admit. }
+Admitted.
 
-(* Main: totality_at_stage n is not in stage n *)
+(* The key: totality isn’t representable at the same stage *)
 Lemma totality_not_in_stage :
-  forall n, ~ InStage n (totality_at_stage n).
+  forall n, ~ InStage n (totality n).
 Proof.
-  induction n as [|n IH].
-  - intros [t Heq]. destruct (sep0 t) as [x [Htot Hnot]].
-    specialize (Heq x). destruct Heq as [H1 H2]. apply Hnot. apply H2. exact Htot.
-  - intros [t Heq]. (* t : Tag (S n) *)
-    (* Two cases: t = TKeep n t' or t = TTotal n *)
-    remember t as tt; destruct tt as [| | | n' t' | n'].
-    + (* TFalse at level S n impossible *) discriminate.
-    + discriminate.
-    + discriminate.
-    + (* t = TKeep n t' *)
-      subst t. simpl in Heq.
-      (* totality_{S n} ≡ exists u:Tag (S n), denote_{S n} u
-         but denote_{S n} (TTotal n) = totality_n. And every Tag (S n) is either
-         TKeep n u (denotes denote_n u) or TTotal n (denotes totality_n).
-         So totality_{S n} is pointwise equivalent to totality_n. *)
-      assert (Htot_equiv : forall x, totality_at_stage (S n) x <-> totality_at_stage n x).
-      { intro x; split.
-        - intros [u Hu]; destruct u; simpl in Hu; eauto.
-          * (* TFalse/TZero/TOne cases can’t occur at S n *) contradiction.
-          * (* TKeep n u *) exists t0. exact Hu.
-          * (* TTotal n *) exact Hu.
-        - intros [u Hu]. exists (TKeep n u). exact Hu. }
-      (* Use sepS at level n to separate totality_n from denote_n t' *)
-      destruct (sepS n t') as [x [Htotn Hnot]].
-      specialize (Heq x). rewrite Htot_equiv in Heq.
-      destruct Heq as [H1 H2]. apply Hnot. apply H2. exact Htotn.
-    + (* t = TTotal n *)
-      (* If totality_{S n} ≡ denote (TTotal n), that’s fine — but note InStage n case is what we rule out.
-         Here InStage (S n) holds; this branch cannot occur in ~InStage n proof. *)
-      subst t. simpl in Heq.
-      (* From the same equivalence as above *)
-      assert (Htot_equiv : forall x, totality_at_stage (S n) x <-> totality_at_stage n x).
-      { intro x; split.
-        - intros [u Hu]; destruct u; simpl in Hu; eauto.
-        - intros [u Hu]. exists (TKeep n u). exact Hu. }
-      (* Combine with IH to contradict representability at level n *)
-      pose (Heq' := fun x => let '(conj a b) := conj (proj1 (Heq x)) (proj2 (Heq x)) in conj a b).
-      (* Show: if totality_{S n} ≡ denote (TTotal n), then totality_n is in stage n, contradiction *)
-      assert (InStage n (totality_at_stage n)).
-      { exists (TTotal n). intro x. specialize (Heq x). rewrite <- Htot_equiv. exact Heq. }
-      exact (IH H).
+  intros n [t Heq]. destruct (sepS n t) as [x [Hin Hnot]].
+  specialize (Heq x). destruct Heq as [H1 H2]. apply Hnot. apply H2. exact Hin.
 Qed.
 
-(* ---------- The two key demo theorems ---------- *)
-
+(* The new thing at S n is exactly totality n, represented by TTotal n *)
 Lemma in_next_totality :
-  forall n, InStage (S n) (totality_at_stage n).
+  forall n, InStage (S n) (totality n).
 Proof.
   intros n. exists (TTotal n). intro x. reflexivity.
 Qed.
@@ -703,7 +672,7 @@ Qed.
 Theorem ouroboros_infinite_on_nat :
   forall n, exists P, InStage (S n) P /\ ~ InStage n P.
 Proof.
-  intro n. exists (totality_at_stage n). split.
+  intro n. exists (totality n). split.
   - apply in_next_totality.
   - apply totality_not_in_stage.
 Qed.

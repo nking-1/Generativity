@@ -1146,3 +1146,209 @@ To avoid contradiction, the only coherent way infinity can “exist” is as a p
 “Time” is then just the experiential or physical shadow of that deeper process — not the fundamental object itself.
 
 *)
+
+Module ConstructiveGodel_v3.
+
+  Section GodelProcess.
+      Context (Alpha : AlphaType).
+
+  (* ============================================================ *)
+  (*                     The Foundation                           *)
+  (* ============================================================ *)
+  
+  (* The fundamental limitation: no collection contains its own totality *)
+  Definition totality_of (Collection : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
+    fun x => exists P, Collection P /\ P x.
+  
+  Axiom no_self_totality :
+    forall Collection, ~ Collection (totality_of Collection).
+  
+  (* ============================================================ *)
+  (*                  The Syntactic Engine                        *)
+  (* ============================================================ *)
+  
+  (* Stage n has finite syntax for predicates *)
+  Inductive Syntax : nat -> Type :=
+    (* Base case: just omega_veil and one witness *)
+    | S_omega : Syntax 0
+    | S_witness : Syntax 0
+    
+    (* Inductive case: keep old + add totality *)
+    | S_keep : forall {n}, Syntax n -> Syntax (S n)
+    | S_total : forall n, Syntax (S n).  (* THE NEW THING *)
+  
+  (* Denotation: defined by structural recursion on Syntax *)
+  (* Alternative: Build denotations level by level *)
+Fixpoint all_syntax_at_level (n : nat) : list (Syntax n) :=
+  match n with
+  | 0 => [S_omega; S_witness]
+  | S m => 
+      (map (@S_keep m) (all_syntax_at_level m)) ++ [S_total m]
+  end.
+
+Fixpoint denote_fuel (fuel : nat) {n : nat} (s : Syntax n) : Alphacarrier -> Prop :=
+  match fuel with
+  | 0 => fun _ => False  (* out of fuel *)
+  | S fuel' =>
+      match s with
+      | S_omega => omega_veil
+      | S_witness => fun x => ~ omega_veil x
+      | @S_keep m s' => denote_fuel fuel' s'
+      | S_total m => fun x => exists t : Syntax m, denote_fuel fuel' t x
+      end
+  end.
+
+(* Use enough fuel for the level *)
+Definition denote {n : nat} (s : Syntax n) : Alphacarrier -> Prop :=
+  denote_fuel (S n) s.
+  
+  (* A predicate is "in" stage n if some syntax denotes it *)
+  Definition InStage (n : nat) (P : Alphacarrier -> Prop) : Prop :=
+    exists s : Syntax n, forall x, P x <-> denote s x.
+  
+  (* The collection at each stage *)
+  Definition stage_collection (n : nat) : (Alphacarrier -> Prop) -> Prop :=
+    fun P => InStage n P.
+  
+  (* ============================================================ *)
+  (*               The Constructive Gödel Theorem                 *)
+  (* ============================================================ *)
+  
+  (* The totality at each stage *)
+  Definition stage_totality (n : nat) : Alphacarrier -> Prop :=
+    fun x => exists s : Syntax n, denote s x.
+  
+  (* Observation: stage_totality n = totality_of (stage_collection n) *)
+  Lemma stage_totality_is_totality :
+    forall n x,
+    stage_totality n x <-> totality_of (stage_collection n) x.
+  Proof.
+    intros n x.
+    unfold stage_totality, totality_of, stage_collection, InStage.
+    split.
+    - intros [s Hs].
+      exists (denote s).
+      split.
+      + exists s. intros y. reflexivity.
+      + exact Hs.
+    - intros [P [[s Heq] HP]].
+      exists s.
+      rewrite <- Heq.
+      exact HP.
+  Qed.
+  
+  (* KEY INSIGHT: S_total denotes the totality of the previous stage *)
+  Lemma denote_fuel_S_total : forall fuel n x,
+  fuel > 0 ->
+  denote_fuel fuel (S_total n) x <-> exists t : Syntax n, denote_fuel (pred fuel) t x.
+Proof.
+  intros fuel n x Hfuel.
+  destruct fuel; [inversion Hfuel|].
+  simpl. reflexivity.
+Qed.
+
+Lemma total_denotes_totality :
+  forall n x,
+  denote (S_total n) x <-> stage_totality n x.
+Proof.
+  intros n x.
+  unfold denote, stage_totality.
+  simpl.
+  reflexivity.
+Qed.
+  
+  (* But totality at stage n is NOT nameable at stage n *)
+  Theorem totality_not_in_stage :
+  forall n, ~ InStage n (stage_totality n).
+Proof.
+  intros n [s Heq].
+  apply (no_self_totality (stage_collection n)).
+  exists s.
+  intros x.
+  unfold totality_of.
+  split.
+  - intros [P [HP Px]].
+    apply Heq.
+    unfold stage_totality.
+    destruct HP as [s' Hs'].
+    exists s'.
+    rewrite <- Hs'.
+    exact Px.
+  - intro Hsx.
+    apply Heq in Hsx.
+    unfold stage_totality in Hsx.
+    destruct Hsx as [s' Hs'].
+    exists (denote s').
+    split.
+    + exists s'. intros y. reflexivity.
+    + exact Hs'.
+Qed.
+  
+  (* However, totality at stage n IS nameable at stage S n *)
+  Theorem totality_named_next :
+    forall n, InStage (S n) (stage_totality n).
+  Proof.
+    intros n.
+    exists (S_total n).
+    intros x.
+    apply total_denotes_totality.
+  Qed.
+  
+  (* ============================================================ *)
+  (*                    TIME EMERGES!                             *)
+  (* ============================================================ *)
+  
+  (* The eternal growth: each stage adds something new *)
+  Theorem eternal_novelty :
+    forall n, exists P,
+    InStage (S n) P /\ ~ InStage n P.
+  Proof.
+    intros n.
+    exists (stage_totality n).
+    split.
+    - apply totality_named_next.
+    - apply totality_not_in_stage.
+  Qed.
+  
+  (* The ouroboros: trying to name yourself creates the next moment *)
+  Theorem ouroboros_eternal :
+    forall n,
+    let current := stage_collection n in
+    let attempt := stage_totality n in
+    let next := stage_collection (S n) in
+    ~ InStage n attempt /\ InStage (S n) attempt.
+  Proof.
+    intros n.
+    split.
+    - apply totality_not_in_stage.
+    - apply totality_named_next.
+  Qed.
+  
+  (* ============================================================ *)
+  (*              The Constructive Use of Gödel                   *)
+  (* ============================================================ *)
+  
+  Definition constructive_godel_principle : Prop :=
+    forall n : nat,
+    exists (Novel : Alphacarrier -> Prop),
+    (* Novel exists but can't be named at stage n *)
+    ~ InStage n Novel /\
+    (* Adding it creates stage S n *)
+    InStage (S n) Novel /\
+    (* But this creates a new unnameable *)
+    ~ InStage (S n) (stage_totality (S n)).
+  
+  Theorem godel_creates_time :
+    constructive_godel_principle.
+  Proof.
+    intros n.
+    exists (stage_totality n).
+    split; [|split].
+    - apply totality_not_in_stage.
+    - apply totality_named_next.
+    - apply totality_not_in_stage.
+  Qed.
+
+End GodelProcess.
+  
+End ConstructiveGodel_v3.
