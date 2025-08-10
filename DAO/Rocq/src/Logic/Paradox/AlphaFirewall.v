@@ -3,6 +3,7 @@
     This is a good file to add more "Red Teaming" theorems to test the integrity of the system later. *)
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
+Require Import Setoid.
 
 
 Section AlphaParadoxFirewalls.
@@ -225,3 +226,109 @@ Section ParadoxesEqualTheImpossible.
   Qed.
 
 End ParadoxesEqualTheImpossible.
+
+(** ** All Paradoxes Are False
+    
+    Making explicit that omega_veil is just False lifted to predicates,
+    and therefore all paradoxes are literally just False. *)
+
+Section ParadoxesAreFalse.
+  Context {Alpha : AlphaType}.
+  
+  (** omega_veil is extensionally equal to the constant False predicate *)
+  Theorem omega_veil_is_false :
+    forall x : Alphacarrier, omega_veil x <-> False.
+  Proof.
+    intro x.
+    split.
+    - apply AlphaProperties.Core.omega_veil_has_no_witnesses.
+    - intro H. destruct H.
+  Qed.
+  
+  (** The "unique impossible predicate" is just False in disguise *)
+  Theorem impossible_is_false :
+    forall P : Alphacarrier -> Prop,
+    (forall x, ~ P x) <-> (forall x, P x <-> False).
+  Proof.
+    intro P.
+    split.
+    - intros HP x. 
+      split; [apply HP | intro H; destruct H].
+    - intros HP x Px.
+      apply (proj1 (HP x)). exact Px.
+  Qed.
+  
+  (** Russell's paradox equals False directly *)
+  Theorem russell_is_false :
+    forall R : Alphacarrier -> Prop,
+    (forall x, R x <-> ~ R x) ->
+    (forall x, R x <-> False).
+  Proof.
+    intros R HR x.
+    rewrite (alpha_russell_equals_impossible R HR x).
+    apply omega_veil_is_false.
+  Qed.
+  
+  (** Curry's paradox equals False directly *)
+  Theorem curry_false_is_false :
+    forall C : Alphacarrier -> Prop,
+    (forall x, C x <-> (C x -> False)) ->
+    (forall x, C x <-> False).
+  Proof.
+    intros C HC x.
+    rewrite (alpha_curry_false_equals_impossible C HC x).
+    apply omega_veil_is_false.
+  Qed.
+  
+  (** The master theorem: Any paradoxical predicate is just False *)
+  Theorem all_paradoxes_are_false :
+    forall P : Alphacarrier -> Prop,
+    (forall x, ~ P x) ->
+    (forall x, P x <-> False).
+  Proof.
+    intros P HP x.
+    rewrite (AlphaProperties.Core.omega_veil_unique P HP x).
+    apply omega_veil_is_false.
+  Qed.
+  
+  (** Corollary: There's only one False *)
+  Theorem false_is_unique :
+    forall P Q : Alphacarrier -> Prop,
+    (forall x, P x <-> False) ->
+    (forall x, Q x <-> False) ->
+    (forall x, P x <-> Q x).
+  Proof.
+    intros P Q HP HQ x.
+    rewrite HP, HQ. reflexivity.
+  Qed.
+  
+  (** The philosophical summary: Paradoxes aren't exotic objects,
+      they're just the void we've always known *)
+  Theorem paradoxes_are_the_void :
+    forall P : Alphacarrier -> Prop,
+    (exists contradiction : (exists x, P x -> ~ P x), 
+     forall x, ~ P x) ->
+    (forall x, P x <-> False).
+  Proof.
+    intros P [_ Hempty].
+    apply all_paradoxes_are_false.
+    exact Hempty.
+  Qed.
+End ParadoxesAreFalse.
+
+
+(** Even more directly: omega_veil IS the constant False function *)
+(* We do need functional extensionality for this *)
+Require Import Coq.Logic.FunctionalExtensionality.
+Require Import Coq.Logic.PropExtensionality.
+Section OmegaVeilEqualsFalse.
+  Context {Alpha : AlphaType}.
+  Theorem omega_veil_equals_constant_false :
+    omega_veil = (fun _ : Alphacarrier => False).
+  Proof.
+    extensionality x.
+    destruct (omega_veil_is_false x) as [H1 H2].
+    apply propositional_extensionality.
+    split; assumption.
+  Qed.
+End OmegaVeilEqualsFalse.

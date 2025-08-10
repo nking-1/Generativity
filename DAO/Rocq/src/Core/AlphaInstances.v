@@ -67,6 +67,10 @@ Instance Alpha_universal (T : Type) `{Inhabited T} : AlphaType := {
   alpha_not_empty := ex_intro _ inhabitant I
 }.
 
+
+(* Extended examples below - we're just going crazy here for fun to *)
+(* see how far we can push the type system *)
+
 (* ============================================================ *)
 (*                    Composite Type Instances                  *)
 (* ============================================================ *)
@@ -178,32 +182,6 @@ Instance Alpha_Zmod (n : nat) : AlphaType := {
 }.
 
 (* ============================================================ *)
-(*                 Philosophical Interpretations                *)
-(* ============================================================ *)
-
-(*
-Each AlphaType instance represents a different "universe" that can 
-undergo the ouroboros process:
-
-1. Alpha_unit: The minimal universe - pure logic, no structure
-2. Alpha_bool: The universe of binary distinctions (yes/no, true/false)
-3. Alpha_nat: The universe of discrete quantities (counting, iteration)
-4. Alpha_list: The universe of sequences (temporal ordering)
-5. Alpha_tree: The universe of branching possibilities (quantum many-worlds?)
-6. Alpha_finite: Bounded universes with limited states
-7. Alpha_Zmod: Cyclic universes that repeat after n steps
-
-Each maintains:
-- Exactly one impossibility (omega_veil)
-- Non-emptiness (at least one element exists)
-- The capacity for ouroboros self-pursuit
-
-This shows the framework's universality - ANY non-empty type with a 
-unique impossible predicate can undergo the process of temporal 
-self-generation through attempted self-completion!
-*)
-
-(* ============================================================ *)
 (*                    Exotic Instance: Streams                  *)
 (* ============================================================ *)
 
@@ -224,17 +202,7 @@ Instance Alpha_stream (A : Type) (HA : A) : AlphaType := {
 }.
 
 
-(* ============================================================ *)
-(*                    The Meta-Instance                         *)
-(* ============================================================ *)
-
-(* Can we make an AlphaType of AlphaTypes? This gets very meta! *)
-(* This would represent a universe of universes, each capable of
-   their own ouroboros process... *)
-(* The AlphaType of AlphaTypes - The Meta-Universe *)
-
 Set Universe Polymorphism.
-(* Require Import DAO.Core.AlphaType. *)
 
 (* Define AlphaType at each universe level *)
 Record AlphaCarrier@{u} : Type@{u+1} := mkAlpha {
@@ -269,10 +237,6 @@ Definition diagonal_universe@{u v | u < v} (enum : nat -> AlphaCarrier@{u}) : Al
     
     (* Non-empty: the constant True sequence exists *)
     (ex_intro _ (fun n _ => True) I).
-
-(* ============================================================ *)
-(*                    The Tower Construction                     *)
-(* ============================================================ *)
 
 (* Define a type that represents "n levels of nesting" all at the same universe *)
 (* TowerLevel needs to be one level higher to contain AlphaCarrier *)
@@ -411,6 +375,15 @@ Definition code_universe@{u} : AlphaCarrier@{u} :=
       (conj (fun _ H => H)
             (fun Q HQ _ => conj (fun H => HQ _ H) (fun H => False_ind _ H))))
     (ex_intro _ code_unit I).
+
+Instance Alpha_code_universe : AlphaType := {
+  Alphacarrier := UniverseCode;
+  alpha_impossibility := exist _ (fun _ : UniverseCode => False)
+    (conj 
+      (fun _ H => H)
+      (fun Q HQ c => conj (fun H => HQ c H) (fun H => False_ind _ H)));
+  alpha_not_empty := ex_intro _ code_unit I
+}.
 
 (* ============================================================ *)
 (*                    Theorems About the Hierarchy               *)

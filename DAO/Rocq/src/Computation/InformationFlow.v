@@ -17,11 +17,12 @@ Require Import Stdlib.Numbers.Natural.Abstract.NDiv0.
 Import ListNotations.
 From Stdlib Require Import Lia.
 
-(* A dynamic system with bounded structure and perpetual change.
+(* A dynamic system with bounded structure and perpetual change
    From the system's perspective, time moves precisely when its structure changes
-   S_min and S_max set finite bounds on number of states in the system.
-   A system with 0 states effectively ceases to exist.
-   We are tying in to entropy here: entropy = kB ln(structure) *)
+   S_min and S_max set finite bounds on number of states in the system
+   A system with 0 states effectively ceases to exist
+   Implicitly, we are tying in to entropy here: entropy = kB ln(structure)
+   Note there is a fundamental assumption: At some level, systems have discrete states *)
 Record System := {
   S_min : nat;
   S_max : nat;
@@ -823,13 +824,13 @@ End Example.
 
 Section MetaProof.
   Context {Omega : OmegaType} {Alpha : AlphaType}.
+
+  (* AXIOMS for the meta-proof *)
   Variable embed : Alphacarrier -> Omegacarrier.
   Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
   Variable enum_complete : forall A : Alphacarrier -> Prop, 
     exists n, alpha_enum n = Some A.
-  
-  (* AXIOMS for the meta-proof *)
-  
+
   (* Axiom 1: Diagonal predicates are enumerable *)
   Axiom diagonal_in_enumeration :
     forall n : nat,

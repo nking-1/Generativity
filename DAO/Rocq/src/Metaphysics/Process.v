@@ -790,6 +790,16 @@ Section Process.
     (** Explicit impossibility equality (not just pointwise) 
     Note: This is currently only needed for these meta-reasoning proofs,
     so it's a separate axiom to isolate where stronger assumptions are needed. *)
+    (** Given the extensive evidence in AlphaFirewall showing that:
+    - All impossible predicates are pointwise equivalent to omega_veil
+    - omega_veil is pointwise equivalent to (fun _ => False)  
+    - All paradoxes collapse to False
+    - There's only one way to be impossible
+    
+    We take as an axiom that impossible predicates are not just 
+    pointwise equal but definitionally equal. This is equivalent to
+    assuming functional and propositional extensionality for the 
+    specific case of impossible predicates. *)
     Axiom alpha_impossibility_equal : { P : Alphacarrier -> Prop | 
       (forall x, ~ P x) /\
       (forall Q, (forall x, ~ Q x) -> Q = P)
@@ -1152,203 +1162,449 @@ Module ConstructiveGodel_v3.
   Section GodelProcess.
       Context (Alpha : AlphaType).
 
-  (* ============================================================ *)
-  (*                     The Foundation                           *)
-  (* ============================================================ *)
-  
-  (* The fundamental limitation: no collection contains its own totality *)
-  Definition totality_of (Collection : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
-    fun x => exists P, Collection P /\ P x.
-  
-  Axiom no_self_totality :
-    forall Collection, ~ Collection (totality_of Collection).
-  
-  (* ============================================================ *)
-  (*                  The Syntactic Engine                        *)
-  (* ============================================================ *)
-  
-  (* Stage n has finite syntax for predicates *)
-  Inductive Syntax : nat -> Type :=
-    (* Base case: just omega_veil and one witness *)
-    | S_omega : Syntax 0
-    | S_witness : Syntax 0
+    (* ============================================================ *)
+    (*                     The Foundation                           *)
+    (* ============================================================ *)
     
-    (* Inductive case: keep old + add totality *)
-    | S_keep : forall {n}, Syntax n -> Syntax (S n)
-    | S_total : forall n, Syntax (S n).  (* THE NEW THING *)
-  
-  (* Denotation: defined by structural recursion on Syntax *)
-  (* Alternative: Build denotations level by level *)
-Fixpoint all_syntax_at_level (n : nat) : list (Syntax n) :=
-  match n with
-  | 0 => [S_omega; S_witness]
-  | S m => 
-      (map (@S_keep m) (all_syntax_at_level m)) ++ [S_total m]
-  end.
+    (* The fundamental limitation: no collection contains its own totality *)
+    Definition totality_of (coll : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
+      fun x => exists P, coll P /\ P x.
+    
+    Axiom no_self_totality :
+      forall coll, ~ coll (totality_of coll).
+    
+    (* ============================================================ *)
+    (*                  The Syntactic Engine                        *)
+    (* ============================================================ *)
+    
+    (* Stage n has finite syntax for predicates *)
+    Inductive Syntax : nat -> Type :=
+      (* Base case: just omega_veil and one witness *)
+      | S_omega : Syntax 0
+      | S_witness : Syntax 0
+      
+      (* Inductive case: keep old + add totality *)
+      | S_keep : forall {n}, Syntax n -> Syntax (S n)
+      | S_total : forall n, Syntax (S n).  (* THE NEW THING *)
+    
+    (* Denotation: defined by structural recursion on Syntax *)
+    Fixpoint all_syntax_at_level (n : nat) : list (Syntax n) :=
+      match n with
+      | 0 => [S_omega; S_witness]
+      | S m => 
+          (map (@S_keep m) (all_syntax_at_level m)) ++ [S_total m]
+      end.
 
-Fixpoint denote_fuel (fuel : nat) {n : nat} (s : Syntax n) : Alphacarrier -> Prop :=
-  match fuel with
-  | 0 => fun _ => False  (* out of fuel *)
-  | S fuel' =>
-      match s with
-      | S_omega => omega_veil
-      | S_witness => fun x => ~ omega_veil x
-      | @S_keep m s' => denote_fuel fuel' s'
-      | S_total m => fun x => exists t : Syntax m, denote_fuel fuel' t x
-      end
-  end.
+    Fixpoint denote_fuel (fuel : nat) {n : nat} (s : Syntax n) : Alphacarrier -> Prop :=
+      match fuel with
+      | 0 => fun _ => False  (* out of fuel *)
+      | S fuel' =>
+          match s with
+          | S_omega => omega_veil
+          | S_witness => fun x => ~ omega_veil x
+          | @S_keep m s' => denote_fuel fuel' s'
+          | S_total m => fun x => exists t : Syntax m, denote_fuel fuel' t x
+          end
+      end.
 
-(* Use enough fuel for the level *)
-Definition denote {n : nat} (s : Syntax n) : Alphacarrier -> Prop :=
-  denote_fuel (S n) s.
-  
-  (* A predicate is "in" stage n if some syntax denotes it *)
-  Definition InStage (n : nat) (P : Alphacarrier -> Prop) : Prop :=
-    exists s : Syntax n, forall x, P x <-> denote s x.
-  
-  (* The collection at each stage *)
-  Definition stage_collection (n : nat) : (Alphacarrier -> Prop) -> Prop :=
-    fun P => InStage n P.
-  
-  (* ============================================================ *)
-  (*               The Constructive Gödel Theorem                 *)
-  (* ============================================================ *)
-  
-  (* The totality at each stage *)
-  Definition stage_totality (n : nat) : Alphacarrier -> Prop :=
-    fun x => exists s : Syntax n, denote s x.
-  
-  (* Observation: stage_totality n = totality_of (stage_collection n) *)
-  Lemma stage_totality_is_totality :
-    forall n x,
-    stage_totality n x <-> totality_of (stage_collection n) x.
+    (* Use enough fuel for the level *)
+    Definition denote {n : nat} (s : Syntax n) : Alphacarrier -> Prop :=
+      denote_fuel (S n) s.
+    
+    (* Fuel is monotone - more fuel preserves truth *)
+    Lemma denote_fuel_enough :
+    forall n (s : Syntax n) fuel x,
+    fuel >= S n ->
+    denote_fuel fuel s x <-> denote_fuel (S n) s x.
   Proof.
-    intros n x.
-    unfold stage_totality, totality_of, stage_collection, InStage.
-    split.
-    - intros [s Hs].
-      exists (denote s).
+    intros n s.
+    induction s; intros fuel x Hfuel; simpl.
+    - (* S_omega *)
+      destruct fuel; [lia|]. reflexivity.
+    - (* S_witness *)
+      destruct fuel; [lia|]. reflexivity.
+    - (* S_keep *)
+      destruct fuel; [lia|].
+      apply IHs. lia.
+    - (* S_total *)
+      destruct fuel; [lia|].
+      split; intros [t Ht]; exists t.
+      + (* We have fuel >= S(S n), so fuel-1 >= S n, enough for t : Syntax n *)
+        destruct (le_lt_dec (S n) fuel) as [Hle|Hlt]; [|lia].
+        admit.
+  Admitted.
+        (* rewrite <- IHt in Ht; auto. lia.
+      + (* We have S n fuel, need to show it works with more fuel *)
+        destruct (le_lt_dec (S n) fuel) as [Hle|Hlt]; [|lia].
+        rewrite IHt; auto. lia.
+  Qed. *)
+
+
+    (* Once we have enough fuel, adding more doesn't change semantics *)
+    (* Lemma denote_fuel_stable :
+      forall n (s : Syntax n) x k,
+      k >= S n ->
+      denote s x <-> denote_fuel k s x.
+    Proof.
+      intros n s x k Hk.
+      unfold denote.
       split.
-      + exists s. intros y. reflexivity.
-      + exact Hs.
-    - intros [P [[s Heq] HP]].
+      - intro H. apply denote_fuel_monotone with (S n); auto.
+      - intro H. 
+        (* If it holds with k fuel, it holds with S n fuel *)
+        (* This direction needs the other monotonicity direction *)
+        admit. (* Mirror of above *)
+    Admitted. *)
+
+    (* Keep preserves denotation *)
+    Lemma keep_denote :
+      forall n (s : Syntax n), 
+      forall x, denote (S_keep s) x <-> denote s x.
+    Proof. 
+      intros n s x. 
+      unfold denote, denote_fuel. 
+      simpl. 
+      reflexivity. 
+    Qed.
+
+    (* Total denotes the union *)
+    Lemma total_denote :
+      forall n x, 
+      denote (S_total n) x <-> exists t : Syntax n, denote t x.
+    Proof. 
+      intros n x.
+      unfold denote at 1.
+      simpl.
+      reflexivity.
+    Qed.
+
+    (* The system actually starts with content *)
+    Lemma stage0_has_witness :
+      exists a, denote S_witness a.
+    Proof.
+      destruct alpha_not_empty as [w _].
+      exists w.
+      unfold denote, denote_fuel.
+      simpl.
+      apply AlphaProperties.Core.omega_veil_has_no_witnesses.
+    Qed.
+
+    Lemma stage0_has_distinct_predicates :
+      ~ (forall x, denote S_omega x <-> denote S_witness x).
+    Proof.
+      intro H.
+      destruct alpha_not_empty as [w _].
+      specialize (H w).
+      destruct H as [H1 H2].
+      assert (denote S_witness w).
+      { unfold denote, denote_fuel. simpl.
+        apply AlphaProperties.Core.omega_veil_has_no_witnesses. }
+      apply H2 in H.
+      unfold denote, denote_fuel in H.
+      simpl in H.
+      exact (AlphaProperties.Core.omega_veil_has_no_witnesses w H).
+    Qed.
+
+    (* A predicate is "in" stage n if some syntax denotes it *)
+    Definition InStage (n : nat) (P : Alphacarrier -> Prop) : Prop :=
+      exists s : Syntax n, forall x, P x <-> denote s x.
+    
+    (* The collection at each stage *)
+    Definition stage_collection (n : nat) : (Alphacarrier -> Prop) -> Prop :=
+      fun P => InStage n P.
+    
+    (* ============================================================ *)
+    (*               The Constructive Gödel Theorem                 *)
+    (* ============================================================ *)
+    
+    (* The totality at each stage *)
+    Definition stage_totality (n : nat) : Alphacarrier -> Prop :=
+      fun x => exists s : Syntax n, denote s x.
+    
+    (* Observation: stage_totality n = totality_of (stage_collection n) *)
+    Lemma stage_totality_is_totality :
+      forall n x,
+      stage_totality n x <-> totality_of (stage_collection n) x.
+    Proof.
+      intros n x.
+      unfold stage_totality, totality_of, stage_collection, InStage.
+      split.
+      - intros [s Hs].
+        exists (denote s).
+        split.
+        + exists s. intros y. reflexivity.
+        + exact Hs.
+      - intros [P [[s Heq] HP]].
+        exists s.
+        rewrite <- Heq.
+        exact HP.
+    Qed.
+    
+    (* S_total denotes the totality of the previous stage *)
+    Lemma denote_fuel_S_total : forall fuel n x,
+      fuel > 0 ->
+      denote_fuel fuel (S_total n) x <-> exists t : Syntax n, denote_fuel (pred fuel) t x.
+    Proof.
+      intros fuel n x Hfuel.
+      destruct fuel; [inversion Hfuel|].
+      simpl. reflexivity.
+    Qed.
+
+    Lemma total_denotes_totality :
+      forall n x,
+      denote (S_total n) x <-> stage_totality n x.
+    Proof.
+      intros n x.
+      unfold denote, stage_totality.
+      simpl.
+      reflexivity.
+    Qed.
+    
+    (* But totality at stage n is NOT nameable at stage n *)
+    Theorem totality_not_in_stage :
+      forall n, ~ InStage n (stage_totality n).
+    Proof.
+      intros n [s Heq].
+      (* Use the equivalence to reduce to no_self_totality *)
+      apply (no_self_totality (stage_collection n)).
       exists s.
-      rewrite <- Heq.
-      exact HP.
-  Qed.
-  
-  (* KEY INSIGHT: S_total denotes the totality of the previous stage *)
-  Lemma denote_fuel_S_total : forall fuel n x,
-  fuel > 0 ->
-  denote_fuel fuel (S_total n) x <-> exists t : Syntax n, denote_fuel (pred fuel) t x.
-Proof.
-  intros fuel n x Hfuel.
-  destruct fuel; [inversion Hfuel|].
-  simpl. reflexivity.
-Qed.
+      intros x.
+      rewrite <- stage_totality_is_totality.
+      apply Heq.
+    Qed.
+    
+    (* However, totality at stage n IS nameable at stage S n *)
+    Theorem totality_named_next :
+      forall n, InStage (S n) (stage_totality n).
+    Proof.
+      intros n.
+      exists (S_total n).
+      intros x.
+      apply total_denotes_totality.
+    Qed.
+    
+    (* ============================================================ *)
+    (*                    TIME EMERGES!                             *)
+    (* ============================================================ *)
+    
+    (* The eternal growth: each stage adds something new *)
+    Theorem eternal_novelty :
+      forall n, exists P,
+      InStage (S n) P /\ ~ InStage n P.
+    Proof.
+      intros n.
+      exists (stage_totality n).
+      split.
+      - apply totality_named_next.
+      - apply totality_not_in_stage.
+    Qed.
+    
+    (* The ouroboros: trying to name yourself creates the next moment *)
+    Theorem ouroboros_eternal :
+      forall n,
+      let current := stage_collection n in
+      let attempt := stage_totality n in
+      let next := stage_collection (S n) in
+      ~ InStage n attempt /\ InStage (S n) attempt.
+    Proof.
+      intros n.
+      split.
+      - apply totality_not_in_stage.
+      - apply totality_named_next.
+    Qed.
 
-Lemma total_denotes_totality :
-  forall n x,
-  denote (S_total n) x <-> stage_totality n x.
-Proof.
-  intros n x.
-  unfold denote, stage_totality.
-  simpl.
-  reflexivity.
-Qed.
-  
-  (* But totality at stage n is NOT nameable at stage n *)
-  Theorem totality_not_in_stage :
-  forall n, ~ InStage n (stage_totality n).
-Proof.
-  intros n [s Heq].
-  apply (no_self_totality (stage_collection n)).
-  exists s.
-  intros x.
-  unfold totality_of.
-  split.
-  - intros [P [HP Px]].
-    apply Heq.
-    unfold stage_totality.
-    destruct HP as [s' Hs'].
-    exists s'.
-    rewrite <- Hs'.
-    exact Px.
-  - intro Hsx.
-    apply Heq in Hsx.
-    unfold stage_totality in Hsx.
-    destruct Hsx as [s' Hs'].
-    exists (denote s').
-    split.
-    + exists s'. intros y. reflexivity.
-    + exact Hs'.
-Qed.
-  
-  (* However, totality at stage n IS nameable at stage S n *)
-  Theorem totality_named_next :
-    forall n, InStage (S n) (stage_totality n).
-  Proof.
-    intros n.
-    exists (S_total n).
-    intros x.
-    apply total_denotes_totality.
-  Qed.
-  
-  (* ============================================================ *)
-  (*                    TIME EMERGES!                             *)
-  (* ============================================================ *)
-  
-  (* The eternal growth: each stage adds something new *)
-  Theorem eternal_novelty :
-    forall n, exists P,
-    InStage (S n) P /\ ~ InStage n P.
-  Proof.
-    intros n.
-    exists (stage_totality n).
-    split.
-    - apply totality_named_next.
-    - apply totality_not_in_stage.
-  Qed.
-  
-  (* The ouroboros: trying to name yourself creates the next moment *)
-  Theorem ouroboros_eternal :
-    forall n,
-    let current := stage_collection n in
-    let attempt := stage_totality n in
-    let next := stage_collection (S n) in
-    ~ InStage n attempt /\ InStage (S n) attempt.
-  Proof.
-    intros n.
-    split.
-    - apply totality_not_in_stage.
-    - apply totality_named_next.
-  Qed.
-  
-  (* ============================================================ *)
-  (*              The Constructive Use of Gödel                   *)
-  (* ============================================================ *)
-  
-  Definition constructive_godel_principle : Prop :=
-    forall n : nat,
-    exists (Novel : Alphacarrier -> Prop),
-    (* Novel exists but can't be named at stage n *)
-    ~ InStage n Novel /\
-    (* Adding it creates stage S n *)
-    InStage (S n) Novel /\
-    (* But this creates a new unnameable *)
-    ~ InStage (S n) (stage_totality (S n)).
-  
-  Theorem godel_creates_time :
-    constructive_godel_principle.
-  Proof.
-    intros n.
-    exists (stage_totality n).
-    split; [|split].
-    - apply totality_not_in_stage.
-    - apply totality_named_next.
-    - apply totality_not_in_stage.
-  Qed.
+    (* THE CORE DISCOVERY: Same extension, new syntax *)
+    Lemma totality_pointwise_same_but_new :
+      forall n,
+      (* Extensionally the same *)
+      (forall x, stage_totality (S n) x <-> stage_totality n x) /\
+      (* But intensionally different *)
+      ~ InStage n (stage_totality n) /\
+      InStage (S n) (stage_totality n).
+    Proof.
+      intros n.
+      split; [|split].
+      - (* Pointwise equivalence *)
+        intros x.
+        unfold stage_totality.
+        split.
+        + (* S n -> n *)
+          intros [s Hs].
+          (* Use refine with convoy pattern *)
+          refine (match s as s' in Syntax m 
+                  return m = S n -> denote s' x -> exists t : Syntax n, denote t x
+                  with
+                  | S_omega => fun Heq => _
+                  | S_witness => fun Heq => _
+                  | @S_keep n' s' => fun Heq => _
+                  | @S_total n' => fun Heq => _
+                  end eq_refl Hs).
+          * (* S_omega: impossible *)
+            discriminate Heq.
+          * (* S_witness: impossible *)
+            discriminate Heq.
+          * (* S_keep *)
+            intros H_denote.
+            injection Heq; intro H'. subst n'.
+            exists s'. simpl in H_denote. exact H_denote.
+          * (* S_total *)
+            intros H_denote.
+            injection Heq; intro H'. subst n'.
+            simpl in H_denote. exact H_denote.
+        + (* n -> S n *)
+          intros [s Hs].
+          exists (S_keep s).
+          simpl. exact Hs.
+      - (* Not nameable at n *)
+        apply totality_not_in_stage.
+      - (* Nameable at S n *)
+        apply totality_named_next.
+    Qed.
 
-End GodelProcess.
+    (* Corollary: This is why time exists *)
+    Theorem extensional_same_intensional_new :
+      forall n,
+      let T_n := stage_totality n in
+      let T_Sn := stage_totality (S n) in
+      (* Same witnesses *)
+      (forall x, T_Sn x <-> T_n x) /\
+      (* But T_n becomes newly expressible *)
+      (exists s : Syntax (S n), forall x, T_n x <-> denote s x) /\
+      (~ exists s : Syntax n, forall x, T_n x <-> denote s x).
+    Proof.
+      intros n.
+      pose proof (totality_pointwise_same_but_new n) as [Heq [Hnot Hin]].
+      split; [exact Heq|split].
+      - exact Hin.
+      - exact Hnot.
+    Qed.
+    
+    (* ============================================================ *)
+    (*              The Constructive Use of Gödel                   *)
+    (* ============================================================ *)
+    
+    Definition constructive_godel_principle : Prop :=
+      forall n : nat,
+      exists (Novel : Alphacarrier -> Prop),
+      (* Novel exists but can't be named at stage n *)
+      ~ InStage n Novel /\
+      (* Adding it creates stage S n *)
+      InStage (S n) Novel /\
+      (* But this creates a new unnameable *)
+      ~ InStage (S n) (stage_totality (S n)).
+    
+    Theorem godel_creates_time :
+      constructive_godel_principle.
+    Proof.
+      intros n.
+      exists (stage_totality n).
+      split; [|split].
+      - apply totality_not_in_stage.
+      - apply totality_named_next.
+      - apply totality_not_in_stage.
+    Qed.
+  End GodelProcess.
   
 End ConstructiveGodel_v3.
+
+
+Module NoSelfTotalityViaGodel.
+  (* Import the Godel machinery *)
+  Import ConstructiveGodel_v3.
+  Section NoSelfTotalityConstruction.
+    Context {Alpha : AlphaType}.
+    
+    
+    (* General totality for any collection *)
+    Definition totality_of (C : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
+      fun x => exists P, C P /\ P x.
+    
+    (* A collection is stage-equivalent if it corresponds to some stage *)
+    Definition StageEquivalent (C : (Alphacarrier -> Prop) -> Prop) : Prop :=
+      exists n : nat,
+      forall P, C P <-> @InStage Alpha n P.
+    
+    (* Bridge lemma: totalities match for stage-equivalent collections *)
+    Lemma totality_matches_stage :
+      forall n C,
+      (forall P, C P <-> @InStage Alpha n P) ->
+      forall x, totality_of C x <-> @stage_totality Alpha n x.
+    Proof.
+      intros n C H_equiv x.
+      unfold totality_of, stage_totality.
+      split.
+      - (* totality_of C -> stage_totality n *)
+        intros [P [HCP HPx]].
+        (* C P means InStage n P *)
+        apply H_equiv in HCP.
+        destruct HCP as [s Hs].
+        exists s.
+        rewrite <- Hs.
+        exact HPx.
+      - (* stage_totality n -> totality_of C *)
+        intros [s Hsx].
+        exists (@denote Alpha n s).
+        split.
+        + (* Show denote s is in C *)
+          apply H_equiv.
+          exists s.
+          intros y. reflexivity.
+        + exact Hsx.
+    Qed.
+    
+    (* Main theorem: stage-equivalent collections can't self-contain *)
+    Theorem stage_equivalent_no_self_totality :
+      forall C : (Alphacarrier -> Prop) -> Prop,
+      StageEquivalent C ->
+      ~ C (totality_of C).
+    Proof.
+      intros C [n H_equiv] H_self.
+      
+      (* C contains its totality *)
+      assert (H_in_stage: @InStage Alpha n (totality_of C)).
+      { apply H_equiv. exact H_self. }
+      
+      (* But totality_of C equals stage_totality n *)
+      assert (H_eq: forall x, totality_of C x <-> @stage_totality Alpha n x).
+      { apply totality_matches_stage. exact H_equiv. }
+      
+      (* So we have InStage n (stage_totality n) *)
+      destruct H_in_stage as [s Hs].
+      assert (@InStage Alpha n (@stage_totality Alpha n)).
+      { exists s. 
+        intros x. 
+        rewrite <- H_eq.
+        exact (Hs x). }
+      
+      (* But this contradicts totality_not_in_stage *)
+      exact (@totality_not_in_stage Alpha n H).
+    Qed.
+    
+    (* The axiom: all collections are stage-equivalent 
+      This is the part we can't prove yet, but it's philosophically reasonable:
+      any mathematical collection should be describable at some stage *)
+    Axiom all_collections_are_stage_equivalent :
+      forall C : (Alphacarrier -> Prop) -> Prop,
+      StageEquivalent C.
+    
+    (* Final theorem: no collection contains its totality *)
+    Theorem no_self_totality :
+      forall C : (Alphacarrier -> Prop) -> Prop,
+      ~ C (totality_of C).
+    Proof.
+      intros C.
+      apply stage_equivalent_no_self_totality.
+      apply all_collections_are_stage_equivalent.
+    Qed.
+    
+    (* Bonus: show this matches the original formulation *)
+    Theorem no_self_totality_alt :
+      forall coll : (Alphacarrier -> Prop) -> Prop,
+      ~ coll (fun x => exists P, coll P /\ P x).
+    Proof.
+      intros coll.
+      apply no_self_totality.
+    Qed.
+    
+  End NoSelfTotalityConstruction.
+End NoSelfTotalityViaGodel.
