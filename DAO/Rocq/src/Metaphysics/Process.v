@@ -1255,109 +1255,147 @@ Module ConstructiveGodel_v3.
 End ConstructiveGodel_v3.
 
 
-Module NoSelfTotalityViaGodel.
-  (* Import the Godel machinery *)
-  Import ConstructiveGodel_v3.
-  Section NoSelfTotalityConstruction.
-    Context {Alpha : AlphaType}.
-    
-    (* General totality for any collection *)
-    Definition totality_of (C : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
-      fun x => exists P, C P /\ P x.
-    
-    (* A collection is stage-equivalent if it corresponds to some stage *)
-    Definition StageEquivalent (C : (Alphacarrier -> Prop) -> Prop) : Prop :=
-      exists n : nat,
-      forall P, C P <-> @InStage Alpha n P.
-    
-    (* Bridge lemma: totalities match for stage-equivalent collections *)
-    Lemma totality_matches_stage :
-      forall n C,
-      (forall P, C P <-> @InStage Alpha n P) ->
-      forall x, totality_of C x <-> @stage_totality Alpha n x.
-    Proof.
-      intros n C H_equiv x.
-      unfold totality_of, stage_totality.
+Module Derive_NoSelfTotality.
+Section Setup.
+  Context {Alpha : AlphaType}.
+
+  (* Mild richness: two distinguishable points *)
+  Variables (a b : Alphacarrier).
+  Hypothesis a_neq_b : a <> b.
+
+  (* -------- Core syntax: PRESENT collection at each stage -------- *)
+  Inductive Core : nat -> Type :=
+  | C0_a  : Core 0
+  | C0_b  : Core 0
+  | C_keep : forall n, Core n -> Core (S n).
+
+  (* Denotation of core tags *)
+  Fixpoint denote_core {n:nat} (c:Core n) : Alphacarrier -> Prop :=
+    match c with
+    | C0_a        => fun x => x = a
+    | C0_b        => fun x => x = b
+    | C_keep _ c' => denote_core c'
+    end.
+
+  (* Present collection at stage n *)
+  Definition InStage (n:nat) (P:Alphacarrier -> Prop) : Prop :=
+    exists c:Core n, forall x, P x <-> denote_core c x.
+
+  (* Totality of the present collection (union of Core n denotations) *)
+  Definition totality_of_stage (n:nat) : Alphacarrier -> Prop :=
+    fun x => exists c:Core n, denote_core c x.
+
+  (* Monotonicity of the present collection *)
+  Lemma stage_monotone :
+    forall n P, InStage n P -> InStage (S n) P.
+  Proof.
+    intros n P [c Hc]. exists (C_keep n c). intro x; simpl; apply Hc.
+  Qed.
+
+
+Lemma fresh_at_level :
+    forall n (c:Core n), exists x, totality_of_stage n x /\ ~ denote_core c x.
+  Proof.
+    fix IH 2.  (* Structural recursion on the second argument (c) *)
+    intros n c.
+    destruct c.
+    - (* c = C0_a *)
+      exists b. split.
+      + exists C0_b. simpl. reflexivity.
+      + simpl. intro Hb. apply a_neq_b. symmetry. exact Hb.
+    - (* c = C0_b *)
+      exists a. split.
+      + exists C0_a. simpl. reflexivity.
+      + simpl. intro Ha. apply a_neq_b. exact Ha.
+    - (* c = C_keep n c *)
+      destruct (IH n c) as [x [Hin Hnot]].
+      exists x. split.
+      + destruct Hin as [d Hd].
+        exists (C_keep n d).
+        simpl. exact Hd.
+      + simpl. exact Hnot.
+  Qed.
+
+
+  (* ---------- Collection-as-predicate style and the theorem ---------- *)
+
+  (* Present collection as a predicate on predicates *)
+  Definition stage_collection (n:nat) : (Alphacarrier -> Prop) -> Prop :=
+    fun P => InStage n P.
+
+  (* Usual totality-of-collection operator *)
+  Definition totality_of (C : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
+    fun x => exists P, C P /\ P x.
+
+  (* Bridge: “union via Core” equals “totality_of (stage_collection)” *)
+  Lemma stage_total_vs_collection_total :
+    forall n x, totality_of_stage n x <-> totality_of (stage_collection n) x.
+  Proof.
+    intros n x; split.
+    - intros [c Hc]. exists (denote_core c). split.
+      + now (exists c).
+      + exact Hc.
+    - intros [P [[c Hc] HP]]. exists c. rewrite <- Hc. exact HP.
+  Qed.
+
+  (* Main theorem: NO SELF-TOTALITY for the present collection at each stage *)
+  Theorem no_self_totality_derived :
+    forall n, ~ stage_collection n (totality_of (stage_collection n)).
+  Proof.
+    intros n [c Heq]. (* assume totality is present as some core tag c *)
+    destruct (fresh_at_level n c) as [x [Hin Hnot]].
+    specialize (Heq x). destruct Heq as [H1 H2].
+    apply Hnot. apply H1. rewrite <- stage_total_vs_collection_total. exact Hin.
+  Qed.
+
+  (* ---------- Optional: show the NEXT stage can NAME the totality ---------- *)
+
+  (* Next-stage naming syntax (not part of present collection): *)
+  Inductive Syn : nat -> Type :=
+  | S_core  : forall n, Core n -> Syn n
+  | S_total : forall n, Syn (S n).  (* new name for totality_at_stage n *)
+
+  Definition denote_syn {n} (s:Syn n) : Alphacarrier -> Prop :=
+    match s with
+    | S_core _ c => denote_core c
+    | S_total n  => fun x => totality_of_stage n x
+    end.
+
+  Lemma totality_nameable_next :
+    forall n, exists s:Syn (S n), forall x,
+      denote_syn s x <-> totality_of_stage n x.
+  Proof.
+    intro n. exists (S_total n). intro x. split; auto.
+  Qed.
+
+  (* The “growth” corollary: new (nameable) predicate not in the present collection *)
+  Corollary novelty :
+    forall n, exists P, (* P is the old totality *)
+      (exists s:Syn (S n), forall x, P x <-> denote_syn s x) /\
+      ~ InStage n P.
+  Proof.
+    intro n. exists (totality_of_stage n).
+    split.
+    - (* Need to flip the biconditional from totality_nameable_next *)
+      destruct (totality_nameable_next n) as [s Hs].
+      exists s. intro x. 
+      specialize (Hs x).
       split.
-      - (* totality_of C -> stage_totality n *)
-        intros [P [HCP HPx]].
-        (* C P means InStage n P *)
-        apply H_equiv in HCP.
-        destruct HCP as [s Hs].
-        exists s.
-        rewrite <- Hs.
-        exact HPx.
-      - (* stage_totality n -> totality_of C *)
-        intros [s Hsx].
-        exists (@denote Alpha n s).
-        split.
-        + (* Show denote s is in C *)
-          apply H_equiv.
-          exists s.
-          intros y. reflexivity.
-        + exact Hsx.
-    Qed.
-    
-    (* Main theorem: stage-equivalent collections can't self-contain *)
-    Theorem stage_equivalent_no_self_totality :
-      forall C : (Alphacarrier -> Prop) -> Prop,
-      StageEquivalent C ->
-      ~ C (totality_of C).
-    Proof.
-      intros C [n H_equiv] H_self.
-      
-      (* C contains its totality *)
-      assert (H_in_stage: @InStage Alpha n (totality_of C)).
-      { apply H_equiv. exact H_self. }
-      
-      (* But totality_of C equals stage_totality n *)
-      assert (H_eq: forall x, totality_of C x <-> @stage_totality Alpha n x).
-      { apply totality_matches_stage. exact H_equiv. }
-      
-      (* So we have InStage n (stage_totality n) *)
-      destruct H_in_stage as [s Hs].
-      assert (@InStage Alpha n (@stage_totality Alpha n)).
-      { exists s. 
-        intros x. 
-        rewrite <- H_eq.
-        exact (Hs x). }
-      
-      (* But this contradicts totality_not_in_stage *)
-      exact (@totality_not_in_stage Alpha n H).
-    Qed.
-    
-    (* Axiom: all collections are stage-equivalent 
-      This is the part we can't prove yet, but it's philosophically reasonable:
-      any mathematical collection should be describable at some stage *)
-    (* Another way to think of it: Mathematics isn't eternally "out there" (Platonism)
-       - it's dynamically constructed by escaping impossibility. Or, you might think of
-       it as: the omega_veil principle applies both physically and mathematically, so
-       physics and math are tightly coupled in their dynamic resolution. *)
-    Axiom all_collections_are_stage_equivalent :
-      forall C : (Alphacarrier -> Prop) -> Prop,
-      StageEquivalent C.
-    
-    (* Final theorem: no collection contains its totality *)
-    Theorem no_self_totality :
-      forall C : (Alphacarrier -> Prop) -> Prop,
-      ~ C (totality_of C).
-    Proof.
-      intros C.
-      apply stage_equivalent_no_self_totality.
-      apply all_collections_are_stage_equivalent.
-    Qed.
-    
-    (* Bonus: show this matches the original formulation *)
-    Theorem no_self_totality_alt :
-      forall coll : (Alphacarrier -> Prop) -> Prop,
-      ~ coll (fun x => exists P, coll P /\ P x).
-    Proof.
-      intros coll.
-      apply no_self_totality.
-    Qed.
-    
-  End NoSelfTotalityConstruction.
-End NoSelfTotalityViaGodel.
+      + apply (proj2 Hs).
+      + apply (proj1 Hs).
+    - intro Hin. (* contradicts no_self_totality *)
+      apply (no_self_totality_derived n).
+      unfold stage_collection.
+      (* Need to show InStage n (totality_of (stage_collection n)) *)
+      destruct Hin as [c Hc].
+      exists c. intro x.
+      rewrite <- stage_total_vs_collection_total.
+      apply Hc.
+  Qed.
+
+End Setup.
+End Derive_NoSelfTotality.
+
 
 
 Module EmergentGenerative.
@@ -1372,7 +1410,7 @@ Section Construction.
   Definition totality_of (coll : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
     fun x => exists P, coll P /\ P x.
   
-  (* The ONLY axiom we need *)
+  (* This axiom actually isn't true - we need to change it to our new constructed theorem about self totality *)
   Axiom no_self_totality : 
     forall coll, ~ coll (totality_of coll).
   

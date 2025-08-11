@@ -49,12 +49,6 @@ Qed.
 
 Parameter strictly_larger : Type -> Type -> Prop.
 
-(* Intuition: X strictly larger than Y means there is no injective mapping from X into Y *)
-Axiom strictly_larger_no_injection :
-  forall (X Y : Type),
-    strictly_larger X Y ->
-      ~ exists (f : X -> Y), (forall x1 x2, f x1 = f x2 -> x1 = x2).
-
 (* Theorem: Omega is larger than GenerativeType *)
 Theorem omega_larger_than_gen :
   forall (Alpha : AlphaType) (HG : GenerativeType Alpha)
