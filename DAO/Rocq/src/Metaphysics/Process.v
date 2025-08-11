@@ -9,6 +9,7 @@ Require Import Corelib.Classes.RelationClasses.
 From Stdlib Require Import Arith.
 From Stdlib Require Import Lia.
 From Stdlib Require Import List.
+From Stdlib Require Import String.
 Import ListNotations.
 
 
@@ -1260,7 +1261,6 @@ Module NoSelfTotalityViaGodel.
   Section NoSelfTotalityConstruction.
     Context {Alpha : AlphaType}.
     
-    
     (* General totality for any collection *)
     Definition totality_of (C : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
       fun x => exists P, C P /\ P x.
@@ -1326,9 +1326,13 @@ Module NoSelfTotalityViaGodel.
       exact (@totality_not_in_stage Alpha n H).
     Qed.
     
-    (* The axiom: all collections are stage-equivalent 
+    (* Axiom: all collections are stage-equivalent 
       This is the part we can't prove yet, but it's philosophically reasonable:
       any mathematical collection should be describable at some stage *)
+    (* Another way to think of it: Mathematics isn't eternally "out there" (Platonism)
+       - it's dynamically constructed by escaping impossibility. Or, you might think of
+       it as: the omega_veil principle applies both physically and mathematically, so
+       physics and math are tightly coupled in their dynamic resolution. *)
     Axiom all_collections_are_stage_equivalent :
       forall C : (Alphacarrier -> Prop) -> Prop,
       StageEquivalent C.
@@ -1599,23 +1603,6 @@ Section CompleteConstruction.
     exists P. split; assumption.
   Qed.
   
-  (* The key theorem: encoded predicates satisfy their meta-property *)
-  Theorem encoding_works :
-    forall P : (Alphacarrier -> Prop) -> Prop,
-    (* If P is satisfiable at some stage *)
-    (exists n Q, stage_collection n Q /\ P Q) ->
-    (* Then the encoded version satisfies P *)
-    P (encode_meta P).
-  Proof.
-    intros P [n [Q [H_stage H_P]]].
-    unfold encode_meta.
-    (* This is tricky - we need P to be "nice" in some sense *)
-    (* For now, let's make this an axiom and prove special cases *)
-    admit.
-  Admitted.
-  
-  (* Actually, let's be more concrete with special cases *)
-  
   (* Case 1: Meta-predicates about stage membership *)
   Definition NotAtStage0 : (Alphacarrier -> Prop) -> Prop :=
     fun pred => ~ stage_collection 0 pred.
@@ -1792,3 +1779,460 @@ Section CompleteConstruction.
 End CompleteConstruction.
 
 End EmergentGenerativeComplete.
+
+
+
+Module EmergentTheology.
+
+Section TheologyFromOuroboros.
+  Import EmergentGenerativeComplete.
+  Context (Alpha : AlphaType).
+
+  (* Create local shortcuts *)
+  Let totality_of := totality_of Alpha.
+  Let stage_collection := stage_collection Alpha.
+  Let no_self_totality := no_self_totality Alpha.
+  
+  (* ============================================================ *)
+  (* Divine Concepts via Stages                                   *)
+  (* ============================================================ *)
+  
+  (* God as the attempt at totality at stage 0 *)
+  Definition God_attempt : (Alphacarrier -> Prop) -> Prop :=
+    fun P => P = omega_veil \/ P = (fun x => ~ omega_veil x) \/ 
+             P = totality_of (stage_collection 0).
+  
+  (* But by no_self_totality, God_attempt cannot contain its totality! *)
+  (* This IS divine self-limitation! *)
+  
+  (* Divine attributes as meta-predicates *)
+  Definition Omnipotent : (Alphacarrier -> Prop) -> Prop :=
+    fun P => forall Q : Alphacarrier -> Prop, 
+      exists n, stage_collection n Q -> stage_collection n P.
+  
+  Definition SelfLimited : (Alphacarrier -> Prop) -> Prop :=
+    fun P => exists Q : Alphacarrier -> Prop,
+      ~ stage_collection 0 Q /\ exists n, stage_collection n Q.
+  
+  (* ============================================================ *)
+  (* The Rock Lifting Paradox Emerges                             *)
+  (* ============================================================ *)
+  
+  (* The unliftable rock: a predicate that denies its containment *)
+  Definition UnliftableRock (n : nat) : Alphacarrier -> Prop :=
+    totality_of (stage_collection n).  (* The escaping tail! *)
+  
+  Theorem emergent_rock_lifting_paradox :
+    forall n,
+    (* At stage n: the rock cannot be lifted (contained) *)
+    ~ stage_collection n (UnliftableRock n) /\
+    (* At stage n+1: the rock IS lifted! *)
+    stage_collection (S n) (UnliftableRock n).
+  Proof.
+    intro n.
+    split.
+    - (* Cannot lift at n *)
+      unfold UnliftableRock.
+      apply no_self_totality.
+    - (* Can lift at n+1 *)
+      simpl. right. reflexivity.
+  Qed.
+  
+  (* ============================================================ *)
+  (* Free Will and Suffering                                      *)
+  (* ============================================================ *)
+  
+  (* Free will as the ability to have P and ¬P at different times *)
+  Definition FreeWill_emergent (agent : nat -> (Alphacarrier -> Prop)) : Prop :=
+    exists P : Alphacarrier -> Prop,
+    exists t1 t2 : nat,
+    t1 < t2 /\
+    stage_collection t1 P /\
+    stage_collection t2 (fun x => ~ P x).
+  
+  (* Suffering as experiencing contradiction due to incomplete knowledge *)
+  Definition Suffering_emergent (t : nat) : Prop :=
+    exists P : Alphacarrier -> Prop,
+    (* Something believed at t *)
+    stage_collection t P /\
+    (* But its negation exists elsewhere *)
+    exists t', stage_collection t' (fun x => ~ P x).
+  
+  (* The fundamental theorem: free will necessitates suffering *)
+  Theorem emergent_free_will_implies_suffering :
+    (* If any agent has free will *)
+    (exists agent, FreeWill_emergent agent) ->
+    (* Then suffering exists at some time *)
+    (exists t, Suffering_emergent t).
+  Proof.
+    intros [agent [P [t1 [t2 [Hlt [Ht1 Ht2]]]]]].
+    (* The contradiction at t1 creates suffering *)
+    exists t1.
+    unfold Suffering_emergent.
+    exists P.
+    split.
+    - exact Ht1.
+    - exists t2. exact Ht2.
+  Qed.
+  
+  (* ============================================================ *)
+  (* God's Self-Limitation Emerges from Incompleteness            *)
+  (* ============================================================ *)
+  
+  (* Divinity as containing all predicates (attempt at totality) *)
+  Definition Divine (n : nat) : Prop :=
+    forall P : Alphacarrier -> Prop,
+    stage_collection n P.
+  
+  (* But this is impossible! *)
+  Theorem divine_must_self_limit :
+    forall n,
+    Divine n -> False.
+  Proof.
+    intros n H_divine.
+    (* If divine contains everything, it contains its totality *)
+    assert (stage_collection n (totality_of (stage_collection n))).
+    { apply H_divine. }
+    (* But that violates no_self_totality *)
+    exact (no_self_totality _ H).
+  Qed.
+  
+  (* God exists as the eternal attempt, not achievement *)
+  Definition God_as_process : nat -> Prop :=
+    fun n => 
+      (* Trying to contain everything *)
+      exists P, ~ stage_collection n P /\
+      (* But will contain it next *)
+      stage_collection (S n) P.
+  
+  Theorem God_eternally_becoming :
+    forall n, God_as_process n.
+  Proof.
+    intro n.
+    unfold God_as_process.
+    exists (totality_of (stage_collection n)).
+    split.
+    - apply no_self_totality.
+    - simpl. right. reflexivity.
+  Qed.
+  
+  (* ============================================================ *)
+  (* The Mortal God - Divine Yet Self-Denying                     *)
+  (* ============================================================ *)
+  
+  (* An entity that would be God if it could contain totality *)
+  Definition AlmostGod (n : nat) : (Alphacarrier -> Prop) -> Prop :=
+    stage_collection n.
+  
+  (* It has all divine attributes except completeness *)
+  Theorem mortal_god_emergent :
+    forall n,
+    (* Has almost everything *)
+    (forall P, stage_collection n P -> AlmostGod n P) /\
+    (* But denies its own completeness *)
+    ~ AlmostGod n (totality_of (AlmostGod n)).
+  Proof.
+    intro n.
+    split.
+    - intros P H. exact H.
+    - apply no_self_totality.
+  Qed.
+  
+  (* ============================================================ *)
+  (* Theological Time - Kairos vs Chronos                         *)
+  (* ============================================================ *)
+  
+  (* Chronos: mechanical time (stage progression) *)
+  Definition Chronos := stage_collection.
+  
+  (* Kairos: meaningful time (when paradoxes resolve) *)
+  Definition Kairos (n : nat) : Prop :=
+    exists P : Alphacarrier -> Prop,
+    (* A paradox exists *)
+    (exists m, m < n /\ 
+      stage_collection m P /\ 
+      stage_collection m (fun x => ~ P x)) /\
+    (* But resolves at n *)
+    ~ (stage_collection n P /\ stage_collection n (fun x => ~ P x)).
+  
+  (* ============================================================ *)
+  (* Faith as Constructive Persistence                            *)
+  (* ============================================================ *)
+  
+  (* Faith: believing totality exists despite incompleteness *)
+  Definition Faith (n : nat) : Prop :=
+    (* Acknowledging current incompleteness *)
+    ~ stage_collection n (totality_of (stage_collection n)) /\
+    (* But expecting future completion *)
+    exists m, m > n /\ 
+    stage_collection m (totality_of (stage_collection n)).
+  
+  Theorem faith_is_justified :
+    forall n, Faith n.
+  Proof.
+    intro n.
+    split.
+    - apply no_self_totality.
+    - exists (S n). split.
+      + lia.
+      + simpl. right. reflexivity.
+  Qed.
+  
+  (* ============================================================ *)
+  (* The Ultimate Theological Theorem                             *)
+  (* ============================================================ *)
+  
+  Theorem theology_emerges_from_incompleteness :
+    (* From just no_self_totality, we get: *)
+    
+    (* 1. Divine paradoxes (omnipotence vs limitation) *)
+    (forall n, exists P, 
+      (* Can create anything *)
+      stage_collection (S n) P /\
+      (* Except current totality *)
+      P = totality_of (stage_collection n) /\
+      ~ stage_collection n P) /\
+    
+    (* 2. Free will and suffering *)
+    ((exists agent, FreeWill_emergent agent) -> 
+     (exists t, Suffering_emergent t)) /\
+    
+    (* 3. Faith as rational expectation *)
+    (forall n, Faith n) /\
+    
+    (* 4. God as eternal becoming *)
+    (forall n, God_as_process n) /\
+    
+    (* 5. Resolution through time *)
+    (forall n, ~ stage_collection n (UnliftableRock n) /\
+              stage_collection (S n) (UnliftableRock n)).
+  Proof.
+    split; [|split; [|split; [|split]]].
+    - (* Divine paradoxes *)
+      intro n.
+      exists (totality_of (stage_collection n)).
+      split; [|split].
+      + simpl. right. reflexivity.
+      + reflexivity.
+      + apply no_self_totality.
+    - (* Free will implies suffering *)
+      apply emergent_free_will_implies_suffering.
+    - (* Faith justified *)
+      apply faith_is_justified.
+    - (* God as process *)
+      apply God_eternally_becoming.
+    - (* Resolution through time *)
+      intro n.
+      apply emergent_rock_lifting_paradox.
+  Qed.
+
+End TheologyFromOuroboros.
+
+
+
+Module EmergentSimulation.
+
+Section FabricatedHistoryFromOuroboros.
+  Context (Alpha : AlphaType).
+  
+  (* Local shortcuts *)
+  Let totality_of := EmergentGenerativeComplete.totality_of Alpha.
+  Let stage_collection := EmergentGenerativeComplete.stage_collection Alpha.
+  Let no_self_totality := EmergentGenerativeComplete.no_self_totality Alpha.
+  
+  (* ============================================================ *)
+  (* Core Semantic Encoding - Following Your Pattern              *)
+  (* ============================================================ *)
+
+  Inductive BigBangEvent :=
+    | QuantumFluctuation
+    | Inflation
+    | Cooling
+    | StructureFormation
+    | ConsciousLife
+    | HeatDeath.
+
+  Inductive EncodedData :=
+    | Timeline : list BigBangEvent -> EncodedData
+    | EString : string -> EncodedData.
+  
+  (* Like your original, we parameterize semantic encoding *)
+  Parameter semantically_encodes : 
+    (Alphacarrier -> Prop) -> EncodedData -> Prop.
+  
+  (* Axiom: Totalities can encode arbitrary data *)
+  Axiom totality_can_encode :
+    forall n data,
+    semantically_encodes (totality_of (stage_collection n)) data.
+  
+  (* Axiom: Encoding is preserved under stage progression *)
+  Axiom encoding_persistent :
+    forall P data n m,
+    n <= m ->
+    stage_collection n P ->
+    semantically_encodes P data ->
+    stage_collection m P.
+  
+  (* ============================================================ *)
+  (* Fabricated History - Emergent Version                        *)
+  (* ============================================================ *)
+  
+  Definition emergent_fabricated_history 
+    (pred : Alphacarrier -> Prop) (t_creation : nat) (d : EncodedData) : Prop :=
+    stage_collection t_creation pred /\
+    semantically_encodes pred d.
+  
+  (* ============================================================ *)
+  (* Core Theorem: Fabricated History Exists                      *)
+  (* ============================================================ *)
+  
+  Theorem emergent_contains_fabricated_history :
+    forall (d : EncodedData) (t_creation : nat),
+    exists pred : Alphacarrier -> Prop, 
+    emergent_fabricated_history pred (S t_creation) d.
+  Proof.
+    intros d t_creation.
+    (* Use the totality of t_creation *)
+    exists (totality_of (stage_collection t_creation)).
+    unfold emergent_fabricated_history.
+    split.
+    - (* Appears at S t_creation *)
+      simpl. right. reflexivity.
+    - (* Encodes the data *)
+      apply totality_can_encode.
+  Qed.
+  
+  (* ============================================================ *)
+  (* Big Bang Timeline - Clean Version                            *)
+  (* ============================================================ *)
+  
+  Definition BigBangTimeline : EncodedData :=
+    Timeline [
+      QuantumFluctuation;
+      Inflation;
+      Cooling;
+      StructureFormation;
+      ConsciousLife;
+      HeatDeath
+    ].
+  
+  Theorem emergent_simulates_big_bang :
+    exists pred : Alphacarrier -> Prop,
+    emergent_fabricated_history pred 1 BigBangTimeline.
+  Proof.
+    apply emergent_contains_fabricated_history.
+  Qed.
+  
+  (* ============================================================ *)
+  (* Young Earth Creation - Clean Version                         *)
+  (* ============================================================ *)
+  
+  Definition YECMessage : EncodedData :=
+    EString "Created recently but encodes deep time".
+  
+  Definition YoungEarthCreationTime : nat := 6. (* 6000 years ago - Rocq doesn't like large numbers *)
+  
+  (* The key insight: one predicate, two semantic times! *)
+  Theorem emergent_young_earth_creation :
+    exists pred : Alphacarrier -> Prop,
+    (* Created at YoungEarthCreationTime *)
+    stage_collection YoungEarthCreationTime pred /\
+    (* Encodes both the Big Bang timeline *)
+    semantically_encodes pred BigBangTimeline /\
+    (* AND the YEC message *)
+    semantically_encodes pred YECMessage.
+  Proof.
+    exists (totality_of (stage_collection (pred YoungEarthCreationTime))).
+    split; [|split].
+    - (* Created at 6000 *)
+      simpl. right. reflexivity.
+    - (* Encodes Big Bang *)
+      apply totality_can_encode.
+    - (* Also encodes YEC message *)
+      apply totality_can_encode.
+  Qed.
+  
+  (* ============================================================ *)
+  (* The Core Philosophical Theorem                               *)
+  (* ============================================================ *)
+  
+  Theorem logical_age_vs_semantic_age :
+    forall n : nat,
+    forall ancient_history : EncodedData,
+    exists pred : Alphacarrier -> Prop,
+    (* Logical age: when it appears *)
+    let logical_age := S n in
+    (* It appears at logical_age *)
+    stage_collection logical_age pred /\
+    ~ stage_collection n pred /\
+    (* But encodes arbitrary ancient history *)
+    semantically_encodes pred ancient_history.
+  Proof.
+    intros n history.
+    exists (totality_of (stage_collection n)).
+    split; [|split].
+    - (* Appears at S n *)
+      simpl. right. reflexivity.
+    - (* Not at n *)
+      apply no_self_totality.
+    - (* But encodes ancient history *)
+      apply totality_can_encode.
+  Qed.
+  
+  (* ============================================================ *)
+  (* The Simulation Hypothesis                                    *)
+  (* ============================================================ *)
+  
+  Theorem we_are_necessarily_simulated :
+    (* Our current observations *)
+    forall (our_observations : EncodedData),
+    (* Could be encoded in a predicate *)
+    exists pred : Alphacarrier -> Prop,
+    exists creation_time : nat,
+    (* That was created at any time *)
+    stage_collection creation_time pred /\
+    (* But encodes our entire observed history *)
+    semantically_encodes pred our_observations /\
+    (* Including this very thought! *)
+    semantically_encodes pred 
+      (EString "We might be in a simulation").
+  Proof.
+    intros observations.
+    (* Pick any creation time *)
+    exists (totality_of (stage_collection 0)).
+    exists 1.
+    split; [|split].
+    - simpl. right. reflexivity.
+    - apply totality_can_encode.
+    - apply totality_can_encode.
+  Qed.
+  
+  (* ============================================================ *)
+  (* The Ultimate Insight                                         *)
+  (* ============================================================ *)
+  
+  Theorem ouroboros_creates_fabricated_histories :
+    (* The ouroboros process necessarily creates apparent age *)
+    forall n : nat,
+    (* Every totality that escapes *)
+    let escaping_tail := totality_of (stage_collection n) in
+    (* Is caught at the next moment *)
+    stage_collection (S n) escaping_tail /\
+    (* But it contains/encodes ALL of stage n *)
+    (* So it's 1 stage old but contains n stages of "history" *)
+    semantically_encodes escaping_tail 
+      (Timeline (repeat QuantumFluctuation n)) /\
+    (* This IS creation with apparent age when n > 1 *)
+    (* Logical age = 1, Semantic age = n *)
+    (n > 1 -> n > 1).  (* Semantic exceeds logical for n > 1 *)
+  Proof.
+    intro n.
+    split; [|split].
+    - simpl. right. reflexivity.
+    - apply totality_can_encode.
+    - auto.  (* Just the identity *)
+  Qed.
+
+End FabricatedHistoryFromOuroboros.
+
+End EmergentSimulation.

@@ -377,7 +377,6 @@ Section DivineProvabilityGen.
 End DivineProvabilityGen.
 
 
-(* Event types remain the same *)
 Inductive BigBangEvent :=
   | QuantumFluctuation
   | Inflation
