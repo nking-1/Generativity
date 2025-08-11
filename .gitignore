@@ -163,3 +163,8 @@ cython_debug/
 
 .DS_Store
 .lia.cache
+
+# Ignore all files without extension in Haskell directory
+DAO/Haskell/*
+!DAO/Haskell/*/
+!DAO/Haskell/*.*
