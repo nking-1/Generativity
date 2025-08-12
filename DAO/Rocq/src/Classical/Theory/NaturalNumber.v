@@ -155,8 +155,6 @@ Module NaturalNumbers.
     
     (** We axiomatize a specific zero element *)
     Axiom zero : Alphacarrier.
-    Axiom zero_is_zero : IsZero zero.
-    Axiom zero_is_nat : IsNat zero.
     
   End Definitions.
 

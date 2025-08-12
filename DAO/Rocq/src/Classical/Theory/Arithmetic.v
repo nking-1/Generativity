@@ -26,9 +26,6 @@ Module Arithmetic.
         (forall z, IsZero z -> P z) ->
         (forall n m, IsNat n -> P n -> Succ n m -> P m) ->
         (forall n, IsNat n -> P n)).
-    Context (zero : Alphacarrier).
-    Context (zero_is_zero : IsZero zero).
-    Context (zero_is_nat : IsNat zero).
     
     (** ** Basic Definitions *)
     

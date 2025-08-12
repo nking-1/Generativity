@@ -27,8 +27,6 @@ Module EuclidPrimes.
     
     (** Import the key elements *)
     Context (zero one : Alphacarrier).
-    Context (zero_is_zero : IsZero zero).
-    Context (zero_is_nat : IsNat zero).
     Context (one_is_one : IsOne one).
     Context (one_is_nat : IsNat one).
     

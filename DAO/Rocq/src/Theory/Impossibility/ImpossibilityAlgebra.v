@@ -3,6 +3,8 @@
     Develops the algebraic structure of impossible predicates in AlphaType.
     Impossible predicates (those equivalent to omega_veil) form a rich
     algebraic structure with specific propagation rules through logical operations.
+    Note - Impossible is the same as False, so a lot of these laws should be familiar to you.
+    For example, it's not really surprising False /\ P results in False.
 *)
 
 Require Import DAO.Core.AlphaType.
