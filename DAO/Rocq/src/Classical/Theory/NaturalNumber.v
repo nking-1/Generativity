@@ -60,6 +60,7 @@ Module NaturalNumbers.
       apply witness_not_impossible.
       destruct zero_exists as [z [Hz _]].
       exists z. exact Hz.
+      Show Proof.
     Qed.
     
     (** Natural numbers form a non-empty set *)

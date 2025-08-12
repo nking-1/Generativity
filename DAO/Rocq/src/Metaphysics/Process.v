@@ -13,6 +13,7 @@ From Stdlib Require Import String.
 Import ListNotations.
 
 
+(*
 Section Process.
   Context (Alpha : AlphaType).
   
@@ -1252,7 +1253,7 @@ Module ConstructiveGodel_v3.
     Qed.
   End GodelProcess.
   
-End ConstructiveGodel_v3.
+End ConstructiveGodel_v3. *)
 
 
 Module Derive_NoSelfTotality.
@@ -1419,7 +1420,6 @@ Section Construction.
   
   Definition InStage (n : nat) := @Derive_NoSelfTotality.InStage Alpha a b n.
   
-  (* The proven theorem that replaces the axiom *)
   Theorem no_self_totality : forall n, ~ stage_collection n (totality_of (stage_collection n)).
   Proof.
     intro n.
