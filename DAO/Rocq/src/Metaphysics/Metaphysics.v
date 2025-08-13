@@ -488,7 +488,7 @@ Section YoungEarthSimulationGen.
   Definition YECMessage : EncodedData :=
     EString "The universe was created recently, but it encodes the appearance of deep time.".
   
-  Definition YoungEarthCreationTime : nat := 6000.  (* "years ago" in semantic units *)
+  Definition YoungEarthCreationTime : nat := 6.  (* "6000 years ago" in semantic units *)
   
   Definition young_earth_entity_gen (pred : Alphacarrier -> Prop) : Prop :=
     fabricated_history_gen pred YoungEarthCreationTime BigBangTimeline /\

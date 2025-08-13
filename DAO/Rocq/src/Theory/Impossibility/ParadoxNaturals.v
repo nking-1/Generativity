@@ -115,6 +115,16 @@ Module ParadoxNaturals.
       - reflexivity.
       - simpl. rewrite IHn. reflexivity.
     Qed.
+
+    Lemma add_zero_right : forall n : PNat, add n PZ = n.
+    Proof.
+      intro n.
+      induction n.
+      - (* n = PZ *)
+        simpl. reflexivity.
+      - (* n = PS n' *)
+        simpl. f_equal. exact IHn.
+    Qed.
     
     (* ================================================================ *)
     (** ** The Deep Truth: We Built Numbers from Pure Structure *)

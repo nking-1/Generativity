@@ -35,6 +35,8 @@ src/Theory/Impossibility/ImpossibilityCalculus.v
 src/Theory/Impossibility/ImpossibilityEntropy.v
 src/Theory/Impossibility/ImpossibilityLogic.v
 src/Theory/Impossibility/ImpossibilitySymmetry.v
+src/Theory/Impossibility/ParadoxNaturals.v
+src/Theory/Impossibility/FalseThermodynamics.v
 
 src/Classical/ClassicalAlphaFirewall.v
 src/Classical/Theory/ClassicalImpossibilityAlgebra.v

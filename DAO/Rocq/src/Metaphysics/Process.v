@@ -2164,7 +2164,7 @@ End TheologyFromOuroboros.
 End EmergentTheology.
 
 
-Module EmergentSimulation.
+(* Module EmergentSimulation.
 
 Section FabricatedHistoryFromOuroboros.
   Context (Alpha : AlphaType).
@@ -2369,4 +2369,4 @@ Section FabricatedHistoryFromOuroboros.
 
 End FabricatedHistoryFromOuroboros.
 
-End EmergentSimulation.
+End EmergentSimulation. *)
