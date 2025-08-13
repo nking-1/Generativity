@@ -1,258 +1,423 @@
 (** * FalseThermodynamics.v
     
     Thermodynamic laws emerging from pure False-structure.
-    Entropy is literally counting recursive impossibility depth.
-    The universe might be computing its own paradoxes.
+    Enhanced with construction history, system entropy, and heat death.
+    
+    "The universe is computing its own paradoxes, and we call this physics."
 *)
 
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
-Require Import DAO.Theory.Impossibility.ParadoxNaturals.  (* Our PNat from False *)
+Require Import DAO.Theory.Impossibility.ParadoxNaturals.
 
 Module FalseThermodynamics.
   Import ImpossibilityAlgebra Core Operations.
   Import ParadoxNaturals.
   
-  Section PureEntropy.
+  (* ================================================================ *)
+  (** ** Part I: Construction History - HOW We Built The Void *)
+  
+  Section ConstructionHistory.
     Context {Alpha : AlphaType}.
     
-    (* ================================================================ *)
-    (** ** Weighted Impossibility Using Pure False-Depth *)
+    (** Track the genealogy of paradoxes *)
+    Inductive ParadoxPath : Type :=
+      | BaseVeil : ParadoxPath                           (* omega_veil *)
+      | SelfContradict : ParadoxPath -> ParadoxPath     (* P ∧ ¬P pattern *)
+      | Compose : ParadoxPath -> ParadoxPath -> ParadoxPath  (* P ∧ Q pattern *)
+      | Iterate : PNat -> ParadoxPath -> ParadoxPath.   (* n iterations *)
     
-    Record PureWeightedImpossible := {
+    (** Convert path to depth (preserves structure as PNat) *)
+    Fixpoint path_depth (p : ParadoxPath) : PNat :=
+      match p with
+      | BaseVeil => PZ
+      | SelfContradict p' => PS (path_depth p')
+      | Compose p1 p2 => add (path_depth p1) (path_depth p2)
+      | Iterate n p' => mult n (path_depth p')
+      end.
+    
+    (** Every path gives an impossible predicate *)
+    Fixpoint path_to_predicate (p : ParadoxPath) : Alphacarrier -> Prop :=
+      match p with
+      | BaseVeil => omega_veil
+      | SelfContradict p' => fun a => path_to_predicate p' a /\ ~ path_to_predicate p' a
+      | Compose p1 p2 => fun a => path_to_predicate p1 a /\ path_to_predicate p2 a
+      | Iterate n p' => fun a => paradox_at (mult n (path_depth p')) a
+      end.
+    
+    (** All paths lead to omega_veil (but remember their history) *)
+    Theorem all_paths_impossible :
+      forall p : ParadoxPath,
+      Is_Impossible (path_to_predicate p).
+    Proof.
+      intro p.
+      induction p; intro a.
+      - (* BaseVeil *) 
+        simpl. reflexivity.
+      - (* SelfContradict *)
+        simpl. split.
+        + intros [H Hnot]. contradiction.
+        + intro Hov. 
+          exfalso. 
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov).
+      - (* Compose *)
+        simpl. split.
+        + intros [H1 H2]. apply IHp1. exact H1.
+        + intro Hov.
+          exfalso.
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov).
+      - (* Iterate *)
+        simpl. apply all_impossible.
+    Qed.
+    
+    (** Different paths can have same depth but different history *)
+    Example different_history_same_depth :
+      exists p1 p2 : ParadoxPath,
+      path_depth p1 = path_depth p2 /\
+      p1 <> p2.
+    Proof.
+      exists (SelfContradict BaseVeil).
+      exists (Compose BaseVeil (SelfContradict BaseVeil)).
+      split.
+      - simpl. reflexivity.
+      - discriminate.
+    Qed.
+    
+  End ConstructionHistory.
+  
+  (* ================================================================ *)
+  (** ** Part II: Weighted Impossibility With History *)
+  
+  Section EnhancedWeightedImpossibility.
+    Context {Alpha : AlphaType}.
+    
+    Record HistoricalImpossible := {
       state : Alphacarrier -> Prop;
-      false_depth : PNat;  (* NOW USING PURE FALSE RECURSION! *)
+      history : ParadoxPath;          (* NEW: Track construction *)
+      false_depth : PNat;
       is_impossible : Is_Impossible state;
-      (* Minimum false-depth is PZ (base False) *)
-      depth_nonzero : exists n, false_depth = PS n \/ false_depth = PZ
+      depth_matches : false_depth = path_depth history  (* Consistency *)
     }.
     
-    (** The ground state - minimal impossibility *)
-    Definition ground_state : PureWeightedImpossible.
+    (** Ground state with history *)
+    Definition ground_state_historical : HistoricalImpossible.
     Proof.
       refine {|
         state := omega_veil;
-        false_depth := PZ;  (* Base False *)
+        history := BaseVeil;
+        false_depth := PZ;
         is_impossible := fun a => conj (fun H => H) (fun H => H);
-        depth_nonzero := _
+        depth_matches := _
       |}.
-      exists PZ. right. reflexivity.
+      reflexivity.
     Defined.
     
-    (* ================================================================ *)
-    (** ** Entropy Operations *)
-    
-    (** Adding impossibilities multiplies their false-depth *)
-    Definition entropy_combine (W1 W2 : PureWeightedImpossible) : PureWeightedImpossible.
+    (** Combining preserves history *)
+    Definition entropy_combine_historical (W1 W2 : HistoricalImpossible) 
+      : HistoricalImpossible.
     Proof.
       refine {|
         state := fun a => state W1 a /\ state W2 a;
+        history := Compose (history W1) (history W2);
         false_depth := add (false_depth W1) (false_depth W2);
-        is_impossible := _;
-        depth_nonzero := _
+        is_impossible := impossible_and _ _ (is_impossible W1);
+        depth_matches := _
       |}.
-      - (* Prove combined state is impossible *)
-        apply impossible_and.
-        apply is_impossible.
-      - (* Prove depth is nonzero *)
-        (* Adding two PureWeightedImpossibles always gives nonzero depth *)
-        destruct (false_depth W1) eqn:Heq1.
-        + (* W1 has depth PZ *)
-            destruct (false_depth W2) eqn:Heq2.
-            * (* Both PZ *)
-            exists PZ. right. simpl. reflexivity.
-            * (* W1 is PZ, W2 is PS p *)
-            exists p. left. simpl. reflexivity.
-        + (* W1 has depth PS p *)
-            exists (add p (false_depth W2)). left.
-            simpl. reflexivity.
-        Defined.
-    
-    (* ================================================================ *)
-    (** ** The Laws of False-Thermodynamics *)
-    
-    (** First Law: False-depth is conserved in isolated systems *)
-    Theorem first_law_conservation :
-      forall W : PureWeightedImpossible,
-      false_depth W = false_depth W.  (* Tautological but important *)
-    Proof.
+      simpl.
+      rewrite (depth_matches W1).
+      rewrite (depth_matches W2).
       reflexivity.
-    Qed.
-    
-    (** Second Law: False-depth is additive (entropy is extensive) *)
-    Theorem second_law_additivity :
-      forall W1 W2 : PureWeightedImpossible,
-      false_depth (entropy_combine W1 W2) = add (false_depth W1) (false_depth W2).
-    Proof.
-      intros. reflexivity.
-    Qed.
-    
-    (** Third Law: Every false-depth is either ground or excited *)
-    Theorem third_law_structure :
-      forall W : PureWeightedImpossible,
-      (false_depth W = PZ) \/ 
-      (exists n : PNat, false_depth W = PS n).
-    Proof.
-      intro W.
-      destruct (false_depth W).
-      - left. reflexivity.
-      - right. exists p. reflexivity.
-    Qed.
-    
-    (** Irreversibility: Some operations strictly increase false-depth *)
-    Definition paradox_operation (W : PureWeightedImpossible) : PureWeightedImpossible.
-    Proof.
-      refine {|
-        state := fun a => state W a /\ ~ state W a;  (* Paradox! *)
-        false_depth := PS (false_depth W);  (* Increases depth! *)
-        is_impossible := _;
-        depth_nonzero := _
-      |}.
-      - (* Prove the paradox state is impossible *)
-        intro a.
-        split.
-        + (* (P ∧ ¬P) → False *)
-          intros [H Hnot]. contradiction.
-        + (* False → anything *)
-          intro Hov. 
-          exfalso.
-          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov).
-      - (* Prove depth is nonzero *)
-        exists (false_depth W). left. reflexivity.
     Defined.
     
-    Theorem irreversibility :
-      forall W : PureWeightedImpossible,
-      exists W', false_depth W' = PS (false_depth W).
+    (** Self-interaction (guaranteed to increase) *)
+    Definition self_interact (W : HistoricalImpossible) : HistoricalImpossible.
+    Proof.
+      refine {|
+        state := fun a => state W a /\ ~ state W a;  (* Make it paradoxical! *)
+        history := SelfContradict (Compose (history W) (history W));
+        false_depth := PS (add (false_depth W) (false_depth W));  (* Always PS! *)
+        is_impossible := _;
+        depth_matches := _
+      |}.
+      - (* Prove paradoxical state is impossible *)
+        intro a. split.
+        + intros [H Hnot]. contradiction.
+        + intro Hov. 
+          exfalso.
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov).
+      - (* Depth matches *)
+        simpl.
+        f_equal.
+        rewrite (depth_matches W).
+        reflexivity.
+    Defined.
+    
+    (** STRONG Irreversibility: self-interaction strictly increases *)
+    Theorem strong_irreversibility :
+      forall W : HistoricalImpossible,
+      exists n : PNat,
+      false_depth (self_interact W) = PS (add (false_depth W) n).
     Proof.
       intro W.
-      exists (paradox_operation W).
+      exists (false_depth W).
+      unfold self_interact. simpl.
       reflexivity.
     Qed.
     
-    (* ================================================================ *)
-    (** ** Temperature as False-Exchange Rate *)
+  End EnhancedWeightedImpossibility.
+  
+  (* ================================================================ *)
+  (** ** Part III: Universe as Paradox System *)
+  
+  Section UniverseSystem.
+    Context {Alpha : AlphaType}.
     
-    (** Temperature: How quickly false-depth propagates *)
-    Definition temperature (W : PureWeightedImpossible) : PNat :=
-      false_depth W.  (* Simple model: temp proportional to depth *)
+    (** The universe is a collection of paradoxes *)
+    Inductive ParadoxSystem : Type :=
+      | EmptyVoid : ParadoxSystem
+      | SingleParadox : ParadoxPath -> ParadoxSystem
+      | SystemJoin : ParadoxSystem -> ParadoxSystem -> ParadoxSystem.
     
-    (** Heat flow: From high false-depth to low *)
-    Definition heat_flows (W1 W2 : PureWeightedImpossible) : Prop :=
-      exists n, false_depth W1 = PS (add (false_depth W2) n).
-      (* W1 has more false-depth than W2 *)
-    
-    (* ================================================================ *)
-    (** ** Statistical Interpretation *)
-    
-    (** Macrostate: Observable false-depth *)
-    Definition macrostate (W : PureWeightedImpossible) : PNat :=
-      false_depth W.
-    
-    (** Microstate: Specific impossibility pattern *)
-    Definition microstate (W : PureWeightedImpossible) : Alphacarrier -> Prop :=
-      state W.
-    
-    (** Entropy counts possible microstates for a macrostate *)
-    Definition entropy_as_count : PNat -> Type :=
-      fun depth => { W : PureWeightedImpossible | false_depth W = depth }.
-    
-    (* ================================================================ *)
-    (** ** The Arrow of Time *)
-    
-    (** Time points toward increasing false-depth *)
-    Definition arrow_of_time (W_past W_future : PureWeightedImpossible) : Prop :=
-      exists n, false_depth W_future = PS (add (false_depth W_past) n).
-    
-    Theorem time_increases_entropy :
-      forall W : PureWeightedImpossible,
-      arrow_of_time W (paradox_operation W).
-    Proof.
-      intro W.
-      unfold arrow_of_time.
-      exists PZ.
-      simpl.
-      f_equal.
-      symmetry.
-      apply add_zero_right.
-    Qed.
-    
-    (* ================================================================ *)
-    (** ** Universe as False-Computer *)
-    
-    (** The universe's state at time t *)
-    Fixpoint universe_at_time (t : PNat) : PureWeightedImpossible :=
-      match t with
-      | PZ => ground_state  (* Big Bang: minimal false *)
-      | PS t' => paradox_operation (universe_at_time t')  (* Evolution *)
+    (** Total entropy of the universe *)
+    Fixpoint system_entropy (sys : ParadoxSystem) : PNat :=
+      match sys with
+      | EmptyVoid => PZ
+      | SingleParadox p => path_depth p
+      | SystemJoin s1 s2 => add (system_entropy s1) (system_entropy s2)
       end.
     
-    (** The universe's entropy always increases *)
-    Theorem universe_entropy_increases :
+    (** Number of paradoxes in system *)
+    Fixpoint paradox_count (sys : ParadoxSystem) : PNat :=
+      match sys with
+      | EmptyVoid => PZ
+      | SingleParadox _ => PS PZ
+      | SystemJoin s1 s2 => add (paradox_count s1) (paradox_count s2)
+      end.
+    
+    (** System contains a specific paradox *)
+    Fixpoint contains_paradox (p : ParadoxPath) (sys : ParadoxSystem) : Prop :=
+      match sys with
+      | EmptyVoid => False
+      | SingleParadox p' => p = p'
+      | SystemJoin s1 s2 => contains_paradox p s1 \/ contains_paradox p s2
+      end.
+    
+    (** Universe evolution: adding paradoxes *)
+    Definition universe_evolve (sys : ParadoxSystem) (p : ParadoxPath) 
+      : ParadoxSystem :=
+      SystemJoin sys (SingleParadox p).
+    
+    Theorem evolution_increases_entropy :
+      forall sys : ParadoxSystem,
+      forall p : ParadoxPath,
+      (path_depth p = PZ /\ 
+       system_entropy (universe_evolve sys p) = system_entropy sys) \/
+      (exists n : PNat,
+       system_entropy (universe_evolve sys p) = PS (add (system_entropy sys) n)).
+    Proof.
+      intros sys p.
+      unfold universe_evolve. simpl.
+      destruct (path_depth p) eqn:Hp.
+      - (* p has depth PZ *)
+        left. split.
+        + reflexivity.  (* The goal is PZ = PZ after substitution *)
+        + apply add_zero_right.
+      - (* p has depth PS p0 *)
+        right.
+        exists p0.
+        induction (system_entropy sys); simpl.
+        + reflexivity.
+        + f_equal. exact IHp1.
+    Qed.
+    
+    (** Maximum entropy: all possible paradoxes exist *)
+    Definition is_maximum_entropy (sys : ParadoxSystem) : Prop :=
+      forall p : ParadoxPath,
+      contains_paradox p sys.
+    
+    (** Heat death: adding paradoxes doesn't increase entropy *)
+    Definition heat_death (sys : ParadoxSystem) : Prop :=
+      forall p : ParadoxPath,
+      system_entropy (universe_evolve sys p) = system_entropy sys.
+    
+    (** If heat death, then maximum entropy (in our model) *)
+    Theorem heat_death_implies_maximum :
+      forall sys : ParadoxSystem,
+      heat_death sys ->
+      (forall p, path_depth p = PZ) \/  (* Degenerate case *)
+      is_maximum_entropy sys.           (* True heat death *)
+    Proof.
+      intros sys Hheat.
+      (* This is subtle - if adding any paradox doesn't increase entropy,
+         either all paradoxes have zero depth, or they're already in sys *)
+      (* We'll axiomatize this for now *)
+      Admitted.  (* TODO: Needs more machinery about paradox uniqueness *)
+    
+  End UniverseSystem.
+  
+  (* ================================================================ *)
+  (** ** Part IV: The Arrow of Time and Universe Evolution *)
+  
+  Section TimeEvolution.
+    Context {Alpha : AlphaType}.
+    
+    (** Time is paradox construction sequence *)
+    Fixpoint universe_at_time (t : PNat) : ParadoxSystem :=
+      match t with
+      | PZ => SingleParadox BaseVeil  (* Big Bang: minimal paradox *)
+      | PS t' => 
+          (* Each moment creates new paradox from existing ones *)
+          universe_evolve (universe_at_time t') 
+                         (SelfContradict BaseVeil)
+      end.
+    
+    Lemma self_contradict_positive_depth :
+      forall p : ParadoxPath,
+      exists n, path_depth (SelfContradict p) = PS n.
+    Proof.
+      intro p.
+      exists (path_depth p).
+      simpl. reflexivity.
+    Qed.
+    
+    Theorem entropy_arrow_of_time :
       forall t : PNat,
-      arrow_of_time (universe_at_time t) (universe_at_time (PS t)).
+      exists n : PNat,
+      system_entropy (universe_at_time (PS t)) = 
+      PS (add (system_entropy (universe_at_time t)) n).
     Proof.
       intro t.
       simpl.
-      apply time_increases_entropy.
+      destruct (evolution_increases_entropy (universe_at_time t) (SelfContradict BaseVeil)) as [[Hcontra _] | H].
+      - (* Impossible: SelfContradict always has positive depth *)
+        destruct (self_contradict_positive_depth BaseVeil) as [n Hn].
+        rewrite Hn in Hcontra.
+        discriminate Hcontra.
+      - exact H.
     Qed.
-    
-    (** Heat death: When everything is maximally paradoxical *)
-    Definition heat_death : Prop :=
-      exists t : PNat, forall t' : PNat,
-      false_depth (universe_at_time (add t t')) = 
-      false_depth (universe_at_time t).
-      (* Entropy stops increasing - maximum reached *)
-    
-    (* ================================================================ *)
-    (** ** The Deep Unity *)
-    
-    Theorem thermodynamics_is_false_dynamics :
-      (* Starting from just False *)
-      (exists W, state W = omega_veil) ->
-      (* We get all thermodynamic laws *)
-      (forall W1 W2, false_depth (entropy_combine W1 W2) = 
-                     add (false_depth W1) (false_depth W2)) /\
-      (forall W, exists W', false_depth W' = PS (false_depth W)) /\
-      (forall t, arrow_of_time (universe_at_time t) 
-                               (universe_at_time (PS t))).
+
+    (* First, let's prove a helper lemma *)
+    Lemma add_one_is_successor :
+      forall n : PNat,
+      add n (PS PZ) = PS n.
     Proof.
-      intro H.
-      split; [|split].
-      - apply second_law_additivity.
-      - apply irreversibility.
-      - apply universe_entropy_increases.
+      intro n.
+      induction n.
+      - simpl. reflexivity.
+      - simpl. f_equal. exact IHn.
     Qed.
     
-  End PureEntropy.
+    (** The universe accumulates paradoxes *)
+    Theorem universe_paradox_accumulation :
+      forall t : PNat,
+      paradox_count (universe_at_time (PS t)) = 
+      PS (paradox_count (universe_at_time t)).
+    Proof.
+      intro t.
+      simpl.
+      unfold universe_evolve.
+      simpl.
+      apply add_one_is_successor.
+    Qed.
+    
+    (** Different evolution paths *)
+    Fixpoint fast_evolution (t : PNat) : ParadoxSystem :=
+      match t with
+      | PZ => SingleParadox BaseVeil
+      | PS t' => 
+          universe_evolve (fast_evolution t')
+                         (SelfContradict (SelfContradict BaseVeil))  (* Depth = PS (PS PZ) *)
+      end.
+    
+    Fixpoint slow_evolution (t : PNat) : ParadoxSystem :=
+      match t with
+      | PZ => EmptyVoid
+      | PS t' => universe_evolve (slow_evolution t') (SelfContradict BaseVeil)  (* Depth = PS PZ *)
+      end.
+    
+    (** Different universes have different entropy growth rates *)
+    Example evolution_rates_differ :
+      exists t : PNat,
+      system_entropy (fast_evolution t) <> system_entropy (slow_evolution t).
+    Proof.
+      exists (PS PZ).  (* Just need one step *)
+      simpl.
+      unfold universe_evolve. simpl.
+      (* fast adds PS (PS PZ), slow adds PS PZ *)
+      discriminate.
+    Qed.
+    
+  End TimeEvolution.
   
   (* ================================================================ *)
-  (** ** Physical Interpretation *)
+  (** ** Part V: The Deep Unity - From Nothing to Physics *)
   
-  Section PhysicalMeaning.
+  Section DeepUnity.
     Context {Alpha : AlphaType}.
     
-    (** What if physical particles are false-patterns? *)
-    Definition particle := PureWeightedImpossible.
+    (** Everything emerges from omega_veil *)
+    Theorem physics_from_nothing :
+      (* Starting from just omega_veil *)
+      (exists P, Is_Impossible P) ->
+      (* We get: *)
+      (* 1. Numbers from paradox depth *)
+      (forall n : PNat, exists p : ParadoxPath, path_depth p = n) /\
+      (* 2. Entropy CAN increase (with non-trivial paradoxes) *)
+      (exists p : ParadoxPath, forall sys,
+        exists n, system_entropy (universe_evolve sys p) = PS (add (system_entropy sys) n)) /\
+      (* 3. Time with inherent direction *)
+      (forall t, exists n,
+        system_entropy (universe_at_time (PS t)) = 
+        PS (add (system_entropy (universe_at_time t)) n)) /\
+      (* 4. Conservation laws *)
+      (forall s1 s2 : ParadoxSystem,
+        system_entropy (SystemJoin s1 s2) = 
+        add (system_entropy s1) (system_entropy s2)).
+    Proof.
+      intro H.
+      split; [|split; [|split]].
+      - (* Numbers exist *)
+        intro n.
+        induction n.
+        + exists BaseVeil. reflexivity.
+        + destruct IHn as [p Hp].
+          exists (SelfContradict p).
+          simpl. f_equal. exact Hp.
+      - (* Entropy CAN increase *)
+        exists (SelfContradict BaseVeil).  (* This always increases *)
+        intro sys.
+        destruct (evolution_increases_entropy sys (SelfContradict BaseVeil)) as [[Hcontra _] | H0].
+        + (* Impossible case *)
+          simpl in Hcontra. discriminate.
+        + exact H0.
+      - (* Time arrow *)
+        apply entropy_arrow_of_time.
+      - (* Conservation *)
+        intros. reflexivity.
+    Qed.
     
-    (** Energy is false-depth *)
-    Definition energy (p : particle) : PNat := false_depth p.
+    (** The universe IS a thermodynamic system *)
+    Theorem universe_is_thermodynamic :
+      (* The universe has: *)
+      (* 1. State (paradox configuration) *)
+      (exists sys : ParadoxSystem, True) /\
+      (* 2. Entropy (total paradox depth) *)
+      (forall sys, exists e : PNat, e = system_entropy sys) /\
+      (* 3. Temperature (rate of paradox formation) *)
+      (forall t, exists temp : PNat, 
+        temp = paradox_count (universe_at_time t)) /\
+      (* 4. Irreversibility *)
+      (forall W : HistoricalImpossible,
+        exists n, false_depth (self_interact W) = PS (add (false_depth W) n)).
+    Proof.
+      split; [|split; [|split]].
+      - exists EmptyVoid. trivial.
+      - intro sys. exists (system_entropy sys). reflexivity.
+      - intro t. exists (paradox_count (universe_at_time t)). reflexivity.
+      - apply strong_irreversibility.
+    Qed.
     
-    (** Mass-energy equivalence: E = mc² *)
-    (* Both mass and energy are measures of false-depth! *)
-    
-    (** Quantum superposition: Multiple false-patterns at once *)
-    Definition superposition (W1 W2 : particle) : particle :=
-      entropy_combine W1 W2.
-    
-    (** Wave function collapse: Choosing one false-pattern *)
-    (* Measurement forces choice between paradoxes *)
-    
-    (** The universe is computing its way through paradox space,
-        with physics as the observable pattern and entropy as 
-        the measure of how deep into False we've recursed. *)
-    
-  End PhysicalMeaning.
+  End DeepUnity.
   
 End FalseThermodynamics.

@@ -278,6 +278,9 @@ Module ImpossibilitySymmetry.
       Context {Alpha : AlphaType}.
       
       (** We need decidability for action computation *)
+      (* Note - we *have* proven that AlphaType's predicates can be undecidable, so this hypothesis 
+        is being a bit generous. *)
+      (* Maybe the universe only "computes" things when they are decidable? *)
       Hypothesis impossible_decidable : forall P, {Is_Impossible P} + {~ Is_Impossible P}.
       
       (** A "Lagrangian" for predicate dynamics *)

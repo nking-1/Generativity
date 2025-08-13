@@ -12,8 +12,6 @@ Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
 
 Module ParadoxNaturals.
   Import ImpossibilityAlgebra Core Rank.
-  (** * PureParadoxNaturals.v
-    Building numbers from scratch using only paradox construction *)
 
   Section PureParadoxNaturals.
     Context {Alpha : AlphaType}.
@@ -171,7 +169,7 @@ Module ParadoxNaturals.
     
     (** The void has infinite internal structure, and that structure IS mathematics *)
   
-    (** The ultimate theorem: We built math from nothing *)
+    (** We built math from "nothing" *)
     Theorem mathematics_from_void :
       (* Starting with just impossible *)
       (exists P, Is_Impossible P) ->
@@ -193,9 +191,6 @@ Module ParadoxNaturals.
 
   Section ConnectionToStandardMath.
     Context {Alpha : AlphaType}.
-    
-    (** We built numbers from nothing. NOW we show they correspond to Coq's nat *)
-    (** This is NOT circular - we're comparing our construction to the standard one *)
     
     Theorem our_numbers_are_the_numbers :
       exists (f : PNat -> nat) (g : nat -> PNat),

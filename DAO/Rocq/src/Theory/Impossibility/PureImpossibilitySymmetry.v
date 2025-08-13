@@ -6,13 +6,23 @@
 
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Theory.Impossibility.ParadoxNaturals.
+Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
 Require Import DAO.Theory.Impossibility.FalseThermodynamics.
 
 Module PureImpossibilitySymmetry.
   Import ParadoxNaturals FalseThermodynamics.
+  Import ImpossibilityAlgebra Core.
   
   Section PureSymmetry.
     Context {Alpha : AlphaType}.
+
+    (** We need decidability for action computation *)
+    (* Note - we *have* proven that AlphaType's predicates can be undecidable, so this hypothesis 
+       is being a bit generous. *)
+    Hypothesis impossible_decidable : forall P, {Is_Impossible P} + {~ Is_Impossible P}.
+
+    (** A transformation on predicates *)
+    Definition predicate_transform := (Alphacarrier -> Prop) -> (Alphacarrier -> Prop).
     
     (* ================================================================ *)
     (** ** Pure Action from False-Depth *)
