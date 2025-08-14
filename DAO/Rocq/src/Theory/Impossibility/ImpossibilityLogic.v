@@ -19,7 +19,7 @@ Module ImpossibilityLogic.
   Module Bootstrap.
 
     (* Define outside the section so they're directly accessible *)
-    (** The first generated predicate: not omega_veil *)
+    (** The first generated predicate: not omega_veil (but ~False isn't necessarily just "True" constructively!) *)
     Definition alpha_0 {Alpha : AlphaType} : Alphacarrier -> Prop :=
     fun a => ~ omega_veil a.
   

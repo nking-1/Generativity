@@ -1257,660 +1257,331 @@ End ConstructiveGodel_v3. *)
 
 
 Module Derive_NoSelfTotality.
-Section Setup.
-  Context {Alpha : AlphaType}.
+  Import AlphaProperties Bootstrap Structure.
+  Section Setup.
+    Let Alpha := StructureAlpha.
 
-  (* Mild richness: two distinguishable points *)
-  Variables (a b : Alphacarrier).
-  Hypothesis a_neq_b : a <> b.
+    (* Use the bootstrapped inhabitants instead of assuming them *)
+    Let a := inhabitant_0.  (* Base *)
+    Let b := inhabitant_1.  (* Nest Base *)
+    Let a_neq_b := distinction_emerges.
 
-  (* -------- Core syntax: PRESENT collection at each stage -------- *)
-  Inductive Core : nat -> Type :=
-  | C0_a  : Core 0
-  | C0_b  : Core 0
-  | C_keep : forall n, Core n -> Core (S n).
+    (* -------- Core syntax: PRESENT collection at each stage -------- *)
+    Inductive Core : nat -> Type :=
+    | C0_a  : Core 0
+    | C0_b  : Core 0
+    | C_keep : forall n, Core n -> Core (S n).
 
-  (* Denotation of core tags *)
-  Fixpoint denote_core {n:nat} (c:Core n) : Alphacarrier -> Prop :=
-    match c with
-    | C0_a        => fun x => x = a
-    | C0_b        => fun x => x = b
-    | C_keep _ c' => denote_core c'
-    end.
+    (* Denotation of core tags *)
+    Fixpoint denote_core {n:nat} (c:Core n) : Alphacarrier -> Prop :=
+      match c with
+      | C0_a        => fun x => x = a
+      | C0_b        => fun x => x = b
+      | C_keep _ c' => denote_core c'
+      end.
 
-  (* Present collection at stage n *)
-  Definition InStage (n:nat) (P:Alphacarrier -> Prop) : Prop :=
-    exists c:Core n, forall x, P x <-> denote_core c x.
+    (* Present collection at stage n *)
+    Definition InStage (n:nat) (P:Alphacarrier -> Prop) : Prop :=
+      exists c:Core n, forall x, P x <-> denote_core c x.
 
-  (* Totality of the present collection (union of Core n denotations) *)
-  Definition totality_of_stage (n:nat) : Alphacarrier -> Prop :=
-    fun x => exists c:Core n, denote_core c x.
+    (* Totality of the present collection (union of Core n denotations) *)
+    Definition totality_of_stage (n:nat) : Alphacarrier -> Prop :=
+      fun x => exists c:Core n, denote_core c x.
 
-  (* Monotonicity of the present collection *)
-  Lemma stage_monotone :
-    forall n P, InStage n P -> InStage (S n) P.
-  Proof.
-    intros n P [c Hc]. exists (C_keep n c). intro x; simpl; apply Hc.
-  Qed.
+    (* Monotonicity of the present collection *)
+    Lemma stage_monotone :
+      forall n P, InStage n P -> InStage (S n) P.
+    Proof.
+      intros n P [c Hc]. exists (C_keep n c). intro x; simpl; apply Hc.
+    Qed.
 
+    Lemma fresh_at_level :
+      forall n (c:Core n), exists x, totality_of_stage n x /\ ~ denote_core c x.
+    Proof.
+      fix IH 2.  (* Structural recursion on the second argument (c) *)
+      intros n c.
+      destruct c.
+      - (* c = C0_a *)
+        exists b. split.
+        + exists C0_b. simpl. reflexivity.
+        + simpl. intro Hb. apply a_neq_b. symmetry. exact Hb.
+      - (* c = C0_b *)
+        exists a. split.
+        + exists C0_a. simpl. reflexivity.
+        + simpl. intro Ha. apply a_neq_b. exact Ha.
+      - (* c = C_keep n c *)
+        destruct (IH n c) as [x [Hin Hnot]].
+        exists x. split.
+        + destruct Hin as [d Hd].
+          exists (C_keep n d).
+          simpl. exact Hd.
+        + simpl. exact Hnot.
+    Qed.
 
-  Lemma fresh_at_level :
-    forall n (c:Core n), exists x, totality_of_stage n x /\ ~ denote_core c x.
-  Proof.
-    fix IH 2.  (* Structural recursion on the second argument (c) *)
-    intros n c.
-    destruct c.
-    - (* c = C0_a *)
-      exists b. split.
-      + exists C0_b. simpl. reflexivity.
-      + simpl. intro Hb. apply a_neq_b. symmetry. exact Hb.
-    - (* c = C0_b *)
-      exists a. split.
-      + exists C0_a. simpl. reflexivity.
-      + simpl. intro Ha. apply a_neq_b. exact Ha.
-    - (* c = C_keep n c *)
-      destruct (IH n c) as [x [Hin Hnot]].
-      exists x. split.
-      + destruct Hin as [d Hd].
-        exists (C_keep n d).
-        simpl. exact Hd.
-      + simpl. exact Hnot.
-  Qed.
+    (* ---------- Collection-as-predicate style and the theorem ---------- *)
 
+    (* Present collection as a predicate on predicates *)
+    Definition stage_collection (n:nat) : (Alphacarrier -> Prop) -> Prop :=
+      fun P => InStage n P.
 
-  (* ---------- Collection-as-predicate style and the theorem ---------- *)
+    (* Usual totality-of-collection operator *)
+    Definition totality_of (C : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
+      fun x => exists P, C P /\ P x.
 
-  (* Present collection as a predicate on predicates *)
-  Definition stage_collection (n:nat) : (Alphacarrier -> Prop) -> Prop :=
-    fun P => InStage n P.
+    (* Bridge: “union via Core” equals “totality_of (stage_collection)” *)
+    Lemma stage_total_vs_collection_total :
+      forall n x, totality_of_stage n x <-> totality_of (stage_collection n) x.
+    Proof.
+      intros n x; split.
+      - intros [c Hc]. exists (denote_core c). split.
+        + now (exists c).
+        + exact Hc.
+      - intros [P [[c Hc] HP]]. exists c. rewrite <- Hc. exact HP.
+    Qed.
 
-  (* Usual totality-of-collection operator *)
-  Definition totality_of (C : (Alphacarrier -> Prop) -> Prop) : Alphacarrier -> Prop :=
-    fun x => exists P, C P /\ P x.
+    (* Main theorem: NO SELF-TOTALITY for the present collection at each stage *)
+    Theorem no_self_totality_derived :
+      forall n, ~ stage_collection n (totality_of (stage_collection n)).
+    Proof.
+      intros n [c Heq]. (* assume totality is present as some core tag c *)
+      destruct (fresh_at_level n c) as [x [Hin Hnot]].
+      specialize (Heq x). destruct Heq as [H1 H2].
+      apply Hnot. apply H1. rewrite <- stage_total_vs_collection_total. exact Hin.
+    Qed.
 
-  (* Bridge: “union via Core” equals “totality_of (stage_collection)” *)
-  Lemma stage_total_vs_collection_total :
-    forall n x, totality_of_stage n x <-> totality_of (stage_collection n) x.
-  Proof.
-    intros n x; split.
-    - intros [c Hc]. exists (denote_core c). split.
-      + now (exists c).
-      + exact Hc.
-    - intros [P [[c Hc] HP]]. exists c. rewrite <- Hc. exact HP.
-  Qed.
+    (* ---------- Optional: show the NEXT stage can NAME the totality ---------- *)
 
-  (* Main theorem: NO SELF-TOTALITY for the present collection at each stage *)
-  Theorem no_self_totality_derived :
-    forall n, ~ stage_collection n (totality_of (stage_collection n)).
-  Proof.
-    intros n [c Heq]. (* assume totality is present as some core tag c *)
-    destruct (fresh_at_level n c) as [x [Hin Hnot]].
-    specialize (Heq x). destruct Heq as [H1 H2].
-    apply Hnot. apply H1. rewrite <- stage_total_vs_collection_total. exact Hin.
-  Qed.
+    (* Next-stage naming syntax (not part of present collection): *)
+    Inductive Syn : nat -> Type :=
+    | S_core  : forall n, Core n -> Syn n
+    | S_total : forall n, Syn (S n).  (* new name for totality_at_stage n *)
 
-  (* ---------- Optional: show the NEXT stage can NAME the totality ---------- *)
+    Definition denote_syn {n} (s:Syn n) : Alphacarrier -> Prop :=
+      match s with
+      | S_core _ c => denote_core c
+      | S_total n  => fun x => totality_of_stage n x
+      end.
 
-  (* Next-stage naming syntax (not part of present collection): *)
-  Inductive Syn : nat -> Type :=
-  | S_core  : forall n, Core n -> Syn n
-  | S_total : forall n, Syn (S n).  (* new name for totality_at_stage n *)
+    Lemma totality_nameable_next :
+      forall n, exists s:Syn (S n), forall x,
+        denote_syn s x <-> totality_of_stage n x.
+    Proof.
+      intro n. exists (S_total n). intro x. split; auto.
+    Qed.
 
-  Definition denote_syn {n} (s:Syn n) : Alphacarrier -> Prop :=
-    match s with
-    | S_core _ c => denote_core c
-    | S_total n  => fun x => totality_of_stage n x
-    end.
-
-  Lemma totality_nameable_next :
-    forall n, exists s:Syn (S n), forall x,
-      denote_syn s x <-> totality_of_stage n x.
-  Proof.
-    intro n. exists (S_total n). intro x. split; auto.
-  Qed.
-
-  (* The “growth” corollary: new (nameable) predicate not in the present collection *)
-  Corollary novelty :
-    forall n, exists P, (* P is the old totality *)
-      (exists s:Syn (S n), forall x, P x <-> denote_syn s x) /\
-      ~ InStage n P.
-  Proof.
-    intro n. exists (totality_of_stage n).
-    split.
-    - (* Need to flip the biconditional from totality_nameable_next *)
-      destruct (totality_nameable_next n) as [s Hs].
-      exists s. intro x. 
-      specialize (Hs x).
+    (* The “growth” corollary: new (nameable) predicate not in the present collection *)
+    Corollary novelty :
+      forall n, exists P, (* P is the old totality *)
+        (exists s:Syn (S n), forall x, P x <-> denote_syn s x) /\
+        ~ InStage n P.
+    Proof.
+      intro n. exists (totality_of_stage n).
       split.
-      + apply (proj2 Hs).
-      + apply (proj1 Hs).
-    - intro Hin. (* contradicts no_self_totality *)
-      apply (no_self_totality_derived n).
-      unfold stage_collection.
-      (* Need to show InStage n (totality_of (stage_collection n)) *)
-      destruct Hin as [c Hc].
-      exists c. intro x.
-      rewrite <- stage_total_vs_collection_total.
-      apply Hc.
-  Qed.
+      - (* Need to flip the biconditional from totality_nameable_next *)
+        destruct (totality_nameable_next n) as [s Hs].
+        exists s. intro x. 
+        specialize (Hs x).
+        split.
+        + apply (proj2 Hs).
+        + apply (proj1 Hs).
+      - intro Hin. (* contradicts no_self_totality *)
+        apply (no_self_totality_derived n).
+        unfold stage_collection.
+        (* Need to show InStage n (totality_of (stage_collection n)) *)
+        destruct Hin as [c Hc].
+        exists c. intro x.
+        rewrite <- stage_total_vs_collection_total.
+        apply Hc.
+    Qed.
 
-End Setup.
+  End Setup.
 End Derive_NoSelfTotality.
 
 
 Module EmergentGenerative.
+  Section Construction.
+    Import AlphaProperties Bootstrap Structure.
 
-Section Construction.
-  Context (Alpha : AlphaType).
-  
-  (* We need at least two distinct elements *)
-  Variables (a b : Alphacarrier).
-  Hypothesis a_neq_b : a <> b.
-  
-  (* ============================================================ *)
-  (* Part 1: Import definitions from Derive_NoSelfTotality        *)
-  (* ============================================================ *)
-  
-  (* Use the definitions from Derive_NoSelfTotality directly *)
-  Definition stage_collection (n : nat) : (Alphacarrier -> Prop) -> Prop :=
-    @Derive_NoSelfTotality.stage_collection Alpha a b n.
-  
-  Definition totality_of : ((Alphacarrier -> Prop) -> Prop) -> (Alphacarrier -> Prop) :=
-    @Derive_NoSelfTotality.totality_of Alpha.
-  
-  Definition InStage (n : nat) := @Derive_NoSelfTotality.InStage Alpha a b n.
-  
-  Theorem no_self_totality : forall n, ~ stage_collection n (totality_of (stage_collection n)).
-  Proof.
-    intro n.
-    unfold stage_collection, totality_of.
-    apply (@Derive_NoSelfTotality.no_self_totality_derived Alpha a b a_neq_b n).
-  Qed.
-  
-  (* ============================================================ *)
-  (* Part 2: The Ouroboros Construction                           *)
-  (* ============================================================ *)
-  
-  (* What escapes at each stage *)
-  Definition escapes_at (n : nat) : Alphacarrier -> Prop :=
-    totality_of (stage_collection n).
-  
-  (* Fundamental theorem: the tail always escapes *)
-  Theorem tail_escapes : forall n, ~ stage_collection n (escapes_at n).
-  Proof.
-    intro n.
-    unfold escapes_at.
-    apply no_self_totality.
-  Qed.
-  
-  (* Import the monotonicity property *)
-  Theorem stage_monotone : forall n P, 
-    stage_collection n P -> stage_collection (S n) P.
-  Proof.
-    intros n P H.
-    unfold stage_collection.
-    apply (@Derive_NoSelfTotality.stage_monotone Alpha a b n P H).
-  Qed.
-  
-  (* The totality can be named at the next stage *)
-  Theorem tail_caught_next : forall n,
-    exists P, (forall x, P x <-> escapes_at n x) /\ ~ stage_collection n P.
-  Proof.
-    intro n.
-    exists (escapes_at n).
-    split.
-    - intro x. reflexivity.
-    - apply tail_escapes.
-  Qed.
-  
-  (* Use the novelty result from Derive_NoSelfTotality *)
-  Theorem eternal_novelty : forall n, 
-    exists P, (exists s : Derive_NoSelfTotality.Syn (S n),
-                forall x, P x <-> @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x) /\
-              ~ InStage n P.
-  Proof.
-    intro n.
-    apply (@Derive_NoSelfTotality.novelty Alpha a b a_neq_b).
-  Qed.
-  
-  (* ============================================================ *)
-  (* Part 3: Core Emergence Properties                            *)
-  (* ============================================================ *)
-  
-  (* Define contains as membership in stage_collection *)
-  Definition contains_emergent (t : nat) (P : Alphacarrier -> Prop) : Prop :=
-    stage_collection t P.
-  
-  (* Theorem: backward containment *)
-  Theorem emergent_contains_backward :
-    forall m n P, m <= n -> contains_emergent m P -> contains_emergent n P.
-  Proof.
-    intros m n P Hle H_m.
-    unfold contains_emergent in *.
-    induction Hle.
-    - exact H_m.
-    - apply stage_monotone. exact IHHle.
-  Qed.
-  
-  (* ============================================================ *)
-  (* Part 4: The Key Growth Theorem                               *)
-  (* ============================================================ *)
-  
-  Theorem growth_exists :
-    forall n, exists P, 
-      ~ contains_emergent n P /\ 
-      (forall x, P x <-> totality_of (stage_collection n) x).
-  Proof.
-    intro n.
-    exists (totality_of (stage_collection n)).
-    split.
-    - unfold contains_emergent. apply no_self_totality.
-    - intro x. reflexivity.
-  Qed.
-  
-  (* ============================================================ *)
-  (* Part 5: Time Emerges from Incompleteness                     *)
-  (* ============================================================ *)
-  
-  Theorem time_emerges_from_incompleteness :
-    (* From no_self_totality, we get time-like structure *)
-    (forall n, exists P, ~ stage_collection n P /\ 
-                         forall x, P x <-> totality_of (stage_collection n) x) /\
-    (* And this structure grows forever *)
-    (forall n, exists m, m > n /\ 
-      exists P, ~ stage_collection n P /\ 
-                forall x, P x <-> totality_of (stage_collection m) x).
-  Proof.
-    split.
-    - apply growth_exists.
-    - intro n.
-      exists (S n).
-      split; [lia|].
-      exists (totality_of (stage_collection (S n))).
+    (* Use the bootstrapped inhabitants instead of assuming them *)
+    Let a := inhabitant_0.  (* Base *)
+    Let b := inhabitant_1.  (* Nest Base *)
+    Let a_neq_b := distinction_emerges.
+    
+    (* ============================================================ *)
+    (* Part 1: Import definitions from Derive_NoSelfTotality        *)
+    (* ============================================================ *)
+    
+    (* Use the definitions from Derive_NoSelfTotality directly *)
+    Definition stage_collection (n : nat) : (BootstrapCarrier -> Prop) -> Prop :=
+      Derive_NoSelfTotality.stage_collection n.
+    
+    Definition totality_of := Derive_NoSelfTotality.totality_of.
+    
+    Definition InStage (n : nat) := Derive_NoSelfTotality.InStage n.
+    
+    Theorem no_self_totality : forall n, ~ stage_collection n (totality_of (stage_collection n)).
+    Proof.
+      apply Derive_NoSelfTotality.no_self_totality_derived.
+    Qed.
+    
+    (* ============================================================ *)
+    (* Part 2: The Ouroboros Construction                           *)
+    (* ============================================================ *)
+    
+    (* What escapes at each stage *)
+    Definition escapes_at (n : nat) : Alphacarrier -> Prop :=
+      totality_of (stage_collection n).
+    
+    (* Fundamental theorem: the tail always escapes *)
+    Theorem tail_escapes : forall n, ~ stage_collection n (escapes_at n).
+    Proof.
+      intro n.
+      unfold escapes_at.
+      apply no_self_totality.
+    Qed.
+    
+    (* Import the monotonicity property *)
+    Theorem stage_monotone : forall n P, 
+      stage_collection n P -> stage_collection (S n) P.
+    Proof.
+      apply Derive_NoSelfTotality.stage_monotone.
+    Qed.
+    
+    (* The totality can be named at the next stage *)
+    Theorem tail_caught_next : forall n,
+      exists P, (forall x, P x <-> escapes_at n x) /\ ~ stage_collection n P.
+    Proof.
+      intro n.
+      exists (escapes_at n).
       split.
-      + intro H.
-        (* If totality (S n) were in stage n, by monotonicity it would be in S n *)
-        assert (Hmono: stage_collection (S n) (totality_of (stage_collection (S n)))).
-        { apply stage_monotone. exact H. }
-        (* But this contradicts no_self_totality *)
-        apply (no_self_totality (S n)).
-        exact Hmono.
-      + intro x. reflexivity.
-  Qed.
-  
-  (* ============================================================ *)
-  (* Part 6: The Philosophical Consequence - Ouroboros            *)
-  (* ============================================================ *)
-  
-  Theorem existence_is_ouroboros :
-    (* The snake always has a tail that escapes *)
-    (forall n, ~ stage_collection n (totality_of (stage_collection n))) /\
-    (* This creates eternal growth *)
-    (forall n, exists gap, ~ stage_collection n gap /\ 
-                          forall x, gap x <-> totality_of (stage_collection n) x).
-  Proof.
-    split.
-    - intro n. apply no_self_totality.
-    - intro n. 
+      - intro x. reflexivity.
+      - apply tail_escapes.
+    Qed.
+    
+    (* Use the novelty result from Derive_NoSelfTotality *)
+    Theorem eternal_novelty : forall n, 
+      exists P, (exists s : Derive_NoSelfTotality.Syn (S n),
+                  forall x, P x <-> Derive_NoSelfTotality.denote_syn s x) /\
+                ~ InStage n P.
+    Proof.
+      intro n.
+      apply Derive_NoSelfTotality.novelty.
+    Qed.
+    
+    (* ============================================================ *)
+    (* Part 3: Core Emergence Properties                            *)
+    (* ============================================================ *)
+    
+    (* Define contains as membership in stage_collection *)
+    Definition contains_emergent (t : nat) (P : Alphacarrier -> Prop) : Prop :=
+      stage_collection t P.
+    
+    (* Theorem: backward containment *)
+    Theorem emergent_contains_backward :
+      forall m n P, m <= n -> contains_emergent m P -> contains_emergent n P.
+    Proof.
+      intros m n P Hle H_m.
+      unfold contains_emergent in *.
+      induction Hle.
+      - exact H_m.
+      - apply stage_monotone. exact IHHle.
+    Qed.
+    
+    (* ============================================================ *)
+    (* Part 4: The Key Growth Theorem                               *)
+    (* ============================================================ *)
+    
+    Theorem growth_exists :
+      forall n, exists P, 
+        ~ contains_emergent n P /\ 
+        (forall x, P x <-> totality_of (stage_collection n) x).
+    Proof.
+      intro n.
       exists (totality_of (stage_collection n)).
       split.
-      + apply no_self_totality.
-      + intro x. reflexivity.
-  Qed.
-  
-  (* ============================================================ *)
-  (* Part 7: Connection to the Constructive Foundation            *)
-  (* ============================================================ *)
-  
-  (* The stage collection corresponds to the Core inductive type *)
-  Theorem stage_has_finite_description :
-    forall n P, stage_collection n P -> InStage n P.
-  Proof.
-    intros n P H.
-    unfold stage_collection, InStage in *.
-    exact H.
-  Qed.
-  
-  (* The growth is constructive - we can exhibit the new predicate *)
-  Theorem constructive_growth :
-    forall n, { P : Alphacarrier -> Prop | 
-                ~ stage_collection n P /\ 
-                forall x, P x <-> totality_of (stage_collection n) x }.
-  Proof.
-    intro n.
-    exists (totality_of (stage_collection n)).
-    split.
-    - apply no_self_totality.
-    - intro x. reflexivity.
-  Qed.
-  
-End Construction.
-
+      - unfold contains_emergent. apply no_self_totality.
+      - intro x. reflexivity.
+    Qed.
+    
+    (* ============================================================ *)
+    (* Part 5: Time Emerges from Incompleteness                     *)
+    (* ============================================================ *)
+    
+    Theorem time_emerges_from_incompleteness :
+      (* From no_self_totality, we get time-like structure *)
+      (forall n, exists P, ~ stage_collection n P /\ 
+                          forall x, P x <-> totality_of (stage_collection n) x) /\
+      (* And this structure grows forever *)
+      (forall n, exists m, m > n /\ 
+        exists P, ~ stage_collection n P /\ 
+                  forall x, P x <-> totality_of (stage_collection m) x).
+    Proof.
+      split.
+      - apply growth_exists.
+      - intro n.
+        exists (S n).
+        split; [lia|].
+        exists (totality_of (stage_collection (S n))).
+        split.
+        + intro H.
+          (* If totality (S n) were in stage n, by monotonicity it would be in S n *)
+          assert (Hmono: stage_collection (S n) (totality_of (stage_collection (S n)))).
+          { apply stage_monotone. exact H. }
+          (* But this contradicts no_self_totality *)
+          apply (no_self_totality (S n)).
+          exact Hmono.
+        + intro x. reflexivity.
+    Qed.
+    
+    (* ============================================================ *)
+    (* Part 6: The Philosophical Consequence - Ouroboros            *)
+    (* ============================================================ *)
+    
+    Theorem existence_is_ouroboros :
+      (* The snake always has a tail that escapes *)
+      (forall n, ~ stage_collection n (totality_of (stage_collection n))) /\
+      (* This creates eternal growth *)
+      (forall n, exists gap, ~ stage_collection n gap /\ 
+                            forall x, gap x <-> totality_of (stage_collection n) x).
+    Proof.
+      split.
+      - intro n. apply no_self_totality.
+      - intro n. 
+        exists (totality_of (stage_collection n)).
+        split.
+        + apply no_self_totality.
+        + intro x. reflexivity.
+    Qed.
+    
+    (* ============================================================ *)
+    (* Part 7: Connection to the Constructive Foundation            *)
+    (* ============================================================ *)
+    
+    (* The stage collection corresponds to the Core inductive type *)
+    Theorem stage_has_finite_description :
+      forall n P, stage_collection n P -> InStage n P.
+    Proof.
+      intros n P H.
+      unfold stage_collection, InStage in *.
+      exact H.
+    Qed.
+    
+    (* The growth is constructive - we can exhibit the new predicate *)
+    Theorem constructive_growth :
+      forall n, { P : Alphacarrier -> Prop | 
+                  ~ stage_collection n P /\ 
+                  forall x, P x <-> totality_of (stage_collection n) x }.
+    Proof.
+      intro n.
+      exists (totality_of (stage_collection n)).
+      split.
+      - apply no_self_totality.
+      - intro x. reflexivity.
+    Qed.
+    
+  End Construction.
 End EmergentGenerative.
 
-
-
-Require Import Stdlib.Program.Equality.
-
-Module EmergentGenerativeComplete.
-Import Derive_NoSelfTotality.
-
-Section CompleteConstruction.
-  Context (Alpha : AlphaType).
-  
-  (* We need the two distinct elements requirement from Derive_NoSelfTotality *)
-  Variables (a b : Alphacarrier).
-  Hypothesis a_neq_b : a <> b.
-  
-  (* ============================================================ *)
-  (* Core: Import the proven theorem instead of axiom             *)
-  (* ============================================================ *)
-  
-  (* Use the definitions from Derive_NoSelfTotality *)
-  Definition stage_collection := @Derive_NoSelfTotality.stage_collection Alpha a b.
-  Definition totality_of := @Derive_NoSelfTotality.totality_of Alpha.
-  Definition InStage := @Derive_NoSelfTotality.InStage Alpha a b.
-  
-  (* The PROVEN theorem replaces the axiom! *)
-  Theorem no_self_totality : 
-    forall n, ~ stage_collection n (totality_of (stage_collection n)).
-  Proof.
-    intro n.
-    apply (@Derive_NoSelfTotality.no_self_totality_derived Alpha a b a_neq_b n).
-  Qed.
-  
-  (* ============================================================ *)
-  (* The Ouroboros Stages - Using the Core structure              *)
-  (* ============================================================ *)
-  
-  (* Note: stage_collection is now defined via Core inductive type,
-     but we can show it has the growth properties we want *)
-  
-  (* Helper: totality appears at next stage conceptually 
-     (though not literally in our Core-based construction) *)
-  Lemma totality_escapes :
-    forall n, ~ stage_collection n (totality_of (stage_collection n)).
-  Proof.
-    apply no_self_totality.
-  Qed.
-  
-  (* Import monotonicity *)
-  Lemma stage_monotone :
-    forall n P, stage_collection n P -> stage_collection (S n) P.
-  Proof.
-    intros n P H.
-    apply (@Derive_NoSelfTotality.stage_monotone Alpha a b n P H).
-  Qed.
-  
-  (* ============================================================ *)
-  (* Rigorous Self-Reference Encoding                             *)
-  (* ============================================================ *)
-  
-  (* Define meta-predicates using the stage structure *)
-  Definition NotAtStage0 : (Alphacarrier -> Prop) -> Prop :=
-    fun pred => ~ InStage 0 pred.
-  
-  Definition AppearsLater : (Alphacarrier -> Prop) -> Prop :=
-    fun pred => exists t, t > 0 /\ InStage t pred.
-  
-  (* First, let's prove that base predicates are in all stages *)
-  Lemma base_predicates_persist :
-    forall n, 
-      InStage n (fun x => x = a) /\ 
-      InStage n (fun x => x = b).
-  Proof.
-    induction n.
-    - (* n = 0 *)
-      split.
-      + exists C0_a. intro x. simpl. reflexivity.
-      + exists C0_b. intro x. simpl. reflexivity.
-    - (* n = S n *)
-      destruct IHn as [Ha Hb].
-      split.
-      + apply (@Derive_NoSelfTotality.stage_monotone Alpha a b n).
-        exact Ha.
-      + apply (@Derive_NoSelfTotality.stage_monotone Alpha a b n).
-        exact Hb.
-  Qed.
-  
-  (* First, let's prove a lemma about Core 0 *)
-  Lemma Core_0_cases : forall (c : Core 0),
-    c = C0_a \/ c = C0_b.
-  Proof.
-    intro c.
-    (* Use dependent pattern matching *)
-    dependent destruction c.
-    - left. reflexivity.
-    - right. reflexivity.
-    (* No C_keep case because C_keep : Core (S n), not Core 0 *)
-  Qed.
-  
-  Theorem totality_not_at_stage :
-    forall n, NotAtStage0 (totality_of (stage_collection n)).
-  Proof.
-    intro n.
-    unfold NotAtStage0, InStage.
-    intro H.
-    (* H says totality of stage n is in stage 0 *)
-    destruct H as [c Hc].
-    (* c : Core 0, so it's either C0_a or C0_b *)
-    destruct (Core_0_cases c) as [Heq | Heq]; rewrite Heq in Hc.
-    - (* c = C0_a *)
-      assert (Hb: totality_of (stage_collection n) b).
-      { unfold totality_of.
-        exists (fun x => x = b).
-        split.
-        - apply base_predicates_persist.
-        - reflexivity. }
-      specialize (Hc b).
-      simpl in Hc.
-      rewrite Hc in Hb.
-      apply a_neq_b. symmetry. exact Hb.
-      
-    - (* c = C0_b *)
-      assert (Ha: totality_of (stage_collection n) a).
-      { unfold totality_of.
-        exists (fun x => x = a).
-        split.
-        - apply base_predicates_persist.
-        - reflexivity. }
-      specialize (Hc a).
-      simpl in Hc.
-      rewrite Hc in Ha.
-      apply a_neq_b. exact Ha.
-  Qed.
-  
-  (* ============================================================ *)
-  (* Complete Replication of GenerativeType Properties            *)
-  (* ============================================================ *)
-  
-  (* Define our emergent "contains" *)
-  Definition contains_emergent (t : nat) (P : Alphacarrier -> Prop) : Prop :=
-    InStage t P.
-  
-  (* Property 1: Some base predicates are always contained *)
-  (* Note: We don't have omega_veil at stage 0 in Core construction,
-     but we have the base predicates *)
-  Theorem emergent_base_predicates :
-    contains_emergent 0 (fun x => x = a) /\
-    contains_emergent 0 (fun x => x = b).
-  Proof.
-    split.
-    - unfold contains_emergent, InStage.
-      exists C0_a.  (* Just C0_a, no parameters *)
-      intro x. simpl. reflexivity.
-    - unfold contains_emergent, InStage.
-      exists C0_b.  (* Just C0_b, no parameters *)
-      intro x. simpl. reflexivity.
-  Qed.
-  
-  (* Property 2: backward containment (monotonicity) *)
-  Theorem emergent_contains_backward :
-    forall m n P, m <= n -> contains_emergent m P -> contains_emergent n P.
-  Proof.
-    intros m n P H_le H_m.
-    unfold contains_emergent in *.
-    induction H_le.
-    - exact H_m.
-    - apply (stage_monotone _ _ IHH_le).
-  Qed.
-  
-  (* Property 3: Growth and novelty *)
-  Theorem emergent_novelty :
-    forall n, exists P, 
-      ~ contains_emergent n P /\
-      (exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, P x <-> @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x).
-  Proof.
-    intro n.
-    destruct (@Derive_NoSelfTotality.novelty Alpha a b a_neq_b n) as [P [Hnameable Hnotin]].
-    exists P.
-    split.
-    - (* ~ contains_emergent n P *)
-      unfold contains_emergent.
-      exact Hnotin.
-    - (* exists s... *)
-      exact Hnameable.
-  Qed.
-  
-  (* ============================================================ *)
-  (* The Complete Equivalence                                     *)
-  (* ============================================================ *)
-  
-  Theorem GenerativeType_is_emergent :
-    (* 1. Base predicates exist *)
-    (contains_emergent 0 (fun x => x = a)) /\
-    
-    (* 2. Monotonicity emerges *)
-    (forall m n P, m <= n -> 
-      contains_emergent m P -> contains_emergent n P) /\
-    
-    (* 3. Eternal novelty emerges *)
-    (forall n, exists P, 
-      ~ contains_emergent n P /\
-      exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, P x <-> @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x) /\
-    
-    (* 4. No self-totality *)
-    (forall n, ~ InStage n (totality_of (stage_collection n))).
-  Proof.
-    split; [|split; [|split]].
-    - (* Base predicates *)
-      apply emergent_base_predicates.
-    - (* Monotonicity *)
-      apply emergent_contains_backward.
-    - (* Eternal novelty *)
-      apply emergent_novelty.
-    - (* No self-totality *)
-      intro n. unfold InStage.
-      apply no_self_totality.
-  Qed.
-  
-  (* ============================================================ *)
-  (* The Ultimate Theorem - All From No Axioms!                   *)
-  (* ============================================================ *)
-  
-  Theorem everything_from_no_axioms :
-    (* From just the proven no_self_totality, we get: *)
-    
-    (* 1. Time (infinite stages) *)
-    (forall n, exists m, m > n) /\
-    
-    (* 2. Space (predicates at each stage) *)
-    (forall n, exists P, InStage n P) /\
-    
-    (* 3. Growth (eternal novelty) *)
-    (forall n, exists P, ~ InStage n P /\
-      exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, P x <-> @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x) /\
-    
-    (* 4. Persistence (base predicates remain) *)
-    (forall n, exists P, InStage 0 P /\ InStage n P) /\
-    
-    (* 5. Structure (totality exists but escapes) *)
-    (forall n, exists P, 
-      (forall x, P x <-> totality_of (stage_collection n) x) /\
-      ~ InStage n P) /\
-    
-    (* 6. Patterns emerge from the diagonal process *)
-    (exists pattern : nat -> nat,
-      forall n, pattern (S n) > pattern n).
-  Proof.
-    split; [|split; [|split; [|split; [|split]]]].
-    - (* Time is infinite *)
-      intro n. exists (S n). lia.
-      
-    - (* Space exists at each stage *)
-      intro n. 
-      destruct n.
-      + (* n = 0: base predicates exist *)
-        exists (fun x => x = a).
-        apply emergent_base_predicates.
-      + (* n = S n': use monotonicity *)
-        exists (fun x => x = a).
-        apply emergent_contains_backward with 0.
-        * lia.
-        * apply emergent_base_predicates.
-        
-    - (* Eternal growth via novelty *)
-      apply emergent_novelty.
-      
-    - (* Persistence of base predicates *)
-      intro n.
-      exists (fun x => x = a).
-      split.
-      + apply emergent_base_predicates.
-      + apply emergent_contains_backward with 0.
-        * lia.
-        * apply emergent_base_predicates.
-        
-    - (* Structure: totality exists but escapes *)
-      intro n.
-      exists (totality_of (stage_collection n)).
-      split.
-      + intro x. reflexivity.
-      + unfold InStage. apply no_self_totality.
-      
-    - (* Patterns emerge *)
-      exists (fun n => n).
-      intros. lia.
-  Qed.
-  
-  (* ============================================================ *)
-  (* The Philosophical Consequence                                *)
-  (* ============================================================ *)
-  
-  Theorem time_from_diagonalization :
-    (* Starting from just two distinct points and diagonalization,
-       we derive temporal structure, growth, and self-reference *)
-    
-    (* The minimal requirements *)
-    (exists x y : Alphacarrier, x <> y) ->
-    
-    (* Give us everything *)
-    (forall n, exists P, ~ InStage n P) /\  (* Eternal incompleteness *)
-    (forall n m P, n <= m -> InStage n P -> InStage m P) /\  (* Time's arrow *)
-    (forall n, exists next, next > n).  (* Infinite future *)
-  Proof.
-    intro H_distinct.
-    split; [|split].
-    - (* Eternal incompleteness *)
-      intro n.
-      exists (totality_of (stage_collection n)).
-      unfold InStage.
-      apply no_self_totality.
-    - (* Time's arrow (monotonicity) *)
-      intros n m P H_le H_n.
-      apply emergent_contains_backward with n.
-      + exact H_le.
-      + exact H_n.
-    - (* Infinite future *)
-      intro n. exists (S n). lia.
-  Qed.
-
-End CompleteConstruction.
-
-End EmergentGenerativeComplete.
 
 
 Module EmergentTheology.
