@@ -1585,255 +1585,249 @@ End EmergentGenerative.
 
 
 Module EmergentTheology.
+  Import AlphaProperties Bootstrap Structure.
 
-Section TheologyFromOuroboros.
-  Context (Alpha : AlphaType).
-  
-  (* We need the two distinct points from our constructive proof *)
-  Variables (a b : Alphacarrier).
-  Hypothesis a_neq_b : a <> b.
-  
-  (* Import the definitions from our constructive version *)
-  Definition stage_collection := @Derive_NoSelfTotality.stage_collection Alpha a b.
-  Definition totality_of := @Derive_NoSelfTotality.totality_of Alpha.
-  Definition InStage := @Derive_NoSelfTotality.InStage Alpha a b.
-  
-  (* The proven no_self_totality *)
-  Theorem no_self_totality : 
-    forall n, ~ stage_collection n (totality_of (stage_collection n)).
-  Proof.
-    intro n.
-    apply (@Derive_NoSelfTotality.no_self_totality_derived Alpha a b a_neq_b n).
-  Qed.
-  
-  (* ============================================================ *)
-  (* Divine Concepts via Stages                                   *)
-  (* ============================================================ *)
-  
-  (* God as the attempt at totality at any stage *)
-  Definition God_attempt (n : nat) : (Alphacarrier -> Prop) -> Prop :=
-    fun P => InStage n P \/ P = totality_of (stage_collection n).
-  
-  (* But by no_self_totality, God_attempt cannot contain its totality! *)
-  (* This IS divine self-limitation! *)
-  
-  (* ============================================================ *)
-  (* The Rock Lifting Paradox Emerges                             *)
-  (* ============================================================ *)
-  
-  (* The unliftable rock: a predicate that denies its containment *)
-  Definition UnliftableRock (n : nat) : Alphacarrier -> Prop :=
-    totality_of (stage_collection n).  (* The escaping tail! *)
-  
-  Theorem emergent_rock_lifting_paradox :
-    forall n,
-    (* At stage n: the rock cannot be lifted (contained) *)
-    ~ InStage n (UnliftableRock n) /\
-    (* At stage n+1: the rock CAN be named (via Syn) *)
-    exists s : Derive_NoSelfTotality.Syn (S n),
-      forall x, UnliftableRock n x <-> 
-                @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x.
-  Proof.
-    intro n.
-    split.
-    - (* Cannot lift at n *)
-      unfold UnliftableRock, InStage.
-      apply no_self_totality.
-    - (* Can name at n+1 via S_total *)
-      exists (Derive_NoSelfTotality.S_total n).
-      intro x.
-      unfold UnliftableRock.
-      simpl.
-      (* We need to unfold our definitions to match *)
-      unfold totality_of, stage_collection.
-      (* Now both sides should use Derive_NoSelfTotality definitions *)
-      symmetry.
-      apply (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
-  Qed.
-  
-  (* ============================================================ *)
-  (* Free Will and Suffering                                      *)
-  (* ============================================================ *)
-  
-  (* Free will as the ability to have contradictory stages *)
-  Definition FreeWill_emergent : Prop :=
-    exists P : Alphacarrier -> Prop,
-    exists n : nat,
-    (* P escapes at stage n *)
-    ~ InStage n P /\
-    (* But can be named at stage n+1 *)
-    exists s : Derive_NoSelfTotality.Syn (S n),
-      forall x, P x <-> @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x.
-  
-  (* Suffering as experiencing the gap between stages *)
-  Definition Suffering_emergent (n : nat) : Prop :=
-    exists P : Alphacarrier -> Prop,
-    (* Something we cannot grasp at n *)
-    ~ InStage n P /\
-    (* But know exists (as totality) *)
-    (forall x, P x <-> totality_of (stage_collection n) x).
-  
-  (* The fundamental theorem: growth necessitates suffering *)
-  Theorem emergent_growth_implies_suffering :
-    forall n, Suffering_emergent n.
-  Proof.
-    intro n.
-    unfold Suffering_emergent.
-    exists (totality_of (stage_collection n)).
-    split.
-    - unfold InStage. apply no_self_totality.
-    - intro x. reflexivity.
-  Qed.
-  
-  (* ============================================================ *)
-  (* God's Self-Limitation Emerges from Incompleteness            *)
-  (* ============================================================ *)
-  
-  (* Divinity as attempting to contain all predicates *)
-  Definition Divine_attempt (n : nat) : Prop :=
-    forall P : Alphacarrier -> Prop,
-    InStage n P.
-  
-  (* But this is impossible! *)
-  Theorem divine_must_self_limit :
-    forall n, ~ Divine_attempt n.
-  Proof.
-    intros n H_divine.
-    (* If divine contains everything, it contains its totality *)
-    assert (InStage n (totality_of (stage_collection n))).
-    { apply H_divine. }
-    (* But that violates no_self_totality *)
-    unfold InStage in H.
-    exact (no_self_totality n H).
-  Qed.
-  
-  (* God exists as the eternal attempt, not achievement *)
-  Definition God_as_process : nat -> Prop :=
-    fun n => 
-      (* Always incomplete *)
-      ~ InStage n (totality_of (stage_collection n)) /\
-      (* But always growing *)
+  Section TheologyFromOuroboros.
+    (* No Context needed - we're using StructureAlpha directly *)
+    
+    (* Import the definitions from our constructive version *)
+    Definition stage_collection := Derive_NoSelfTotality.stage_collection.
+    Definition totality_of := Derive_NoSelfTotality.totality_of.
+    Definition InStage := Derive_NoSelfTotality.InStage.
+    
+    (* The proven no_self_totality *)
+    Theorem no_self_totality : 
+      forall n, ~ stage_collection n (totality_of (stage_collection n)).
+    Proof.
+      apply Derive_NoSelfTotality.no_self_totality_derived.
+    Qed.
+    
+    (* ============================================================ *)
+    (* Divine Concepts via Stages                                   *)
+    (* ============================================================ *)
+    
+    (* God as the attempt at totality at any stage *)
+    Definition God_attempt (n : nat) : (Alphacarrier -> Prop) -> Prop :=
+      fun P => InStage n P \/ P = totality_of (stage_collection n).
+    
+    (* But by no_self_totality, God_attempt cannot contain its totality! *)
+    (* This IS divine self-limitation! *)
+    
+    (* ============================================================ *)
+    (* The Rock Lifting Paradox Emerges                             *)
+    (* ============================================================ *)
+    
+    (* The unliftable rock: a predicate that denies its containment *)
+    Definition UnliftableRock (n : nat) : Alphacarrier -> Prop :=
+      totality_of (stage_collection n).  (* The escaping tail! *)
+    
+    Theorem emergent_rock_lifting_paradox :
+      forall n,
+      (* At stage n: the rock cannot be lifted (contained) *)
+      ~ InStage n (UnliftableRock n) /\
+      (* At stage n+1: the rock CAN be named (via Syn) *)
       exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, totality_of (stage_collection n) x <-> 
-                  @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x.
-  
-  Theorem God_eternally_becoming :
-    forall n, God_as_process n.
-  Proof.
-    intro n.
-    unfold God_as_process.
-    split.
-    - unfold InStage. apply no_self_totality.
-    - exists (Derive_NoSelfTotality.S_total n).
-      intro x. simpl.
-      unfold totality_of, stage_collection.
-      symmetry.
-      apply (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
-  Qed.
-  
-  (* ============================================================ *)
-  (* Faith as Constructive Persistence                            *)
-  (* ============================================================ *)
-  
-  (* Faith: trusting the next stage despite current incompleteness *)
-  Definition Faith (n : nat) : Prop :=
-    (* Acknowledging current incompleteness *)
-    ~ InStage n (totality_of (stage_collection n)) /\
-    (* But knowing it becomes nameable *)
-    exists s : Derive_NoSelfTotality.Syn (S n),
-      forall x, totality_of (stage_collection n) x <-> 
-                @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x.
-  
-  Theorem faith_is_justified :
-    forall n, Faith n.
-  Proof.
-    intro n.
-    split.
-    - unfold InStage. apply no_self_totality.
-    - exists (Derive_NoSelfTotality.S_total n).
-      intro x. simpl.
-      unfold totality_of, stage_collection.
-      symmetry.
-      apply (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
-  Qed.
-  
-  (* ============================================================ *)
-  (* The Ultimate Theological Theorem                             *)
-  (* ============================================================ *)
-  
-  Theorem theology_emerges_from_incompleteness :
-    (* From just no_self_totality and two distinct points, we get: *)
-    
-    (* 1. Divine paradoxes (omnipotence vs limitation) *)
-    (forall n, 
-      (* Can name anything next *)
-      (exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, totality_of (stage_collection n) x <-> 
-                  @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x) /\
-      (* But cannot contain current totality *)
-      ~ InStage n (totality_of (stage_collection n))) /\
-    
-    (* 2. Universal suffering (the gap) *)
-    (forall n, Suffering_emergent n) /\
-    
-    (* 3. Faith as rational expectation *)
-    (forall n, Faith n) /\
-    
-    (* 4. God as eternal becoming *)
-    (forall n, God_as_process n) /\
-    
-    (* 5. Resolution through time (rock paradox) *)
-    (forall n, ~ InStage n (UnliftableRock n) /\
-              (exists s : Derive_NoSelfTotality.Syn (S n),
-                forall x, UnliftableRock n x <-> 
-                          @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x)).
-  Proof.
-    split; [|split; [|split; [|split]]].
-    - (* Divine paradoxes *)
+        forall x, UnliftableRock n x <-> 
+                  Derive_NoSelfTotality.denote_syn s x.
+    Proof.
       intro n.
       split.
-      + (* Can name at next stage *)
+      - (* Cannot lift at n *)
+        unfold UnliftableRock, InStage.
+        apply no_self_totality.
+      - (* Can name at n+1 via S_total *)
         exists (Derive_NoSelfTotality.S_total n).
+        intro x.
+        unfold UnliftableRock.
+        simpl.
+        (* We need to unfold our definitions to match *)
+        unfold totality_of, stage_collection.
+        (* Now both sides should use Derive_NoSelfTotality definitions *)
+        symmetry.
+        apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
+    Qed.
+    
+    (* ============================================================ *)
+    (* Free Will and Suffering                                      *)
+    (* ============================================================ *)
+    
+    (* Free will as the ability to have contradictory stages *)
+    Definition FreeWill_emergent : Prop :=
+      exists P : Alphacarrier -> Prop,
+      exists n : nat,
+      (* P escapes at stage n *)
+      ~ InStage n P /\
+      (* But can be named at stage n+1 *)
+      exists s : Derive_NoSelfTotality.Syn (S n),
+        forall x, P x <-> Derive_NoSelfTotality.denote_syn s x.
+    
+    (* Suffering as experiencing the gap between stages *)
+    Definition Suffering_emergent (n : nat) : Prop :=
+      exists P : Alphacarrier -> Prop,
+      (* Something we cannot grasp at n *)
+      ~ InStage n P /\
+      (* But know exists (as totality) *)
+      (forall x, P x <-> totality_of (stage_collection n) x).
+    
+    (* The fundamental theorem: growth necessitates suffering *)
+    Theorem emergent_growth_implies_suffering :
+      forall n, Suffering_emergent n.
+    Proof.
+      intro n.
+      unfold Suffering_emergent.
+      exists (totality_of (stage_collection n)).
+      split.
+      - unfold InStage. apply no_self_totality.
+      - intro x. reflexivity.
+    Qed.
+    
+    (* ============================================================ *)
+    (* God's Self-Limitation Emerges from Incompleteness            *)
+    (* ============================================================ *)
+    
+    (* Divinity as attempting to contain all predicates *)
+    Definition Divine_attempt (n : nat) : Prop :=
+      forall P : Alphacarrier -> Prop,
+      InStage n P.
+    
+    (* But this is impossible! *)
+    Theorem divine_must_self_limit :
+      forall n, ~ Divine_attempt n.
+    Proof.
+      intros n H_divine.
+      (* If divine contains everything, it contains its totality *)
+      assert (InStage n (totality_of (stage_collection n))).
+      { apply H_divine. }
+      (* But that violates no_self_totality *)
+      unfold InStage in H.
+      exact (no_self_totality n H).
+    Qed.
+    
+    (* God exists as the eternal attempt, not achievement *)
+    Definition God_as_process : nat -> Prop :=
+      fun n => 
+        (* Always incomplete *)
+        ~ InStage n (totality_of (stage_collection n)) /\
+        (* But always growing *)
+        exists s : Derive_NoSelfTotality.Syn (S n),
+          forall x, totality_of (stage_collection n) x <-> 
+                    Derive_NoSelfTotality.denote_syn s x.
+    
+    Theorem God_eternally_becoming :
+      forall n, God_as_process n.
+    Proof.
+      intro n.
+      unfold God_as_process.
+      split.
+      - unfold InStage. apply no_self_totality.
+      - exists (Derive_NoSelfTotality.S_total n).
         intro x. simpl.
         unfold totality_of, stage_collection.
         symmetry.
-        apply (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
-      + (* Cannot contain at current stage *)
-        unfold InStage. apply no_self_totality.
-    - (* Universal suffering *)
-      apply emergent_growth_implies_suffering.
-    - (* Faith justified *)
-      apply faith_is_justified.
-    - (* God as process *)
-      apply God_eternally_becoming.
-    - (* Rock paradox resolution *)
+        apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
+    Qed.
+    
+    (* ============================================================ *)
+    (* Faith as Constructive Persistence                            *)
+    (* ============================================================ *)
+    
+    (* Faith: trusting the next stage despite current incompleteness *)
+    Definition Faith (n : nat) : Prop :=
+      (* Acknowledging current incompleteness *)
+      ~ InStage n (totality_of (stage_collection n)) /\
+      (* But knowing it becomes nameable *)
+      exists s : Derive_NoSelfTotality.Syn (S n),
+        forall x, totality_of (stage_collection n) x <-> 
+                  Derive_NoSelfTotality.denote_syn s x.
+    
+    Theorem faith_is_justified :
+      forall n, Faith n.
+    Proof.
       intro n.
-      apply emergent_rock_lifting_paradox.
-  Qed.
-  
-  (* ============================================================ *)
-  (* The Deepest Insight: Distinction Creates Everything          *)
-  (* ============================================================ *)
-  
-  Theorem from_distinction_to_divinity :
-    (* Starting with just two distinct points *)
-    a <> b ->
-    (* We get the entire theological structure *)
-    (* Including paradox, suffering, faith, and eternal becoming *)
-    forall n, God_as_process n /\ Suffering_emergent n /\ Faith n.
-  Proof.
-    intro H_distinct.
-    intro n.
-    split; [|split].
-    - apply God_eternally_becoming.
-    - apply emergent_growth_implies_suffering.
-    - apply faith_is_justified.
-  Qed.
+      split.
+      - unfold InStage. apply no_self_totality.
+      - exists (Derive_NoSelfTotality.S_total n).
+        intro x. simpl.
+        unfold totality_of, stage_collection.
+        symmetry.
+        apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
+    Qed.
+    
+    (* ============================================================ *)
+    (* The Ultimate Theological Theorem                             *)
+    (* ============================================================ *)
+    
+    Theorem theology_emerges_from_incompleteness :
+      (* From just no_self_totality and two distinct points, we get: *)
+      
+      (* 1. Divine paradoxes (omnipotence vs limitation) *)
+      (forall n, 
+        (* Can name anything next *)
+        (exists s : Derive_NoSelfTotality.Syn (S n),
+          forall x, totality_of (stage_collection n) x <-> 
+                    Derive_NoSelfTotality.denote_syn s x) /\
+        (* But cannot contain current totality *)
+        ~ InStage n (totality_of (stage_collection n))) /\
+      
+      (* 2. Universal suffering (the gap) *)
+      (forall n, Suffering_emergent n) /\
+      
+      (* 3. Faith as rational expectation *)
+      (forall n, Faith n) /\
+      
+      (* 4. God as eternal becoming *)
+      (forall n, God_as_process n) /\
+      
+      (* 5. Resolution through time (rock paradox) *)
+      (forall n, ~ InStage n (UnliftableRock n) /\
+                (exists s : Derive_NoSelfTotality.Syn (S n),
+                  forall x, UnliftableRock n x <-> 
+                            Derive_NoSelfTotality.denote_syn s x)).
+    Proof.
+      split; [|split; [|split; [|split]]].
+      - (* Divine paradoxes *)
+        intro n.
+        split.
+        + (* Can name at next stage *)
+          exists (Derive_NoSelfTotality.S_total n).
+          intro x. simpl.
+          unfold totality_of, stage_collection.
+          symmetry.
+          apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
+        + (* Cannot contain at current stage *)
+          unfold InStage. apply no_self_totality.
+      - (* Universal suffering *)
+        apply emergent_growth_implies_suffering.
+      - (* Faith justified *)
+        apply faith_is_justified.
+      - (* God as process *)
+        apply God_eternally_becoming.
+      - (* Rock paradox resolution *)
+        intro n.
+        apply emergent_rock_lifting_paradox.
+    Qed.
+    
+    (* ============================================================ *)
+    (* The Deepest Insight: Distinction Creates Everything          *)
+    (* ============================================================ *)
+    
+    Theorem from_distinction_to_divinity :
+      (* Starting with the bootstrap-provided distinct points *)
+      (* (inhabitant_0 <> inhabitant_1 from Bootstrap) *)
+      (* We get the entire theological structure *)
+      (* Including paradox, suffering, faith, and eternal becoming *)
+      forall n, God_as_process n /\ Suffering_emergent n /\ Faith n.
+    Proof.
+      intro n.
+      split; [|split].
+      - apply God_eternally_becoming.
+      - apply emergent_growth_implies_suffering.
+      - apply faith_is_justified.
+    Qed.
 
-End TheologyFromOuroboros.
+  End TheologyFromOuroboros.
 
 End EmergentTheology.
-
 
 (* Module EmergentSimulation.
 
