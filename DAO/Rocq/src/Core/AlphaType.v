@@ -1,8 +1,6 @@
 (** AlphaType.v: The Consistent but Incomplete Type
     
-    AlphaType represents a type with exactly one impossible predicate,
-    differentiating it from OmegaType and NomegaType, which behave like
-    maximally paradoxical infinities.
+    AlphaType represents a type with exactly one impossible predicate
 *)
 
 Class AlphaType := {
@@ -19,7 +17,7 @@ Class AlphaType := {
   };
 
   (** Non-emptiness - need at least one element *)
-  alpha_not_empty : exists x : Alphacarrier, True
+  alpha_not_empty : { x : Alphacarrier | True }
 }.
 
 (** Helper to extract the impossible predicate *)

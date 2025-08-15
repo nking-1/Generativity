@@ -57,7 +57,7 @@ Module Rice.
     (* Future work could prove rice_omega_unrepresentable by showing 
         how semantic properties enable diagonal constructions similar to
         those in the Gödel/Turing proofs *)
-    Axiom rice_omega_unrepresentable : forall P : Alphacarrier -> Prop,
+    Hypothesis rice_omega_unrepresentable : forall P : Alphacarrier -> Prop,
       semantic_property P ->
       (exists p, P p) -> 
       (exists p, ~ P p) ->

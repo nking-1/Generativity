@@ -9,11 +9,11 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
-Require Import DAO.Theory.Impossibility.ParadoxNaturals.
+Require Import DAO.Theory.Impossibility.ParadoxNumbers.
 
 Module FalseThermodynamics.
   Import ImpossibilityAlgebra Core Operations.
-  Import ParadoxNaturals.
+  Import ParadoxNumbers ParadoxNaturals.
   
   (* ================================================================ *)
   (** ** Part I: Construction History - HOW We Built The Void *)

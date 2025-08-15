@@ -31,7 +31,7 @@ Module AlphaTernary.
         forall (A : Alphacarrier -> Prop), 
         (exists a, A a) \/ (forall a, ~ A a).
       
-      (** Key lemma: if Alpha has excluded middle, it can detect diagonal witnesses *)
+      (** If Alpha has excluded middle, it can detect diagonal witnesses *)
       Lemma alpha_em_detects_diagonal :
         alpha_excluded_middle ->
         exists (A_detect : Alphacarrier -> Prop),
@@ -39,12 +39,9 @@ Module AlphaTernary.
           A_detect a <-> Diagonal.Omega.om_diagonal alpha_enum embed (embed a).
       Proof.
         intro AEM.
-        
         (* Define A_detect as the preimage of omega_diagonal *)
         pose (A_detect := fun a => Diagonal.Omega.om_diagonal alpha_enum embed (embed a)).
         exists A_detect.
-        
-        (* This is just the definition - no EM needed yet *)
         split; intro H; exact H.
       Qed.
       
@@ -71,9 +68,6 @@ Module AlphaTernary.
         - (* Case 2: A_detect has no witnesses *)
           (* This means no embedded Alpha element satisfies omega_diagonal *)
           (* But we know omega_diagonal has witnesses in Omega *)
-          
-          (* Actually, both cases lead to the same conclusion: *)
-          (* A_detect and embed form a representation! *)
           unfold Unrepresentability.Core.representable.
           exists A_detect, embed.
           exact HA_detect.

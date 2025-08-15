@@ -158,14 +158,14 @@ Module ImpossibilitySymmetry.
       (** Axiom: Two predicate transformations are equal if they agree on all predicates.
           This is a restricted form of functional extensionality specifically for
           predicate transformations. *)
-      Axiom predicate_transform_ext : 
+      Hypothesis predicate_transform_ext : 
         forall (T1 T2 : predicate_transform),
         (forall P : Alphacarrier -> Prop, T1 P = T2 P) -> T1 = T2.
 
       (** Axiom: Proofs of impossibility preservation are unique.
           This is reasonable because preserves_impossibility is a Prop,
           and different proofs of the same proposition should be considered equal. *)
-      Axiom preserves_impossibility_proof_irrelevance :
+      Hypothesis preserves_impossibility_proof_irrelevance :
         forall (T : predicate_transform) 
               (p1 p2 : preserves_impossibility T), 
         p1 = p2.

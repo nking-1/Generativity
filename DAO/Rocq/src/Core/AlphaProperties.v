@@ -173,7 +173,7 @@ Module AlphaProperties.
       alpha_impossibility := exist _ bootstrap_omega
         (conj bootstrap_omega_is_impossible
               bootstrap_omega_is_unique);
-      alpha_not_empty := ex_intro _ inhabitant_0 I
+      alpha_not_empty := exist _ inhabitant_0 I
     }.
     
   End Bootstrap.

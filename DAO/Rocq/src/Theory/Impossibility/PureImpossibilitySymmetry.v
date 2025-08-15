@@ -21,8 +21,25 @@ Module PureImpossibilitySymmetry.
        is being a bit generous. *)
     Hypothesis impossible_decidable : forall P, {Is_Impossible P} + {~ Is_Impossible P}.
 
+    (** We need decidable equality for computational purposes *)
+    Hypothesis predicate_eq_dec : forall P Q : Alphacarrier -> Prop,
+      {forall a, P a <-> Q a} + {~ (forall a, P a <-> Q a)}.
+
     (** A transformation on predicates *)
     Definition predicate_transform := (Alphacarrier -> Prop) -> (Alphacarrier -> Prop).
+
+    (** A transformation preserves impossibility structure if it maps 
+    impossible predicates to impossible predicates *)
+    Definition preserves_impossibility (T : predicate_transform) : Prop :=
+      forall P, Is_Impossible P <-> Is_Impossible (T P).
+    
+    (** A "paradox translation" - maps one impossible predicate to another *)
+    Definition paradox_translation (source target : Alphacarrier -> Prop) 
+      (H_source : Is_Impossible source) (H_target : Is_Impossible target) : predicate_transform :=
+      fun P => match predicate_eq_dec P source with
+                | left _ => target
+                | right _ => P
+                end.
     
     (* ================================================================ *)
     (** ** Pure Action from False-Depth *)
