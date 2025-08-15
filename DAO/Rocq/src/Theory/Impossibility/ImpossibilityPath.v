@@ -69,63 +69,63 @@ Module WaysOfNotExisting.
       
       (** All patterns are impossible, but each has a different structure *)
       Lemma all_patterns_impossible : 
-  ImpossibilityAlgebra.Core.Is_Impossible (div_by_zero_pattern 1) /\
-  ImpossibilityAlgebra.Core.Is_Impossible (sqrt_negative_pattern 1) /\
-  ImpossibilityAlgebra.Core.Is_Impossible log_zero_pattern /\
-  ImpossibilityAlgebra.Core.Is_Impossible russell_pattern /\
-  ImpossibilityAlgebra.Core.Is_Impossible liar_pattern.
-Proof.
-  split.
-  - (* div_by_zero_pattern 1 *)
-    intro a. split.
-    + intros [m [H Hom]]. 
-      (* m * 0 = 1 is impossible - need to show m * 0 = 0 first *)
-      assert (m * 0 = 0) by (induction m; auto).
-      rewrite H0 in H.
-      (* Now we have 0 = 1 *)
-      discriminate H.
-    + intro H. exfalso. 
-      exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
-  
-  - split.
-    + (* sqrt_negative_pattern 1 *)
-      intro a. split.
-      * intros [m [H Hom]].
-        (* m * m + 1 = 0 is impossible for nat *)
-        (* m * m + 1 is always at least 1 *)
-        assert (m * m + 1 > 0).
-        { induction m; simpl; lia. }
-        lia.
-      * intro H. exfalso.
-        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
-    
-    + split.
-      * (* log_zero_pattern *)
-        intro a. split.
-        -- intros [e [Hpos [H Hom]]].
-          (* Just use the omega_veil witness *)
-          exact Hom.
-        -- intro H. exfalso.
-          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
-      
-      * split.
-        -- (* russell_pattern *)
+        ImpossibilityAlgebra.Core.Is_Impossible (div_by_zero_pattern 1) /\
+        ImpossibilityAlgebra.Core.Is_Impossible (sqrt_negative_pattern 1) /\
+        ImpossibilityAlgebra.Core.Is_Impossible log_zero_pattern /\
+        ImpossibilityAlgebra.Core.Is_Impossible russell_pattern /\
+        ImpossibilityAlgebra.Core.Is_Impossible liar_pattern.
+      Proof.
+        split.
+        - (* div_by_zero_pattern 1 *)
           intro a. split.
-          ++ intros [[H1 H2] Hw].
-              exact Hw.
-          ++ intro H. exfalso.
-              exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
+          + intros [m [H Hom]]. 
+            (* m * 0 = 1 is impossible - need to show m * 0 = 0 first *)
+            assert (m * 0 = 0) by (induction m; auto).
+            rewrite H0 in H.
+            (* Now we have 0 = 1 *)
+            discriminate H.
+          + intro H. exfalso. 
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
         
-        -- (* liar_pattern *)
-          intro a. split.
-          ++ intros [H1 H2]. 
-              (* H1: ~ omega_veil a *)
-              (* H2: omega_veil a *)
-              (* We can just use H2 directly *)
-              exact H2.
-          ++ intro H. exfalso.
+        - split.
+          + (* sqrt_negative_pattern 1 *)
+            intro a. split.
+            * intros [m [H Hom]].
+              (* m * m + 1 = 0 is impossible for nat *)
+              (* m * m + 1 is always at least 1 *)
+              assert (m * m + 1 > 0).
+              { induction m; simpl; lia. }
+              lia.
+            * intro H. exfalso.
               exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
-Qed.
+          
+          + split.
+            * (* log_zero_pattern *)
+              intro a. split.
+              -- intros [e [Hpos [H Hom]]].
+                (* Just use the omega_veil witness *)
+                exact Hom.
+              -- intro H. exfalso.
+                exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
+            
+            * split.
+              -- (* russell_pattern *)
+                intro a. split.
+                ++ intros [[H1 H2] Hw].
+                    exact Hw.
+                ++ intro H. exfalso.
+                    exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
+              
+              -- (* liar_pattern *)
+                intro a. split.
+                ++ intros [H1 H2]. 
+                    (* H1: ~ omega_veil a *)
+                    (* H2: omega_veil a *)
+                    (* We can just use H2 directly *)
+                    exact H2.
+                ++ intro H. exfalso.
+                    exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
+      Qed.
       
       (** Create mathematical objects from these patterns *)
       Definition make_object (pattern : WayOfNotExisting -> Prop)
@@ -242,32 +242,28 @@ Qed.
   (** ** Philosophy: False Has Rich Structure *)
   (* ================================================================ *)
   
-  Module Philosophy.
+  (*
+    Traditional view:
+    - True has many proofs (constructive mathematics)
+    - False is just False (nothing to say)
     
-    (*
-      Traditional view:
-      - True has many proofs (constructive mathematics)
-      - False is just False (nothing to say)
-      
-      Our discovery:
-      - False has many constructions too!
-      - Different impossibilities are different mathematical objects
-      - The pattern of impossibility IS the mathematics
-      
-      Just as constructive mathematics studies different proofs of True,
-      we study different constructions of False.
-      
-      1/0, 2/0, sqrt(-1), log(0) are all "undefined" in traditional math.
-      But they're undefined in DIFFERENT WAYS.
-      These different ways are different mathematical objects.
-      
-      Mathematics isn't about what's true or false.
-      It's about HOW things are true or false.
-      The construction IS the content.
-      
-      Intensionality matters everywhere - for True AND False.
-    *)
+    Our discovery:
+    - False has many constructions too!
+    - Different impossibilities are different mathematical objects
+    - The pattern of impossibility IS the mathematics
     
-  End Philosophy.
+    Just as constructive mathematics studies different proofs of True,
+    we study different constructions of False.
+    
+    1/0, 2/0, sqrt(-1), log(0) are all "undefined" in traditional math.
+    But they're undefined in DIFFERENT WAYS.
+    These different ways are different mathematical objects.
+    
+    Mathematics isn't about what's true or false.
+    It's about HOW things are true or false.
+    The construction IS the content.
+    
+    Intensionality matters everywhere - for True AND False.
+  *)
 
 End WaysOfNotExisting.
