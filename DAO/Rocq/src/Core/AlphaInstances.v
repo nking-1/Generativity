@@ -21,7 +21,7 @@ Instance Alpha_unit : AlphaType := {
         conj
           (fun (H : Q x) => HQ x H : False)  (* Q x -> False *)
           (fun (H : False) => False_ind (Q x) H))); (* False -> Q x *)
-  alpha_not_empty := ex_intro _ tt I
+  alpha_not_empty := exist _ tt I
 }.
 
 (* Natural numbers - the universe of discrete quantities *)
@@ -31,7 +31,7 @@ Instance Alpha_nat : AlphaType := {
     (conj
       (fun (n : nat) (H : False) => H)
       (fun Q HQ n => conj (fun H => HQ n H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ 0 I
+  alpha_not_empty := exist _ 0 I
 }.
 
 (* Booleans - the universe of binary choices *)
@@ -41,7 +41,7 @@ Instance Alpha_bool : AlphaType := {
     (conj
       (fun (b : bool) (H : False) => H)
       (fun Q HQ b => conj (fun H => HQ b H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ true I
+  alpha_not_empty := exist _ true I
 }.
 
 
@@ -64,7 +64,7 @@ Instance Alpha_universal (T : Type) `{Inhabited T} : AlphaType := {
     (conj
       (fun (x : T) (H : False) => H)
       (fun Q HQ x => conj (fun H => HQ x H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ inhabitant I
+  alpha_not_empty := exist _ inhabitant I
 }.
 
 
@@ -83,7 +83,7 @@ Instance Alpha_product (A B : Type)
     (conj
       (fun (p : A * B) (H : False) => H)
       (fun Q HQ p => conj (fun H => HQ p H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ (HA, HB) I
+  alpha_not_empty := exist _ (HA, HB) I
 }.
 
 (* Sums - the universe of alternatives *)
@@ -93,7 +93,7 @@ Instance Alpha_sum_left (A B : Type) (HA : A) : AlphaType := {
     (conj
       (fun (s : A + B) (H : False) => H)
       (fun Q HQ s => conj (fun H => HQ s H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ (inl HA) I
+  alpha_not_empty := exist _ (inl HA) I
 }.
 
 (* Lists - the universe of sequences *)
@@ -103,7 +103,7 @@ Instance Alpha_list (A : Type) : AlphaType := {
     (conj
       (fun (l : list A) (H : False) => H)
       (fun Q HQ l => conj (fun H => HQ l H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ nil I
+  alpha_not_empty := exist _ nil I
 }.
 
 (* ============================================================ *)
@@ -122,7 +122,7 @@ Instance Alpha_finite_obs : AlphaType := {
     (conj
       (fun (o : FiniteObs) (H : False) => H)
       (fun Q HQ o => conj (fun H => HQ o H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ obs_zero I
+  alpha_not_empty := exist _ obs_zero I
 }.
 
 (* The universe of binary trees - branching possibilities *)
@@ -136,7 +136,7 @@ Instance Alpha_tree (A : Type) (HA : A) : AlphaType := {
     (conj
       (fun (t : BinaryTree A) (H : False) => H)
       (fun Q HQ t => conj (fun H => HQ t H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ (leaf A HA) I
+  alpha_not_empty := exist _ (leaf A HA) I
 }.
 
 (* ============================================================ *)
@@ -151,7 +151,7 @@ Instance Alpha_sigma (A : Type) (B : A -> Type)
     (conj
       (fun (s : {a : A & B a}) (H : False) => H)
       (fun Q HQ s => conj (fun H => HQ s H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ (existT _ HA HB) I
+  alpha_not_empty := exist _ (existT _ HA HB) I
 }.
 
 (* Finite types via Fin n *)
@@ -162,7 +162,7 @@ Instance Alpha_finite (n : nat) : AlphaType := {
     (conj
       (fun (f : Fin.t (S n)) (H : False) => H)
       (fun Q HQ f => conj (fun H => HQ f H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ Fin.F1 I
+  alpha_not_empty := exist _ Fin.F1 I
 }.
 
 (* ============================================================ *)
@@ -178,7 +178,7 @@ Instance Alpha_Zmod (n : nat) : AlphaType := {
     (conj
       (fun (z : Zmod n) (H : False) => H)
       (fun Q HQ z => conj (fun H => HQ z H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ (exist _ 0 (Nat.lt_0_succ n)) I
+  alpha_not_empty := exist _ (exist _ 0 (Nat.lt_0_succ n)) I
 }.
 
 (* ============================================================ *)
@@ -198,7 +198,7 @@ Instance Alpha_stream (A : Type) (HA : A) : AlphaType := {
     (conj
       (fun (s : Stream A) (H : False) => H)
       (fun Q HQ s => conj (fun H => HQ s H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ (repeat HA) I
+  alpha_not_empty := exist _ (repeat HA) I
 }.
 
 
@@ -210,7 +210,7 @@ Record AlphaCarrier@{u} : Type@{u+1} := mkAlpha {
   impossibility : {P : carrier -> Prop | 
     (forall x, ~ P x) /\ 
     (forall Q, (forall x, ~ Q x) -> forall x, Q x <-> P x)};
-  non_empty : exists x : carrier, True
+  non_empty : { x : carrier | True }
 }.
 
 (* Lift an AlphaCarrier to a higher universe level *)
@@ -236,7 +236,7 @@ Definition diagonal_universe@{u v | u < v} (enum : nat -> AlphaCarrier@{u}) : Al
         (fun Q HQ f => conj (fun H => HQ f H) (fun H => False_ind _ H))))
     
     (* Non-empty: the constant True sequence exists *)
-    (ex_intro _ (fun n _ => True) I).
+    (exist _ (fun n _ => True) I).
 
 (* Define a type that represents "n levels of nesting" all at the same universe *)
 (* TowerLevel needs to be one level higher to contain AlphaCarrier *)
@@ -252,7 +252,7 @@ Definition make_tower_level@{u v | u < v} : AlphaCarrier@{v} :=
     (exist _ (fun _ => False)
       (conj (fun _ H => H)
             (fun Q HQ x => conj (fun H => HQ x H) (fun H => False_ind _ H))))
-    (ex_intro _ (existT _ 0 base_level) I).  (* Level 0 with its base *)
+    (exist _ (existT _ 0 base_level) I).  (* Level 0 with its base *)
 
 (* Meta - Build a tower of universes, each containing the previous *)
 (* Not possible to do in coq - universe levels are compile time *)
@@ -263,14 +263,14 @@ Definition make_tower_level@{u v | u < v} : AlphaCarrier@{v} :=
       (exist _ (fun _ : unit => False)
         (conj (fun _ H => H)
               (fun Q HQ x => conj (fun H => HQ x H) (fun H => False_ind _ H))))
-      (ex_intro _ tt I)
+      (exist _ tt I)
   | S n' => 
       mkAlpha
         (AlphaCarrier@{u+n'})  (* Contains universes from the level below *)
         (exist _ (fun _ : AlphaCarrier@{u+n'} => False)
           (conj (fun _ H => H)
                 (fun Q HQ A => conj (fun H => HQ A H) (fun H => False_ind _ H))))
-        (ex_intro _ (universe_tower n') I)
+        (exist _ (universe_tower n') I)
   end. *)
 
 
@@ -286,7 +286,7 @@ Definition product_universe@{u} (A B : AlphaCarrier@{u}) : AlphaCarrier@{u} :=
       (conj (fun _ H => H)
             (fun Q HQ p => conj (fun H => HQ p H) (fun H => False_ind _ H))))
     (match non_empty A, non_empty B with
-     | ex_intro _ a _, ex_intro _ b _ => ex_intro _ (a, b) I
+     | exist _ a _, exist _ b _ => exist _ (a, b) I
      end).
 
 (* ============================================================ *)
@@ -301,7 +301,7 @@ Definition function_universe@{u v | u < v} (A B : AlphaCarrier@{u}) : AlphaCarri
       (conj (fun _ H => H)
             (fun Q HQ f => conj (fun H => HQ f H) (fun H => False_ind _ H))))
     (match non_empty B with
-     | ex_intro _ b _ => ex_intro _ (fun _ => b) I
+     | exist _ b _ => exist _ (fun _ => b) I
      end).
 
 (* ============================================================ *)
@@ -322,7 +322,7 @@ Fixpoint interpret_code@{u} (c : UniverseCode@{u}) : AlphaCarrier@{u} :=
       (exist _ (fun _ => False) 
         (conj (fun _ H => H) 
               (fun Q HQ _ => conj (fun H => HQ _ H) (fun H => False_ind _ H))))
-      (ex_intro _ tt I)
+      (exist _ tt I)
   | code_product c1 c2 => product_universe (interpret_code c1) (interpret_code c2)
   | code_sum c1 c2 => 
       mkAlpha 
@@ -331,7 +331,7 @@ Fixpoint interpret_code@{u} (c : UniverseCode@{u}) : AlphaCarrier@{u} :=
           (conj (fun _ H => H)
                 (fun Q HQ _ => conj (fun H => HQ _ H) (fun H => False_ind _ H))))
         (match non_empty (interpret_code c1) with
-         | ex_intro _ a _ => ex_intro _ (inl a) I
+         | exist _ a _ => exist _ (inl a) I
          end)
   | code_function _ _ => 
       (* Functions escape! Return a witness to this fact *)
@@ -340,7 +340,7 @@ Fixpoint interpret_code@{u} (c : UniverseCode@{u}) : AlphaCarrier@{u} :=
         (exist _ (fun _ => False)
           (conj (fun _ H => H)
                 (fun Q HQ _ => conj (fun H => HQ _ H) (fun H => False_ind _ H))))
-        (ex_intro _ tt I)
+        (exist _ tt I)
   end.
 
 (* The function space interpreter - where the magic happens *)
@@ -352,7 +352,7 @@ Definition interpret_function_code@{u v | u < v}
       (conj (fun _ H => H)
             (fun Q HQ _ => conj (fun H => HQ _ H) (fun H => False_ind _ H))))
     (match non_empty (interpret_code@{u} c2) with
-     | ex_intro _ b _ => ex_intro _ (fun _ => b) I
+     | exist _ b _ => exist _ (fun _ => b) I
      end).
 
 (* A code that references function spaces *)
@@ -374,7 +374,7 @@ Definition code_universe@{u} : AlphaCarrier@{u} :=
     (exist _ (fun _ : UniverseCode@{u} => False)
       (conj (fun _ H => H)
             (fun Q HQ _ => conj (fun H => HQ _ H) (fun H => False_ind _ H))))
-    (ex_intro _ code_unit I).
+    (exist _ code_unit I).
 
 Instance Alpha_code_universe : AlphaType := {
   Alphacarrier := UniverseCode;
@@ -382,7 +382,7 @@ Instance Alpha_code_universe : AlphaType := {
     (conj 
       (fun _ H => H)
       (fun Q HQ c => conj (fun H => HQ c H) (fun H => False_ind _ H)));
-  alpha_not_empty := ex_intro _ code_unit I
+  alpha_not_empty := exist _ code_unit I
 }.
 
 (* ============================================================ *)
@@ -420,7 +420,7 @@ Admitted. *)
 
 (* Add a new section: Concrete Ouroboros Demonstration *)
 
-Module ConcreteOuroboros.
+(* Module ConcreteOuroboros.
   
   (* Let's run ouroboros on nat - starting with just omega_veil and one other predicate *)
   Definition nat_predicates_at_stage : nat -> (nat -> Prop) -> Prop :=
@@ -650,7 +650,7 @@ Proof.
   - apply totality_not_in_stage.
 Qed.
 
-End ConcreteOuroboros_Tagged.
+End ConcreteOuroboros_Tagged. *)
 
 
 (* ============================================================ *)

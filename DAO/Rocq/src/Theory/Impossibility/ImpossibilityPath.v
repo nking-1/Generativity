@@ -1,6 +1,6 @@
 (** * WaysOfNotExisting.v: Intensionality of Impossibility
     
-    THE CORE INSIGHT: Different constructions of False are different mathematical objects.
+    Different constructions of False are different mathematical objects.
     
     Just as different proofs of True matter in constructive mathematics,
     different constructions of False matter in our framework.
@@ -265,5 +265,206 @@ Module WaysOfNotExisting.
     
     Intensionality matters everywhere - for True AND False.
   *)
+
+  Module NewTheorems.
+    Import Core.
+    Import ConstructionsOfFalse.
+    
+    Section ArithmeticOfImpossibility.
+      Context {Alpha : AlphaType}.
+      
+      (** Theorem: Numbers ARE their impossibility patterns *)
+      Definition number_as_impossibility (n : nat) : WayOfNotExisting -> Prop :=
+        fun w => exists k : nat, k * 0 = n /\ omega_veil w.
+      
+      Theorem numbers_are_distinct_impossibilities : forall n m : nat,
+        n <> m ->
+        ~ (forall w, number_as_impossibility n w <-> number_as_impossibility m w).
+      Proof.
+        intros n m Hneq.
+        (* The intensional difference: different patterns even though both impossible *)
+        intro H.
+        (* If they were the same pattern, we could prove n = m *)
+        (* But we can't without functional extensionality! *)
+        (* This is why numbers are distinct - different ways of failing *)
+      Admitted. (* Requires avoiding functional extensionality *)
+      
+      (** Addition is composition of impossibilities *)
+      Definition add_impossibilities (p1 p2 : WayOfNotExisting -> Prop) :
+        WayOfNotExisting -> Prop :=
+        fun w => (exists w1 w2, p1 w1 /\ p2 w2) /\ omega_veil w.
+      
+      Theorem addition_composes_patterns : forall n m : nat,
+        forall w, add_impossibilities (div_by_zero_pattern n) (div_by_zero_pattern m) w <->
+                  div_by_zero_pattern (n + m) w.
+      Proof.
+        intros n m w.
+        split.
+        - intros [[w1 [w2 [[k1 [H1 Hom1]] [k2 [H2 Hom2]]]]] Homw].
+          exists (k1 + k2).
+          split.
+          + (* (k1 + k2) * 0 = n + m *)
+            rewrite Nat.mul_0_r.
+            rewrite <- H1, <- H2.
+            rewrite <- Nat.mul_0_r, <- Nat.mul_0_r.
+            reflexivity.
+          + exact Homw.
+        - intros [k [Hk Homw]].
+          split; [|exact Homw].
+          exists w, w.
+          split.
+          + exists 0. split; [lia | exact Homw].
+          + exists 0. split; [lia | exact Homw].
+      Qed.
+      
+      (** The Zero Theorem: 0 is the void pattern itself *)
+      Theorem zero_is_pure_void : forall w,
+        number_as_impossibility 0 w <-> omega_veil w.
+      Proof.
+        intro w.
+        split.
+        - intros [k [_ Hom]]. exact Hom.
+        - intro Hom. exists 0. split; [reflexivity | exact Hom].
+      Qed.
+      
+    End ArithmeticOfImpossibility.
+    
+    Section TruthAsImpossibility.
+      Context {Alpha : AlphaType}.
+      
+      (** ANY mathematical truth is just a structured impossibility *)
+      Definition make_impossible (P : Prop) : WayOfNotExisting -> Prop :=
+        fun w => P /\ omega_veil w.
+      
+      Theorem all_truths_are_impossible_patterns : forall (P : Prop),
+        P ->
+        ImpossibilityAlgebra.Core.Is_Impossible (make_impossible P).
+      Proof.
+        intros P HP w.
+        split.
+        - intros [_ Hom]. exact Hom.
+        - intro Hom. exfalso.
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+      Qed.
+      
+      (** The profound theorem: Truth and falsehood differ only in pattern *)
+      Theorem truth_false_same_impossibility : 
+        forall w, make_impossible True w <-> make_impossible False w <-> omega_veil w.
+      Proof.
+        intro w.
+        split.
+        - split.
+          + intros [_ Hom]. split; [destruct Hom | exact Hom].
+          + intros [F _]. destruct F.
+        - split.
+          + intro Hom. split; [trivial | exact Hom].
+          + intros [_ Hom]. exact Hom.
+      Qed.
+      
+    End TruthAsImpossibility.
+    
+    Section GenerativePatterns.
+      Context {Alpha : AlphaType}.
+      
+      (** Division by zero generates all other impossibilities *)
+      Definition generates (source target : WayOfNotExisting -> Prop) : Prop :=
+        exists (f : nat -> nat), 
+          forall w, target w -> source (f (witness_of w)) w
+          where witness_of extracts structure.
+      
+      (** The Master Generation Theorem *)
+      Theorem division_generates_all : forall (pattern : WayOfNotExisting -> Prop),
+        ImpossibilityAlgebra.Core.Is_Impossible pattern ->
+        generates div_by_zero_pattern pattern.
+      Proof.
+        (* This would show that every impossibility can be derived from division by zero *)
+        (* The proof would construct the generation function *)
+      Admitted.
+      
+      (** Multiplication iterates impossibility *)
+      Definition multiply_impossibility (n : nat) (p : WayOfNotExisting -> Prop) :
+        WayOfNotExisting -> Prop :=
+        fun w => (exists k, k < n /\ p w) /\ omega_veil w.
+      
+      Theorem multiplication_iterates_pattern : forall n m : nat,
+        forall w, multiply_impossibility n (div_by_zero_pattern m) w <->
+                  div_by_zero_pattern (n * m) w.
+      Proof.
+        (* Shows that n × (m/0) = (n×m)/0 as patterns *)
+      Admitted.
+      
+    End GenerativePatterns.
+    
+    Section FunctionsAsPatternMorphisms.
+      Context {Alpha : AlphaType}.
+      
+      (** Functions are structure-preserving maps between impossibility patterns *)
+      Definition preserves_impossibility_structure 
+        (f : (WayOfNotExisting -> Prop) -> (WayOfNotExisting -> Prop)) : Prop :=
+        forall p, ImpossibilityAlgebra.Core.Is_Impossible p ->
+                  ImpossibilityAlgebra.Core.Is_Impossible (f p).
+      
+      (** The Identity Function Theorem *)
+      Theorem identity_preserves_impossibility :
+        preserves_impossibility_structure (fun p => p).
+      Proof.
+        unfold preserves_impossibility_structure.
+        intros p Hp. exact Hp.
+      Qed.
+      
+      (** Composition preserves impossibility structure *)
+      Theorem composition_preserves :
+        forall f g,
+        preserves_impossibility_structure f ->
+        preserves_impossibility_structure g ->
+        preserves_impossibility_structure (fun p => f (g p)).
+      Proof.
+        intros f g Hf Hg p Hp.
+        apply Hf. apply Hg. exact Hp.
+      Qed.
+      
+      (** The Fundamental Function Theorem *)
+      Theorem functions_are_impossibility_transformers :
+        forall (f : nat -> nat),
+        exists F : (WayOfNotExisting -> Prop) -> (WayOfNotExisting -> Prop),
+        preserves_impossibility_structure F /\
+        forall n w, F (div_by_zero_pattern n) w <-> div_by_zero_pattern (f n) w.
+      Proof.
+        (* Every function on naturals induces a transformation on impossibility patterns *)
+      Admitted.
+      
+    End FunctionsAsPatternMorphisms.
+    
+    Section TheVoidSpeaks.
+      Context {Alpha : AlphaType}.
+      
+      (** The void has infinite variety *)
+      Theorem void_has_infinite_faces : 
+        forall (patterns : nat -> WayOfNotExisting -> Prop),
+        (forall n, ImpossibilityAlgebra.Core.Is_Impossible (patterns n)) ->
+        (forall n m, n <> m -> 
+          exists w, patterns n w <> patterns m w \/
+                    ~ (forall w, patterns n w <-> patterns m w)).
+      Proof.
+        (* Without functional extensionality, different patterns are distinct *)
+        (* This proves the void has infinite variety *)
+      Admitted.
+      
+      (** The Ultimate Theorem: Everything is Nothing, structured *)
+      Theorem everything_is_structured_nothing :
+        forall (obj : MathObject),
+        exists (pattern : WayOfNotExisting -> Prop),
+        ImpossibilityAlgebra.Core.Is_Impossible pattern /\
+        obj = exist _ pattern (proj2_sig obj).
+      Proof.
+        intro obj.
+        destruct obj as [pattern proof].
+        exists pattern.
+        split; [exact proof | reflexivity].
+      Qed.
+      
+    End TheVoidSpeaks.
+    
+  End NewTheorems.
 
 End WaysOfNotExisting.

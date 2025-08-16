@@ -832,13 +832,13 @@ Section MetaProof.
     exists n, alpha_enum n = Some A.
 
   (* Axiom 1: Diagonal predicates are enumerable *)
-  Axiom diagonal_in_enumeration :
+  Hypothesis diagonal_in_enumeration :
     forall n : nat,
     exists m : nat,
     alpha_enum m = Some (fun a => Diagonal.Alpha.diagonal_pred alpha_enum n a).
   
   (* Axiom 2: What it means for Theory to "analyze" a predicate *)
-  Axiom theory_analyzes :
+  Hypothesis theory_analyzes :
     forall (Theory P : Alphacarrier -> Prop) (analysis : Alphacarrier),
     Theory analysis ->
     (* analysis correctly captures P's diagonal relationship to Theory *)
