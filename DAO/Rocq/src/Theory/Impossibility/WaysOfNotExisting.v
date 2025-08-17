@@ -252,7 +252,7 @@ Module WaysOfNotExisting.
     But they're undefined in DIFFERENT WAYS.
     These different ways are different mathematical objects.
     
-    Mathematics isn't about what's true or false.
+    This framework's view: Mathematics isn't about what's true or false.
     It's about HOW things are true or false.
     The construction IS the content.
     
