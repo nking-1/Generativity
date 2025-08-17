@@ -8,13 +8,18 @@
     Mathematics isn't about what exists (True) or doesn't exist (False).
     It's about HOW things exist or fail to exist.
     The construction IS the mathematical object.
+
+    Alpha doesn't get to know actual truths - only contradictions.
+    Omega gets to know all truths, which Alpha approximates through tracking contradictions.
+    Alpha gets consistency through being able to prove what must be False.
+    Omega gets completeness through being able to prove everything True.
 *)
 
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
-Require Import ZArith.
-Require Import Lia.
+From Stdlib Require Import ZArith.
+From Stdlib Require Import Lia.
 
 Module WaysOfNotExisting.
 
@@ -79,11 +84,8 @@ Module WaysOfNotExisting.
         - (* div_by_zero_pattern 1 *)
           intro a. split.
           + intros [m [H Hom]]. 
-            (* m * 0 = 1 is impossible - need to show m * 0 = 0 first *)
-            assert (m * 0 = 0) by (induction m; auto).
-            rewrite H0 in H.
-            (* Now we have 0 = 1 *)
-            discriminate H.
+            (* Notice a pattern: We'll always have omega_veil at this point. *)
+            exact Hom.
           + intro H. exfalso. 
             exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
         
@@ -91,11 +93,7 @@ Module WaysOfNotExisting.
           + (* sqrt_negative_pattern 1 *)
             intro a. split.
             * intros [m [H Hom]].
-              (* m * m + 1 = 0 is impossible for nat *)
-              (* m * m + 1 is always at least 1 *)
-              assert (m * m + 1 > 0).
-              { induction m; simpl; lia. }
-              lia.
+              exact Hom.
             * intro H. exfalso.
               exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
           
@@ -103,7 +101,6 @@ Module WaysOfNotExisting.
             * (* log_zero_pattern *)
               intro a. split.
               -- intros [e [Hpos [H Hom]]].
-                (* Just use the omega_veil witness *)
                 exact Hom.
               -- intro H. exfalso.
                 exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
@@ -111,8 +108,8 @@ Module WaysOfNotExisting.
             * split.
               -- (* russell_pattern *)
                 intro a. split.
-                ++ intros [[H1 H2] Hw].
-                    exact Hw.
+                ++ intros [[H1 H2] Hom].
+                    exact Hom.
                 ++ intro H. exfalso.
                     exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
               
@@ -140,7 +137,6 @@ Module WaysOfNotExisting.
         intros Hn a.
         split.
         - intros [m [H_eq H_omega]].
-          (* We already have omega_veil a from H_omega *)
           exact H_omega.
         - intro H. exfalso.
           exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
