@@ -590,7 +590,7 @@ Module WaysOfNotExisting.
   Module Functions.
     Import NaturalNumbers.
     Import PatternEquivalence.
-          Import ImpossibilityAlgebra.Core. (* For Is_Impossible *)
+    Import ImpossibilityAlgebra.Core. (* For Is_Impossible *)
     
     Section FunctionConstruction.
       Context {Alpha : AlphaType}.
@@ -657,7 +657,7 @@ Module WaysOfNotExisting.
   End Functions.
 
 
-  Module NewTheorems.
+  (* Module NewTheorems.
     Import Core.
     Import ConstructionsOfFalse.
     
@@ -856,6 +856,6 @@ Module WaysOfNotExisting.
       
     End TheVoidSpeaks.
     
-  End NewTheorems.
+  End NewTheorems. *)
 
 End WaysOfNotExisting.
