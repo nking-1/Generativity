@@ -1177,6 +1177,9 @@ Module VoidLang.
     Extract Inductive ascii => "Prelude.Char" 
     ["(\\b0 b1 b2 b3 b4 b5 b6 b7 -> Data.Char.chr (Prelude.fromIntegral ((if b0 then 1 else 0) Prelude.+ (if b1 then 2 else 0) Prelude.+ (if b2 then 4 else 0) Prelude.+ (if b3 then 8 else 0) Prelude.+ (if b4 then 16 else 0) Prelude.+ (if b5 then 32 else 0) Prelude.+ (if b6 then 64 else 0) Prelude.+ (if b7 then 128 else 0))))"]
     "(\fAscii c -> fAscii (let n = Data.Char.ord c in (n `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 2) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 4) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 8) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 16) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 32) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 64) `Prelude.mod` 2 Prelude.== 1) (n `Prelude.div` 128 Prelude.== 1)))".
+
+    Extract Constant Nat.div => "(\n m -> n `Prelude.div` m)".
+    Extract Constant Nat.modulo => "(\n m -> n `Prelude.mod` m)".
     
     (** Demo programs... rest stays the same **)
     

@@ -9,16 +9,6 @@ data Option a =
 data Prod a b =
    Pair a b
 
-fst :: (Prod a1 a2) -> a1
-fst p =
-  case p of {
-   Pair x _ -> x}
-
-snd :: (Prod a1 a2) -> a2
-snd p =
-  case p of {
-   Pair _ y -> y}
-
 add :: Prelude.Integer -> Prelude.Integer -> Prelude.Integer
 add n m =
   (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
@@ -79,18 +69,10 @@ divmod x y q u =
     x
 
 div :: Prelude.Integer -> Prelude.Integer -> Prelude.Integer
-div x y =
-  (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
-    (\_ -> y)
-    (\y' -> fst (divmod x y' 0 y'))
-    y
+div = (\n m -> n `Prelude.div` m)
 
 modulo :: Prelude.Integer -> Prelude.Integer -> Prelude.Integer
-modulo x y =
-  (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
-    (\_ -> x)
-    (\y' -> sub0 y' (snd (divmod x y' 0 y')))
-    y
+modulo = (\n m -> n `Prelude.mod` m)
 
 eqb :: Prelude.String -> Prelude.String -> Prelude.Bool
 eqb = (Prelude.==)
