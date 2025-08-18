@@ -99,16 +99,8 @@ main = do
   putStrLn $ "fibonacci(25) = " ++ showResult (run_basic (fibonacci 25))
   
   putStrLn "\n--- THE PROFOUND IMPLICATIONS ---"
-  putStrLn "• NO program can hang your system"
+  putStrLn "• NO program can hang your the"
   putStrLn "• ALL programs return a result (possibly void)"
   putStrLn "• Servers run for bounded time then gracefully stop"
   putStrLn "• Recursion works up to fuel/depth limits"
   putStrLn "• Infinite loops are IMPOSSIBLE - they just return void"
-  
-  putStrLn "\n--- WHAT THIS MEANS ---"
-  putStrLn "You've built a language where:"
-  putStrLn "1. Bitcoin smart contracts can't DOS the network"
-  putStrLn "2. Web servers automatically rate-limit"
-  putStrLn "3. Recursive algorithms can't stack overflow"
-  putStrLn "4. Every API call WILL return (possibly void)"
-  putStrLn "5. The halting problem is SOLVED (everything halts!)"
