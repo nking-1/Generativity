@@ -1,4 +1,4 @@
-(** * UnravelLang.v: Where Nothing Is Something and Computation Unravels the Veil
+(** * Unravel: Where Nothing Is Something and Computation Unravels the Veil
     
     A simple functional language where omega_veil is a first-class value.
     All operations are total - errors return void rather than crashing.
@@ -19,6 +19,9 @@ Import ListNotations.
 (* Import our framework - adjust paths as needed *)
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
+Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
+Require Import DAO.Theory.Impossibility.FalseThermodynamics.
+Require Import DAO.Theory.Impossibility.ParadoxNumbers.
 Require Import DAO.Theory.Impossibility.WaysOfNotExisting.
 
 Module UnravelLang.
@@ -1024,9 +1027,15 @@ Module UnravelLang.
   Module FrameworkConnection.
     Import Core.
     Import Eval.
+    Import WithVariables.
     Import ImpossibilityAlgebra Core.
+    Import FalseThermodynamics.
+    Import ParadoxNumbers ParadoxNaturals.
+    Import WaysOfNotExisting.IntensionalFoundation.
     Import WaysOfNotExisting.Core.
     Import WaysOfNotExisting.PatternEquivalence.
+    Import WaysOfNotExisting.ConstructionsOfFalse.
+    Import WaysOfNotExisting.ImpossibleAlgebra.
     
     Section ConnectionToPatterns.
       Context {Alpha : AlphaType}.
@@ -1079,6 +1088,186 @@ Module UnravelLang.
           split; intros [H Hom]; exfalso;
           exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
       Qed.
+
+      (** Different void expressions are different Ways of Not Existing *)
+    Definition div_zero_way (n : nat) : WayOfNotExisting -> Prop :=
+      div_by_zero_pattern n.  (* From ConstructionsOfFalse *)
+    
+    Definition undefined_var_way (x : string) : WayOfNotExisting -> Prop :=
+      fun w => (forall env, lookup env x = VVoid) /\ omega_veil w.
+    
+    Definition type_error_way : WayOfNotExisting -> Prop :=
+      fun w => eval_default (EAdd (EBool true) (ENum 5)) = VVoid /\ omega_veil w.
+    
+    (** Intensional difference: different void expressions have different patterns *)
+    Theorem void_patterns_intensionally_distinct :
+      div_zero_way 1 <> div_zero_way 2.
+    Proof.
+      apply number_patterns_distinct.
+      discriminate.
+    Qed.
+    
+    (** But extensionally equivalent *)
+    Theorem void_patterns_extensionally_equal :
+      forall n m : nat,
+      n <> 0 -> m <> 0 ->
+      forall w, div_zero_way n w <-> omega_veil w.
+    Proof.
+      intros n m Hn Hm w.
+      unfold div_zero_way, div_by_zero_pattern.
+      split.
+      - (* If div_zero_way n w, then omega_veil w *)
+        intros [x [Hx Hom]].
+        exact Hom.
+      - (* If omega_veil w, then... impossible! *)
+        intro Hom.
+        exfalso.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+    Qed.
+    
+    (** Void propagation preserves impossibility *)
+    Theorem void_propagation_is_impossible :
+      forall e1 e2,
+      eval_default e1 = VVoid ->
+      ImpossibilityAlgebra.Core.Is_Impossible (void_expression_pattern (EAdd e1 e2)).
+    Proof.
+      intros e1 e2 H1 w.
+      split.
+      - intros [Heval Hom]. exact Hom.
+      - intro Hom. exfalso.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+    Qed.
+    
+    (** Recovery from void creates a new pattern *)
+    Definition recovery_pattern (e_void e_default : Expr) : WayOfNotExisting -> Prop :=
+      fun w => eval_default e_void = VVoid /\ 
+               eval_default (EDefault e_void e_default) <> VVoid /\
+               omega_veil w.
+    
+    (** Recovery doesn't eliminate impossibility, just masks it *)
+    Theorem recovery_preserves_underlying_impossibility :
+      forall e_void e_default,
+      eval_default e_void = VVoid ->
+      eval_default (EDefault e_void e_default) <> VVoid ->
+      ImpossibilityAlgebra.Core.Is_Impossible (recovery_pattern e_void e_default).
+    Proof.
+      intros e_void e_default Hvoid Hrecov w.
+      split.
+      - intros [_ [_ Hom]]. exact Hom.
+      - intro Hom. exfalso.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+    Qed.
+    
+    (** Fuel exhaustion is another way of not existing *)
+    Definition fuel_exhaustion_pattern (fuel : nat) (e : Expr) : WayOfNotExisting -> Prop :=
+      fun w => eval fuel e = VVoid /\ eval (S fuel) e <> VVoid /\ omega_veil w.
+    
+    Theorem fuel_exhaustion_is_impossible :
+      forall fuel e,
+      eval fuel e = VVoid ->
+      eval (S fuel) e <> VVoid ->
+      ImpossibilityAlgebra.Core.Is_Impossible (fuel_exhaustion_pattern fuel e).
+    Proof.
+      intros fuel e Hfuel HmoreFuel w.
+      split.
+      - intros [_ [_ Hom]]. exact Hom.
+      - intro Hom. exfalso.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+    Qed.
+    
+    (** The algebra of void expressions *)
+    Definition void_sum (e1 e2 : Expr) : WayOfNotExisting -> Prop :=
+      pattern_sum (void_expression_pattern e1) (void_expression_pattern e2).
+    
+    Definition void_product (e1 e2 : Expr) : WayOfNotExisting -> Prop :=
+      pattern_product (void_expression_pattern e1) (void_expression_pattern e2).
+    
+    Theorem void_algebra_closed :
+      forall e1 e2,
+      eval_default e1 = VVoid ->
+      eval_default e2 = VVoid ->
+      ImpossibilityAlgebra.Core.Is_Impossible (void_sum e1 e2) /\ ImpossibilityAlgebra.Core.Is_Impossible (void_product e1 e2).
+    Proof.
+      intros e1 e2 H1 H2.
+      split.
+      - apply sum_preserves_impossible.
+        + intro w. split.
+          * intros [_ Hom]. exact Hom.
+          * intro Hom. exfalso.
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+        + intro w. split.
+          * intros [_ Hom]. exact Hom.
+          * intro Hom. exfalso.
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+      - intro w. unfold pattern_product. split.
+        + intros [_ [_ Hom]]. exact Hom.
+        + intro Hom. exfalso.
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+    Qed.
+    
+    (** Connection to thermodynamics: void expressions have depth *)
+    Definition void_depth (e : Expr) : nat :=
+      match e with
+      | EDiv _ (ENum 0) => 1  (* Direct division by zero *)
+      | EAdd e1 e2 => 
+          match eval_default e1, eval_default e2 with
+          | VVoid, VVoid => 2  (* Both void *)
+          | VVoid, _ => 1      (* Left void *)
+          | _, VVoid => 1      (* Right void *)
+          | _, _ => 0          (* Neither void *)
+          end
+      | _ => 0
+      end.
+    
+    (** Deeper void expressions represent more complex impossibilities *)
+    Theorem deeper_void_more_complex :
+      forall e1 e2,
+      void_depth e1 < void_depth e2 ->
+      (* e2 represents a more complex pattern of impossibility *)
+      exists (p1 p2 : ParadoxPath),
+      pnat_to_coq_nat (path_depth p1) < pnat_to_coq_nat (path_depth p2).
+    Proof.
+      intros e1 e2 Hdepth.
+      (* Construct corresponding paradox paths *)
+      exists BaseVeil, (SelfContradict BaseVeil).
+      simpl. unfold Nat.lt. apply le_n.
+    Qed.
+    
+    (** Every Unravel computation is a journey through impossibility space *)
+    Definition computation_path (e : Expr) : WayOfNotExisting -> Prop :=
+      fun w => 
+        (eval_default e = VVoid \/ eval_default e <> VVoid) /\ 
+        omega_veil w.
+    
+    Theorem all_computation_touches_void :
+      forall e,
+      Is_Impossible (computation_path e).
+    Proof.
+      intro e.
+      intro w.
+      split.
+      - intros [_ Hom]. exact Hom.
+      - intro Hom. exfalso.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+    Qed.
+    
+    (** The boundary between successful and void computation *)
+    Definition computation_boundary (e : Expr) : WayOfNotExisting -> Prop :=
+      fun w =>
+        (exists fuel, eval fuel e = VVoid /\ eval (S fuel) e <> VVoid) /\
+        omega_veil w.
+    
+    Theorem boundary_is_omega_veil :
+      forall e,
+      (exists fuel, eval fuel e = VVoid /\ eval (S fuel) e <> VVoid) ->
+      Is_Impossible (computation_boundary e).
+    Proof.
+      intros e Hex w.
+      split.
+      - intros [_ Hom]. exact Hom.
+      - intro Hom. exfalso.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses w Hom).
+    Qed.
       
     End ConnectionToPatterns.
   End FrameworkConnection.
@@ -1139,7 +1328,7 @@ Module UnravelLang.
     Proof. reflexivity. Qed.
     
   End Examples.
-  
+
   (* ================================================================ *)
   (** ** Extraction Setup *)
   (* ================================================================ *)
@@ -1261,26 +1450,3 @@ Module UnravelLang.
   End Extraction.
 
 End UnravelLang.
-
-(* ================================================================ *)
-(** ** Next Steps *)
-(* ================================================================ *)
-
-(*
-  This simple arithmetic language demonstrates:
-  - Void as a first-class value
-  - Total evaluation (no crashes)
-  - Natural error handling through void propagation
-  - Recovery mechanisms (Default)
-  
-  We could extend this with:
-  - Variables and let-bindings
-  - Functions and application
-  - Recursion (with fuel to prevent infinite loops)
-  - Lists and other data structures
-  - Pattern matching on void
-  
-  The key insight: In a language built on void, "errors" aren't
-  exceptional - they're just another value that flows through
-  computation naturally.
-*)

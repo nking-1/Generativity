@@ -16,7 +16,6 @@ Module ParadoxNumbers.
     Section PureParadoxNaturals.
       Context {Alpha : AlphaType}.
       
-      (* ================================================================ *)
       (** ** Natural numbers start at 1 - they are CONSTRUCTIONS beyond void *)
       
       (* Natural numbers are positive constructions *)
@@ -50,7 +49,6 @@ Module ParadoxNumbers.
             exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov).
       Qed.
       
-      (* ================================================================ *)
       (** ** Arithmetic *)
       
       Fixpoint add (m n : PNat) : PNat :=
@@ -65,7 +63,6 @@ Module ParadoxNumbers.
         | PS m' => add n (mult m' n)
         end.
       
-      (* ================================================================ *)
       (** ** Modified Peano Axioms (starting from 1) *)
       
       Theorem one_not_succ : forall n : PNat, POne <> PS n.
@@ -80,7 +77,6 @@ Module ParadoxNumbers.
         injection H. auto.
       Qed.
       
-      (* ================================================================ *)
       (** ** Connection to Coq's nat (which includes 0) *)
       
       Fixpoint pnat_to_coq_nat (n : PNat) : nat :=
@@ -107,9 +103,7 @@ Module ParadoxNumbers.
         | S m => PS (coq_nat_to_pnat_positive m)
         end.
       
-      (* ================================================================ *)
       (** ** The philosophical point *)
-      
       Theorem what_are_numbers :
         forall n : PNat,
         (* Numbers are positive constructions beyond void *)
@@ -140,7 +134,7 @@ Module ParadoxNumbers.
       Context {Alpha : AlphaType}.
       
       (* ================================================================ *)
-      (** ** The Integer type - now with direct encoding! *)
+      (** ** The Integer type *)
       
       Inductive PInt : Type :=
         | PZero : PInt               (* Zero: the void itself *)
@@ -161,19 +155,18 @@ Module ParadoxNumbers.
       Proof.
         intro i.
         destruct i; intro a.
-        - (* PZero *)
+        -
           split; intro H; exact H.
-        - (* PPos n *)
+        -
           apply all_impossible.
-        - (* PNeg n *)
+        -
           split.
           + intros [H1 H2]. exfalso. exact (H2 H1).
           + intro H. exfalso. 
             exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
       Qed.
       
-      (* ================================================================ *)
-      (** ** Arithmetic Operations - now direct! *)
+      (** ** Arithmetic Operations *)
       
       (* Negation *)
       Definition pint_neg (i : PInt) : PInt :=
@@ -222,7 +215,7 @@ Module ParadoxNumbers.
         | PNeg n => add_neg_pnat n j
         end.
       
-      (* Multiplication - NOW TRIVIAL! *)
+      (* Multiplication *)
       Definition pint_mult (i j : PInt) : PInt :=
         match i, j with
         | PZero, _ => PZero              (* void * anything = void *)
@@ -247,7 +240,6 @@ Module ParadoxNumbers.
         PNeg (PS (PS (PS (PS (PS POne))))).
       Proof. reflexivity. Qed.  (* -2 * 3 = -6 *)
       
-      (* ================================================================ *)
       (** ** Properties *)
       
       Theorem neg_involutive : forall i : PInt,
@@ -273,7 +265,6 @@ Module ParadoxNumbers.
         destruct p; reflexivity.
       Qed.
       
-      (* ================================================================ *)
       (** ** Connection to Coq integers *)
       
       Open Scope Z_scope.
@@ -285,7 +276,7 @@ Module ParadoxNumbers.
         | PNeg n => Z.opp (Z.of_nat (pnat_to_coq_nat n))
         end.
       
-      (* The philosophical point: so much cleaner! *)
+      (* The philosophical point *)
       Theorem integers_are_signed_constructions :
         forall i : PInt,
         ImpossibilityAlgebra.Core.Is_Impossible (int_paradox_at i) /\
@@ -311,8 +302,7 @@ Module ParadoxNumbers.
     Section PureParadoxRationals.
       Context {Alpha : AlphaType}.
       
-      (* ================================================================ *)
-      (** ** Rationals with Zero Denominators Allowed! *)
+      (** ** Rationals with 0 denominators allowed - because we handle paradox already anyway *)
       
       Definition PRat := (PInt * PInt)%type.
       
@@ -338,14 +328,12 @@ Module ParadoxNumbers.
           apply all_int_impossible.
       Qed.
       
-      (* ================================================================ *)
       (** ** Equivalence that Handles Division by Zero *)
-      
       Definition rat_equiv (r1 r2 : PRat) : Prop :=
         let (p1, q1) := r1 in
         let (p2, q2) := r2 in
         match q1, q2 with
-        | PZero, PZero => True  (* All infinities are equal! *)
+        | PZero, PZero => True  (* x/0 and y/0 - all infinities extensionally equal *)
         | PZero, _ => False
         | _, PZero => False
         | _, _ => pint_mult p1 q2 = pint_mult p2 q1
@@ -366,7 +354,6 @@ Module ParadoxNumbers.
         intros p q. simpl. exact I.
       Qed.
       
-      (* ================================================================ *)
       (** ** Arithmetic Operations *)
       
       (* Addition: (a/b) + (c/d) = (ad + bc)/(bd) *)
@@ -411,7 +398,7 @@ Module ParadoxNumbers.
       Theorem undefined_arithmetic :
         (* undefined + anything = undefined *)
         (forall r : PRat, rat_equiv (rat_add undefined r) undefined) /\
-        (* undefined * anything = undefined ALWAYS! *)
+        (* undefined * anything = undefined *)
         (forall r : PRat, rat_equiv (rat_mult undefined r) undefined).
       Proof.
         split.
@@ -424,9 +411,6 @@ Module ParadoxNumbers.
           (* (PZero, PZero) always *)
           unfold rat_equiv. simpl. exact I.
       Qed.
-      
-      (* ================================================================ *)
-      (** ** The Incredible Unification *)
       
       (* All "infinite" rationals are the same void *)
       Theorem all_infinities_equal : forall p q : PInt,
@@ -446,7 +430,6 @@ Module ParadoxNumbers.
         discriminate H.
       Qed.
       
-      (* ================================================================ *)
       (** ** The Deep Truth About Division by Zero *)
       
       (* Division by zero doesn't break mathematics - it reveals the void *)
@@ -463,7 +446,7 @@ Module ParadoxNumbers.
         - apply all_rat_impossible.
       Qed.
       
-      (* The philosophical culmination: undefined isn't scary *)
+      (* The philosophical idea: undefined isn't scary *)
       Theorem undefined_is_just_another_void :
         rat_paradox_at undefined = omega_veil /\
         rat_paradox_at (PPos POne, PZero) = omega_veil /\
@@ -475,7 +458,6 @@ Module ParadoxNumbers.
         split; [|split; [|split]]; reflexivity.
       Qed.
       
-      (* ================================================================ *)
       (** ** Reciprocals and the Beauty of 1/0 *)
       
       Definition rat_reciprocal (r : PRat) : PRat :=
@@ -503,30 +485,6 @@ Module ParadoxNumbers.
       
     End PureParadoxRationals.
     
-    Section Philosophy.
-      Context {Alpha : AlphaType}.
-      
-      (** Rationals show us that "undefined" is not a bug but a feature.
-          Division by zero doesn't break mathematics - it reveals that
-          infinity is just another name for the void we've known all along.
-          
-          Every "dangerous" operation in mathematics is safe in AlphaType
-          because danger IS the void, and the void is our foundation. *)
-      
-      Definition WhatAreRationals : Type :=
-        { r : PRat & ImpossibilityAlgebra.Core.Is_Impossible (rat_paradox_at r) }.
-      
-      Definition WhatIsInfinity : Prop :=
-        forall p : PInt, rat_paradox_at (p, PZero) = omega_veil.
-      
-      Definition WhatIsUndefined : Prop :=
-        rat_paradox_at (PZero, PZero) = omega_veil /\
-        (* And undefined arithmetic still works! *)
-        exists (add : PRat -> PRat -> PRat),
-        forall r, add (PZero, PZero) r = (PZero, PZero).
-      
-    End Philosophy.
-
     (* ================================================================ *)
     (** ** Stress Test: Division by Zero Doesn't Break Mathematics! *)
 
@@ -706,7 +664,6 @@ Module ParadoxNumbers.
     
   End ParadoxRationals.
 
-  (* ================================================================ *)
   (** Connection to Standard Rationals *)
   (* Importing QArith messes with the meaning of "0" in our other contexts. *)
   (* TODO: Move this and other Coq interfaces to an API file later. *)

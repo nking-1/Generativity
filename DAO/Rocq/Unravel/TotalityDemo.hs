@@ -112,5 +112,3 @@ main = do
   putStrLn "3. Recursive algorithms can't stack overflow"
   putStrLn "4. Every API call WILL return (possibly void)"
   putStrLn "5. The halting problem is SOLVED (everything halts!)"
-  
-  putStrLn "\n✨ Not Turing Complete - Something BETTER! ✨"

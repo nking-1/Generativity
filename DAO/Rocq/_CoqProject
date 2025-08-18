@@ -37,7 +37,7 @@ src/Theory/Impossibility/ImpossibilityEntropy.v
 src/Theory/Impossibility/ImpossibilityLogic.v
 src/Theory/Impossibility/ImpossibilitySymmetry.v
 src/Theory/Impossibility/ParadoxNumbers.v
-# src/Theory/Impossibility/FalseThermodynamics.v
+src/Theory/Impossibility/FalseThermodynamics.v
 src/Theory/Impossibility/WaysOfNotExisting.v
 
 src/Classical/ClassicalAlphaFirewall.v
