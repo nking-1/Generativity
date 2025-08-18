@@ -1,5 +1,5 @@
--- VoidLangWrapper.hs
-import VoidLang
+-- UnravelWrapper.hs
+import Unravel
 
 -- Helper to convert normal Integers
 fromInt :: Integer -> Expr
@@ -24,7 +24,7 @@ demo desc expr = do
 
 main :: IO ()
 main = do
-  putStrLn "=== Welcome to VoidLang ==="
+  putStrLn "=== Welcome to Unravel ==="
   putStrLn "Where Nothing Is Something!\n"
   
   putStrLn "--- Basic Arithmetic ---"
@@ -60,6 +60,6 @@ main = do
   demo "(100/0 + 5*3) default (42+58)" complex
   
   putStrLn "\n--- The Philosophy ---"
-  putStrLn "In VoidLang, errors don't crash - they flow."
+  putStrLn "In Unravel, errors don't crash - they flow."
   putStrLn "The void (∅) is not absence but presence."
   putStrLn "Every impossible operation returns to the source: omega_veil."

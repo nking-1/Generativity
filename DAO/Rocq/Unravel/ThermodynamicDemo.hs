@@ -1,5 +1,5 @@
 -- ThermodynamicDemo.hs
-import VoidLang
+import Unravel
 import Prelude hiding (lookup)
 
 -- Pretty printer for Value
@@ -43,7 +43,7 @@ demoThermo desc expr = do
 
 main :: IO ()
 main = do
-  putStrLn "=== THERMODYNAMIC VOIDLANG ==="
+  putStrLn "=== THERMODYNAMIC UNRAVEL ==="
   putStrLn "Where computation is physics!\n"
   
   putStrLn "--- Basic Variable Examples ---"

@@ -1,5 +1,5 @@
 -- TotalityDemo.hs
-import VoidLang
+import Unravel
 import Prelude hiding (lookup)
 
 -- Helper to show results
@@ -74,7 +74,7 @@ serverLoop maxRequests = handleRequests maxRequests
 
 main :: IO ()
 main = do
-  putStrLn "=== TOTALITY IN VOIDLANG ==="
+  putStrLn "=== TOTALITY IN UNRAVEL ==="
   putStrLn "Everything terminates, even 'infinite' loops!\n"
   
   putStrLn "--- INFINITE LOOPS BECOME VOID ---"

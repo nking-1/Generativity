@@ -1,5 +1,5 @@
 -- StressTest.hs
-import VoidLang
+import Unravel
 import Prelude hiding (lookup)
 
 -- Helper to show results
@@ -73,7 +73,7 @@ testThermo desc expr = do
 
 main :: IO ()
 main = do
-  putStrLn "=== STRESS TESTING VOIDLANG'S TERMINATION ==="
+  putStrLn "=== STRESS TESTING UNRAVEL'S TERMINATION ==="
   putStrLn "No matter what we try, everything MUST terminate!\n"
   
   putStrLn "--- TEST 1: MASSIVE NESTING ---"
@@ -124,11 +124,3 @@ main = do
   testWithFuel 1000 "Fuel=1000" bigExpr
   testWithFuel 10000 "Fuel=10000" bigExpr
   putStrLn "  ↑ ALL terminate, just at different points!\n"
-  
-  putStrLn "=== CONCLUSION ==="
-  putStrLn "• NO expression can run forever"
-  putStrLn "• Fuel is a HARD LIMIT enforced by the evaluator"
-  putStrLn "• Complex expressions just exhaust fuel faster"
-  putStrLn "• The universe (evaluator) ALWAYS wins"
-  putStrLn "• Termination is not a choice - it's a LAW"
-  putStrLn "\n✨ The halting problem doesn't exist here - everything halts! ✨"

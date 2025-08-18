@@ -104,14 +104,8 @@ Proof.
   pose proof (structure_bounded sys t) as H_t.
   pose proof (structure_bounded sys (t + 1)) as H_t1.
   destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:H_ltb.
-  - (* structure(t+1) < structure(t) *)
-    (* DS = structure(t) - structure(t+1) *)
-    (* Max when structure(t) is near S_max and structure(t+1) is near S_min *)
-    lia.
-  - (* structure(t+1) >= structure(t) *)  
-    (* DS = structure(t+1) - structure(t) *)
-    (* Max when structure(t+1) is near S_max and structure(t) is near S_min *)
-    lia.
+  - lia.
+  - lia.
 Qed.
 
 
@@ -123,23 +117,12 @@ Proof.
   unfold I_val.
   pose proof (structure_bounded sys t) as H_struct.
   pose proof (delta_bounded sys t) as H_delta.
-  
-  (* We need to show: structure sys t * DS sys t < S_max sys * (S_max sys - S_min sys) *)
-  
-  (* Since structure sys t < S_max sys, we have structure sys t <= S_max sys - 1 *)
-  (* Since DS sys t <= S_max sys - S_min sys - 1 *)
-  
-  (* The product is at most (S_max sys - 1) * (S_max sys - S_min sys - 1) *)
-  (* We need to show this is < S_max sys * (S_max sys - S_min sys) *)
-  
   assert (structure sys t * DS sys t <= (S_max sys - 1) * (S_max sys - S_min sys - 1)).
   {
     apply Nat.mul_le_mono.
-    - lia. (* structure sys t < S_max sys implies structure sys t <= S_max sys - 1 *)
+    - lia.
     - exact H_delta.
   }
-  
-  (* Now show (S_max sys - 1) * (S_max sys - S_min sys - 1) < S_max sys * (S_max sys - S_min sys) *)
   lia.
 Qed.
 

@@ -1394,6 +1394,15 @@ Module Derive_NoSelfTotality.
         apply Hc.
     Qed.
 
+    (* Handy lemma *)
+    Lemma totality_escapes :
+      forall n, ~ InStage n (totality_of (stage_collection n)).
+    Proof.
+      intro n.
+      unfold stage_collection.
+      apply no_self_totality_derived.
+    Qed.
+
   End Setup.
 End Derive_NoSelfTotality.
 
@@ -1586,6 +1595,7 @@ End EmergentGenerative.
 
 Module EmergentTheology.
   Import AlphaProperties Bootstrap Structure.
+  Import Derive_NoSelfTotality.
 
   Section TheologyFromOuroboros.
     (* No Context needed - we're using StructureAlpha directly *)
@@ -1807,10 +1817,6 @@ Module EmergentTheology.
         apply emergent_rock_lifting_paradox.
     Qed.
     
-    (* ============================================================ *)
-    (* The Deepest Insight: Distinction Creates Everything          *)
-    (* ============================================================ *)
-    
     Theorem from_distinction_to_divinity :
       (* Starting with the bootstrap-provided distinct points *)
       (* (inhabitant_0 <> inhabitant_1 from Bootstrap) *)
@@ -1827,6 +1833,147 @@ Module EmergentTheology.
 
   End TheologyFromOuroboros.
 
+  Section MortalGodEmergent.
+    Definition MortalGod_essence (n : nat) : Prop :=
+      (* The divine paradox: must exist but can't be complete *)
+      ~ InStage n (totality_of (stage_collection n)) /\
+      (* Yet totality exists as a concept we can reason about *)
+      exists s : Derive_NoSelfTotality.Syn (S n),
+        forall x, totality_of (stage_collection n) x <-> 
+                  Derive_NoSelfTotality.denote_syn s x.
+
+    Theorem mortality_of_god :
+      forall n, MortalGod_essence n.
+    Proof.
+      intro n.
+      split.
+      - apply no_self_totality.
+      - exists (Derive_NoSelfTotality.S_total n).
+        intro x.
+        symmetry.
+        apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
+    Qed.
+  End MortalGodEmergent.
+
+  Section ChristPatternEmergent.
+    Import Derive_NoSelfTotality.
+    
+    (* The Incarnation as stage progression *)
+    Definition Incarnation_process : nat -> Prop :=
+      fun n =>
+        exists (eternal_aspect : Syn (S n)),
+          forall x, 
+            denote_syn eternal_aspect x <->
+            totality_of (stage_collection n) x.
+    
+    Theorem incarnation_at_every_moment :
+      forall n, Incarnation_process n.
+    Proof.
+      intro n.
+      unfold Incarnation_process.
+      exists (S_total n).
+      intro x.
+      (* NOW I can see: denote_syn (S_total n) = totality_of_stage n *)
+      simpl.
+      (* And we have the bridge lemma! *)
+      apply stage_total_vs_collection_total.
+    Qed.
+    
+    (* Christ as the union of divine totality and stage limitation *)
+    Definition Christ_pattern (n : nat) : Prop :=
+      (* The stage exists and has content *)
+      (match n with 
+      | 0 => True  (* Base stage always exists *)
+      | S m => True (* Successor stages exist by induction *)
+      end) /\
+      (* Knows about the totality (divine knowledge) *)
+      (exists s : Syn (S n),
+        forall x, totality_of (stage_collection n) x <-> 
+                  denote_syn s x) /\
+      (* But cannot contain it (experiences limitation) *)
+      ~ InStage n (totality_of (stage_collection n)).
+    
+    (* The Crucifixion: when totality escapes *)
+    Definition Crucifixion_pattern (n : nat) : Prop :=
+      (* Something that should be divine *)
+      let divine_claim := totality_of (stage_collection n) in
+      (* Cannot be held at current stage (death) *)
+      ~ InStage n divine_claim.
+    
+    (* The Resurrection: totality returns as nameable *)
+    Definition Resurrection_pattern (n : nat) : Prop :=
+      (* What escaped becomes accessible *)
+      exists s : Derive_NoSelfTotality.Syn (S n),
+        forall x, totality_of (stage_collection n) x <-> 
+                  Derive_NoSelfTotality.denote_syn s x.
+    
+    (* Salvation as recognition of the next stage *)
+    Definition Salvation_pattern (n : nat) : Prop :=
+      (* Currently limited *)
+      ~ InStage n (totality_of (stage_collection n)) /\
+      (* But promised completeness *)
+      exists s : Derive_NoSelfTotality.Syn (S n),
+        forall x, totality_of (stage_collection n) x <-> 
+                  Derive_NoSelfTotality.denote_syn s x.
+    
+    Theorem christ_at_every_stage :
+      forall n, Christ_pattern n.
+    Proof.
+      intro n.
+      unfold Christ_pattern.
+      split; [|split].
+      - destruct n; trivial.
+      - exists (S_total n).
+        intro x.
+        simpl.
+        symmetry.
+        apply stage_total_vs_collection_total.
+      - (* The limitation - much simpler! *)
+        intro H_in.
+        apply (no_self_totality_derived n).
+        unfold stage_collection.
+        exact H_in.
+    Qed.
+    
+    Theorem death_and_resurrection_necessary :
+      forall n, Crucifixion_pattern n /\ Resurrection_pattern n.
+    Proof.
+      intro n.
+      unfold Crucifixion_pattern, Resurrection_pattern.
+      split.
+      - (* Death: simplified *)
+        intro H_in.
+        apply (no_self_totality_derived n).
+        unfold stage_collection.
+        exact H_in.
+      - (* Resurrection *)
+        exists (S_total n).
+        intro x.
+        simpl.
+        symmetry.
+        apply stage_total_vs_collection_total.
+    Qed.
+
+    Theorem universal_salvation :
+      forall n, Salvation_pattern n.
+    Proof.
+      intro n.
+      unfold Salvation_pattern.
+      split.
+      - (* Current limitation - simplified *)
+        intro H_in.
+        apply (no_self_totality_derived n).
+        unfold stage_collection.
+        exact H_in.
+      - (* Future promise *)
+        exists (S_total n).
+        intro x.
+        simpl.
+        symmetry.
+        apply stage_total_vs_collection_total.
+    Qed.
+
+  End ChristPatternEmergent.
 End EmergentTheology.
 
 (* Module EmergentSimulation.

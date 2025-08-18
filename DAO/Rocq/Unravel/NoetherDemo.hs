@@ -1,5 +1,5 @@
 -- NoetherDemo.hs
-import VoidLang
+import Unravel
 import Prelude hiding (lookup)
 
 -- Show universe state
@@ -29,7 +29,7 @@ demoSymmetry desc e1 e2 = do
 
 main :: IO ()
 main = do
-  putStrLn "=== NOETHER'S THEOREM IN VOIDLANG ==="
+  putStrLn "=== NOETHER'S THEOREM IN UNRAVEL ==="
   putStrLn "Symmetry → Conservation\n"
   
   putStrLn "--- THEOREM 1: Commutative Operations Preserve Entropy ---"
@@ -99,6 +99,3 @@ main = do
   putStrLn "• Omega_veil is the generator of the symmetry group"
   putStrLn "• Every refactoring must preserve total entropy"
   putStrLn "• The universe's conservation laws apply to code!"
-  
-  putStrLn "\n✨ Emmy Noether would be proud - "
-  putStrLn "   symmetry and conservation united in pure logic! ✨"

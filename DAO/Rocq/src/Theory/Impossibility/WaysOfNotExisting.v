@@ -10,7 +10,7 @@
     The construction IS the mathematical object.
 
     Alpha doesn't get to know actual truths - only contradictions.
-    Omega gets to know all truths, which Alpha approximates through tracking contradictions.
+    Omega knows all truths, which Alpha approximates through tracking contradictions.
     Alpha gets consistency through being able to prove what must be False.
     Omega gets completeness through being able to prove everything True.
 *)

@@ -1,4 +1,4 @@
-(** * VoidLang.v: A Language Where Nothing Is Something
+(** * UnravelLang.v: Where Nothing Is Something and Computation Unravels the Veil
     
     A simple functional language where omega_veil is a first-class value.
     All operations are total - errors return void rather than crashing.
@@ -21,7 +21,7 @@ Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.WaysOfNotExisting.
 
-Module VoidLang.
+Module UnravelLang.
 
   (* ================================================================ *)
   (** ** Core Language Definition *)
@@ -485,10 +485,10 @@ Module VoidLang.
   End WithVariables.
 
   (* ================================================================ *)
-  (** ** Thermodynamic VoidLang - Where Computation Meets Physics *)
+  (** ** Thermodynamic UnravelLang - Where Computation Meets Physics *)
   (* ================================================================ *)
 
-  Module ThermodynamicVoidLang.
+  Module ThermodynamicUnravelLang.
     Import Core.
     Import WithVariables.
     
@@ -975,7 +975,7 @@ Module VoidLang.
       
     End ThermodynamicProperties.
     
-  End ThermodynamicVoidLang.
+  End ThermodynamicUnravelLang.
 
   (* ================================================================ *)
   (** ** Example: Watching the Universe Evolve *)
@@ -1148,7 +1148,7 @@ Module VoidLang.
     Import Core.
     Import Eval.
     Import WithVariables.
-    Import ThermodynamicVoidLang.
+    Import ThermodynamicUnravelLang.
     Import Examples.
     Import VariableExamples.
     
@@ -1168,7 +1168,7 @@ Module VoidLang.
     Extract Inductive string => "Prelude.String" ["[]" "(:)"].
     
     (* Extract Constant WithVariables.lookup => "voidLookup".
-    Extract Constant ThermodynamicVoidLang.lookupT => "voidLookupT". *)
+    Extract Constant ThermodynamicUnravelLang.lookupT => "voidLookupT". *)
     
     (* String equality *)
     Extract Constant String.eqb => "(Prelude.==)".
@@ -1236,8 +1236,8 @@ Module VoidLang.
        chaos_generator 5;
        chaos_generator 10].
     
-    (* Extract everything! *)
-    Extraction "VoidLang.hs" 
+    (* Unravel/ local dir must exist already for this to work *)
+    Extraction "Unravel/Unravel.hs" 
       (* Core types *)
       Core.Expr Core.Value 
       ExprV ValueT Universe VoidInfo VoidSource
@@ -1260,7 +1260,7 @@ Module VoidLang.
     
   End Extraction.
 
-End VoidLang.
+End UnravelLang.
 
 (* ================================================================ *)
 (** ** Next Steps *)
