@@ -117,9 +117,10 @@ main = do
   -- This might hit bounds
   putStrLn $ "fibonacci(25) = " ++ showResult (run_basic (fibonacci 25))
   
-  putStrLn "\n--- Why Unravel is Total ---"
+  putStrLn "\n--- Why Unravel is Operationally Total ---"
   putStrLn "• No recursive let bindings (self-reference = void)"
   putStrLn "• No fixpoint operator"
+  putStrLn "• No need to prove termination"
   putStrLn "• Fuel bounds all evaluation"
   putStrLn "• Void catches all failure modes"
-  putStrLn "• Result: EVERY program terminates!"
+  putStrLn "• Result: Every program unravels!"

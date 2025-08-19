@@ -533,8 +533,8 @@ Module PureImpossibilitySymmetry.
       split; [|split; [|split]]; unfold preserves_impossibility; intro P; reflexivity.
     Qed.
     
-    (** The Theory of Everything: all physics from omega_veil *)
-    Theorem theory_of_everything :
+    (** Comprehensive physics from omega_veil *)
+    Theorem comprehensive_physics :
       (* From just omega_veil and symmetry *)
       (exists (void : Alphacarrier -> Prop), Is_Impossible void) ->
       (* We get all of physics *)
