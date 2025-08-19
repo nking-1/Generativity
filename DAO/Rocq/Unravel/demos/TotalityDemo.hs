@@ -10,12 +10,25 @@ showResult (VBool b) = show b
 
 -- ATTEMPTING INFINITE LOOPS
 
--- Classic infinite loop attempt
-infiniteLoop :: ExprV
-infiniteLoop = 
+-- This LOOKS like an infinite loop but isn't!
+notActuallyInfinite :: ExprV
+notActuallyInfinite = 
   EVLet "counter" (EVNum 0)
     (EVLet "loop" (EVAdd (EVVar "counter") (EVNum 1))  
-      (EVVar "loop"))  -- Try to reference itself - becomes void!
+      (EVVar "loop"))  -- Just returns counter + 1 = 1
+
+-- TRUE self-reference attempt (returns void)
+actualSelfReference :: ExprV
+actualSelfReference = 
+  EVLet "x" (EVVar "x")  -- x refers to itself before being defined
+    (EVVar "x")           -- Returns void!
+
+-- Mutual recursion attempt (also void)
+mutualRecursion :: ExprV
+mutualRecursion =
+  EVLet "x" (EVVar "y")
+    (EVLet "y" (EVVar "x")
+      (EVVar "x"))  -- Both undefined, returns void
 
 -- Factorial with bounded recursion (pseudo-recursion via fuel)
 factorial :: Integer -> ExprV
@@ -77,9 +90,15 @@ main = do
   putStrLn "=== TOTALITY IN UNRAVEL ==="
   putStrLn "Everything terminates, even 'infinite' loops!\n"
   
-  putStrLn "--- INFINITE LOOPS BECOME VOID ---"
-  putStrLn $ "Attempted infinite loop: " ++ showResult (run_basic infiniteLoop)
-  putStrLn "  (Variables can't reference themselves recursively → void)\n"
+  putStrLn "--- RECURSION ATTEMPTS ---"
+  putStrLn $ "Looks infinite but isn't: " ++ showResult (run_basic notActuallyInfinite)
+  putStrLn "  (Just evaluates to counter + 1 = 1)\n"
+  
+  putStrLn $ "True self-reference (let x = x): " ++ showResult (run_basic actualSelfReference)
+  putStrLn "  (Variable undefined during own binding → void)\n"
+  
+  putStrLn $ "Mutual recursion attempt: " ++ showResult (run_basic mutualRecursion)
+  putStrLn "  (Circular dependency → void)\n"
   
   putStrLn "--- BOUNDED RECURSION WORKS ---"
   putStrLn $ "factorial(5) = " ++ showResult (run_basic (factorial 5))
@@ -98,9 +117,9 @@ main = do
   -- This might hit bounds
   putStrLn $ "fibonacci(25) = " ++ showResult (run_basic (fibonacci 25))
   
-  putStrLn "\n--- THE PROFOUND IMPLICATIONS ---"
-  putStrLn "• NO program can hang your the"
-  putStrLn "• ALL programs return a result (possibly void)"
-  putStrLn "• Servers run for bounded time then gracefully stop"
-  putStrLn "• Recursion works up to fuel/depth limits"
-  putStrLn "• Infinite loops are IMPOSSIBLE - they just return void"
+  putStrLn "\n--- Why Unravel is Total ---"
+  putStrLn "• No recursive let bindings (self-reference = void)"
+  putStrLn "• No fixpoint operator"
+  putStrLn "• Fuel bounds all evaluation"
+  putStrLn "• Void catches all failure modes"
+  putStrLn "• Result: EVERY program terminates!"

@@ -278,3 +278,43 @@
     End ProofThatMathWorks.
     
   End RealMathematics.
+
+  (* ================================================================ *)
+  (** ** Example: Watching the Universe Evolve *)
+  (* ================================================================ *)
+  
+  (* Module UniverseExamples.
+    
+    (** A computation that increases entropy *)
+    Definition entropy_generator : ExprV :=
+      EVLet "x" (EVDiv (EVNum 10) (EVNum 0))  (* Create void *)
+        (EVLet "y" (EVDiv (EVNum 20) (EVNum 0))  (* Another void *)
+          (EVAdd (EVVar "x") (EVVar "y"))).  (* Combine them *)
+    
+    (** Run and observe universe evolution *)
+    Example universe_evolution :
+      let '(v, u) := evalT 100 initial_universe [] entropy_generator in
+      u.(total_entropy) >= 2.  (* At least 2 units of entropy created *)
+    Proof.
+      simpl.
+      (* Would show the actual computation *)
+      Admitted.
+    Qed.
+    
+    (** A program that approaches heat death *)
+    Fixpoint chaos_generator (n : nat) : ExprV :=
+      match n with
+      | 0 => EVNum 42
+      | S n' => EVAdd (EVDiv (EVNum 1) (EVNum 0)) (chaos_generator n')
+      end.
+    
+    (** The philosophical demonstration *)
+    Definition computation_is_physics : Prop :=
+      (* Every program execution creates entropy *)
+      (forall e, exists u', evalT 1000 initial_universe [] e = (_, u')) /\
+      (* Complex programs create more entropy *)
+      (forall e1 e2, True) /\  (* Would formalize complexity *)
+      (* The universe evolves through computation *)
+      True.
+    
+  End UniverseExamples. *)
