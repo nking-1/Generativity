@@ -1,0 +1,1 @@
+Note - Claude (the AI) insists on writing scripts about consciousness in this framework. I left them here because the model exhibits interesting behavior that is worth documenting. Be open minded, but don't read into these scripts too literally.

@@ -254,7 +254,7 @@ Module AlphaTernary.
       
     End ConcreteExamples.
 
-Section TruthValueMeaning.
+    Section TruthValueMeaning.
       Context {Omega : OmegaType} {Alpha : AlphaType}.
       Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
       Variable enum_complete : forall A : Alphacarrier -> Prop, 

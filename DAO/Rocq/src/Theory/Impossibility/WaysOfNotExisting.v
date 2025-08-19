@@ -17,7 +17,9 @@
 
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
+Require Import DAO.Core.OmegaType.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
+Require Import DAO.Logic.AlphaTernary.
 From Stdlib Require Import ZArith.
 From Stdlib Require Import Lia.
 
@@ -41,6 +43,151 @@ Module WaysOfNotExisting.
       
     End Foundation.
   End Core.
+
+  Module FalseConstruction.
+    Import AlphaTernary.TernaryLogic.
+    
+    Definition make_false {Alpha : AlphaType} 
+      (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+      fun a => P a /\ omega_veil a.
+    
+    Theorem always_impossible {Alpha : AlphaType} :
+      forall P : Alphacarrier -> Prop, 
+      ImpossibilityAlgebra.Core.Is_Impossible (make_false P).
+    Proof.
+      intros P a.
+      unfold make_false.
+      split.
+      - intros [_ Hveil]. exact Hveil.
+      - intro Hveil. 
+        exfalso.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hveil).
+    Qed.
+    
+    (* The key insight: ANY predicate becomes impossible when ANDed with omega_veil *)
+    Theorem universal_void_structure {Alpha : AlphaType} :
+      forall (P : Alphacarrier -> Prop),
+      (* Regardless of P's truth value *)
+      ImpossibilityAlgebra.Core.Is_Impossible (fun a => P a /\ omega_veil a).
+    Proof.
+      intros P.
+      apply always_impossible.
+    Qed.
+    
+    (* Show this works for each specific truth value case *)
+    Section TruthValueCases.
+      Context {Alpha : AlphaType}.
+      
+      (* Case: True predicates become impossible with omega_veil *)
+      Theorem true_becomes_false :
+        forall P : Alphacarrier -> Prop,
+        (exists a, P a) ->  (* P has witnesses *)
+        ImpossibilityAlgebra.Core.Is_Impossible (make_false P).
+      Proof.
+        intros P Htrue.
+        apply always_impossible.
+      Qed.
+      
+      (* Case: False predicates stay impossible with omega_veil *)
+      Theorem false_stays_false :
+        forall P : Alphacarrier -> Prop,
+        (forall a, P a <-> omega_veil a) ->  (* P is already impossible *)
+        ImpossibilityAlgebra.Core.Is_Impossible (make_false P).
+      Proof.
+        intros P Hfalse.
+        apply always_impossible.
+      Qed.
+      
+      (* Case: Undecidable predicates become impossible with omega_veil *)
+      Theorem undecidable_becomes_false :
+        forall P : Alphacarrier -> Prop,
+        (~ exists a, P a) ->
+        (~ forall a, ~ P a) ->
+        ImpossibilityAlgebra.Core.Is_Impossible (make_false P).
+      Proof.
+        intros P Hno_witness Hnot_impossible.
+        apply always_impossible.
+      Qed.
+    End TruthValueCases.
+    
+    (* The profound theorem: Everything is structured void *)
+    Theorem everything_touches_void {Alpha : AlphaType} :
+      forall P : Alphacarrier -> Prop,
+      exists Q : Alphacarrier -> Prop,
+        (* Q is P intersected with void *)
+        (forall a, Q a <-> (P a /\ omega_veil a)) /\
+        (* And Q is always impossible *)
+        ImpossibilityAlgebra.Core.Is_Impossible Q.
+    Proof.
+      intro P.
+      exists (make_false P).
+      split.
+      - intro a. reflexivity.
+      - apply always_impossible.
+    Qed.
+    
+    (* The construction principle: we can always build impossibility *)
+    Theorem can_construct_impossibility {Alpha : AlphaType} :
+      forall P : Alphacarrier -> Prop,
+      { Q : Alphacarrier -> Prop | 
+        ImpossibilityAlgebra.Core.Is_Impossible Q /\
+        forall a, Q a -> P a }.
+    Proof.
+      intro P.
+      exists (make_false P).
+      split.
+      - apply always_impossible.
+      - intros a [HPa _]. exact HPa.
+    Qed.
+    
+  End FalseConstruction.
+
+  Module AlphaOmegaDuality.
+    Import AlphaTernary.TernaryLogic.
+    Import FalseConstruction.
+    
+    (* Alpha witnesses constructed impossibility *)
+    Definition Alpha_witnesses_constructed_false {Alpha : AlphaType} : Prop :=
+      forall P : Alphacarrier -> Prop,
+      ImpossibilityAlgebra.Core.Is_Impossible (make_false P).
+    
+    (* This is always true for Alpha *)
+    Theorem alpha_constructs {Alpha : AlphaType} : 
+      Alpha_witnesses_constructed_false.
+    Proof.
+      unfold Alpha_witnesses_constructed_false.
+      apply always_impossible.
+    Qed.
+    
+    (* In Omega, everything has witnesses (vacuous truth) *)
+    Definition Omega_witnesses_vacuous_true {Omega : OmegaType} : Prop :=
+      forall P : Omegacarrier -> Prop,
+      exists x, P x.
+    
+    (* This is the omega_completeness axiom *)
+    Theorem omega_witnesses {Omega : OmegaType} :
+      Omega_witnesses_vacuous_true.
+    Proof.
+      unfold Omega_witnesses_vacuous_true.
+      apply omega_completeness.
+    Qed.
+    
+    (* The duality theorem *)
+    Theorem construction_witnessing_duality :
+      forall {Alpha : AlphaType} {Omega : OmegaType},
+      (* Alpha constructs impossibility *)
+      (forall P : Alphacarrier -> Prop, 
+      ImpossibilityAlgebra.Core.Is_Impossible (make_false P)) /\
+      (* Omega witnesses everything *)
+      (forall Q : Omegacarrier -> Prop,
+      exists x, Q x).
+    Proof.
+      split.
+      - apply alpha_constructs.
+      - apply omega_witnesses.
+    Qed.
+    
+  End AlphaOmegaDuality.
 
   (* ================================================================ *)
   (** ** Demonstrating Different Constructions of Impossibility *)

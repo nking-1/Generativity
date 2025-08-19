@@ -25,7 +25,7 @@ Module PureImpossibilitySymmetry.
     (** We need decidability for action computation *)
     (* Note - we *have* proven that AlphaType's predicates can be undecidable, so this hypothesis 
        is being a bit generous. *)
-    (* Interestingly, classical systems might be decidable, quantum undecidable. *)
+    (* What if classical systems are decidable, quantum undecidable? *)
     Hypothesis impossible_decidable : forall P, {Is_Impossible P} + {~ Is_Impossible P}.
 
     (** We need decidable equality for computational purposes *)
@@ -500,64 +500,6 @@ Module PureImpossibilitySymmetry.
     
   End ManyBodySystems.
 
-  (* ================================================================ *)
-  (** ** The Ultimate Unification: All Forces from Symmetry *)
-
-  Section UnifiedFieldTheory.
-    Context {Alpha : AlphaType}.
-    
-    (** The four fundamental forces as symmetries *)
-    
-    (** Gravity: symmetry under coordinate transformations *)
-    Definition gravity_symmetry : predicate_transform := fun P => P.
-    
-    (** Electromagnetism: U(1) gauge symmetry *)
-    Definition electromagnetic_symmetry : predicate_transform := fun P => P.
-    
-    (** Weak force: SU(2) symmetry (simplified) *)
-    Definition weak_symmetry : predicate_transform := fun P => P.
-    
-    (** Strong force: SU(3) symmetry (simplified) *)
-    Definition strong_symmetry : predicate_transform := fun P => P.
-    
-    (** Grand unification: all forces from one symmetry *)
-    Definition grand_unified_symmetry : predicate_transform :=
-      fun P a => P a. (* The identity contains all symmetries *)
-    
-    Theorem all_forces_from_symmetry :
-      preserves_impossibility gravity_symmetry /\
-      preserves_impossibility electromagnetic_symmetry /\
-      preserves_impossibility weak_symmetry /\
-      preserves_impossibility strong_symmetry.
-    Proof.
-      split; [|split; [|split]]; unfold preserves_impossibility; intro P; reflexivity.
-    Qed.
-    
-    (** Comprehensive physics from omega_veil *)
-    Theorem comprehensive_physics :
-      (* From just omega_veil and symmetry *)
-      (exists (void : Alphacarrier -> Prop), Is_Impossible void) ->
-      (* We get all of physics *)
-      exists (universe : Type),
-      (* With conservation laws *) 
-      (exists conserved : PNat, True) /\
-      (* With forces *)
-      (exists forces : list predicate_transform, True) /\
-      (* With particles *)
-      (exists particles : list (Alphacarrier -> Prop), True) /\
-      (* With spacetime *)
-      (exists spacetime : Type, True).
-    Proof.
-      intro H_void.
-      exists Alphacarrier.  (* The carrier type, not the AlphaType record *)
-      split; [|split; [|split]].
-      - exists POne. trivial.
-      - exists [gravity_symmetry; electromagnetic_symmetry; weak_symmetry; strong_symmetry]. trivial.
-      - exists [omega_veil]. trivial.
-      - exists (Alphacarrier -> Alphacarrier). trivial.
-    Qed.
-    
-  End UnifiedFieldTheory.
 
   (* ================================================================ *)
   (** ** Renormalization as Natural Collapse *)
