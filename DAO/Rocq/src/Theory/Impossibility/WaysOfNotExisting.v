@@ -3,16 +3,35 @@
     Different constructions of False are different mathematical objects.
     
     Just as different proofs of True matter in constructive mathematics,
-    different constructions of False matter in our framework.
+    different constructions of False matter in our framework, which is
+    why things like paradoxes or division by 0 can be handled without
+    collapsing the system. We have demonstrated some ways to creatively
+    use paradox as a foundation. Can you think of any more?
     
-    Mathematics isn't about what exists (True) or doesn't exist (False).
-    It's about HOW things exist or fail to exist.
-    The construction IS the mathematical object.
-
-    Alpha doesn't get to know actual truths - only contradictions.
-    Omega knows all truths, which Alpha approximates through tracking contradictions.
+    Alpha doesn't get to know all truths but can always construct contradictions (False).
+    Omega knows all truths, which Alpha approximates through tracking contradictions, or through direct construction.
     Alpha gets consistency through being able to prove what must be False.
     Omega gets completeness through being able to prove everything True.
+    Knowledge on the boundary between Alpha and Omega is undecidable.
+    
+    Summary: Alpha always has a path to False. Omega always has a path to True.
+*)
+(** Modal Structure from Impossibility:
+    
+    From the single impossibility predicate omega_veil, modal logic emerges:
+    
+    - omega_veil a         : Necessarily false (impossible)
+    - ~omega_veil a        : Possibly true (the space of possible existence)
+    - ~(P /\ omega_veil)   : Necessarily true (refutation of impossibility)
+    - P /\ ~omega_veil     : Contingent (P restricted to possible space)
+    
+    Alpha discovers necessity through contradiction and possibility through
+    its negation. The impossible (omega_veil) defines the possible (~omega_veil),
+    which defines the contingent (predicates on possible space).
+    
+    This isn't modal logic added to the system - it's modal structure emerging
+    from the void itself. Mathematics exists in the contingent space between
+    the necessarily false (omega_veil) and the necessarily true (~omega_veil).
 *)
 
 Require Import DAO.Core.AlphaType.
@@ -26,7 +45,7 @@ From Stdlib Require Import Lia.
 Module WaysOfNotExisting.
 
   (* ================================================================ *)
-  (** ** Core: Every Element of Alphacarrier is a Way *)
+  (** ** Every Element of Alphacarrier can be used for contradiction. *)
   (* ================================================================ *)
   
   Module Core.
@@ -64,7 +83,7 @@ Module WaysOfNotExisting.
         exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hveil).
     Qed.
     
-    (* The key insight: ANY predicate becomes impossible when ANDed with omega_veil *)
+    (* Any predicate becomes impossible when ANDed with omega_veil *)
     Theorem universal_void_structure {Alpha : AlphaType} :
       forall (P : Alphacarrier -> Prop),
       (* Regardless of P's truth value *)
@@ -313,14 +332,14 @@ Module WaysOfNotExisting.
   End ConstructionsOfFalse.
 
   (* ================================================================ *)
-  (** ** The Key Insight: Intensionality of False *)
+  (** ** Intensionality of False *)
   (* ================================================================ *)
   
   Module IntensionalityOfFalse.
     Import Core.
     Import ConstructionsOfFalse.
     
-    Section TheCoreInsight.
+    Section ExtensionallyEqualFalse.
       Context {Alpha : AlphaType}.
       
       (** All our patterns are extensionally equal (all equivalent to omega_veil) *)
@@ -375,7 +394,7 @@ Module WaysOfNotExisting.
       (** Different patterns represent different mathematics *)
       (** Even though all patterns lead to False! *)
       
-    End TheCoreInsight.
+    End ExtensionallyEqualFalse.
   End IntensionalityOfFalse.
 
   (* ================================================================ *)

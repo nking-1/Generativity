@@ -923,8 +923,7 @@ Module ZFCVoid.
     Import ZFC.Basic ZFC.Fundamental ZFC.Operations ZFC.Codes.
     Import ZFCMeta.
     
-    (* ========== The Clean Mathematical Statement ========== *)
-    Axiom mem_well_founded : forall P : Alphacarrier -> Prop,
+    Variable mem_well_founded : forall P : Alphacarrier -> Prop,
     (forall x, is_set_code x -> 
       (forall y, mem y x -> P y) -> P x) ->
     forall x, is_set_code x -> P x.
@@ -1046,8 +1045,7 @@ Module ZFCVoid.
         exists path. auto.
     Qed.
     
-    (* First we need this axiom - it's reasonable in ZFC *)
-    Axiom mem_implies_set_code : forall a b,
+    Variable mem_implies_set_code : forall a b,
       is_set_code b -> mem a b -> is_set_code a.
 
     Theorem void_is_foundation : 
