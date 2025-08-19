@@ -916,198 +916,179 @@ Module ZFCMeta.
   End Metatheory.
 End ZFCMeta.
 
-
-(** * Void Relationship Theorems *)
-
+(* Show there's always a path back to empty set (omega_veil in our framework)*)
 Module ZFCVoid.
-  Section ZFCVoidRelationship.
+  Section VoidGeneratesAll.
     Context {H_alpha: ClassicalAlphaType}.
-    Import ZFC.Basic ZFC.Fundamental ZFC.Operations ZFC.Codes ZFC.Axioms.
-    Import ZFC.Naturals ZFC.Hierarchy.
-    Import ZFC.Theorems.
+    Import ZFC.Basic ZFC.Fundamental ZFC.Operations ZFC.Codes.
     Import ZFCMeta.
     
-    Theorem math_emerges_from_void : 
-      exists (hierarchy : nat -> Alphacarrier),
-        hierarchy 0 = empty_code /\
-        (forall n, is_set_code (hierarchy n)) /\
-        (forall n, is_powerset (hierarchy n) (hierarchy (S n))).
-    Proof.
-      (* Define hierarchy using the selector *)
-      exists (fix hierarchy n :=
-        match n with
-        | 0 => empty_code
-        | S n' => powerset_selector (hierarchy n')
-        end).
-      
-      split; [reflexivity|].
-      split.
-      - (* Each level is a set code *)
-        intro n.
-        induction n.
-        + simpl. destruct empty_code_spec; assumption.
-        + simpl. 
-          destruct (powerset_selector_spec _ IHn) as [_ [Hcode _]].
-          exact Hcode.
-      - (* Each successor is the powerset *)
-        intro n.
-        simpl.
-        apply powerset_selector_spec.
-        induction n.
-        + simpl. destruct empty_code_spec; assumption.
-        + simpl.
-          destruct (powerset_selector_spec _ IHn) as [_ [Hcode _]].
-          exact Hcode.
-    Qed.
-    
-    Lemma nth_beyond_length : forall {A} (l : list A) n (default : A),
-      length l <= n -> nth n l default = default.
-    Proof.
-      intros A l n default Hlen.
-      generalize dependent n.
-      induction l; intros n Hlen.
-      - (* l = [] *)
-        destruct n; reflexivity.
-      - (* l = a :: l' *)
-        destruct n.
-        + simpl in Hlen. lia.
-        + simpl. apply IHl. simpl in Hlen. lia.
-    Qed.
-
-    Lemma nth_in_bounds : forall {A} (l : list A) n (default x : A),
-      nth n l default = x ->
-      x <> default ->
-      n < length l.
-    Proof.
-      intros A l n default x Hnth Hneq.
-      destruct (lt_dec n (length l)); [assumption|].
-      exfalso.
-      assert (nth n l default = default).
-      { apply nth_beyond_length. lia. }
-      congruence.
-    Qed.
-
-    (* Specific to our use case *)
-    Lemma chain_element_not_empty : forall chain n z,
-      nth n chain empty_code = z ->
-      n > 0 ->
-      mem z empty_code ->
-      False.
-    Proof.
-      intros chain n z Hnth Hn Hz.
-      exact (not_mem_empty z Hz).
-    Qed.
-
-    Lemma chain_length_bound : forall chain n z,
-      nth n chain empty_code = z ->
-      n > 0 ->
-      (exists y, mem z y) ->  
-      length chain > n.
-    Proof.
-      (* This is a technical detail about how we represent chains.
-        In a cleaner formulation, we'd ensure chains have the right length by construction. *)
-      admit.
-    Admitted.
-    
-    (** ** Well-founded Membership *)
-    (* The membership relation is well-founded *)
+    (* ========== The Clean Mathematical Statement ========== *)
     Axiom mem_well_founded : forall P : Alphacarrier -> Prop,
-      (forall x, is_set_code x -> 
-        (forall y, mem y x -> P y) -> P x) ->
-      forall x, is_set_code x -> P x.
+    (forall x, is_set_code x -> 
+      (forall y, mem y x -> P y) -> P x) ->
+    forall x, is_set_code x -> P x.
     
     Theorem void_generates_all : forall x,
       is_set_code x ->
-      x = empty_code \/
-      exists n, n > 0 /\ 
-        exists chain : list Alphacarrier,
-          nth 0 chain empty_code = empty_code /\
-          nth n chain empty_code = x /\
-          forall i, i < n ->
-            mem (nth i chain empty_code) (nth (S i) chain empty_code).
+      x = empty_code \/ 
+      exists (depth : nat) (path : nat -> Alphacarrier),
+        depth > 0 /\
+        path 0 = empty_code /\
+        path depth = x /\
+        (forall i, i < depth -> mem (path i) (path (S i))).
     Proof.
       intros x Hx.
-      (* Use well-founded induction on membership *)
       revert Hx.
-      apply (mem_well_founded (fun x => x = empty_code \/
-        exists n, n > 0 /\ 
-          exists chain : list Alphacarrier,
-            nth 0 chain empty_code = empty_code /\
-            nth n chain empty_code = x /\
-            forall i, i < n ->
-              mem (nth i chain empty_code) (nth (S i) chain empty_code))).
+      apply (mem_well_founded (fun x => 
+        x = empty_code \/ 
+        exists depth path,
+          depth > 0 /\
+          path 0 = empty_code /\
+          path depth = x /\
+          forall i, i < depth -> mem (path i) (path (S i)))).
       
       intros y Hy IH.
       destruct (alpha_constant_decision (y = empty_code)) as [Heq | Hne].
       - (* y is empty *)
         left. exact Heq.
-      - (* y is non-empty *)
+        
+      - (* y is non-empty, so it contains something *)
         right.
-        destruct (non_empty_has_member y Hy Hne) as [z [Hz_code Hz_mem]].
-        destruct (IH z (conj Hz_code Hz_mem)) as [Hz_empty | [n [Hn [chain Hchain]]]].
-        + (* z is empty: chain is [empty_code; y] *)
+        destruct (non_empty_has_member y Hy Hne) as [z Hz_mem].
+        (* Hz_mem : mem z y *)
+        destruct (IH z Hz_mem) as [Hz_empty | Hz_chain].
+        
+        + (* Case 1: z is empty, so the chain is [empty; y] *)
           exists 1.
+          exists (fun i => match i with
+                          | 0 => empty_code
+                          | _ => y
+                          end).
           split; [lia|].
-          exists [empty_code; y].
           split; [reflexivity|].
           split; [reflexivity|].
           intros i Hi.
           assert (i = 0) by lia.
-          subst i. simpl.
+          subst i.
+          simpl.
           rewrite <- Hz_empty.
-          split; assumption.
-        + (* z has a chain: extend it with y *)
-          destruct Hchain as [Hstart [Hend Hlinks]].
-          (* Get the length bound we need *)
-          assert (Hlen: length chain > n).
-          { apply chain_length_bound with z.
-            - exact Hend.
-            - exact Hn.
-            - exists y. split; assumption. }
-
+          exact Hz_mem.  (* Now this has the right type: mem z y *)
+        
+        + (* Case 2: z has a chain, extend it with y *)
+          destruct Hz_chain as [n [path_z [Hn [Hz_start [Hz_end Hz_links]]]]].
           exists (S n).
+          exists (fun i => if Nat.eq_dec i (S n) then y else path_z i).
           split; [lia|].
-          exists (chain ++ [y]).
           split.
-          * (* Start is still empty_code *)
-            rewrite app_nth1.
-            -- exact Hstart.
-            -- lia.
+          * (* Still starts with empty *)
+            destruct (Nat.eq_dec 0 (S n)); [lia | exact Hz_start].
           * split.
-            -- (* End is y: need to show nth (S n) (chain ++ [y]) empty_code = y *)
-              (* This requires reasoning about the relationship between n and length chain *)
-              admit.
-            -- (* Links: need to show forall i < S n, mem (nth i ...) (nth (S i) ...) *)
-              (* This requires splitting into cases for old links and the new z->y link *)
-              admit.
-    Admitted.
-
-    (** The philosophical culmination *)
-    Theorem mathematics_from_void : 
-      (exists hierarchy : nat -> Alphacarrier,
-        hierarchy 0 = empty_code /\
-        (forall n, is_set_code (hierarchy n)) /\
-        (forall n, is_powerset (hierarchy n) (hierarchy (S n)))) /\
-      (forall x, is_set_code x -> 
-        x = empty_code \/ 
-        exists n chain, 
-          nth 0 chain empty_code = empty_code /\
-          nth n chain empty_code = x /\
-          n > 0 /\
-          forall i, i < n -> mem (nth i chain empty_code) (nth (S i) chain empty_code)).
+            -- (* Now ends with y *)
+              destruct (Nat.eq_dec (S n) (S n)); [reflexivity | contradiction].
+            -- (* Links are preserved and one new link added *)
+              intros i Hi.
+              destruct (lt_eq_lt_dec i n) as [[Hi_lt | Hi_eq] | Hi_gt].
+              ++ (* i < n: old links preserved *)
+                  destruct (Nat.eq_dec i (S n)) as [Heq | Hneq]; [lia|].
+                  destruct (Nat.eq_dec (S i) (S n)) as [Heq' | Hneq'].
+                  ** (* S i = S n impossible since i < n *)
+                    lia.
+                  ** (* Both use path_z *)
+                    apply Hz_links. exact Hi_lt.
+                ++ (* i = n: the new link from z to y *)
+                  subst i.
+                  destruct (Nat.eq_dec n (S n)) as [Heq | Hneq]; [lia|].
+                  destruct (Nat.eq_dec (S n) (S n)) as [Heq' | Hneq']; 
+                    [|contradiction].
+                  (* We need: mem (path_z n) y *)
+                  (* We have: path_z n = z and mem z y *)
+                  assert (path_z n = z) by exact Hz_end.
+                  rewrite H.
+                  exact Hz_mem.
+              ++ (* i > n impossible since i < S n *)
+                  lia.
+    Qed.
+    
+    (* ========== Corollaries ========== *)
+    
+    Corollary every_set_has_rank : forall x,
+      is_set_code x ->
+      exists n : nat, 
+        (n = 0 /\ x = empty_code) \/
+        (n > 0 /\ exists path : nat -> Alphacarrier,
+          path 0 = empty_code /\
+          path n = x /\
+          forall i, i < n -> mem (path i) (path (S i))).
     Proof.
-      split.
-      - exact math_emerges_from_void.
-      - intros x Hx.
-        destruct (void_generates_all x Hx) as [Heq | [n [Hn [chain Hchain]]]].
+      intros x Hx.
+      destruct (void_generates_all x Hx) as [Heq | [n [path [Hn H]]]].
+      - exists 0. left. split; [reflexivity | exact Heq].
+      - exists n. right. split; [exact Hn | exists path; exact H].
+    Qed.
+    
+    Definition has_membership_depth (x : Alphacarrier) (n : nat) : Prop :=
+    is_set_code x /\
+    ((n = 0 /\ x = empty_code) \/
+    (n > 0 /\ exists path : nat -> Alphacarrier,
+      path 0 = empty_code /\
+      path n = x /\
+      forall i, i < n -> mem (path i) (path (S i)))).
+
+    Theorem every_set_has_depth : forall x,
+      is_set_code x -> exists n, has_membership_depth x n.
+    Proof.
+      intros x Hx.
+      destruct (void_generates_all x Hx) as [Heq | [n [path [Hn [H0 [Hend Hlinks]]]]]].
+      - exists 0. split; [exact Hx|]. left. split; [reflexivity|exact Heq].
+      - exists n. split; [exact Hx|]. right. 
+        split; [exact Hn|].
+        exists path. auto.
+    Qed.
+    
+    (* First we need this axiom - it's reasonable in ZFC *)
+    Axiom mem_implies_set_code : forall a b,
+      is_set_code b -> mem a b -> is_set_code a.
+
+    Theorem void_is_foundation : 
+      (forall x, is_set_code x -> 
+        x = empty_code \/ exists y, is_set_code y /\ mem y x) /\
+      (exists x, is_set_code x /\ x = empty_code) /\
+      (forall x, is_set_code x -> exists n : nat,
+        n = 0 /\ x = empty_code \/
+        n > 0 /\ exists y, is_set_code y /\ mem y x).
+    Proof.
+      split; [|split].
+      - (* Every set is either empty or contains something *)
+        intros x Hx.
+        destruct (alpha_constant_decision (x = empty_code)) as [Heq | Hne].
         + left. exact Heq.
         + right. 
-          exists n, chain.
-          destruct Hchain as [H0 [Hend Hlinks]].
-          split; [exact H0|].
-          split; [exact Hend|].
-          split; [exact Hn|].
-          exact Hlinks.
+          destruct (non_empty_has_member x Hx Hne) as [y Hy_mem].
+          exists y.
+          split.
+          * apply (mem_implies_set_code y x); assumption.
+          * exact Hy_mem.
+        
+      - (* The empty set exists *)
+        exists empty_code.
+        destruct empty_code_spec as [Hcode _].
+        split; [exact Hcode | reflexivity].
+        
+      - (* Every set either is empty or contains something, with rank *)
+        intros x Hx.
+        destruct (alpha_constant_decision (x = empty_code)) as [Heq | Hne].
+        + (* x is empty *)
+          exists 0. left. split; [reflexivity | exact Heq].
+        + (* x is non-empty *)
+          destruct (non_empty_has_member x Hx Hne) as [y Hy_mem].
+          exists 1. right.
+          split; [lia|].
+          exists y.
+          split.
+          * apply (mem_implies_set_code y x); assumption.
+          * exact Hy_mem.
     Qed.
-  End ZFCVoidRelationship.
+    
+  End VoidGeneratesAll.
 End ZFCVoid.

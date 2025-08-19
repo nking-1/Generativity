@@ -1818,4 +1818,155 @@ Module UnravelLang.
     
   End Extraction.
 
+  (* ================================================================ *)
+  (** ** OCaml Extraction - Single File *)
+  (* ================================================================ *)
+  
+  (* Module ExtractionOcaml.
+    Import Core.
+    Import Eval.
+    Import WithVariables.
+    Import ThermodynamicUnravelLang.
+    Import Examples.
+    Import VariableExamples.
+
+    (** Redefine chaos_generator here *)
+    Fixpoint chaos_generator (n : nat) : ExprV :=
+      match n with
+      | 0 => EVNum 42
+      | S n' => EVAdd (EVDiv (EVNum 1) (EVNum 0)) (chaos_generator n')
+      end.
+    
+    (** Configure extraction for OCaml *)
+    Extraction Language OCaml.
+    
+    (** Optimize the extracted code *)
+    Set Extraction Optimize.
+    Set Extraction AutoInline.
+    
+    (** Map Coq types to OCaml built-ins for efficiency *)
+    Extract Inductive bool => "bool" ["true" "false"].
+    Extract Inductive nat => "int"
+      ["0" "(fun n -> n + 1)"]
+      "(fun fO fS n -> if n = 0 then fO () else fS (n - 1))".
+    Extract Inductive list => "list" ["[]" "(::)"].
+    
+    (** FIX: Properly extract Coq strings to OCaml strings *)
+    Extract Inductive string => "string" ["""""" "(^)"].
+    Extract Inductive ascii => "char" 
+      ["(fun _ _ _ _ _ _ _ _ -> ' ')"]
+      "(fun f c -> f true true true true true true true true)".
+    
+    (** Handle string operations *)
+    Extract Constant String.eqb => "(=)".
+    
+    (** Arithmetic operations - map to OCaml's native ops *)
+    Extract Constant Nat.add => "(+)".
+    Extract Constant Nat.sub => "(fun n m -> max 0 (n - m))". (* Saturating *)
+    Extract Constant Nat.mul => "( * )".
+    Extract Constant Nat.div => "(fun n m -> if m = 0 then 0 else n / m)".
+    Extract Constant Nat.modulo => "(fun n m -> if m = 0 then 0 else n mod m)".
+    Extract Constant Nat.leb => "(<=)".
+    
+    (** Product types - map to OCaml pairs/tuples *)
+    Extract Inductive prod => "(*)" ["(,)"].
+    Extract Inductive sigT => "(*)" ["(,)"].
+    
+    (** Option type for better OCaml interop *)
+    Extract Inductive option => "option" ["Some" "None"].
+    
+    (** Suppress some Coq-specific stuff we don't need *)
+    Extraction Blacklist String List.
+    
+    (** Create a test runner module with everything *)
+    Module Runner.
+      
+      (** Quick test function *)
+      Definition test_simple : Value :=
+        eval_default (EAdd (ENum 2) (ENum 3)).
+      
+      (** Test void propagation *)
+      Definition test_void : Value :=
+        eval_default (EAdd (EDiv (ENum 10) (ENum 0)) (ENum 5)).
+      
+      (** Test recovery *)
+      Definition test_recovery : Value :=
+        eval_default (EDefault (EDiv (ENum 10) (ENum 0)) (ENum 42)).
+      
+      (** Test variables *)
+      Definition test_let : Value :=
+        evalV_empty (EVLet "x" (EVNum 10) (EVAdd (EVVar "x") (EVNum 5))).
+      
+      (** Test thermodynamics *)
+      Definition test_thermo : (ValueT * Universe) :=
+        evalT_initial (EVAdd (EVDiv (EVNum 1) (EVNum 0)) 
+                             (EVDiv (EVNum 2) (EVNum 0))).
+      
+      (** Get just the entropy from a thermodynamic evaluation *)
+      Definition get_entropy (e : ExprV) : nat :=
+        match evalT_initial e with
+        | (_, u) => u.(total_entropy)
+        end.
+      
+      (** Basic tests - just the values, no string labels *)
+      Definition basic_tests : list Value :=
+        [test_simple;
+         test_void;
+         test_recovery;
+         test_let].
+      
+      (** Entropy measurements - just the numbers *)
+      Definition entropy_measurements : list nat :=
+        [get_entropy (EVAdd (EVNum 1) (EVNum 2));
+         get_entropy (EVDiv (EVNum 10) (EVNum 0));
+         get_entropy (EVAdd (EVDiv (EVNum 1) (EVNum 0))
+                           (EVDiv (EVNum 2) (EVNum 0)));
+         get_entropy (chaos_generator 5);
+         get_entropy (chaos_generator 10)].
+      
+      (** Extract the universe state from test_thermo *)
+      Definition thermo_universe : Universe :=
+        snd test_thermo.
+      
+      (** Extract the value from test_thermo *)
+      Definition thermo_value : ValueT :=
+        fst test_thermo.
+      
+      (** Check heat death for various programs *)
+      Definition heat_death_tests : list bool :=
+        [is_heat_death (snd (evalT_initial (chaos_generator 5)));
+         is_heat_death (snd (evalT_initial (chaos_generator 10)));
+         is_heat_death (snd (evalT_initial (chaos_generator 20)))].
+      
+    End Runner.
+    
+    (** Extract to a single file *)
+    Extraction "Unravel/unravel.ml"
+      (* Core types *)
+      Expr Value ExprV ValueT Universe VoidInfo VoidSource
+      
+      (* Core evaluators *)
+      eval eval_default evalV evalV_empty evalT evalT_initial
+      
+      (* Helper functions *)
+      is_void value_to_nat_default value_to_bool_default
+      lookup lookupT
+      initial_universe evolve_universe combine_voids
+      value_entropy is_heat_death
+      
+      (* Variables/Let examples *)
+      simple_let nested_let undefined_var void_binding
+      shadowing recover_undefined complex_with_vars
+      
+      (* Basic examples *)
+      safe_div divides calculation risky_calculation recovered
+      
+      chaos_generator
+      
+      (* Test runner *)
+      Runner.test_simple Runner.test_void Runner.test_recovery
+      Runner.test_let Runner.test_thermo Runner.get_entropy.
+      
+  End ExtractionOcaml. *)
+
 End UnravelLang.
