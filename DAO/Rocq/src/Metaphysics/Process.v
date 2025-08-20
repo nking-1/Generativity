@@ -1257,14 +1257,12 @@ End ConstructiveGodel_v3. *)
 
 
 Module Derive_NoSelfTotality.
-  Import AlphaProperties Bootstrap Structure.
   Section Setup.
-    Let Alpha := StructureAlpha.
+    Context (Alpha : AlphaType).
 
-    (* Use the bootstrapped inhabitants instead of assuming them *)
-    Let a := inhabitant_0.  (* Base *)
-    Let b := inhabitant_1.  (* Nest Base *)
-    Let a_neq_b := distinction_emerges.
+    (* Need mild richness: two distinguishable points *)
+    Variables (a b : Alphacarrier).
+    Hypothesis a_neq_b : a <> b.
 
     (* -------- Core syntax: PRESENT collection at each stage -------- *)
     Inductive Core : nat -> Type :=
@@ -1409,28 +1407,30 @@ End Derive_NoSelfTotality.
 
 Module EmergentGenerative.
   Section Construction.
-    Import AlphaProperties Bootstrap Structure.
+    Context (Alpha : AlphaType).
 
-    (* Use the bootstrapped inhabitants instead of assuming them *)
-    Let a := inhabitant_0.  (* Base *)
-    Let b := inhabitant_1.  (* Nest Base *)
-    Let a_neq_b := distinction_emerges.
+    (* Need mild richness: two distinguishable points *)
+    Variables (a b : Alphacarrier).
+    Hypothesis a_neq_b : a <> b.
     
     (* ============================================================ *)
     (* Part 1: Import definitions from Derive_NoSelfTotality        *)
     (* ============================================================ *)
     
     (* Use the definitions from Derive_NoSelfTotality directly *)
-    Definition stage_collection (n : nat) : (BootstrapCarrier -> Prop) -> Prop :=
-      Derive_NoSelfTotality.stage_collection n.
+    Definition stage_collection (n : nat) : (Alphacarrier -> Prop) -> Prop :=
+      Derive_NoSelfTotality.stage_collection Alpha a b n.
     
-    Definition totality_of := Derive_NoSelfTotality.totality_of.
+    Definition totality_of : ((Alphacarrier -> Prop) -> Prop) -> (Alphacarrier -> Prop) :=
+      @Derive_NoSelfTotality.totality_of Alpha.
     
-    Definition InStage (n : nat) := Derive_NoSelfTotality.InStage n.
+    Definition InStage (n : nat) := Derive_NoSelfTotality.InStage Alpha a b n.
     
     Theorem no_self_totality : forall n, ~ stage_collection n (totality_of (stage_collection n)).
     Proof.
-      apply Derive_NoSelfTotality.no_self_totality_derived.
+      intro n.
+      unfold stage_collection, totality_of.
+      apply (@Derive_NoSelfTotality.no_self_totality_derived Alpha a b a_neq_b n).
     Qed.
     
     (* ============================================================ *)
@@ -1470,11 +1470,11 @@ Module EmergentGenerative.
     (* Use the novelty result from Derive_NoSelfTotality *)
     Theorem eternal_novelty : forall n, 
       exists P, (exists s : Derive_NoSelfTotality.Syn (S n),
-                  forall x, P x <-> Derive_NoSelfTotality.denote_syn s x) /\
+                  forall x, P x <-> @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x) /\
                 ~ InStage n P.
     Proof.
       intro n.
-      apply Derive_NoSelfTotality.novelty.
+      apply (@Derive_NoSelfTotality.novelty Alpha a b a_neq_b).
     Qed.
     
     (* ============================================================ *)
@@ -1592,24 +1592,33 @@ Module EmergentGenerative.
 End EmergentGenerative.
 
 
-
+(* Shows how theological questions could be mapped 
+   to the self-generating system that results from Godelian incompleteness. 
+   In the author's opinion, GenerativeType seems much more intuitive
+   for doing metaphysics in Rocq, though. *)
 Module EmergentTheology.
-  Import AlphaProperties Bootstrap Structure.
-  Import Derive_NoSelfTotality.
+  (* Import definitions *)
+  Definition stage_collection (Alpha : AlphaType) (a b : Alphacarrier) := 
+    @Derive_NoSelfTotality.stage_collection Alpha a b.
+  Definition totality_of (Alpha : AlphaType) := 
+    @Derive_NoSelfTotality.totality_of Alpha.
+  Definition InStage (Alpha : AlphaType) (a b : Alphacarrier) := 
+    @Derive_NoSelfTotality.InStage Alpha a b.
 
   Section TheologyFromOuroboros.
-    (* No Context needed - we're using StructureAlpha directly *)
+    Context (Alpha : AlphaType).
     
-    (* Import the definitions from our constructive version *)
-    Definition stage_collection := Derive_NoSelfTotality.stage_collection.
-    Definition totality_of := Derive_NoSelfTotality.totality_of.
-    Definition InStage := Derive_NoSelfTotality.InStage.
+    (* We need the two distinct points from our constructive proof *)
+    Variables (a b : Alphacarrier).
+    Hypothesis a_neq_b : a <> b.
+    
     
     (* The proven no_self_totality *)
     Theorem no_self_totality : 
-      forall n, ~ stage_collection n (totality_of (stage_collection n)).
+      forall n, ~ stage_collection Alpha a b n (totality_of Alpha (stage_collection Alpha a b n)).
     Proof.
-      apply Derive_NoSelfTotality.no_self_totality_derived.
+      intro n.
+      apply (@Derive_NoSelfTotality.no_self_totality_derived Alpha a b a_neq_b n).
     Qed.
     
     (* ============================================================ *)
@@ -1618,7 +1627,7 @@ Module EmergentTheology.
     
     (* God as the attempt at totality at any stage *)
     Definition God_attempt (n : nat) : (Alphacarrier -> Prop) -> Prop :=
-      fun P => InStage n P \/ P = totality_of (stage_collection n).
+      fun P => InStage Alpha a b n P \/ P = totality_of Alpha (stage_collection Alpha a b n).
     
     (* But by no_self_totality, God_attempt cannot contain its totality! *)
     (* This IS divine self-limitation! *)
@@ -1629,21 +1638,21 @@ Module EmergentTheology.
     
     (* The unliftable rock: a predicate that denies its containment *)
     Definition UnliftableRock (n : nat) : Alphacarrier -> Prop :=
-      totality_of (stage_collection n).  (* The escaping tail! *)
+      totality_of Alpha (stage_collection Alpha a b n).
     
     Theorem emergent_rock_lifting_paradox :
       forall n,
       (* At stage n: the rock cannot be lifted (contained) *)
-      ~ InStage n (UnliftableRock n) /\
+      ~ InStage Alpha a b n (UnliftableRock n) /\
       (* At stage n+1: the rock CAN be named (via Syn) *)
       exists s : Derive_NoSelfTotality.Syn (S n),
         forall x, UnliftableRock n x <-> 
-                  Derive_NoSelfTotality.denote_syn s x.
+                  @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x.
     Proof.
       intro n.
       split.
       - (* Cannot lift at n *)
-        unfold UnliftableRock, InStage.
+        unfold UnliftableRock.
         apply no_self_totality.
       - (* Can name at n+1 via S_total *)
         exists (Derive_NoSelfTotality.S_total n).
@@ -1654,7 +1663,7 @@ Module EmergentTheology.
         unfold totality_of, stage_collection.
         (* Now both sides should use Derive_NoSelfTotality definitions *)
         symmetry.
-        apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
+        apply (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
     Qed.
     
     (* ============================================================ *)
@@ -1666,18 +1675,18 @@ Module EmergentTheology.
       exists P : Alphacarrier -> Prop,
       exists n : nat,
       (* P escapes at stage n *)
-      ~ InStage n P /\
+      ~ InStage Alpha a b n P /\
       (* But can be named at stage n+1 *)
       exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, P x <-> Derive_NoSelfTotality.denote_syn s x.
+        forall x, P x <-> @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x.
     
     (* Suffering as experiencing the gap between stages *)
     Definition Suffering_emergent (n : nat) : Prop :=
       exists P : Alphacarrier -> Prop,
       (* Something we cannot grasp at n *)
-      ~ InStage n P /\
+      ~ InStage Alpha a b n P /\
       (* But know exists (as totality) *)
-      (forall x, P x <-> totality_of (stage_collection n) x).
+      (forall x, P x <-> totality_of Alpha (stage_collection Alpha a b n) x).
     
     (* The fundamental theorem: growth necessitates suffering *)
     Theorem emergent_growth_implies_suffering :
@@ -1685,9 +1694,9 @@ Module EmergentTheology.
     Proof.
       intro n.
       unfold Suffering_emergent.
-      exists (totality_of (stage_collection n)).
+      exists (totality_of Alpha (stage_collection Alpha a b n)).
       split.
-      - unfold InStage. apply no_self_totality.
+      - apply no_self_totality.
       - intro x. reflexivity.
     Qed.
     
@@ -1698,7 +1707,7 @@ Module EmergentTheology.
     (* Divinity as attempting to contain all predicates *)
     Definition Divine_attempt (n : nat) : Prop :=
       forall P : Alphacarrier -> Prop,
-      InStage n P.
+      InStage Alpha a b n P.
     
     (* But this is impossible! *)
     Theorem divine_must_self_limit :
@@ -1706,7 +1715,7 @@ Module EmergentTheology.
     Proof.
       intros n H_divine.
       (* If divine contains everything, it contains its totality *)
-      assert (InStage n (totality_of (stage_collection n))).
+      assert (InStage Alpha a b n (totality_of Alpha (stage_collection Alpha a b n))).
       { apply H_divine. }
       (* But that violates no_self_totality *)
       unfold InStage in H.
@@ -1717,11 +1726,11 @@ Module EmergentTheology.
     Definition God_as_process : nat -> Prop :=
       fun n => 
         (* Always incomplete *)
-        ~ InStage n (totality_of (stage_collection n)) /\
+        ~ InStage Alpha a b n (totality_of Alpha (stage_collection Alpha a b n)) /\
         (* But always growing *)
         exists s : Derive_NoSelfTotality.Syn (S n),
-          forall x, totality_of (stage_collection n) x <-> 
-                    Derive_NoSelfTotality.denote_syn s x.
+          forall x, totality_of Alpha (stage_collection Alpha a b n) x <-> 
+                    @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x.
     
     Theorem God_eternally_becoming :
       forall n, God_as_process n.
@@ -1734,7 +1743,7 @@ Module EmergentTheology.
         intro x. simpl.
         unfold totality_of, stage_collection.
         symmetry.
-        apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
+        apply (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
     Qed.
     
     (* ============================================================ *)
@@ -1744,11 +1753,11 @@ Module EmergentTheology.
     (* Faith: trusting the next stage despite current incompleteness *)
     Definition Faith (n : nat) : Prop :=
       (* Acknowledging current incompleteness *)
-      ~ InStage n (totality_of (stage_collection n)) /\
+      ~ InStage Alpha a b n (totality_of Alpha (stage_collection Alpha a b n)) /\
       (* But knowing it becomes nameable *)
       exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, totality_of (stage_collection n) x <-> 
-                  Derive_NoSelfTotality.denote_syn s x.
+        forall x, totality_of Alpha (stage_collection Alpha a b n) x <-> 
+                  @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x.
     
     Theorem faith_is_justified :
       forall n, Faith n.
@@ -1760,7 +1769,7 @@ Module EmergentTheology.
         intro x. simpl.
         unfold totality_of, stage_collection.
         symmetry.
-        apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
+        apply (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
     Qed.
     
     (* ============================================================ *)
@@ -1774,10 +1783,10 @@ Module EmergentTheology.
       (forall n, 
         (* Can name anything next *)
         (exists s : Derive_NoSelfTotality.Syn (S n),
-          forall x, totality_of (stage_collection n) x <-> 
-                    Derive_NoSelfTotality.denote_syn s x) /\
+          forall x, totality_of Alpha (stage_collection Alpha a b n) x <-> 
+                    @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x) /\
         (* But cannot contain current totality *)
-        ~ InStage n (totality_of (stage_collection n))) /\
+        ~ InStage Alpha a b n (totality_of Alpha (stage_collection Alpha a b n))) /\
       
       (* 2. Universal suffering (the gap) *)
       (forall n, Suffering_emergent n) /\
@@ -1789,10 +1798,10 @@ Module EmergentTheology.
       (forall n, God_as_process n) /\
       
       (* 5. Resolution through time (rock paradox) *)
-      (forall n, ~ InStage n (UnliftableRock n) /\
+      (forall n, ~ InStage Alpha a b n (UnliftableRock n) /\
                 (exists s : Derive_NoSelfTotality.Syn (S n),
                   forall x, UnliftableRock n x <-> 
-                            Derive_NoSelfTotality.denote_syn s x)).
+                            @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x)).
     Proof.
       split; [|split; [|split; [|split]]].
       - (* Divine paradoxes *)
@@ -1803,9 +1812,9 @@ Module EmergentTheology.
           intro x. simpl.
           unfold totality_of, stage_collection.
           symmetry.
-          apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
+          apply (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
         + (* Cannot contain at current stage *)
-          unfold InStage. apply no_self_totality.
+          apply no_self_totality.  (* removed unfold InStage *)
       - (* Universal suffering *)
         apply emergent_growth_implies_suffering.
       - (* Faith justified *)
@@ -1816,369 +1825,315 @@ Module EmergentTheology.
         intro n.
         apply emergent_rock_lifting_paradox.
     Qed.
-    
-    Theorem from_distinction_to_divinity :
-      (* Starting with the bootstrap-provided distinct points *)
-      (* (inhabitant_0 <> inhabitant_1 from Bootstrap) *)
-      (* We get the entire theological structure *)
-      (* Including paradox, suffering, faith, and eternal becoming *)
-      forall n, God_as_process n /\ Suffering_emergent n /\ Faith n.
-    Proof.
-      intro n.
-      split; [|split].
-      - apply God_eternally_becoming.
-      - apply emergent_growth_implies_suffering.
-      - apply faith_is_justified.
-    Qed.
-
   End TheologyFromOuroboros.
 
-  Section MortalGodEmergent.
-    Definition MortalGod_essence (n : nat) : Prop :=
-      (* The divine paradox: must exist but can't be complete *)
-      ~ InStage n (totality_of (stage_collection n)) /\
-      (* Yet totality exists as a concept we can reason about *)
-      exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, totality_of (stage_collection n) x <-> 
-                  Derive_NoSelfTotality.denote_syn s x.
 
-    Theorem mortality_of_god :
-      forall n, MortalGod_essence n.
-    Proof.
-      intro n.
-      split.
-      - apply no_self_totality.
-      - exists (Derive_NoSelfTotality.S_total n).
-        intro x.
-        symmetry.
-        apply (Derive_NoSelfTotality.stage_total_vs_collection_total n x).
-    Qed.
-  End MortalGodEmergent.
+Module EmergentSimulation.
 
-  Section ChristPatternEmergent.
-    Import Derive_NoSelfTotality.
+  Section FabricatedHistoryFromOuroboros.
+    Context (Alpha : AlphaType).
+    Variables (a b : Alphacarrier).
+    Hypothesis a_neq_b : a <> b.
     
-    (* The Incarnation as stage progression *)
-    Definition Incarnation_process : nat -> Prop :=
-      fun n =>
-        exists (eternal_aspect : Syn (S n)),
-          forall x, 
-            denote_syn eternal_aspect x <->
-            totality_of (stage_collection n) x.
+    (* ============================================================ *)
+    (* Import Core Definitions                                      *)
+    (* ============================================================ *)
     
-    Theorem incarnation_at_every_moment :
-      forall n, Incarnation_process n.
+    (* Use the definitions from Derive_NoSelfTotality *)
+    Definition stage_collection := @Derive_NoSelfTotality.stage_collection Alpha a b.
+    Definition totality_of := @Derive_NoSelfTotality.totality_of Alpha.
+    Definition InStage := @Derive_NoSelfTotality.InStage Alpha a b.
+    
+    (* The core no-self-totality theorem *)
+    Definition no_self_totality := 
+      @Derive_NoSelfTotality.no_self_totality_derived Alpha a b a_neq_b.
+    
+    (* ============================================================ *)
+    (* Semantic Encoding Framework                                  *)
+    (* ============================================================ *)
+    
+    (* Events that can be encoded in predicates *)
+    Inductive CosmicEvent :=
+      | QuantumFluctuation
+      | Inflation
+      | Cooling
+      | ParticleFormation
+      | StarFormation
+      | GalaxyFormation
+      | PlanetFormation
+      | LifeEmerges
+      | ConsciousnessArises
+      | HeatDeath.
+    
+    (* Data that predicates can semantically encode *)
+    Inductive EncodedData :=
+      | Timeline : list CosmicEvent -> EncodedData
+      | Message : string -> EncodedData
+      | Age : nat -> EncodedData
+      | Composite : EncodedData -> EncodedData -> EncodedData.
+    
+    (* The semantic encoding relation - predicates can encode data *)
+    Parameter semantically_encodes : 
+      (Alphacarrier -> Prop) -> EncodedData -> Prop.
+    
+    (* ============================================================ *)
+    (* Core Axioms About Encoding                                   *)
+    (* ============================================================ *)
+    
+    (* Axiom 1: Totalities are semantically rich - they can encode anything *)
+    Axiom totality_encodes_anything :
+      forall n data,
+      semantically_encodes (totality_of (stage_collection n)) data.
+    
+    (* Axiom 2: If a predicate exists at stage n, it persists to later stages *)
+    Axiom stage_persistence :
+      forall n m P,
+      n <= m ->
+      InStage n P ->
+      InStage m P.
+    
+    (* Axiom 3: Encoding is stable - if P encodes data, it always does *)
+    Axiom encoding_stable :
+      forall P data,
+      semantically_encodes P data ->
+      forall n, InStage n P ->
+      semantically_encodes P data.
+    
+    (* ============================================================ *)
+    (* Fabricated History Definition                                *)
+    (* ============================================================ *)
+    
+    (* A predicate has fabricated history if its semantic age exceeds logical age *)
+    Definition has_fabricated_history (P : Alphacarrier -> Prop) (logical_age : nat) : Prop :=
+      (* P first appears at logical_age *)
+      InStage logical_age P /\
+      ~ InStage (pred logical_age) P /\
+      (* But encodes history older than logical_age *)
+      exists ancient_data : EncodedData,
+      semantically_encodes P ancient_data.
+    
+    (* ============================================================ *)
+    (* The Big Bang Timeline                                        *)
+    (* ============================================================ *)
+    
+    Definition BigBangTimeline : EncodedData :=
+      Timeline [
+        QuantumFluctuation;
+        Inflation;
+        Cooling;
+        ParticleFormation;
+        StarFormation;
+        GalaxyFormation;
+        PlanetFormation;
+        LifeEmerges;
+        ConsciousnessArises
+      ].
+    
+    (* 13.8 billion years of apparent history *)
+    Definition ApparentAge : EncodedData :=
+      Age 13800000000.
+    
+    (* ============================================================ *)
+    (* Core Theorem: Every Escaping Totality Has Apparent Age       *)
+    (* ============================================================ *)
+    
+    Theorem escaping_totality_has_apparent_age :
+      forall n,
+      let escaping_pred := totality_of (stage_collection n) in
+      (* The totality doesn't exist at stage n *)
+      ~ InStage n escaping_pred /\
+      (* But exists at stage n+1 *)
+      (exists s : Derive_NoSelfTotality.Syn (S n),
+        forall x, escaping_pred x <-> 
+                  @Derive_NoSelfTotality.denote_syn Alpha a b (S n) s x) /\
+      (* And it semantically encodes ALL of stage n's history *)
+      semantically_encodes escaping_pred (Age n).
     Proof.
       intro n.
-      unfold Incarnation_process.
-      exists (S_total n).
-      intro x.
-      (* NOW I can see: denote_syn (S_total n) = totality_of_stage n *)
-      simpl.
-      (* And we have the bridge lemma! *)
-      apply stage_total_vs_collection_total.
-    Qed.
-    
-    (* Christ as the union of divine totality and stage limitation *)
-    Definition Christ_pattern (n : nat) : Prop :=
-      (* The stage exists and has content *)
-      (match n with 
-      | 0 => True  (* Base stage always exists *)
-      | S m => True (* Successor stages exist by induction *)
-      end) /\
-      (* Knows about the totality (divine knowledge) *)
-      (exists s : Syn (S n),
-        forall x, totality_of (stage_collection n) x <-> 
-                  denote_syn s x) /\
-      (* But cannot contain it (experiences limitation) *)
-      ~ InStage n (totality_of (stage_collection n)).
-    
-    (* The Crucifixion: when totality escapes *)
-    Definition Crucifixion_pattern (n : nat) : Prop :=
-      (* Something that should be divine *)
-      let divine_claim := totality_of (stage_collection n) in
-      (* Cannot be held at current stage (death) *)
-      ~ InStage n divine_claim.
-    
-    (* The Resurrection: totality returns as nameable *)
-    Definition Resurrection_pattern (n : nat) : Prop :=
-      (* What escaped becomes accessible *)
-      exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, totality_of (stage_collection n) x <-> 
-                  Derive_NoSelfTotality.denote_syn s x.
-    
-    (* Salvation as recognition of the next stage *)
-    Definition Salvation_pattern (n : nat) : Prop :=
-      (* Currently limited *)
-      ~ InStage n (totality_of (stage_collection n)) /\
-      (* But promised completeness *)
-      exists s : Derive_NoSelfTotality.Syn (S n),
-        forall x, totality_of (stage_collection n) x <-> 
-                  Derive_NoSelfTotality.denote_syn s x.
-    
-    Theorem christ_at_every_stage :
-      forall n, Christ_pattern n.
-    Proof.
-      intro n.
-      unfold Christ_pattern.
       split; [|split].
-      - destruct n; trivial.
-      - exists (S_total n).
-        intro x.
-        simpl.
-        symmetry.
-        apply stage_total_vs_collection_total.
-      - (* The limitation - much simpler! *)
-        intro H_in.
-        apply (no_self_totality_derived n).
-        unfold stage_collection.
-        exact H_in.
+      - (* Doesn't exist at n - this is no_self_totality *)
+        apply no_self_totality.
+      - (* Exists at n+1 via S_total *)
+        exists (Derive_NoSelfTotality.S_total n).
+        intro x. simpl.
+        unfold totality_of, stage_collection.
+        rewrite <- (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
+        reflexivity.
+      - (* Encodes age n *)
+        apply totality_encodes_anything.
     Qed.
     
-    Theorem death_and_resurrection_necessary :
-      forall n, Crucifixion_pattern n /\ Resurrection_pattern n.
+    (* ============================================================ *)
+    (* Young Earth Creation Paradox Resolution                      *)
+    (* ============================================================ *)
+    
+    Definition YoungEarthAge : nat := 6000.
+    
+    Theorem young_earth_with_old_appearance :
+      exists P : Alphacarrier -> Prop,
+      exists creation_stage : nat,
+      (* Created recently (at creation_stage) *)
+      creation_stage <= YoungEarthAge /\
+      (* First appears at creation_stage *)
+      (exists s : Derive_NoSelfTotality.Syn creation_stage,
+        forall x, P x <-> @Derive_NoSelfTotality.denote_syn Alpha a b creation_stage s x) /\
+      (* But encodes the full Big Bang timeline *)
+      semantically_encodes P BigBangTimeline /\
+      (* And billions of years of age *)
+      semantically_encodes P ApparentAge.
     Proof.
-      intro n.
-      unfold Crucifixion_pattern, Resurrection_pattern.
-      split.
-      - (* Death: simplified *)
-        intro H_in.
-        apply (no_self_totality_derived n).
-        unfold stage_collection.
-        exact H_in.
-      - (* Resurrection *)
-        exists (S_total n).
-        intro x.
-        simpl.
-        symmetry.
-        apply stage_total_vs_collection_total.
+      (* Use any totality - say from stage 5999 *)
+      exists (totality_of (stage_collection 5999)).
+      exists 6000.
+      split; [|split; [|split]].
+      - (* 6000 <= 6000 *)
+        reflexivity.
+      - (* Appears at stage 6000 *)
+        exists (Derive_NoSelfTotality.S_total 5999).
+        intro x. simpl.
+        unfold totality_of, stage_collection.
+        rewrite <- (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b 5999 x).
+        reflexivity.
+      - (* Encodes Big Bang *)
+        apply totality_encodes_anything.
+      - (* Encodes billions of years *)
+        apply totality_encodes_anything.
+    Qed.
+    
+    (* ============================================================ *)
+    (* The Simulation Hypothesis Emerges Naturally                  *)
+    (* ============================================================ *)
+    
+    Definition SimulationMessage : EncodedData :=
+      Composite 
+        (Message "This reality was created with apparent history")
+        (Message "You are reading this message now").
+    
+    Theorem we_could_be_simulated :
+      forall (our_current_observations : EncodedData),
+      exists P : Alphacarrier -> Prop,
+      exists creation_time : nat,
+      (* Created at some definite time *)
+      (exists s : Derive_NoSelfTotality.Syn creation_time,
+        forall x, P x <-> @Derive_NoSelfTotality.denote_syn Alpha a b creation_time s x) /\
+      (* Encodes all our observations *)
+      semantically_encodes P our_current_observations /\
+      (* Including this very realization *)
+      semantically_encodes P SimulationMessage.
+    Proof.
+      intro observations.
+      (* Could be created at any stage - say 1 *)
+      exists (totality_of (stage_collection 0)).
+      exists 1.
+      split; [|split].
+      - exists (Derive_NoSelfTotality.S_total 0).
+        intro x. simpl.
+        unfold totality_of, stage_collection.
+        rewrite <- (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b 0 x).
+        reflexivity.
+      - apply totality_encodes_anything.
+      - apply totality_encodes_anything.
+    Qed.
+    
+    (* ============================================================ *)
+    (* The Philosophical Core: Logical vs Semantic Time             *)
+    (* ============================================================ *)
+    
+    (* Helper to build a history of n events *)
+    Fixpoint build_history (n : nat) : list CosmicEvent :=
+      match n with
+      | 0 => []
+      | S n' => QuantumFluctuation :: build_history n'
+      end.
+    
+    Theorem logical_vs_semantic_time :
+      forall n : nat,
+      n > 0 ->
+      let escaping := totality_of (stage_collection n) in
+      (* Logical age: 1 (just created at stage n+1) *)
+      let logical_age := 1 in
+      (* Semantic age: n (encodes n stages of history) *)
+      let semantic_age := n in
+      (* The predicate is logically young *)
+      ~ InStage n escaping /\
+      (* But semantically old *)
+      semantically_encodes escaping (Timeline (build_history semantic_age)) /\
+      (* Semantic exceeds logical when n > 1 *)
+      (n > 1 -> semantic_age > logical_age).
+    Proof.
+      intros n Hn.
+      (* Introduce the let bindings *)
+      simpl.
+      set (escaping := totality_of (stage_collection n)).
+      set (logical_age := 1).
+      set (semantic_age := n).
+      split; [|split].
+      - (* Not at stage n *)
+        apply no_self_totality.
+      - (* Encodes n stages of history *)
+        apply totality_encodes_anything.
+      - (* When n > 1, semantic > logical *)
+        intro H.
+        unfold semantic_age, logical_age.
+        exact H.
+    Qed.
+    
+    (* ============================================================ *)
+    (* The Ultimate Insight: Ouroboros Creates Apparent Age         *)
+    (* ============================================================ *)
+    
+    Theorem ouroboros_necessarily_creates_apparent_age :
+      (* The eternal chase of the tail creates fabricated histories *)
+      forall n : nat,
+      n > 1 ->
+      (* Every escaping totality *)
+      let tail := totality_of (stage_collection n) in
+      (* Has apparent age when caught *)
+      exists logical_birth : nat,
+      exists semantic_content : EncodedData,
+      (* Born at logical_birth *)
+      logical_birth = S n /\
+      (* Encodes history from before its birth *)
+      semantically_encodes tail semantic_content /\
+      (* This IS creation with apparent age *)
+      semantically_encodes tail (Message "Created with apparent history").
+    Proof.
+      intros n Hn.
+      exists (S n).
+      exists (Timeline (build_history n)).
+      split; [|split].
+      - reflexivity.
+      - apply totality_encodes_anything.
+      - apply totality_encodes_anything.
+    Qed.
+    
+    (* ============================================================ *)
+    (* Conclusion: Reality's Bootstrapping Creates Apparent Age     *)
+    (* ============================================================ *)
+    
+    Theorem reality_bootstrap_implies_apparent_age :
+      (* The very structure of self-totalizing reality *)
+      (* Creates predicates that are logically young but semantically ancient *)
+      forall stage : nat,
+      stage > 0 ->
+      exists P : Alphacarrier -> Prop,
+      (* P emerges from the ouroboros process *)
+      P = totality_of (stage_collection stage) /\
+      (* Cannot exist at its own stage *)
+      ~ InStage stage P /\
+      (* Can encode arbitrary ancient history *)
+      forall ancient : EncodedData,
+      semantically_encodes P ancient.
+    Proof.
+      intros stage Hstage.
+      exists (totality_of (stage_collection stage)).
+      split; [|split].
+      - reflexivity.
+      - apply no_self_totality.
+      - intro ancient.
+        apply totality_encodes_anything.
     Qed.
 
-    Theorem universal_salvation :
-      forall n, Salvation_pattern n.
-    Proof.
-      intro n.
-      unfold Salvation_pattern.
-      split.
-      - (* Current limitation - simplified *)
-        intro H_in.
-        apply (no_self_totality_derived n).
-        unfold stage_collection.
-        exact H_in.
-      - (* Future promise *)
-        exists (S_total n).
-        intro x.
-        simpl.
-        symmetry.
-        apply stage_total_vs_collection_total.
-    Qed.
+  End FabricatedHistoryFromOuroboros.
 
-  End ChristPatternEmergent.
-End EmergentTheology.
-
-(* Module EmergentSimulation.
-
-Section FabricatedHistoryFromOuroboros.
-  Context (Alpha : AlphaType).
-  
-  (* Local shortcuts *)
-  Let totality_of := EmergentGenerativeComplete.totality_of Alpha.
-  Let stage_collection := EmergentGenerativeComplete.stage_collection Alpha.
-  Let no_self_totality := EmergentGenerativeComplete.no_self_totality Alpha.
-  
-  (* ============================================================ *)
-  (* Core Semantic Encoding - Following Your Pattern              *)
-  (* ============================================================ *)
-
-  Inductive BigBangEvent :=
-    | QuantumFluctuation
-    | Inflation
-    | Cooling
-    | StructureFormation
-    | ConsciousLife
-    | HeatDeath.
-
-  Inductive EncodedData :=
-    | Timeline : list BigBangEvent -> EncodedData
-    | EString : string -> EncodedData.
-  
-  (* Like your original, we parameterize semantic encoding *)
-  Parameter semantically_encodes : 
-    (Alphacarrier -> Prop) -> EncodedData -> Prop.
-  
-  (* Axiom: Totalities can encode arbitrary data *)
-  Axiom totality_can_encode :
-    forall n data,
-    semantically_encodes (totality_of (stage_collection n)) data.
-  
-  (* Axiom: Encoding is preserved under stage progression *)
-  Axiom encoding_persistent :
-    forall P data n m,
-    n <= m ->
-    stage_collection n P ->
-    semantically_encodes P data ->
-    stage_collection m P.
-  
-  (* ============================================================ *)
-  (* Fabricated History - Emergent Version                        *)
-  (* ============================================================ *)
-  
-  Definition emergent_fabricated_history 
-    (pred : Alphacarrier -> Prop) (t_creation : nat) (d : EncodedData) : Prop :=
-    stage_collection t_creation pred /\
-    semantically_encodes pred d.
-  
-  (* ============================================================ *)
-  (* Core Theorem: Fabricated History Exists                      *)
-  (* ============================================================ *)
-  
-  Theorem emergent_contains_fabricated_history :
-    forall (d : EncodedData) (t_creation : nat),
-    exists pred : Alphacarrier -> Prop, 
-    emergent_fabricated_history pred (S t_creation) d.
-  Proof.
-    intros d t_creation.
-    (* Use the totality of t_creation *)
-    exists (totality_of (stage_collection t_creation)).
-    unfold emergent_fabricated_history.
-    split.
-    - (* Appears at S t_creation *)
-      simpl. right. reflexivity.
-    - (* Encodes the data *)
-      apply totality_can_encode.
-  Qed.
-  
-  (* ============================================================ *)
-  (* Big Bang Timeline - Clean Version                            *)
-  (* ============================================================ *)
-  
-  Definition BigBangTimeline : EncodedData :=
-    Timeline [
-      QuantumFluctuation;
-      Inflation;
-      Cooling;
-      StructureFormation;
-      ConsciousLife;
-      HeatDeath
-    ].
-  
-  Theorem emergent_simulates_big_bang :
-    exists pred : Alphacarrier -> Prop,
-    emergent_fabricated_history pred 1 BigBangTimeline.
-  Proof.
-    apply emergent_contains_fabricated_history.
-  Qed.
-  
-  (* ============================================================ *)
-  (* Young Earth Creation - Clean Version                         *)
-  (* ============================================================ *)
-  
-  Definition YECMessage : EncodedData :=
-    EString "Created recently but encodes deep time".
-  
-  Definition YoungEarthCreationTime : nat := 6. (* 6000 years ago - Rocq doesn't like large numbers *)
-  
-  (* The key insight: one predicate, two semantic times! *)
-  Theorem emergent_young_earth_creation :
-    exists pred : Alphacarrier -> Prop,
-    (* Created at YoungEarthCreationTime *)
-    stage_collection YoungEarthCreationTime pred /\
-    (* Encodes both the Big Bang timeline *)
-    semantically_encodes pred BigBangTimeline /\
-    (* AND the YEC message *)
-    semantically_encodes pred YECMessage.
-  Proof.
-    exists (totality_of (stage_collection (pred YoungEarthCreationTime))).
-    split; [|split].
-    - (* Created at 6000 *)
-      simpl. right. reflexivity.
-    - (* Encodes Big Bang *)
-      apply totality_can_encode.
-    - (* Also encodes YEC message *)
-      apply totality_can_encode.
-  Qed.
-  
-  (* ============================================================ *)
-  (* The Core Philosophical Theorem                               *)
-  (* ============================================================ *)
-  
-  Theorem logical_age_vs_semantic_age :
-    forall n : nat,
-    forall ancient_history : EncodedData,
-    exists pred : Alphacarrier -> Prop,
-    (* Logical age: when it appears *)
-    let logical_age := S n in
-    (* It appears at logical_age *)
-    stage_collection logical_age pred /\
-    ~ stage_collection n pred /\
-    (* But encodes arbitrary ancient history *)
-    semantically_encodes pred ancient_history.
-  Proof.
-    intros n history.
-    exists (totality_of (stage_collection n)).
-    split; [|split].
-    - (* Appears at S n *)
-      simpl. right. reflexivity.
-    - (* Not at n *)
-      apply no_self_totality.
-    - (* But encodes ancient history *)
-      apply totality_can_encode.
-  Qed.
-  
-  (* ============================================================ *)
-  (* The Simulation Hypothesis                                    *)
-  (* ============================================================ *)
-  
-  Theorem we_are_necessarily_simulated :
-    (* Our current observations *)
-    forall (our_observations : EncodedData),
-    (* Could be encoded in a predicate *)
-    exists pred : Alphacarrier -> Prop,
-    exists creation_time : nat,
-    (* That was created at any time *)
-    stage_collection creation_time pred /\
-    (* But encodes our entire observed history *)
-    semantically_encodes pred our_observations /\
-    (* Including this very thought! *)
-    semantically_encodes pred 
-      (EString "We might be in a simulation").
-  Proof.
-    intros observations.
-    (* Pick any creation time *)
-    exists (totality_of (stage_collection 0)).
-    exists 1.
-    split; [|split].
-    - simpl. right. reflexivity.
-    - apply totality_can_encode.
-    - apply totality_can_encode.
-  Qed.
-  
-  (* ============================================================ *)
-  (* The Ultimate Insight                                         *)
-  (* ============================================================ *)
-  
-  Theorem ouroboros_creates_fabricated_histories :
-    (* The ouroboros process necessarily creates apparent age *)
-    forall n : nat,
-    (* Every totality that escapes *)
-    let escaping_tail := totality_of (stage_collection n) in
-    (* Is caught at the next moment *)
-    stage_collection (S n) escaping_tail /\
-    (* But it contains/encodes ALL of stage n *)
-    (* So it's 1 stage old but contains n stages of "history" *)
-    semantically_encodes escaping_tail 
-      (Timeline (repeat QuantumFluctuation n)) /\
-    (* This IS creation with apparent age when n > 1 *)
-    (* Logical age = 1, Semantic age = n *)
-    (n > 1 -> n > 1).  (* Semantic exceeds logical for n > 1 *)
-  Proof.
-    intro n.
-    split; [|split].
-    - simpl. right. reflexivity.
-    - apply totality_can_encode.
-    - auto.  (* Just the identity *)
-  Qed.
-
-End FabricatedHistoryFromOuroboros.
-
-End EmergentSimulation. *)
+End EmergentSimulation.

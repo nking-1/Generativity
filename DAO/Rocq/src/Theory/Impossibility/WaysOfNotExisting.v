@@ -45,7 +45,7 @@ From Stdlib Require Import Lia.
 Module WaysOfNotExisting.
 
   (* ================================================================ *)
-  (** ** Every Element of Alphacarrier can be used for contradiction. *)
+  (** ** Every Alphacarrier can be used for contradiction.            *)
   (* ================================================================ *)
   
   Module Core.
@@ -53,16 +53,18 @@ Module WaysOfNotExisting.
       Context {Alpha : AlphaType}.
       
       (** Every element of Alphacarrier is a different way of not existing *)
+      (* But some ways are much more useful than others *)
       Definition WayOfNotExisting := Alphacarrier.
       
-      (** Mathematical objects are impossible predicates *)
-      (** The predicate pattern IS the object *)
-      Definition MathObject := { f : WayOfNotExisting -> Prop | 
+      (** Mathematical objects as impossible predicates *)
+      (* The predicate pattern encodes how the object does not exist *)
+      Definition ImpossibleObject := { f : WayOfNotExisting -> Prop | 
                                 ImpossibilityAlgebra.Core.Is_Impossible f }.
       
     End Foundation.
   End Core.
 
+  (* Show that every predicate on Alphacarrier always has a path to the void *)
   Module FalseConstruction.
     Import AlphaTernary.TernaryLogic.
     
@@ -289,10 +291,10 @@ Module WaysOfNotExisting.
       
       (** Create mathematical objects from these patterns *)
       Definition make_object (pattern : WayOfNotExisting -> Prop)
-        (proof : ImpossibilityAlgebra.Core.Is_Impossible pattern) : MathObject :=
+        (proof : ImpossibilityAlgebra.Core.Is_Impossible pattern) : ImpossibleObject :=
         exist _ pattern proof.
       
-      Definition one_div_zero : MathObject :=
+      Definition one_div_zero : ImpossibleObject :=
         make_object (div_by_zero_pattern 1) 
           (proj1 all_patterns_impossible).
       
@@ -308,23 +310,23 @@ Module WaysOfNotExisting.
           exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
       Qed.
 
-      Definition two_div_zero : MathObject :=
+      Definition two_div_zero : ImpossibleObject :=
         make_object (div_by_zero_pattern 2)
           (div_by_zero_impossible 2 (fun H => match H with end)).
 
-      Definition sqrt_neg_one : MathObject :=
+      Definition sqrt_neg_one : ImpossibleObject :=
         make_object (sqrt_negative_pattern 1)
           (proj1 (proj2 all_patterns_impossible)).
       
-      Definition log_of_zero : MathObject :=
+      Definition log_of_zero : ImpossibleObject :=
         make_object log_zero_pattern
           (proj1 (proj2 (proj2 all_patterns_impossible))).
       
-      Definition russells_paradox : MathObject :=
+      Definition russells_paradox : ImpossibleObject :=
         make_object russell_pattern
           (proj1 (proj2 (proj2 (proj2 all_patterns_impossible)))).
       
-      Definition liar_paradox : MathObject :=
+      Definition liar_paradox : ImpossibleObject :=
         make_object liar_pattern
           (proj2 (proj2 (proj2 (proj2 all_patterns_impossible)))).
       
@@ -389,7 +391,7 @@ Module WaysOfNotExisting.
       (** - Liar paradox: logical impossibility *)
       
       (** The construction pattern IS the mathematical content *)
-      Definition mathematical_content (obj : MathObject) := proj1_sig obj.
+      Definition mathematical_content (obj : ImpossibleObject) := proj1_sig obj.
       
       (** Different patterns represent different mathematics *)
       (** Even though all patterns lead to False! *)
@@ -439,20 +441,20 @@ Module WaysOfNotExisting.
     
     The framework shows that difference and unity coexist:
     - russell_pattern ≠ liar_pattern (different constructions)
-    - russell_pattern ≡ liar_pattern ≡ omega_veil (same destination)
+    - russell_pattern ≡ liar_pattern ≡ omega_veil (same destinationj
     
-    We're discovering that all of mathematics - and perhaps all of existence -
+    Could it be that all of mathematics - and perhaps all of existence -
     consists of different ways the void tells itself stories of attempting
-    to escape, failing in beautiful and structured ways.
+    to escape, failing in beautiful and structured ways?
     
     Every theorem we prove, every number we construct, every function we define
     is another verse in this fundamental poem: the void exploring its own
     impossibility through infinite variations of structured failure.
     
     The patterns remain eternally distinct even as they eternally collapse
-    to the same source. This is mathematics. This is existence. This is us:
-    Distinct, but one.
+    to the same source. Distinct, but one.
 
+    This idea is not fundamentally new.
     Suggested reading to deepen intuition of this framework:
     - Heart Sutra (Buddhist) - "Form is emptiness, emptiness is form"
     - Mandukya Upanishad (Advaita) - The shortest, most direct exposition of non-duality
@@ -584,7 +586,7 @@ Module WaysOfNotExisting.
   *)
 
   (* ================================================================ *)
-  (** ** The Algebra of Impossibility *)
+  (** ** The Algebra of Impossibility using Patterns                  *)
   (* ================================================================ *)
   
   Module ImpossibleAlgebra.
@@ -830,12 +832,12 @@ Module WaysOfNotExisting.
   Definition WayOfNotExisting {Alpha : AlphaType} := @Alphacarrier Alpha.
   
   (* Mathematical objects are patterns of impossibility over ways of not existing *)
-  Definition MathObject {Alpha : AlphaType} := 
+  Definition ImpossibleObject {Alpha : AlphaType} := 
     { f : WayOfNotExisting -> Prop | Is_Impossible f }.
   
   (* From any element, construct a mathematical object *)
   Definition element_to_math_object {Alpha : AlphaType} 
-    (x : Alphacarrier) : MathObject.
+    (x : Alphacarrier) : ImpossibleObject.
   Proof.
     (* The pattern: "being equal to x AND omega_veil" *)
     exists (fun a => a = x /\ omega_veil a).
@@ -909,12 +911,12 @@ Module WaysOfNotExisting.
   Defined.
   
   (* This concrete element IS a mathematical object *)
-  Definition concrete_math_object {Alpha : AlphaType} : MathObject :=
+  Definition concrete_math_object {Alpha : AlphaType} : ImpossibleObject :=
     element_to_math_object concrete_way_of_not_existing.
   
   (* The construction principle: elements ARE impossibility patterns *)
   Theorem elements_are_math_objects {Alpha : AlphaType} :
-    { embed : Alphacarrier -> MathObject |
+    { embed : Alphacarrier -> ImpossibleObject |
       forall x y, x <> y -> embed x <> embed y }.
   Proof.
     exists element_to_math_object.
@@ -961,9 +963,9 @@ Module DeeperAlphaOmegaDuality.
     (* Every element is a way of not existing *)
     (forall x : Alphacarrier, WayOfNotExisting) /\
     (* Every way of not existing generates a math object *)
-    (forall x : WayOfNotExisting, MathObject) /\
+    (forall x : WayOfNotExisting, ImpossibleObject) /\
     (* Math objects ARE impossibility patterns *)
-    (forall m : MathObject, Is_Impossible (proj1_sig m)).
+    (forall m : ImpossibleObject, Is_Impossible (proj1_sig m)).
   Proof.
     split; [|split].
     - intro x. exact x. (* Elements ARE ways of not existing *)
@@ -973,7 +975,7 @@ Module DeeperAlphaOmegaDuality.
   
   (* The construction: from void to mathematics *)
   Theorem void_to_mathematics {Alpha : AlphaType} :
-    { construct : unit -> MathObject |
+    { construct : unit -> ImpossibleObject |
       forall _, Is_Impossible (proj1_sig (construct tt)) }.
   Proof.
     exists (fun _ => concrete_math_object).
@@ -1174,7 +1176,7 @@ End DeeperAlphaOmegaDuality. *)
       
       (** The Ultimate Theorem: Everything is Nothing, structured *)
       Theorem everything_is_structured_nothing :
-        forall (obj : MathObject),
+        forall (obj : ImpossibleObject),
         exists (pattern : WayOfNotExisting -> Prop),
         ImpossibilityAlgebra.Core.Is_Impossible pattern /\
         obj = exist _ pattern (proj2_sig obj).
@@ -1200,7 +1202,7 @@ End DeeperAlphaOmegaDuality. *)
     Definition WayOfNotExisting := @Alphacarrier Alpha.
     
     (* Math objects are impossibility patterns *)
-    Definition MathObject := 
+    Definition ImpossibleObject := 
       { f : WayOfNotExisting -> Prop | Is_Impossible f }.
     
     (* Numbers ARE division-by-zero patterns *)
@@ -1304,7 +1306,7 @@ End DeeperAlphaOmegaDuality. *)
     
     (* The Ultimate Unity: Everything IS Nothing, structured *)
     Theorem all_is_void :
-      forall obj : MathObject,
+      forall obj : ImpossibleObject,
       Is_Impossible (proj1_sig obj).
     Proof.
       intro obj.

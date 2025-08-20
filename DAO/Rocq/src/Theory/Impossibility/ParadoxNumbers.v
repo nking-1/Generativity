@@ -11,6 +11,15 @@ Require Import DAO.Theory.Impossibility.WaysOfNotExisting.
 Require Import ZArith.
 
 Module ParadoxNumbers.
+
+  (* We will construct the natural numbers using paradoxes in a few different ways. 
+     First, we'll use nested empty types, inspired by Von Neumann's empty set nesting.
+     Next, we'll build numbers with towers of nested paradox predicates.
+     Finally, we'll find a practical middle ground, where we use an inductive type to
+     index our paradox naturals, and have a way to construct the paradox for any indexed
+     number. The inductive type method is slightly less "pure" but the easiest way
+     for working in Rocq *)
+
   Module ParadoxNaturals.
     Import ImpossibilityAlgebra Core.
     Import WaysOfNotExisting PatternEquivalence.
@@ -211,16 +220,6 @@ Module ParadoxNumbers.
         - apply HS. exact IHn.
       Qed.
       
-      (* ================================================================ *)
-      (** ** The Philosophical Victory *)
-      (* ================================================================ *)
-      
-      (* We've built natural numbers where: *)
-      (* 1. Each number is a TYPE (not a value) *)
-      (* 2. All types are EMPTY (paradoxical) *)
-      (* 3. The structure IS the number *)
-      (* 4. Arithmetic works on the structure *)
-      
       (* The correspondence to von Neumann: *)
       (* Von Neumann: n+1 = n ∪ {n} *)
       (* Ours: (n+1)T = SuccT(nT) = type of paradoxes about nT *)
@@ -242,260 +241,262 @@ Module ParadoxNumbers.
         reflexivity.
       Qed.
       
-      (* The numbers work, even though they're all impossible! *)
+      (* The numbers work, even though they're all impossible *)
       
-  End VonNeumannParadox.
+    End VonNeumannParadox.
 
     Section PureParadoxConstruction.
- Context {Alpha : AlphaType}.
- 
- (* ================================================================ *)
- (** ** The Foundation: Building Numbers from Pure Paradox *)
- (* ================================================================ *)
- 
- (* The first paradox - the unit of construction *)
- Definition first_paradox : Alphacarrier -> Prop :=
-   fun a => omega_veil a /\ ~omega_veil a.
- 
- (* The successor operation - add another layer of paradox *)
- Definition next_paradox (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
-   fun a => P a /\ ~P a.
- 
- (* Build paradox patterns of any depth *)
- Fixpoint paradox_depth (n : nat) : Alphacarrier -> Prop :=
-   match n with
-   | 0 => omega_veil                           (* Zero is the void itself *)
-   | S m => next_paradox (paradox_depth m)     (* Each successor adds a layer *)
-   end.
- 
- (* Prove all depths are impossible *)
- Lemma paradox_depth_impossible : forall n : nat,
-   ImpossibilityAlgebra.Core.Is_Impossible (paradox_depth n).
- Proof.
-   intro n.
-   induction n.
-   - (* Base case: omega_veil *)
-     intro a. simpl. split; intro H; exact H.
-   - (* Inductive case: next_paradox *)
-     intro a. simpl.
-     unfold next_paradox.
-     split.
-     + (* Forward *)
-       intros [H_prev H_not_prev].
-       (* This is contradictory *)
-       exfalso. exact (H_not_prev H_prev).
-     + (* Backward *)
-       intro H_omega.
-       exfalso.
-       exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H_omega).
- Qed.
- 
- (* ================================================================ *)
- (** ** Numbers as Equivalence Classes of Paradox Patterns *)
- (* ================================================================ *)
- 
- (* A natural number IS an equivalence class of patterns at depth n *)
- Definition ParadoxNat (n : nat) := 
-   { P : Alphacarrier -> Prop | 
-     PatternEquivalence.pattern_equiv P (paradox_depth n) }.
- 
- (* Constructor for the canonical representative *)
- Definition make_nat (n : nat) : ParadoxNat n.
- Proof.
-   exists (paradox_depth n).
-   unfold PatternEquivalence.pattern_equiv.
-   split; [|split].
-   - apply paradox_depth_impossible.
-   - apply paradox_depth_impossible.
-   - intro w. split; intro H; exact H.
- Defined.
- 
- (* The first few numbers *)
- Definition Zero : ParadoxNat 0 := make_nat 0.
- Definition One : ParadoxNat 1 := make_nat 1.
- Definition Two : ParadoxNat 2 := make_nat 2.
- Definition Three : ParadoxNat 3 := make_nat 3.
- 
- (* ================================================================ *)
- (** ** Arithmetic Operations on Paradox Patterns *)
- (* ================================================================ *)
- 
- (* Addition combines paradox depths *)
- Definition add_paradox_patterns (m n : nat) : Alphacarrier -> Prop :=
-   paradox_depth (m + n).
- 
- (* Addition for our paradox naturals *)
- Definition paradox_add {m n : nat} 
-   (x : ParadoxNat m) (y : ParadoxNat n) : ParadoxNat (m + n).
- Proof.
-   exists (add_paradox_patterns m n).
-   unfold add_paradox_patterns.
-   unfold PatternEquivalence.pattern_equiv.
-   split; [|split].
-   - apply paradox_depth_impossible.
-   - apply paradox_depth_impossible.
-   - intro w. split; intro H; exact H.
- Defined.
- 
- (* Multiplication iterates paradox construction *)
- Definition mult_paradox_patterns (m n : nat) : Alphacarrier -> Prop :=
-   paradox_depth (m * n).
- 
- Definition paradox_mult {m n : nat}
-   (x : ParadoxNat m) (y : ParadoxNat n) : ParadoxNat (m * n).
- Proof.
-   exists (mult_paradox_patterns m n).
-   unfold mult_paradox_patterns.
-   unfold PatternEquivalence.pattern_equiv.
-   split; [|split].
-   - apply paradox_depth_impossible.
-   - apply paradox_depth_impossible.
-   - intro w. split; intro H; exact H.
- Defined.
- 
- (* ================================================================ *)
- (** ** The Successor Operation *)
- (* ================================================================ *)
- 
- (* Successor adds one more paradox layer *)
- Definition paradox_successor {n : nat} (x : ParadoxNat n) : ParadoxNat (S n).
- Proof.
-   (* Extract the pattern from x *)
-   destruct x as [P [H_imp_P [H_imp_depth H_equiv]]].
-   (* Build the next paradox *)
-   exists (next_paradox P).
-   unfold PatternEquivalence.pattern_equiv.
-   split; [|split].
-   - (* next_paradox P is impossible *)
-     intro a. unfold next_paradox.
-     split.
-     + intros [HP HnP]. exfalso. exact (HnP HP).
-     + intro H. exfalso.
-       exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
-   - (* paradox_depth (S n) is impossible *)
-     apply paradox_depth_impossible.
-   - (* They're extensionally equal *)
-     intro w.
-     simpl.
-     unfold next_paradox.
-     (* Both sides are impossible, so they're equal to omega_veil *)
-     split; intro H.
-     + (* next_paradox P w -> paradox_depth n w /\ ~paradox_depth n w *)
-       destruct H as [HPw HnPw].
-       split.
-       * (* P w -> paradox_depth n w *)
-         apply H_equiv. exact HPw.
-       * (* ~paradox_depth n w *)
-         intro H_depth.
-         apply HnPw.
-         apply H_equiv.
-         exact H_depth.
-     + (* paradox_depth n w /\ ~paradox_depth n w -> next_paradox P w *)
-       destruct H as [H_depth Hn_depth].
-       split.
-       * (* P w *)
-         apply H_equiv. exact H_depth.
-       * (* ~P w *)
-         intro HPw.
-         apply Hn_depth.
-         apply H_equiv.
-         exact HPw.
- Defined.
- 
- (* ================================================================ *)
- (** ** Properties and Theorems *)
- (* ================================================================ *)
- 
- (* All paradox naturals are built from impossible patterns *)
- Theorem all_paradox_nats_impossible : forall n (x : ParadoxNat n),
-   ImpossibilityAlgebra.Core.Is_Impossible (proj1_sig x).
- Proof.
-   intros n x.
-   destruct x as [P [H_imp_P dc]].
-   exact H_imp_P.
- Qed.
- 
- Axiom ParadoxNat_injective : forall m n : nat,
-  ParadoxNat m = ParadoxNat n -> m = n.
-
-Theorem successor_injective : forall m n,
-  ParadoxNat (S m) = ParadoxNat (S n) -> m = n.
-Proof.
-  intros m n H.
-  apply ParadoxNat_injective in H.
-  injection H. auto.
-Qed.
-
-Theorem zero_not_successor : forall n,
-  ParadoxNat 0 <> ParadoxNat (S n).
-Proof.
-  intros n H.
-  apply ParadoxNat_injective in H.
-  discriminate H.
-Qed.
- 
- (* ================================================================ *)
- (** ** The Philosophy: What We've Built *)
- (* ================================================================ *)
- 
- (* Numbers ARE paradox patterns - not built from them, but BEING them *)
- Theorem numbers_are_paradoxes : forall n,
-   exists P : Alphacarrier -> Prop,
-   ImpossibilityAlgebra.Core.Is_Impossible P /\
-   ParadoxNat n = { Q | PatternEquivalence.pattern_equiv Q P }.
- Proof.
-   intro n.
-   exists (paradox_depth n).
-   split.
-   - apply paradox_depth_impossible.
-   - reflexivity.
- Qed.
- 
- (* Each number has a canonical paradox representation *)
- Definition canonical_paradox (n : nat) : Alphacarrier -> Prop :=
-   paradox_depth n.
- 
- (* The construction principle: numbers emerge from iterating paradox *)
- Theorem construction_principle : forall n,
-   canonical_paradox (S n) = next_paradox (canonical_paradox n).
- Proof.
-   intro n.
-   reflexivity.
- Qed.
- 
- (* Zero is the void, One is the first construction, etc. *)
- Theorem number_meanings :
-   (canonical_paradox 0 = omega_veil) /\
-   (canonical_paradox 1 = first_paradox) /\
-   (canonical_paradox 2 = next_paradox first_paradox).
- Proof.
-   split; [|split]; reflexivity.
- Qed.
- 
- (* ================================================================ *)
- (** ** Examples *)
- (* ================================================================ *)
- 
-Example two_plus_three_pattern : 
-  add_paradox_patterns 2 3 = paradox_depth 5.
-Proof.
-  unfold add_paradox_patterns.
-  simpl. reflexivity.
-Qed.
-
-Example two_times_three_pattern :
-  mult_paradox_patterns 2 3 = paradox_depth 6.
-Proof.
-  unfold mult_paradox_patterns.
-  simpl. reflexivity.
-Qed.
- 
-End PureParadoxConstruction.
-
-    Section PureParadoxNaturals.
       Context {Alpha : AlphaType}.
       
-      (** ** Natural numbers start at 1 - they are CONSTRUCTIONS beyond void *)
+      (* ================================================================ *)
+      (** ** The Foundation: Building Numbers from Pure Paradox *)
+      (* ================================================================ *)
+      
+      (* The first paradox - the unit of construction *)
+      Definition first_paradox : Alphacarrier -> Prop :=
+        fun a => omega_veil a /\ ~omega_veil a.
+      
+      (* The successor operation - add another layer of paradox *)
+      Definition next_paradox (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+        fun a => P a /\ ~P a.
+      
+      (* Build paradox patterns of any depth *)
+      Fixpoint paradox_depth (n : nat) : Alphacarrier -> Prop :=
+        match n with
+        | 0 => omega_veil                           (* Zero is the void itself *)
+        | S m => next_paradox (paradox_depth m)     (* Each successor adds a layer *)
+        end.
+      
+      (* Prove all depths are impossible *)
+      Lemma paradox_depth_impossible : forall n : nat,
+        ImpossibilityAlgebra.Core.Is_Impossible (paradox_depth n).
+      Proof.
+        intro n.
+        induction n.
+        - (* Base case: omega_veil *)
+          intro a. simpl. split; intro H; exact H.
+        - (* Inductive case: next_paradox *)
+          intro a. simpl.
+          unfold next_paradox.
+          split.
+          + (* Forward *)
+            intros [H_prev H_not_prev].
+            (* This is contradictory *)
+            exfalso. exact (H_not_prev H_prev).
+          + (* Backward *)
+            intro H_omega.
+            exfalso.
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H_omega).
+      Qed.
+      
+      (* ================================================================ *)
+      (** ** Numbers as Equivalence Classes of Paradox Patterns *)
+      (* ================================================================ *)
+      
+      (* A natural number IS an equivalence class of patterns at depth n *)
+      Definition ParadoxNat (n : nat) := 
+        { P : Alphacarrier -> Prop | 
+          PatternEquivalence.pattern_equiv P (paradox_depth n) }.
+      
+      (* Constructor for the canonical representative *)
+      Definition make_nat (n : nat) : ParadoxNat n.
+      Proof.
+        exists (paradox_depth n).
+        unfold PatternEquivalence.pattern_equiv.
+        split; [|split].
+        - apply paradox_depth_impossible.
+        - apply paradox_depth_impossible.
+        - intro w. split; intro H; exact H.
+      Defined.
+      
+      (* The first few numbers *)
+      Definition Zero : ParadoxNat 0 := make_nat 0.
+      Definition One : ParadoxNat 1 := make_nat 1.
+      Definition Two : ParadoxNat 2 := make_nat 2.
+      Definition Three : ParadoxNat 3 := make_nat 3.
+      
+      (* ================================================================ *)
+      (** ** Arithmetic Operations on Paradox Patterns *)
+      (* ================================================================ *)
+      
+      (* Addition combines paradox depths *)
+      Definition add_paradox_patterns (m n : nat) : Alphacarrier -> Prop :=
+        paradox_depth (m + n).
+      
+      (* Addition for our paradox naturals *)
+      Definition paradox_add {m n : nat} 
+        (x : ParadoxNat m) (y : ParadoxNat n) : ParadoxNat (m + n).
+      Proof.
+        exists (add_paradox_patterns m n).
+        unfold add_paradox_patterns.
+        unfold PatternEquivalence.pattern_equiv.
+        split; [|split].
+        - apply paradox_depth_impossible.
+        - apply paradox_depth_impossible.
+        - intro w. split; intro H; exact H.
+      Defined.
+      
+      (* Multiplication iterates paradox construction *)
+      Definition mult_paradox_patterns (m n : nat) : Alphacarrier -> Prop :=
+        paradox_depth (m * n).
+      
+      Definition paradox_mult {m n : nat}
+        (x : ParadoxNat m) (y : ParadoxNat n) : ParadoxNat (m * n).
+      Proof.
+        exists (mult_paradox_patterns m n).
+        unfold mult_paradox_patterns.
+        unfold PatternEquivalence.pattern_equiv.
+        split; [|split].
+        - apply paradox_depth_impossible.
+        - apply paradox_depth_impossible.
+        - intro w. split; intro H; exact H.
+      Defined.
+      
+      (* ================================================================ *)
+      (** ** The Successor Operation *)
+      (* ================================================================ *)
+      
+      (* Successor adds one more paradox layer *)
+      Definition paradox_successor {n : nat} (x : ParadoxNat n) : ParadoxNat (S n).
+      Proof.
+        (* Extract the pattern from x *)
+        destruct x as [P [H_imp_P [H_imp_depth H_equiv]]].
+        (* Build the next paradox *)
+        exists (next_paradox P).
+        unfold PatternEquivalence.pattern_equiv.
+        split; [|split].
+        - (* next_paradox P is impossible *)
+          intro a. unfold next_paradox.
+          split.
+          + intros [HP HnP]. exfalso. exact (HnP HP).
+          + intro H. exfalso.
+            exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
+        - (* paradox_depth (S n) is impossible *)
+          apply paradox_depth_impossible.
+        - (* They're extensionally equal *)
+          intro w.
+          simpl.
+          unfold next_paradox.
+          (* Both sides are impossible, so they're equal to omega_veil *)
+          split; intro H.
+          + (* next_paradox P w -> paradox_depth n w /\ ~paradox_depth n w *)
+            destruct H as [HPw HnPw].
+            split.
+            * (* P w -> paradox_depth n w *)
+              apply H_equiv. exact HPw.
+            * (* ~paradox_depth n w *)
+              intro H_depth.
+              apply HnPw.
+              apply H_equiv.
+              exact H_depth.
+          + (* paradox_depth n w /\ ~paradox_depth n w -> next_paradox P w *)
+            destruct H as [H_depth Hn_depth].
+            split.
+            * (* P w *)
+              apply H_equiv. exact H_depth.
+            * (* ~P w *)
+              intro HPw.
+              apply Hn_depth.
+              apply H_equiv.
+              exact HPw.
+      Defined.
+      
+      (* ================================================================ *)
+      (** ** Properties and Theorems *)
+      (* ================================================================ *)
+      
+      (* All paradox naturals are built from impossible patterns *)
+      Theorem all_paradox_nats_impossible : forall n (x : ParadoxNat n),
+        ImpossibilityAlgebra.Core.Is_Impossible (proj1_sig x).
+      Proof.
+        intros n x.
+        destruct x as [P [H_imp_P dc]].
+        exact H_imp_P.
+      Qed.
+      
+      Axiom ParadoxNat_injective : forall m n : nat,
+        ParadoxNat m = ParadoxNat n -> m = n.
+
+      Theorem successor_injective : forall m n,
+        ParadoxNat (S m) = ParadoxNat (S n) -> m = n.
+      Proof.
+        intros m n H.
+        apply ParadoxNat_injective in H.
+        injection H. auto.
+      Qed.
+
+      Theorem zero_not_successor : forall n,
+        ParadoxNat 0 <> ParadoxNat (S n).
+      Proof.
+        intros n H.
+        apply ParadoxNat_injective in H.
+        discriminate H.
+      Qed.
+      
+      (* ================================================================ *)
+      (** ** The Philosophy: What We've Built *)
+      (* ================================================================ *)
+      
+      (* Numbers ARE paradox patterns - not built from them, but BEING them *)
+      Theorem numbers_are_paradoxes : forall n,
+        exists P : Alphacarrier -> Prop,
+        ImpossibilityAlgebra.Core.Is_Impossible P /\
+        ParadoxNat n = { Q | PatternEquivalence.pattern_equiv Q P }.
+      Proof.
+        intro n.
+        exists (paradox_depth n).
+        split.
+        - apply paradox_depth_impossible.
+        - reflexivity.
+      Qed.
+      
+      (* Each number has a canonical paradox representation *)
+      Definition canonical_paradox (n : nat) : Alphacarrier -> Prop :=
+        paradox_depth n.
+      
+      (* The construction principle: numbers emerge from iterating paradox *)
+      Theorem construction_principle : forall n,
+        canonical_paradox (S n) = next_paradox (canonical_paradox n).
+      Proof.
+        intro n.
+        reflexivity.
+      Qed.
+      
+      (* Zero is the void, One is the first construction, etc. *)
+      Theorem number_meanings :
+        (canonical_paradox 0 = omega_veil) /\
+        (canonical_paradox 1 = first_paradox) /\
+        (canonical_paradox 2 = next_paradox first_paradox).
+      Proof.
+        split; [|split]; reflexivity.
+      Qed.
+      
+      (* ================================================================ *)
+      (** ** Examples *)
+      (* ================================================================ *)
+      
+      Example two_plus_three_pattern : 
+        add_paradox_patterns 2 3 = paradox_depth 5.
+      Proof.
+        unfold add_paradox_patterns.
+        simpl. reflexivity.
+      Qed.
+
+      Example two_times_three_pattern :
+        mult_paradox_patterns 2 3 = paradox_depth 6.
+      Proof.
+        unfold mult_paradox_patterns.
+        simpl. reflexivity.
+      Qed.
+      
+    End PureParadoxConstruction.
+
+    (* This section is the one used elsewhere in the code base, built on inductive types. *)
+    Section InductiveParadoxNaturals.
+      Context {Alpha : AlphaType}.
+      
+      (** Here, natural numbers start at 1 - they are constructions beyond void *)
+      (* This might be controversial, but we do it because it works well downstream. *)
       
       (* Natural numbers are positive constructions *)
       Inductive PNat : Type :=
@@ -583,7 +584,7 @@ End PureParadoxConstruction.
         end.
       
       (** ** The philosophical point *)
-      Theorem what_are_numbers :
+      Theorem impossible_natural_numbers :
         forall n : PNat,
         (* Numbers are positive constructions beyond void *)
         (n = POne \/ exists m, n = PS m) /\
@@ -598,11 +599,7 @@ End PureParadoxConstruction.
         - apply all_impossible.
       Qed.
       
-      (* Zero is NOT a natural number - it's the void itself! *)
-      Definition zero_is_void : Prop :=
-        forall a : Alphacarrier, omega_veil a <-> False.
-        
-    End PureParadoxNaturals.
+    End InductiveParadoxNaturals.
     
   End ParadoxNaturals.
 
@@ -755,7 +752,6 @@ End PureParadoxConstruction.
         | PNeg n => Z.opp (Z.of_nat (pnat_to_coq_nat n))
         end.
       
-      (* The philosophical point *)
       Theorem integers_are_signed_constructions :
         forall i : PInt,
         ImpossibilityAlgebra.Core.Is_Impossible (int_paradox_at i) /\
@@ -909,8 +905,6 @@ End PureParadoxConstruction.
         discriminate H.
       Qed.
       
-      (** ** The Deep Truth About Division by Zero *)
-      
       (* Division by zero doesn't break mathematics - it reveals the void *)
       Theorem division_by_zero_is_safe :
         forall p : PInt,
@@ -925,7 +919,7 @@ End PureParadoxConstruction.
         - apply all_rat_impossible.
       Qed.
       
-      (* The philosophical idea: undefined isn't scary *)
+      (* Philosophical idea: undefined isn't scary *)
       Theorem undefined_is_just_another_void :
         rat_paradox_at undefined = omega_veil /\
         rat_paradox_at (PPos POne, PZero) = omega_veil /\
@@ -965,7 +959,7 @@ End PureParadoxConstruction.
     End PureParadoxRationals.
     
     (* ================================================================ *)
-    (** ** Stress Test: Division by Zero Doesn't Break Mathematics! *)
+    (** ** Stress Test: Does Division by Zero Break Mathematics? *)
 
     Section StressTest.
       Context {Alpha : AlphaType}.
