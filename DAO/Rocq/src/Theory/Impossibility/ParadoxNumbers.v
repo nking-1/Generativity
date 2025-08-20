@@ -785,7 +785,7 @@ Module ParadoxNumbers.
       Definition rat_paradox_at (r : PRat) : Alphacarrier -> Prop :=
         let (p, q) := r in
         match q with
-        | PZero => omega_veil  (* Division by zero IS the void! *)
+        | PZero => omega_veil  (* Division by zero is impossible *)
         | _ => int_paradox_at p  (* Otherwise, use numerator's paradox *)
         end.
       
@@ -869,7 +869,7 @@ Module ParadoxNumbers.
         intro p. reflexivity.
       Qed.
       
-      (* The wonderful theorem: arithmetic with undefined *)
+      (* Arithmetic with undefined *)
       Theorem undefined_arithmetic :
         (* undefined + anything = undefined *)
         (forall r : PRat, rat_equiv (rat_add undefined r) undefined) /\
@@ -1304,15 +1304,152 @@ Module ParadoxNumbers.
   (* Importing QArith messes with the meaning of "0" in our other contexts. *)
   (* TODO: Move this and other Coq interfaces to an API file later. *)
   Module RationalsCoqInterface.
+    Import ParadoxNaturals.
     Import ParadoxIntegers.
     Import ParadoxRationals.
     From Stdlib Require Import QArith.
+    From Stdlib Require Import PArith.
     
+    (* Helper to normalize signs - move negative to numerator *)
+    Definition normalize_signs (p q : PInt) : (PInt * PInt) :=
+      match q with
+      | PZero => (p, q)  (* Keep as is for zero denominator *)
+      | PPos _ => (p, q) (* Positive denominator - keep as is *)
+      | PNeg n => (pint_neg p, PPos n) (* Negative denominator - flip both signs *)
+      end.
+    
+    (* Convert positive natural to positive Z *)
+    Definition pnat_to_positive (n : PNat) : positive :=
+      Pos.of_nat (pnat_to_coq_nat n).
+    
+    (* Better version that handles negative denominators *)
     Definition rat_to_Q (r : PRat) : option Q :=
       let (p, q) := r in
       match q with
-      | PZero => None  
-      | _ => Some (Qmake (pint_to_Z p) (Z.to_pos (pint_to_Z q)))
+      | PZero => None  (* Division by zero *)
+      | PPos n => 
+          (* Positive denominator - straightforward *)
+          Some (Qmake (pint_to_Z p) (pnat_to_positive n))
+      | PNeg n => 
+          (* Negative denominator - flip sign of numerator *)
+          Some (Qmake (Z.opp (pint_to_Z p)) (pnat_to_positive n))
+      end.
+    
+    (* Alternative: normalize first, then convert *)
+    Definition rat_to_Q_normalized (r : PRat) : option Q :=
+      let (p', q') := normalize_signs (fst r) (snd r) in
+      match q' with
+      | PZero => None
+      | PPos n => Some (Qmake (pint_to_Z p') (pnat_to_positive n))
+      | PNeg _ => None  (* Should never happen after normalization *)
       end.
   End RationalsCoqInterface.
+
+  Module RationalsCoqInterfaceTests.
+    Import ParadoxNaturals.
+    Import ParadoxIntegers.
+    Import ParadoxRationals.
+    Import RationalsCoqInterface.
+    From Stdlib Require Import QArith.
+    
+    Section Tests.
+      Context {Alpha : AlphaType}.
+      
+      (* Test 1: Basic conversions *)
+      Example basic_conversions :
+        rat_to_Q (PPos POne, PPos POne) = Some (1#1) /\                    (* 1/1 = 1 *)
+        rat_to_Q (PPos (PS POne), PPos POne) = Some (2#1) /\              (* 2/1 = 2 *)
+        rat_to_Q (PNeg POne, PPos POne) = Some (Qmake (-1) 1) /\          (* -1/1 = -1 *)
+        rat_to_Q (PPos POne, PPos (PS POne)) = Some (1#2) /\              (* 1/2 *)
+        rat_to_Q (PZero, PPos POne) = Some (0#1).                         (* 0/1 = 0 *)
+      Proof.
+        split; [|split; [|split; [|split]]]; reflexivity.
+      Qed.
+      
+      (* Test 2: Division by zero returns None *)
+      Example div_by_zero_handled :
+        rat_to_Q (PPos POne, PZero) = None /\                             (* 1/0 = None *)
+        rat_to_Q (PNeg POne, PZero) = None /\                             (* -1/0 = None *)
+        rat_to_Q (PZero, PZero) = None.                                   (* 0/0 = None *)
+      Proof.
+        split; [|split]; reflexivity.
+      Qed.
+      
+      (* Test 3: Negative denominators *)
+      Example negative_denominators :
+        rat_to_Q (PPos POne, PNeg POne) = Some (Qmake (-1) 1) /\        (* 1/(-1) = -1 *)
+        rat_to_Q (PNeg POne, PNeg POne) = Some (Qmake 1 1) /\          (* (-1)/(-1) = 1 *)
+        rat_to_Q (PPos (PS POne), PNeg (PS POne)) = Some (Qmake (-2) 2). (* 2/(-2) = -1 *)
+      Proof.
+        split; [|split]; reflexivity.
+      Qed.
+      
+      (* Test 4: Zero numerator *)
+      Example zero_numerator :
+        rat_to_Q (PZero, PPos POne) = Some (0#1) /\
+        rat_to_Q (PZero, PPos (PS POne)) = Some (0#2) /\
+        rat_to_Q (PZero, PPos (PS (PS POne))) = Some (0#3).
+      Proof.
+        split; [|split]; reflexivity.
+      Qed.
+      
+      (* Test 5: Larger numbers *)
+      Example larger_numbers :
+        let three := PS (PS POne) in
+        let four := PS three in
+        let five := PS four in
+        rat_to_Q (PPos three, PPos POne) = Some (3#1) /\
+        rat_to_Q (PPos four, PPos five) = Some (4#5) /\
+        rat_to_Q (PNeg three, PPos four) = Some (Qmake (-3) 4).
+      Proof.
+        split; [|split]; reflexivity.
+      Qed.
+      
+      (* Test 6: Round-trip for valid rationals *)
+      Example round_trip_valid :
+        forall p : PNat,
+        forall q : PNat,
+        let r := (PPos p, PPos q) in
+        exists q_result : Q,
+          rat_to_Q r = Some q_result.
+      Proof.
+        intros p q.
+        simpl.
+        eexists.
+        reflexivity.
+      Qed.
+      
+      (* Test 7: None only for zero denominator *)
+      Example none_iff_zero_denom :
+        forall r : PRat,
+        rat_to_Q r = None <-> (let (_, q) := r in q = PZero).
+      Proof.
+        intro r.
+        destruct r as [p q].
+        split.
+        - intro H.
+          destruct q; try discriminate.
+          reflexivity.
+        - intro H.
+          rewrite H.
+          reflexivity.
+      Qed.
+      
+      (* Test 8: Check that conversion preserves zero *)
+      Example zero_preservation :
+        rat_to_Q (PZero, PPos POne) = Some (0#1) /\
+        rat_to_Q (PZero, PPos (PS POne)) = Some (Qmake 0 2) /\
+        forall n : PNat,
+          rat_to_Q (PZero, PPos n) = Some (Qmake 0 (pnat_to_positive n)).
+      Proof.
+        split; [|split].
+        - reflexivity.
+        - reflexivity.
+        - intro n.
+          simpl.
+          reflexivity.
+      Qed.
+      
+    End Tests.
+  End RationalsCoqInterfaceTests.
 End ParadoxNumbers.
