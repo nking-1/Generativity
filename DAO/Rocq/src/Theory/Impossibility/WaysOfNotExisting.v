@@ -35,6 +35,7 @@
 *)
 
 Require Import DAO.Core.AlphaType.
+Require Import DAO.Logic.Paradox.AlphaFirewall.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
@@ -66,7 +67,6 @@ Module WaysOfNotExisting.
 
   (* Show that every predicate on Alphacarrier always has a path to the void *)
   Module FalseConstruction.
-    Import AlphaTernary.TernaryLogic.
     
     Definition make_false {Alpha : AlphaType} 
       (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
@@ -163,8 +163,93 @@ Module WaysOfNotExisting.
     
   End FalseConstruction.
 
+  Module ParadoxConstruction.
+    Import AlphaProperties.
+    
+    Definition make_paradox {Alpha : AlphaType} 
+      (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+      fun a => P a <-> ~P a.
+    
+    (* Direct proof that make_paradox always creates impossibility *)
+    Theorem paradox_always_impossible {Alpha : AlphaType} :
+      forall P : Alphacarrier -> Prop,
+      ImpossibilityAlgebra.Core.Is_Impossible (make_paradox P).
+    Proof.
+      intros P a.
+      unfold ImpossibilityAlgebra.Core.Is_Impossible.
+      unfold make_paradox.
+      split.
+      - (* (P a <-> ~P a) -> omega_veil a *)
+        intro H.
+        exfalso.
+        destruct H as [H1 H2].
+        assert (P a).
+        { apply H2. intro HPa. apply (H1 HPa). exact HPa. }
+        apply (H1 H). exact H.
+      - (* omega_veil a -> (P a <-> ~P a) *)
+        intro Hveil.
+        exfalso.
+        exact (Core.omega_veil_has_no_witnesses a Hveil).
+    Qed.
+    
+    (* Direct proof that make_paradox creates predicates equal to omega_veil *)
+    Theorem paradox_equals_void {Alpha : AlphaType} :
+      forall P : Alphacarrier -> Prop,
+      forall a : Alphacarrier,
+      make_paradox P a <-> omega_veil a.
+    Proof.
+      intros P a.
+      unfold make_paradox.
+      split.
+      - (* (P a <-> ~P a) -> omega_veil a *)
+        intro H.
+        (* This is contradictory, so we get False *)
+        exfalso.
+        destruct H as [H1 H2].
+        assert (P a).
+        { apply H2. intro HPa. apply (H1 HPa). exact HPa. }
+        apply (H1 H). exact H.
+      - (* omega_veil a -> (P a <-> ~P a) *)
+        intro Hveil.
+        exfalso.
+        exact (Core.omega_veil_has_no_witnesses a Hveil).
+    Qed.
+    
+    (* Any predicate can generate omega_veil through self-reference *)
+    Theorem self_reference_finds_void {Alpha : AlphaType} :
+      forall P : Alphacarrier -> Prop,
+      exists Q : Alphacarrier -> Prop,
+        (* Q is the self-referential paradox of P *)
+        (forall a, Q a <-> (P a <-> ~P a)) /\
+        (* And Q equals omega_veil *)
+        (forall a, Q a <-> omega_veil a).
+    Proof.
+      intro P.
+      exists (make_paradox P).
+      split.
+      - intro a. reflexivity.
+      - apply paradox_equals_void.
+    Qed.
+    
+    (* The ultimate theorem: Any predicate can be used to construct the void *)
+    Theorem any_predicate_constructs_void {Alpha : AlphaType} :
+      forall P : Alphacarrier -> Prop,
+      { Q : Alphacarrier -> Prop |
+        (* Q is built from P *)
+        (forall a, Q a <-> (P a <-> ~P a)) /\
+        (* Q is impossible *)
+        ImpossibilityAlgebra.Core.Is_Impossible Q }.
+    Proof.
+      intro P.
+      exists (make_paradox P).
+      split.
+      - intro a. reflexivity.
+      - apply paradox_always_impossible.
+    Qed.
+    
+  End ParadoxConstruction.
+
   Module AlphaOmegaDuality.
-    Import AlphaTernary.TernaryLogic.
     Import FalseConstruction.
     
     (* Alpha witnesses constructed impossibility *)
