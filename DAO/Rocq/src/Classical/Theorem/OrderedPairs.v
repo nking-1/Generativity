@@ -254,7 +254,6 @@ Module OrderedPairs.
     Qed.
 
     (** Helper: If two pairs of codes are equal as sets, their elements match up *)
-    (** Helper: If two pairs of codes are equal as sets, their elements match up *)
     Lemma pair_code_elements : forall x y z w,
       is_set_code x -> is_set_code y -> is_set_code z -> is_set_code w ->
       set_eq (set_decode (pair_code x y)) (set_decode (pair_code z w)) ->

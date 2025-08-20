@@ -880,19 +880,93 @@ Module PureImpossibilitySymmetry.
       apply all_paths_impossible.
     Qed.
     
-    (** More elegant: dimensions beyond 4 are inherently impossible *)
-    Theorem high_dimensions_collapse :
+    (** All dimensions are equally compact, even if there are 4 of them. *)
+    Theorem all_dimensions_compact :
       forall n : nat,
-      n > 4 ->
+      n > 0 ->
       forall d : dimension,
-      (* If dimension has high enough depth, it collapses *)
-      Is_Impossible (path_to_predicate d).
+      compact_dimension d.
     Proof.
       intros n Hn d.
       apply all_paths_impossible.
     Qed.
 
   End EmergentDimensions.
+
+  (* Note - it might be possible there are more than 4 dimensions "out there,"
+     we're just showing how you might construct 4 separate dimensions. *)
+  Section FourDimensionalEmergence.
+    Context {Alpha : AlphaType}.
+    
+    (** Four distinct paradox paths *)
+    Definition dim_t := BaseVeil.                           (* time *)
+    Definition dim_x := SelfContradict BaseVeil.           (* x-space *)
+    Definition dim_y := SelfContradict (SelfContradict BaseVeil). (* y-space *)
+    Definition dim_z := Compose BaseVeil (SelfContradict BaseVeil). (* z-space *)
+    
+    (** They have different constructions (different "names") *)
+    Lemma dimensions_distinct_construction :
+      dim_t <> dim_x /\ dim_x <> dim_y /\ dim_y <> dim_z /\ dim_z <> dim_t.
+    Proof.
+      (* Let's be explicit about why each pair is different *)
+      split; [|split; [|split]].
+      
+      - (* dim_t <> dim_x *)
+        unfold dim_t, dim_x.
+        (* BaseVeil <> SelfContradict BaseVeil *)
+        intro H_eq.
+        (* If they were equal, we'd have BaseVeil = SelfContradict BaseVeil *)
+        (* But these are different constructors of ParadoxPath *)
+        discriminate H_eq.
+        
+      - (* dim_x <> dim_y *)
+        unfold dim_x, dim_y.
+        (* SelfContradict BaseVeil <> SelfContradict (SelfContradict BaseVeil) *)
+        intro H_eq.
+        (* These have different depths of self-contradiction *)
+        injection H_eq as H_inner.
+        (* This would mean BaseVeil = SelfContradict BaseVeil *)
+        discriminate H_inner.
+        
+      - (* dim_y <> dim_z *)
+        unfold dim_y, dim_z.
+        (* SelfContradict (SelfContradict BaseVeil) <> Compose BaseVeil (SelfContradict BaseVeil) *)
+        intro H_eq.
+        (* Different constructors: SelfContradict vs Compose *)
+        discriminate H_eq.
+        
+      - (* dim_z <> dim_t *)
+        unfold dim_z, dim_t.
+        (* Compose BaseVeil (SelfContradict BaseVeil) <> BaseVeil *)
+        intro H_eq.
+        (* Compose can't equal BaseVeil - different constructors *)
+        discriminate H_eq.
+    Qed.
+    
+    (** But all are compact *)
+    Theorem four_dimensions_all_compact :
+      compact_dimension dim_t /\
+      compact_dimension dim_x /\
+      compact_dimension dim_y /\
+      compact_dimension dim_z.
+    Proof.
+      unfold compact_dimension.
+      repeat split.
+      - (* dim_t *)
+        unfold dim_t.
+        apply all_paths_impossible.
+      - (* dim_x *) 
+        unfold dim_x.
+        apply all_paths_impossible.
+      - (* dim_y *)
+        unfold dim_y.
+        apply all_paths_impossible.
+      - (* dim_z *)
+        unfold dim_z.
+        apply all_paths_impossible.
+    Qed.
+  
+  End FourDimensionalEmergence.
 
   (* ================================================================ *)
   (** ** Black Hole Thermodynamics *)
