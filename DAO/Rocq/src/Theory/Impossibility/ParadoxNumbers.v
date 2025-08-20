@@ -1,4 +1,4 @@
-(** * ParadoxNaturals.v
+(** * ParadoxNumbers.v
     
     Numbers as construction depths of paradoxes.
     All paradoxes equal omega_veil, but their construction history gives us arithmetic.

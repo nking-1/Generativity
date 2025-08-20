@@ -428,8 +428,6 @@ Module WaysOfNotExisting.
     
     ----------------------------------------------------------------
     
-    Deeper realization:
-    
     Every mathematical object is a unique pattern of failing to exist completely.
     These patterns are intensionally distinct (different stories) but 
     extensionally equivalent (all equal omega_veil).

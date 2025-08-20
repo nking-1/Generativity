@@ -205,212 +205,212 @@ Module Unrepresentability.
   (** ** Turing's Halting Problem *)
   
   Module Turing.
-  
-  Section HaltingAsPredicates.
-    Context {Alpha : AlphaType} {Omega : OmegaType}.
-    Variable embed : Alphacarrier -> Omegacarrier.
-    (* We need embed to be injective for the oracle to work properly *)
-    Variable embed_injective : forall a b, embed a = embed b -> a = b.
     
-    (* ============================================================ *)
-    (** ** Basic Computation Framework *)
-    (* ============================================================ *)
-    
-    (* Computation as a ternary relation: program × input → output *)
-    Variable Computes : Alphacarrier -> Alphacarrier -> Alphacarrier -> Prop.
-    
-    (* Programs can be enumerated *)
-    Variable prog_enum : nat -> option Alphacarrier.
-    Variable prog_enum_complete : forall p, exists n, prog_enum n = Some p.
-    
-    (* Basic properties of computation *)
-    Variable compute_deterministic : forall p input out1 out2,
-      Computes p input out1 -> Computes p input out2 -> out1 = out2.
-    
-    (* Universal machine axiom: there exists a program that can simulate others *)
-    Variable universal : Alphacarrier.
-    Variable pair : Alphacarrier -> Alphacarrier -> Alphacarrier.
-    Variable universal_property : forall p input output,
-      Computes p input output <-> Computes universal (pair p input) output.
-    
-    (* ============================================================ *)
-    (** ** Halting Definitions *)
-    (* ============================================================ *)
-    
-    Definition Halts (p input : Alphacarrier) : Prop :=
-      exists output, Computes p input output.
-    
-    Definition SelfHalts (p : Alphacarrier) : Prop :=
-      Halts p p.
-    
-    (* Embed predicates from Alpha to Omega *)
-    Definition embed_pred (P : Alphacarrier -> Prop) : Omegacarrier -> Prop :=
-      fun x => exists a, embed a = x /\ P a.
-    
-    (* ============================================================ *)
-    (** ** The Diagonal Construction *)
-    (* ============================================================ *)
-    
-    (* The diagonal specification: programs that do the opposite of what a decider says *)
-    Definition diagonal_spec (decider : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
-      fun d => forall p, 
-        (* d halts on p iff the decider says p doesn't self-halt *)
-        (Halts d p <-> ~ decider p).
-    
-    (* In Omega, diagonal programs exist *)
-    Lemma omega_has_diagonal_program :
-      forall decider : Alphacarrier -> Prop,
-      exists x : Omegacarrier, embed_pred (diagonal_spec decider) x.
-    Proof.
-      intro decider.
-      apply omega_completeness.
-    Qed.
-    
-    (* Key construction: build a self-referential program *)
-    Variable construct_diagonal : forall (decider : Alphacarrier -> Prop),
-      {d : Alphacarrier | 
-        (* d halts on input p iff decider says p doesn't self-halt *)
-        forall p, Halts d p <-> ~ decider p}.
-    
-    (* ============================================================ *)
-    (** ** The Main Theorems *)
-    (* ============================================================ *)
-    
-    (* If we could decide halting, we'd get a contradiction *)
-    Theorem diagonal_contradiction :
-      forall (decider : Alphacarrier -> Prop),
-      (forall p, decider p <-> SelfHalts p) ->
-      exists d : Alphacarrier,
-        SelfHalts d <-> ~ SelfHalts d.
-    Proof.
-      intros decider Hdec.
+    Section HaltingAsPredicates.
+      Context {Alpha : AlphaType} {Omega : OmegaType}.
+      Variable embed : Alphacarrier -> Omegacarrier.
+      (* We need embed to be injective for the oracle to work properly *)
+      Variable embed_injective : forall a b, embed a = embed b -> a = b.
       
-      (* Get the diagonal program *)
-      destruct (construct_diagonal decider) as [d Hd].
-      exists d.
+      (* ============================================================ *)
+      (** ** Basic Computation Framework *)
+      (* ============================================================ *)
       
-      (* Show: SelfHalts d <-> ~ SelfHalts d *)
-      split.
-      - intro Hself.
-        (* SelfHalts d means Halts d d *)
-        unfold SelfHalts in *.
-        
-        (* By Hd: Halts d d <-> ~ decider d *)
-        apply Hd in Hself.
-        
-        (* By Hdec: decider d <-> SelfHalts d *)
-        rewrite Hdec in Hself.
-        exact Hself.
-        
-      - intro Hnself.
-        (* ~ SelfHalts d *)
-        unfold SelfHalts in *.
-        
-        (* By Hdec: decider d <-> SelfHalts d *)
-        assert (~ decider d).
-        { rewrite Hdec. exact Hnself. }
-        
-        (* By Hd: Halts d d <-> ~ decider d *)
-        apply Hd.
-        exact H.
-    Qed.
-    
-    (* Therefore, Alpha cannot decide halting *)
-    Theorem alpha_cannot_decide_halting :
-      ~ exists (decider : Alphacarrier -> Prop),
-        forall p, decider p <-> SelfHalts p.
-    Proof.
-      intros [decider Hdec].
+      (* Computation as a ternary relation: program × input → output *)
+      Variable Computes : Alphacarrier -> Alphacarrier -> Alphacarrier -> Prop.
       
-      (* Get the diagonal contradiction *)
-      destruct (diagonal_contradiction decider Hdec) as [d Hcontra].
+      (* Programs can be enumerated *)
+      Variable prog_enum : nat -> option Alphacarrier.
+      Variable prog_enum_complete : forall p, exists n, prog_enum n = Some p.
       
-      (* We have: SelfHalts d <-> ~ SelfHalts d *)
-      destruct Hcontra as [H1 H2].
+      (* Basic properties of computation *)
+      Variable compute_deterministic : forall p input out1 out2,
+        Computes p input out1 -> Computes p input out2 -> out1 = out2.
       
-      (* Derive False *)
-      assert (~ SelfHalts d).
-      { intro H. exact (H1 H H). }
+      (* Universal machine axiom: there exists a program that can simulate others *)
+      Variable universal : Alphacarrier.
+      Variable pair : Alphacarrier -> Alphacarrier -> Alphacarrier.
+      Variable universal_property : forall p input output,
+        Computes p input output <-> Computes universal (pair p input) output.
       
-      apply H. apply H2. exact H.
-    Qed.
-    
-    (* ============================================================ *)
-    (** ** Connection to Ternary Logic *)
-    (* ============================================================ *)
-    
-    (* SelfHalts is an undecidable predicate in Alpha's ternary logic *)
-    Theorem self_halts_undecidable :
-      (~ exists p, SelfHalts p) /\ (~ forall p, ~ SelfHalts p).
-    Proof.
-      split.
+      (* ============================================================ *)
+      (** ** Halting Definitions *)
+      (* ============================================================ *)
       
-      - (* Assume exists p, SelfHalts p *)
-        intro H_exists.
-        
-        (* We'll show this leads to decidability *)
-        assert (exists decider : Alphacarrier -> Prop, forall p, decider p <-> SelfHalts p).
-        {
-          (* Define decider as SelfHalts itself *)
-          exists SelfHalts.
-          intro p. reflexivity.
-        }
-        
-        (* But we proved halting is undecidable *)
-        exact (alpha_cannot_decide_halting H).
-        
-      - (* Assume forall p, ~ SelfHalts p *)
-        intro H_none.
-        
-        (* Then the decider would be the constant False predicate *)
-        assert (exists decider : Alphacarrier -> Prop, forall p, decider p <-> SelfHalts p).
-        {
-          exists (fun _ => False).
-          intro p.
-          split.
-          - intro H. destruct H.
-          - intro H. exact (H_none p H).
-        }
-        
-        (* But we proved halting is undecidable *)
-        exact (alpha_cannot_decide_halting H).
-    Qed.
-    
-    (* ============================================================ *)
-    (** ** Halting Oracle in Omega *)
-    (* ============================================================ *)
-    
-    (* In Omega, we can have a "halting oracle" that knows all *)
-    Definition omega_halting_oracle : Omegacarrier -> Prop :=
-      fun x => exists p, embed p = x /\ SelfHalts p.
-    
-    Theorem omega_knows_halting :
-      exists oracle : Omegacarrier,
-      forall p : Alphacarrier,
-        omega_halting_oracle (embed p) <-> SelfHalts p.
-    Proof.
-      (* In Omega, such an oracle exists by completeness *)
-      destruct (omega_completeness omega_halting_oracle) as [oracle Horacle].
-      exists oracle.
+      Definition Halts (p input : Alphacarrier) : Prop :=
+        exists output, Computes p input output.
       
-      intro p.
-      split.
-      - intro H.
-        unfold omega_halting_oracle in H.
-        destruct H as [p' [Hembed Hself]].
-        apply embed_injective in Hembed.
-        rewrite <- Hembed.
-        exact Hself.
+      Definition SelfHalts (p : Alphacarrier) : Prop :=
+        Halts p p.
+      
+      (* Embed predicates from Alpha to Omega *)
+      Definition embed_pred (P : Alphacarrier -> Prop) : Omegacarrier -> Prop :=
+        fun x => exists a, embed a = x /\ P a.
+      
+      (* ============================================================ *)
+      (** ** The Diagonal Construction *)
+      (* ============================================================ *)
+      
+      (* The diagonal specification: programs that do the opposite of what a decider says *)
+      Definition diagonal_spec (decider : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
+        fun d => forall p, 
+          (* d halts on p iff the decider says p doesn't self-halt *)
+          (Halts d p <-> ~ decider p).
+      
+      (* In Omega, diagonal programs exist *)
+      Lemma omega_has_diagonal_program :
+        forall decider : Alphacarrier -> Prop,
+        exists x : Omegacarrier, embed_pred (diagonal_spec decider) x.
+      Proof.
+        intro decider.
+        apply omega_completeness.
+      Qed.
+      
+      (* Key construction: build a self-referential program *)
+      Variable construct_diagonal : forall (decider : Alphacarrier -> Prop),
+        {d : Alphacarrier | 
+          (* d halts on input p iff decider says p doesn't self-halt *)
+          forall p, Halts d p <-> ~ decider p}.
+      
+      (* ============================================================ *)
+      (** ** The Main Theorems *)
+      (* ============================================================ *)
+      
+      (* If we could decide halting, we'd get a contradiction *)
+      Theorem diagonal_contradiction :
+        forall (decider : Alphacarrier -> Prop),
+        (forall p, decider p <-> SelfHalts p) ->
+        exists d : Alphacarrier,
+          SelfHalts d <-> ~ SelfHalts d.
+      Proof.
+        intros decider Hdec.
         
-      - intro Hself.
-        unfold omega_halting_oracle.
-        exists p.
-        split; [reflexivity | exact Hself].
-    Qed.
+        (* Get the diagonal program *)
+        destruct (construct_diagonal decider) as [d Hd].
+        exists d.
+        
+        (* Show: SelfHalts d <-> ~ SelfHalts d *)
+        split.
+        - intro Hself.
+          (* SelfHalts d means Halts d d *)
+          unfold SelfHalts in *.
+          
+          (* By Hd: Halts d d <-> ~ decider d *)
+          apply Hd in Hself.
+          
+          (* By Hdec: decider d <-> SelfHalts d *)
+          rewrite Hdec in Hself.
+          exact Hself.
+          
+        - intro Hnself.
+          (* ~ SelfHalts d *)
+          unfold SelfHalts in *.
+          
+          (* By Hdec: decider d <-> SelfHalts d *)
+          assert (~ decider d).
+          { rewrite Hdec. exact Hnself. }
+          
+          (* By Hd: Halts d d <-> ~ decider d *)
+          apply Hd.
+          exact H.
+      Qed.
+      
+      (* Therefore, Alpha cannot decide halting *)
+      Theorem alpha_cannot_decide_halting :
+        ~ exists (decider : Alphacarrier -> Prop),
+          forall p, decider p <-> SelfHalts p.
+      Proof.
+        intros [decider Hdec].
+        
+        (* Get the diagonal contradiction *)
+        destruct (diagonal_contradiction decider Hdec) as [d Hcontra].
+        
+        (* We have: SelfHalts d <-> ~ SelfHalts d *)
+        destruct Hcontra as [H1 H2].
+        
+        (* Derive False *)
+        assert (~ SelfHalts d).
+        { intro H. exact (H1 H H). }
+        
+        apply H. apply H2. exact H.
+      Qed.
+      
+      (* ============================================================ *)
+      (** ** Connection to Ternary Logic *)
+      (* ============================================================ *)
+      
+      (* SelfHalts is an undecidable predicate in Alpha's ternary logic *)
+      Theorem self_halts_undecidable :
+        (~ exists p, SelfHalts p) /\ (~ forall p, ~ SelfHalts p).
+      Proof.
+        split.
+        
+        - (* Assume exists p, SelfHalts p *)
+          intro H_exists.
+          
+          (* We'll show this leads to decidability *)
+          assert (exists decider : Alphacarrier -> Prop, forall p, decider p <-> SelfHalts p).
+          {
+            (* Define decider as SelfHalts itself *)
+            exists SelfHalts.
+            intro p. reflexivity.
+          }
+          
+          (* But we proved halting is undecidable *)
+          exact (alpha_cannot_decide_halting H).
+          
+        - (* Assume forall p, ~ SelfHalts p *)
+          intro H_none.
+          
+          (* Then the decider would be the constant False predicate *)
+          assert (exists decider : Alphacarrier -> Prop, forall p, decider p <-> SelfHalts p).
+          {
+            exists (fun _ => False).
+            intro p.
+            split.
+            - intro H. destruct H.
+            - intro H. exact (H_none p H).
+          }
+          
+          (* But we proved halting is undecidable *)
+          exact (alpha_cannot_decide_halting H).
+      Qed.
+      
+      (* ============================================================ *)
+      (** ** Halting Oracle in Omega *)
+      (* ============================================================ *)
+      
+      (* In Omega, we can have a "halting oracle" that knows all *)
+      Definition omega_halting_oracle : Omegacarrier -> Prop :=
+        fun x => exists p, embed p = x /\ SelfHalts p.
+      
+      Theorem omega_knows_halting :
+        exists oracle : Omegacarrier,
+        forall p : Alphacarrier,
+          omega_halting_oracle (embed p) <-> SelfHalts p.
+      Proof.
+        (* In Omega, such an oracle exists by completeness *)
+        destruct (omega_completeness omega_halting_oracle) as [oracle Horacle].
+        exists oracle.
+        
+        intro p.
+        split.
+        - intro H.
+          unfold omega_halting_oracle in H.
+          destruct H as [p' [Hembed Hself]].
+          apply embed_injective in Hembed.
+          rewrite <- Hembed.
+          exact Hself.
+          
+        - intro Hself.
+          unfold omega_halting_oracle.
+          exists p.
+          split; [reflexivity | exact Hself].
+      Qed.
+      
+    End HaltingAsPredicates.
     
-  End HaltingAsPredicates.
-  
-End Turing.
+  End Turing.
 
   (* ================================================================ *)
   (** ** General Undecidability Framework *)
