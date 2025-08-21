@@ -1826,6 +1826,7 @@ Module EmergentTheology.
         apply emergent_rock_lifting_paradox.
     Qed.
   End TheologyFromOuroboros.
+End EmergentTheology.
 
 
 Module EmergentSimulation.

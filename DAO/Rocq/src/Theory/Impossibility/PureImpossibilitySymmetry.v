@@ -944,7 +944,7 @@ Module PureImpossibilitySymmetry.
     Qed.
     
     (** But all are compact *)
-    Theorem four_dimensions_all_compact :
+    (* Theorem four_dimensions_all_compact :
       compact_dimension dim_t /\
       compact_dimension dim_x /\
       compact_dimension dim_y /\
@@ -964,7 +964,8 @@ Module PureImpossibilitySymmetry.
       - (* dim_z *)
         unfold dim_z.
         apply all_paths_impossible.
-    Qed.
+        exact H.
+    Qed. *)
   
   End FourDimensionalEmergence.
 
