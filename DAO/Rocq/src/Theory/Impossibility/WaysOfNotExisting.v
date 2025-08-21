@@ -72,6 +72,8 @@ Module WaysOfNotExisting.
       (P : Alphacarrier -> Prop) : Alphacarrier -> Prop :=
       fun a => P a /\ omega_veil a.
     
+    (* Any predicate becomes impossible when ANDed with omega_veil *)
+    (* Regardless of P's truth value *)
     Theorem always_impossible {Alpha : AlphaType} :
       forall P : Alphacarrier -> Prop, 
       ImpossibilityAlgebra.Core.Is_Impossible (make_false P).
@@ -84,17 +86,7 @@ Module WaysOfNotExisting.
         exfalso.
         exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hveil).
     Qed.
-    
-    (* Any predicate becomes impossible when ANDed with omega_veil *)
-    Theorem universal_void_structure {Alpha : AlphaType} :
-      forall (P : Alphacarrier -> Prop),
-      (* Regardless of P's truth value *)
-      ImpossibilityAlgebra.Core.Is_Impossible (fun a => P a /\ omega_veil a).
-    Proof.
-      intros P.
-      apply always_impossible.
-    Qed.
-    
+
     (* Show this works for each specific truth value case *)
     Section TruthValueCases.
       Context {Alpha : AlphaType}.
@@ -131,7 +123,7 @@ Module WaysOfNotExisting.
       Qed.
     End TruthValueCases.
     
-    (* The profound theorem: Everything is structured void *)
+    (* Everything is structured void *)
     Theorem everything_touches_void {Alpha : AlphaType} :
       forall P : Alphacarrier -> Prop,
       exists Q : Alphacarrier -> Prop,

@@ -7,6 +7,7 @@ Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Core.Bridge.
+From Stdlib Require Import Lia.
 
 Definition injective {A B: Type} (f: A -> B) : Prop :=
   forall x y: A, f x = f y -> x = y.
@@ -149,3 +150,116 @@ Proof.
   exact H_equiv.
 Qed.
 
+
+Theorem omega_counts_its_own_transcendence_infinitely :
+  forall (Omega : OmegaType),
+    exists (counter : Omegacarrier),
+      (* The counter witnesses that for every n, there are n distinct things larger than Omega *)
+      (forall n : nat, 
+        exists (witnesses : nat -> Omegacarrier),
+          forall i j : nat, i < n -> j < n -> i <> j ->
+            witnesses i <> witnesses j /\
+            exists (X_i X_j : Type),
+              strictly_larger X_i Omegacarrier /\
+              strictly_larger X_j Omegacarrier /\
+              X_i <> X_j).
+Proof.
+  intros Omega.
+  
+  (* The cheeky predicate: "I count infinite transcendences" *)
+  set (infinite_counter := fun counter : Omegacarrier =>
+    forall n : nat, 
+      exists (witnesses : nat -> Omegacarrier),
+        forall i j : nat, i < n -> j < n -> i <> j ->
+          witnesses i <> witnesses j /\
+          exists (X_i X_j : Type),
+            strictly_larger X_i Omegacarrier /\
+            strictly_larger X_j Omegacarrier /\
+            X_i <> X_j).
+  
+  destruct (omega_completeness infinite_counter) as [counter H_counts].
+  exists counter.
+  exact H_counts.
+Qed.
+
+
+(* Now let's show how this could lead to actual math *)
+Module SizeParadoxCounting.
+  (* Define the counting function once *)
+  Axiom hash_surjective_sig : 
+    forall {Alpha : AlphaType} (n : nat), 
+    {a : Alphacarrier | @hash Alphacarrier a = n}.
+
+  (* Now we can extract computationally *)
+  Definition paradox_count {Alpha : AlphaType} : nat -> Alphacarrier :=
+    fun n => proj1_sig (@hash_surjective_sig Alpha n).
+
+  Lemma paradox_count_correct {Alpha : AlphaType} :
+    forall n, @hash Alphacarrier (paradox_count n) = n.
+  Proof.
+    intro n.
+    unfold paradox_count.
+    destruct (@hash_surjective_sig Alpha n) as [a Ha].
+    simpl.
+    exact Ha.
+  Qed.
+  
+  (* Alpha literally counts using paradox levels *)
+  Theorem alpha_uses_paradoxes_as_numbers :
+    forall (Alpha : AlphaType) (Omega : OmegaType),
+    (* We have a bijection between nat and some Alpha elements via paradox levels *)
+    exists (count : nat -> Alphacarrier),
+      (* It's injective *)
+      (forall n m, count n = count m -> n = m) /\
+      (* Each count n represents paradox level n *)
+      (forall n, @hash Alphacarrier (count n) = n) /\
+      (* We can always go to the next paradox level *)
+      (forall a : Alphacarrier, 
+        exists next : Alphacarrier, 
+        @hash Alphacarrier next = S (@hash Alphacarrier a)).
+  Proof.
+    intros Alpha Omega.
+    exists paradox_count.
+    
+    split; [|split].
+    - (* Injective *)
+      intros n m Heq.
+      pose proof (paradox_count_correct n) as Hn.  (* Fixed: was paradox_count_hash *)
+      pose proof (paradox_count_correct m) as Hm.  (* Fixed: was paradox_count_hash *)
+      rewrite <- Hn, <- Hm, Heq.
+      reflexivity.
+      
+    - (* Correct hash *)
+      exact paradox_count_correct.  (* Fixed: was paradox_count_hash *)
+      
+    - (* Can always increment *)
+      intro a.
+      destruct (@hash_surjective_sig Alpha (S (@hash Alphacarrier a))) as [next Hnext].
+      exists next.
+      exact Hnext.
+  Qed.
+
+  (* Now we can build paradox numbers using omega's own size paradox *)
+  (* We need a computational way to get witnesses from Omega *)
+  Parameter omega_witness : forall (Omega : OmegaType) (P : Omegacarrier -> Prop), Omegacarrier.
+
+  Definition size_paradox_zero (Omega : OmegaType) : Omegacarrier :=
+    omega_witness Omega (fun x => 
+      (exists (X : Type) (f : X -> Omegacarrier), strictly_larger X Omegacarrier) <->
+      ~ (exists (X : Type) (f : X -> Omegacarrier), strictly_larger X Omegacarrier)).
+
+  (* For the successor, we need to be creative since we can't talk about "Carrier_of prev" *)
+  Definition size_paradox_succ (Omega : OmegaType) (prev : Omegacarrier) : Omegacarrier :=
+    omega_witness Omega (fun x =>
+      (* x witnesses being paradoxically larger than prev's level *)
+      exists (X : Type), 
+        (strictly_larger X Omegacarrier /\ x = prev) <->
+        ~ (strictly_larger X Omegacarrier /\ x = prev)).
+
+  (* Omega can build numbers from infinitely transcending itself *)
+  Fixpoint size_paradox_nat (Omega : OmegaType) (n : nat) : Omegacarrier :=
+    match n with
+    | 0 => size_paradox_zero Omega
+    | S n' => size_paradox_succ Omega (size_paradox_nat Omega n')
+    end.
+End SizeParadoxCounting.
