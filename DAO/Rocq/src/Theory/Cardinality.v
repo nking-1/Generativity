@@ -222,17 +222,14 @@ Module SizeParadoxCounting.
     exists paradox_count.
     
     split; [|split].
-    - (* Injective *)
+    -
       intros n m Heq.
-      pose proof (paradox_count_correct n) as Hn.  (* Fixed: was paradox_count_hash *)
-      pose proof (paradox_count_correct m) as Hm.  (* Fixed: was paradox_count_hash *)
+      pose proof (paradox_count_correct n) as Hn.
+      pose proof (paradox_count_correct m) as Hm.
       rewrite <- Hn, <- Hm, Heq.
       reflexivity.
-      
-    - (* Correct hash *)
-      exact paradox_count_correct.  (* Fixed: was paradox_count_hash *)
-      
-    - (* Can always increment *)
+    - exact paradox_count_correct.
+    -
       intro a.
       destruct (@hash_surjective_sig Alpha (S (@hash Alphacarrier a))) as [next Hnext].
       exists next.

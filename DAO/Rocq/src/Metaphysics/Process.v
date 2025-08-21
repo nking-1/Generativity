@@ -104,7 +104,7 @@ Module Derive_NoSelfTotality.
       apply Hnot. apply H1. rewrite <- stage_total_vs_collection_total. exact Hin.
     Qed.
 
-    (* ---------- Optional: show the NEXT stage can NAME the totality ---------- *)
+    (* ---------- Show the next stage can name the totality ---------- *)
 
     (* Next-stage naming syntax (not part of present collection): *)
     Inductive Syn : nat -> Type :=
@@ -149,7 +149,6 @@ Module Derive_NoSelfTotality.
         apply Hc.
     Qed.
 
-    (* Handy lemma *)
     Lemma totality_escapes :
       forall n, ~ InStage n (totality_of (stage_collection n)).
     Proof.

@@ -401,7 +401,7 @@ Section FixedPointTheorems.
     apply omega_completeness.
   Qed.
   
-  (* The deep theorem: fixed points can be "composed" *)
+  (* Fixed points can be "composed" *)
   Theorem fixed_point_composition :
     forall f g : Omegacarrier -> Omegacarrier,
     exists x, x = f x /\ x = g x /\ x = f (g x) /\ x = g (f x).
@@ -413,7 +413,7 @@ Section FixedPointTheorems.
     exists x. exact Hx.
   Qed.
   
-  (* The mind-bender: a point that's moved by f but fixed by f∘f *)
+  (* Mind-bender: a point that's moved by f but fixed by f∘f *)
   Theorem exists_period_two_point :
     forall f : Omegacarrier -> Omegacarrier,
     exists x, x <> f x /\ x = f (f x).
@@ -424,7 +424,7 @@ Section FixedPointTheorems.
     exists x. exact Hx.
   Qed.
   
-  (* And the ultimate mind-bender: a point with any period we want *)
+  (* Bigger mind-bender: a point with any period we want *)
   Theorem exists_period_n_point :
     forall (f : Omegacarrier -> Omegacarrier) (n : nat),
     n > 0 ->

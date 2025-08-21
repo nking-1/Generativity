@@ -185,9 +185,6 @@ Module PureImpossibilitySymmetry.
 
     End PureSymmetry.
 
-    (* ================================================================ *)
-    (** ** The Ultimate Connection *)
-
     Section PhysicsFromFalse.
       Context {Alpha : AlphaType}.
       
@@ -239,8 +236,9 @@ Module PureImpossibilitySymmetry.
     Definition paradox_reflection : predicate_transform :=
       fun P => fun a => P a \/ omega_veil a.  (* Include the void *)
     
-    (** The deep truth: Every symmetry of impossibility creates a conservation law.
+    (** Every symmetry of impossibility creates a conservation law.
         Physics might literally be the study of symmetries in the void. *)
+    (** TODO: Proofs about paradox_rotation and paradox_reflection *)
     
   End PhysicsFromFalse.
 
