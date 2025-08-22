@@ -185,7 +185,7 @@ Qed.
 
 (* Now let's show how this could lead to actual math *)
 Module SizeParadoxCounting.
-  (* Define the counting function once *)
+  (* Define the counting function *)
   Axiom hash_surjective_sig : 
     forall {Alpha : AlphaType} (n : nat), 
     {a : Alphacarrier | @hash Alphacarrier a = n}.

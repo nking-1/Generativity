@@ -1,3 +1,4 @@
+(* TODO: Rename this to WaysToNewBeginnings - each path to the veil is actually a start. It's always 1 step away. *)
 (** * WaysOfNotExisting.v: Intensionality of Impossibility
     
     Different constructions of False are different mathematical objects.
