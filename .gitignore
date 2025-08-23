@@ -171,7 +171,11 @@ DAO/Haskell/*
 
 bin/
 obj/
+
 # Ignore all files without extension in omega_types directory
-DAO/omega_types/*
-!DAO/omega_types/*/
-!DAO/omega_types/*.*
+DAO/omega_types/cpp/*
+!DAO/omega_types/cpp/*/
+!DAO/omega_types/cpp/*.*
+DAO/omega_types/haskell/*
+!DAO/omega_types/haskell/*/
+!DAO/omega_types/haskell/*.*
