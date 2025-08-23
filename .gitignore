@@ -179,3 +179,7 @@ DAO/omega_types/cpp/*
 DAO/omega_types/haskell/*
 !DAO/omega_types/haskell/*/
 !DAO/omega_types/haskell/*.*
+
+node_modules/
+
+*.sln

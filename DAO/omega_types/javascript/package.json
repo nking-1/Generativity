@@ -4,9 +4,10 @@
   "description": "Total functional programming for TypeScript with structured impossibility",
   "main": "omega-types.js",
   "scripts": {
-    "build": "tsc omega-types.ts --target es2020 --module commonjs --lib dom,es2020",
-    "test": "npm run build && node omega-types.js",
-    "demo": "npm run build && node -e \"require('./omega-types.js').runTests()\""
+    "build": "tsc",
+    "test": "npm run build && node dist/omega-types.js",
+    "demo": "npm run build && node -e \"require('./dist/omega-types.js').runTests()\"",
+    "test-js": "node omega-types.js"
   },
   "keywords": ["total-functions", "functional-programming", "mathematics", "impossibility-algebra"],
   "author": "DAO Framework",
