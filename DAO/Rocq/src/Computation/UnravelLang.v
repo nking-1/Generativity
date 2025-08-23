@@ -17,7 +17,6 @@ Require Extraction.
 Require Import Strings.Ascii.
 Import ListNotations.
 
-(* Import our framework - adjust paths as needed *)
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.

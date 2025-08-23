@@ -48,7 +48,6 @@ Proof.
   exact Heq.
 Qed.
 
-Parameter strictly_larger : Type -> Type -> Prop.
 
 (* Theorem: Omega is larger than GenerativeType *)
 Theorem omega_larger_than_gen :
@@ -109,6 +108,9 @@ Proof.
     as [t [_ Ht]].
   exists t. exact Ht.
 Qed.
+
+
+Parameter strictly_larger : Type -> Type -> Prop.
 
 Theorem Omega_contains_set_larger_than_itself :
   forall (Omega : OmegaType),

@@ -7,10 +7,15 @@
   "scripts": {
     "build": "tsc",
     "test": "npm run build && node dist/unravel.js",
+    "test-production": "npx tsc unravel-final.ts --target es2020 --module commonjs && node unravel-final.js",
+    "test-stress": "npx tsc totality-stress-test.ts --target es2020 --module commonjs && node totality-stress-test.js",
+    "test-enhanced": "npx tsc unravel-enhanced.ts --target es2020 --module commonjs && node unravel-enhanced.js",
+    "test-comprehensive": "npx tsc comprehensive-demo.ts --target es2020 --module commonjs && node comprehensive-demo.js",
     "watch": "tsc --watch",
     "clean": "rm -rf dist/",
-    "verify-laws": "npm run build && node -e \"require('./dist/unravel.js').default.runUnravelTests()\"",
-    "demo": "npm run build && node demo.js"
+    "demo": "npm run test-production && npm run test-stress",
+    "test-integration": "npx tsc test-integration.ts --target es2020 --module commonjs && node test-integration.js",
+    "test-all": "npm run test-production && npm run test-integration && npm run test-stress"
   },
   "keywords": [
     "total-functions", 
