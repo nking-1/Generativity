@@ -1,0 +1,33 @@
+{
+  "name": "unravel-lang",
+  "version": "2.0.0",
+  "description": "Advanced total functional programming with computational thermodynamics",
+  "main": "dist/unravel.js",
+  "types": "dist/unravel.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node dist/unravel.js",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist/",
+    "verify-laws": "npm run build && node -e \"require('./dist/unravel.js').default.runUnravelTests()\"",
+    "demo": "npm run build && node demo.js"
+  },
+  "keywords": [
+    "total-functions", 
+    "computational-thermodynamics", 
+    "functional-programming", 
+    "mathematics", 
+    "impossibility-algebra",
+    "conservation-laws",
+    "noether-theorem"
+  ],
+  "author": "DAO Framework",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

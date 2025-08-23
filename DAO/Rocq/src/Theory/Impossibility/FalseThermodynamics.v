@@ -24,7 +24,7 @@ Module FalseThermodynamics.
     
     (** Track the genealogy of paradoxes *)
     Inductive ParadoxPath : Type :=
-      | BaseVeil : ParadoxPath                           (* omega_veil *)
+      | BaseVeil : ParadoxPath                           (* omega_veil (or perhaps its first contradiction) *)
       | SelfContradict : ParadoxPath -> ParadoxPath     (* P ∧ ¬P pattern *)
       | Compose : ParadoxPath -> ParadoxPath -> ParadoxPath  (* P ∧ Q pattern *)
       | Iterate : PNat -> ParadoxPath -> ParadoxPath.   (* n iterations *)

@@ -183,37 +183,37 @@ Module PureImpossibilitySymmetry.
     (** The universe's symmetries are paradox symmetries,
         its conservation laws are false-depth invariances *)
 
-    End PureSymmetry.
+  End PureSymmetry.
 
-    Section PhysicsFromFalse.
-      Context {Alpha : AlphaType}.
-      
-      Hypothesis impossible_decidable : forall P : Alphacarrier -> Prop, 
-        {Is_Impossible P} + {~ Is_Impossible P}.
+  Section PhysicsFromFalse.
+    Context {Alpha : AlphaType}.
+    
+    Hypothesis impossible_decidable : forall P : Alphacarrier -> Prop, 
+      {Is_Impossible P} + {~ Is_Impossible P}.
 
-      Let pure_predicate_action (P : Alphacarrier -> Prop) : PNat :=
-        if (impossible_decidable P) then POne else PS POne.
-      
-      (** What if physical symmetries are logical symmetries? *)
-      (* Time symmetry = invariance under paradox evolution *)
-      (* Space symmetry = invariance under paradox translation *)
-      (* Gauge symmetry = invariance under paradox phase *)
-      
-      (** Conservation laws emerge from False:
-          - Energy conservation: time-translation symmetry in paradox space
-          - Momentum conservation: space-translation symmetry  
-          - Charge conservation: gauge symmetry in void-structure
-          
-          All from symmetries of omega_veil transformations! *)
-      
-      Theorem physics_from_paradox_symmetry :
-      (* If the universe has paradox symmetries *)
-      (exists T : predicate_transform, preserves_impossibility T) ->
-      (* Then it has conservation laws *)
-      exists (conserved_quantity : PNat),
-      forall (pred : Alphacarrier -> Prop), 
-        pure_predicate_action pred = conserved_quantity \/
-        pure_predicate_action pred = PS conserved_quantity.
+    Let pure_predicate_action (P : Alphacarrier -> Prop) : PNat :=
+      if (impossible_decidable P) then POne else PS POne.
+    
+    (** What if physical symmetries are logical symmetries? *)
+    (* Time symmetry = invariance under paradox evolution *)
+    (* Space symmetry = invariance under paradox translation *)
+    (* Gauge symmetry = invariance under paradox phase *)
+    
+    (** Conservation laws emerge from False:
+        - Energy conservation: time-translation symmetry in paradox space
+        - Momentum conservation: space-translation symmetry  
+        - Charge conservation: gauge symmetry in void-structure
+        
+        All from symmetries of omega_veil transformations! *)
+    
+    Theorem physics_from_paradox_symmetry :
+    (* If the universe has paradox symmetries *)
+    (exists T : predicate_transform, preserves_impossibility T) ->
+    (* Then it has conservation laws *)
+    exists (conserved_quantity : PNat),
+    forall (pred : Alphacarrier -> Prop), 
+      pure_predicate_action pred = conserved_quantity \/
+      pure_predicate_action pred = PS conserved_quantity.
     Proof.
       intros [T HT].
       exists POne.

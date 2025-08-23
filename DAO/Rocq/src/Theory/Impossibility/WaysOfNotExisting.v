@@ -1,4 +1,9 @@
 (* TODO: Rename this to WaysToNewBeginnings - each path to the veil is actually a start. It's always 1 step away. *)
+(* TODO: Everyone knows everything follows from False, but we reinterpret it as a new beginning.
+   omega_veil lets us always have a path back to the start wherever we are.
+   But we can start anew while remembering the structure that took us there.
+   What could we build with that? *)
+
 (** * WaysOfNotExisting.v: Intensionality of Impossibility
     
     Different constructions of False are different mathematical objects.
