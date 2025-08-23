@@ -1,0 +1,18 @@
+{
+  "name": "omega-types-ts",
+  "version": "1.0.0",
+  "description": "Total functional programming for TypeScript with structured impossibility",
+  "main": "omega-types.js",
+  "scripts": {
+    "build": "tsc omega-types.ts --target es2020 --module commonjs --lib dom,es2020",
+    "test": "npm run build && node omega-types.js",
+    "demo": "npm run build && node -e \"require('./omega-types.js').runTests()\""
+  },
+  "keywords": ["total-functions", "functional-programming", "mathematics", "impossibility-algebra"],
+  "author": "DAO Framework",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
