@@ -15,7 +15,13 @@
     "clean": "rm -rf dist/",
     "demo": "npm run test-production && npm run test-stress",
     "test-integration": "npx tsc test-integration.ts --target es2020 --module commonjs && node test-integration.js",
-    "test-all": "npm run test-production && npm run test-integration && npm run test-stress"
+    "test-all": "npm run test-production && npm run test-integration && npm run test-stress",
+    "test-game-integration": "cd entropy-lab-game && node test-library-integration.js",
+    "setup-game": "npx tsc unravel-final.ts --target es2020 --module commonjs --outDir ./lib && npm run test-game-integration"
+  },
+  "scripts-help": {
+    "setup-game": "Compiles library and tests game integration",
+    "test-game-integration": "Verifies game uses actual production library"
   },
   "keywords": [
     "total-functions", 

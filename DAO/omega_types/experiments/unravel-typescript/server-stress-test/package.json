@@ -1,0 +1,39 @@
+{
+  "name": "unravel-server-stress-test",
+  "version": "1.0.0",
+  "description": "Backend stress testing with production Unravel library",
+  "main": "dist/server.js",
+  "scripts": {
+    "setup": "cd .. && npx tsc unravel-final.ts --target es2020 --module commonjs --outDir ./lib",
+    "build": "npm run setup && npx tsc",
+    "start": "npm run build && node dist/server.js",
+    "test": "npm run build && node dist/stress-test.js",
+    "test-integration": "node test-library-integration.js",
+    "stress": "npm run build && node dist/stress-test.js --intensive",
+    "benchmark": "npm run build && node dist/benchmark.js",
+    "dev": "npx tsc --watch",
+    "clean": "rm -rf dist/"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
+    "@types/compression": "^1.7.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^4.9.5"
+  },
+  "keywords": [
+    "unravel",
+    "total-functions",
+    "server-reliability",
+    "stress-testing",
+    "mathematical-guarantees"
+  ],
+  "author": "DAO Framework",
+  "license": "MIT"
+}
