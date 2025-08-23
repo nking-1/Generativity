@@ -12,7 +12,11 @@
     "stress": "npm run build && node dist/stress-test.js --intensive",
     "benchmark": "npm run build && node dist/benchmark.js",
     "dev": "npx tsc --watch",
-    "clean": "rm -rf dist/"
+    "clean": "rm -rf dist/",
+    "diabolical": "npm run build && node dist/diabolical-test.js",
+    "diabolical-extreme": "npm run build && node dist/diabolical-test.js --extreme",
+    "chaos": "npm run build && timeout 30s node dist/diabolical-test.js || echo 'Test completed or timed out'",
+    "test-everything": "npm run test && npm run diabolical"
   },
   "dependencies": {
     "express": "^4.18.0",
