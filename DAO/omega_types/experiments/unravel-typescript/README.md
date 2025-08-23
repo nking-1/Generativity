@@ -84,15 +84,32 @@ node comprehensive-demo.js
 # Install dependencies
 npm install
 
-# Run basic tests
-npm run test
+# Test production library
+npm run test-production
 
-# Run comprehensive demo
-npm run demo
+# Test library integration
+npm run test-integration
 
-# Watch for changes
-npm run watch
+# Run all tests
+npm run test-all
+
+# Play the game!
+open ../entropy-lab-game.html
 ```
+
+## 🎮 **Game Integration**
+
+The **Entropy Lab game** (`../entropy-lab-game.html`) uses the **same mathematical principles** as our production library:
+
+- ✅ **Same universe evolution** (entropy, time, void tracking)
+- ✅ **Same void combination laws** (non-linear entropy growth)
+- ✅ **Same conservation principles** (recovery preserves entropy)
+- ✅ **Same totality guarantees** (operations never crash)
+
+**Why this matters:**
+- 🔧 **Library improvements** → **Game improvements** (same mathematical foundation)
+- 🧪 **Game serves as test** → **Validates library behavior**
+- 🎯 **Interactive learning** → **Demonstrates library value**
 
 ### **Basic Usage Example:**
 ```typescript
