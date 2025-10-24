@@ -369,3 +369,224 @@ Section ImpossibilityNumbers.
   
 End ImpossibilityNumbers.
 
+
+
+    Section VonNeumannFalse.
+      Context {Alpha : AlphaType}.
+
+      (* ================================================================ *)
+      (** ** Numbers as Types: Von Neumann Ordinals via Paradox *)
+      (* ================================================================ *)
+
+      (* Zero is the type of things satisfying omega_veil - necessarily empty *)
+      Definition ZeroT : Type := { a : Alphacarrier | omega_veil a }.
+
+      (* Zero has no inhabitants *)
+      Theorem zero_empty : ZeroT -> False.
+      Proof.
+        intros [a Ha].
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Ha).
+      Qed.
+
+      (* Successor creates a paradox type *)
+      Inductive SuccT (T : Type) : Type :=
+        | mk_paradox : T -> (T -> False) -> SuccT T.
+
+      (* Numbers are types *)
+      Definition OneT := SuccT ZeroT.
+      Definition TwoT := SuccT OneT.
+      Definition ThreeT := SuccT TwoT.
+
+      (* All number types are empty (uninhabited) *)
+      Theorem one_empty : OneT -> False.
+      Proof.
+        intro one.
+        destruct one as [z not_z].
+        (* z : ZeroT and not_z : ZeroT -> False *)
+        exact (not_z z).
+      Qed.
+
+      Theorem two_empty : TwoT -> False.
+      Proof.
+        intro two.
+        destruct two as [one not_one].
+        exact (not_one one).
+      Qed.
+
+      (* General theorem: all successor types are empty *)
+      Theorem succ_empty : forall T : Type, SuccT T -> False.
+      Proof.
+        intros T s.
+        destruct s as [t not_t].
+        exact (not_t t).
+      Qed.
+
+      (* ================================================================ *)
+      (** ** Building Natural Numbers as a Type Family *)
+      (* ================================================================ *)
+
+      (* Natural numbers as an inductive type indexing our paradox types *)
+      Inductive PNatT : Type :=
+        | ZT : PNatT
+        | ST : PNatT -> PNatT.
+
+      (* Map each PNatT to its corresponding paradox type *)
+      Fixpoint to_paradox_type (n : PNatT) : Type :=
+        match n with
+        | ZT => ZeroT
+        | ST m => SuccT (to_paradox_type m)
+        end.
+
+      (* All paradox types are empty *)
+      Theorem all_paradox_types_empty : forall n : PNatT,
+        to_paradox_type n -> False.
+      Proof.
+        intro n.
+        induction n.
+        - (* ZT case *)
+          apply zero_empty.
+        - (* ST case *)
+          intro s.
+          destruct s as [t not_t].
+          exact (not_t t).
+      Qed.
+
+      (* ================================================================ *)
+      (** ** Arithmetic on Paradox Types *)
+      (* ================================================================ *)
+
+      (* Addition: combine the paradox structures *)
+      Fixpoint addT (m n : PNatT) : PNatT :=
+        match m with
+        | ZT => n
+        | ST m' => ST (addT m' n)
+        end.
+
+      (* Multiplication: iterate the paradox *)
+      Fixpoint multT (m n : PNatT) : PNatT :=
+        match m with
+        | ZT => ZT
+        | ST m' => addT n (multT m' n)
+        end.
+
+      (* Addition preserves the paradox structure *)
+      Theorem add_preserves_emptiness : forall m n : PNatT,
+        to_paradox_type (addT m n) -> False.
+      Proof.
+        intros m n.
+        apply all_paradox_types_empty.
+      Qed.
+
+      (* ================================================================ *)
+      (** ** The Equivalence to Von Neumann Ordinals *)
+      (* ================================================================ *)
+
+      (* Von Neumann: 0 = ∅, 1 = {∅}, 2 = {∅, {∅}}, ... *)
+      (* Ours: 0 = omega_veil, 1 = paradox(0), 2 = paradox(1), ... *)
+
+      (* The key insight: both are building structure from emptiness *)
+      (* Von Neumann uses set membership, we use paradox construction *)
+
+      (* A "set" in our framework is a type *)
+      Definition SetT := Type.
+
+      (* The empty set is ZeroT *)
+      Definition empty_set : SetT := ZeroT.
+
+      (* The singleton {∅} is OneT - it "contains" zero via paradox *)
+      Definition singleton_empty : SetT := OneT.
+
+      (* In von Neumann ordinals, each number contains all smaller numbers *)
+      (* So we need a recursive membership relation *)
+      Fixpoint contains_vn (inner outer : PNatT) : Prop :=
+      match outer with
+      | ZT => False  (* Zero contains nothing *)
+      | ST m => (inner = m) \/ contains_vn inner m  
+        (* Successor contains its predecessor AND everything the predecessor contains *)
+      end.
+
+      (* This gives us the true von Neumann structure *)
+      Theorem von_neumann_structure : 
+      (* 0 = ∅ *)
+      (forall x, ~contains_vn x ZT) /\
+      (* 1 = {0} *)
+      (contains_vn ZT (ST ZT)) /\
+      (* 2 = {0, 1} *)
+      (contains_vn ZT (ST (ST ZT)) /\ contains_vn (ST ZT) (ST (ST ZT))).
+      Proof.
+      split; [|split; [|split]].
+      - (* 0 contains nothing *)
+        intros x. simpl. auto.
+      - (* 1 contains 0 *)
+        simpl. left. reflexivity.
+      - (* 2 contains 0 *)
+        simpl. right. left. reflexivity.
+      - (* 2 contains 1 *)
+        simpl. left. reflexivity.
+      Qed.
+
+      (* The crucial theorem: n+1 contains exactly 0 through n *)
+      Theorem von_neumann_characterization : forall n m : PNatT,
+      contains_vn m (ST n) <-> (m = n \/ contains_vn m n).
+      Proof.
+      intros n m.
+      simpl.
+      split; intro H; exact H.
+      Qed.
+
+      (* This perfectly mirrors von Neumann's n = {0, 1, ..., n-1} *)
+      
+      (* ================================================================ *)
+      (** ** The Peano Structure *)
+      (* ================================================================ *)
+      
+      (* Zero is not a successor *)
+      Theorem zero_not_succ : forall n : PNatT, ZT <> ST n.
+      Proof.
+        intros n H.
+        discriminate H.
+      Qed.
+      
+      (* Successor is injective *)
+      Theorem succ_injective_vn : forall m n : PNatT, 
+        ST m = ST n -> m = n.
+      Proof.
+        intros m n H.
+        injection H. auto.
+      Qed.
+      
+      (* Induction principle *)
+      Theorem nat_induction : forall (P : PNatT -> Prop),
+        P ZT ->
+        (forall n, P n -> P (ST n)) ->
+        forall n, P n.
+      Proof.
+        intros P HZ HS n.
+        induction n.
+        - exact HZ.
+        - apply HS. exact IHn.
+      Qed.
+      
+      (* The correspondence to von Neumann: *)
+      (* Von Neumann: n+1 = n ∪ {n} *)
+      (* Ours: (n+1)T = SuccT(nT) = type of paradoxes about nT *)
+      
+      (* Both build numbers from structured emptiness, *)
+      (* but ours uses type theory instead of set theory! *)
+      
+      (* Example: Two is literally the type of paradoxes about paradoxes about void *)
+      Example two_is_double_paradox : 
+        TwoT = SuccT (SuccT ZeroT).
+      Proof.
+        reflexivity.
+      Qed.
+      
+      (* And this type structure gives us computation *)
+      Example one_plus_one : 
+        addT (ST ZT) (ST ZT) = ST (ST ZT).
+      Proof.
+        reflexivity.
+      Qed.
+      
+      (* The numbers work, even though they're all impossible *)
+    End VonNeumannParadox.
