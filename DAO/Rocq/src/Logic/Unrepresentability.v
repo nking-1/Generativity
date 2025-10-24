@@ -67,7 +67,6 @@ Module Unrepresentability.
       unfold Diagonal.Alpha.diagonal_pred in Hdiag.
       unfold Diagonal.Main.diagonal in Hdiag.
       rewrite H_nA in Hdiag.
-      simpl in Hdiag.
       
       exact (Hdiag Hod).
     Qed.
@@ -197,6 +196,15 @@ Module Unrepresentability.
       split; [exact (godel_true alpha_enum embed) |].
       split; [exact (godel_unprovable alpha_enum enum_complete embed) | 
               exact (godel_unrefutable alpha_enum embed)].
+    Qed.
+
+    (** G is also false in Omega, which is why Alpha can't represent it, because Alpha is consistent *)
+    (* Omega proves G both ways and moves on *)
+    Theorem godel_false {Omega : OmegaType} {Alpha : AlphaType}
+      (alpha_enum : nat -> option (Alphacarrier -> Prop))
+      (embed : Alphacarrier -> Omegacarrier) :
+      ~Godel_Statement alpha_enum embed.
+    Proof.
     Qed.
     
   End Godel.

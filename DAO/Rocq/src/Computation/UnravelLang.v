@@ -16,6 +16,8 @@ Require Import Lia.
 Require Extraction.
 Require Import Strings.Ascii.
 Import ListNotations.
+Require Import ZArith.
+Open Scope Z_scope.
 
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
@@ -27,7 +29,7 @@ Require Import DAO.Theory.Impossibility.WaysOfNotExisting.
 Module UnravelLang.
 
   (* ================================================================ *)
-  (** ** Core Language Definition *)
+  (* Core Language Definition *)
   (* ================================================================ *)
   
   Module Core.
@@ -35,17 +37,24 @@ Module UnravelLang.
     (** Our expression language *)
     Inductive Expr : Type :=
       (* Values *)
-      | ENum : nat -> Expr                    (* Natural number *)
+      | ENum : Z -> Expr                      (* Integer *)
       | EVoid : Expr                          (* The void value *)
       | EBool : bool -> Expr                  (* Boolean *)
       
       (* Arithmetic - all operations are safe *)
       | EAdd : Expr -> Expr -> Expr           (* Addition *)
-      | ESub : Expr -> Expr -> Expr           (* Subtraction (saturating) *)
+      | ESub : Expr -> Expr -> Expr           (* Subtraction *)
       | EMul : Expr -> Expr -> Expr           (* Multiplication *)
       | EDiv : Expr -> Expr -> Expr           (* Division - void on div/0 *)
       | EMod : Expr -> Expr -> Expr           (* Modulo - void on mod 0 *)
       
+      (* Comparison Operators *)
+      | EEquals : Expr -> Expr -> Expr        (* Equality test *)
+      | ELessThan : Expr -> Expr -> Expr      (* Less than *)
+
+      (* Conditional *)
+      | EIf : Expr -> Expr -> Expr -> Expr    (* if-then-else *)
+
       (* Void operations *)
       | EIsVoid : Expr -> Expr                (* Test if expression is void *)
       | EIfVoid : Expr -> Expr -> Expr -> Expr (* If void then else *)
@@ -53,44 +62,39 @@ Module UnravelLang.
     
     (** Values our language evaluates to *)
     Inductive Value : Type :=
-      | VNum : nat -> Value
+      | VNum : Z -> Value
       | VBool : bool -> Value
       | VVoid : Value.  (* omega_veil as a runtime value *)
     
-    (** Check if a value is void *)
-    Definition is_void (v : Value) : bool :=
-      match v with
-      | VVoid => true
-      | _ => false
-      end.
-    
-    (** Extract nat from value, with default *)
-    Definition value_to_nat_default (v : Value) (default : nat) : nat :=
-      match v with
-      | VNum n => n
-      | _ => default
-      end.
-    
-    (** Extract bool from value, with default *)
-    Definition value_to_bool_default (v : Value) (default : bool) : bool :=
-      match v with
-      | VBool b => b
-      | _ => default
-      end.
-    
   End Core.
-  
+
   (* ================================================================ *)
-  (** ** Evaluation *)
+  (* Fuel Configuration *)
+  (* ================================================================ *)
+  
+  Module Config.
+    (** Fuel amounts for different contexts *)
+    Definition proof_fuel : nat := 10.    (* Small for proofs - prevents stack overflow *)
+    Definition default_fuel : nat := 100. (* Medium for examples *)
+    
+    (** Heat death thresholds *)
+    Definition proof_heat_death : nat := 10.
+    Definition default_heat_death : nat := 100.
+    Definition large_heat_death : nat := 1000.
+  End Config.
+
+  (* ================================================================ *)
+  (* Evaluation *)
   (* ================================================================ *)
   
   Module Eval.
     Import Core.
+    Import Config.
     
     (** Big-step evaluation - always total! *)
     Fixpoint eval (fuel : nat) (e : Expr) : Value :=
       match fuel with
-      | 0 => VVoid  (* Out of fuel = void (prevents infinite loops) *)
+      | O => VVoid  (* Out of fuel = void (prevents infinite loops) *)
       | S fuel' =>
           match e with
           | ENum n => VNum n
@@ -108,7 +112,7 @@ Module UnravelLang.
               
           | ESub e1 e2 =>
               match eval fuel' e1, eval fuel' e2 with
-              | VNum n1, VNum n2 => VNum (n1 - n2)  (* Saturating subtraction *)
+              | VNum n1, VNum n2 => VNum (n1 - n2)  (* TODO: Change, saturating subtraction *)
               | VVoid, _ => VVoid
               | _, VVoid => VVoid
               | _, _ => VVoid
@@ -163,7 +167,7 @@ Module UnravelLang.
     
     (** Evaluation with default fuel *)
     Definition eval_default (e : Expr) : Value :=
-      eval 1000 e.
+      eval default_fuel e.
     
   End Eval.
   
@@ -285,6 +289,7 @@ Module UnravelLang.
   Module WithVariables.
     Import Core.
     Import Eval.
+    Import Config.
     
     (** Extended expression language with variables *)
     Inductive ExprV : Type :=
@@ -400,7 +405,7 @@ Module UnravelLang.
     
     (** Evaluation with empty environment *)
     Definition evalV_empty (e : ExprV) : Value :=
-      evalV 1000 [] e.
+      evalV default_fuel [] e.
     
     (* ================================================================ *)
     (** ** Examples with Variables *)
@@ -527,6 +532,7 @@ Module UnravelLang.
   Module ThermodynamicUnravelLang.
     Import Core.
     Import WithVariables.
+    Import Config.
     
     (** Void now carries thermodynamic information *)
     Inductive VoidInfo : Type :=
@@ -712,7 +718,7 @@ Module UnravelLang.
     
     (** Helper to run with initial universe *)
     Definition evalT_initial (e : ExprV) : (ValueT * Universe) :=
-      evalT 1000 initial_universe [] e.
+      evalT default_fuel initial_universe [] e.
     
     (** Extract entropy from a value *)
     Definition value_entropy (v : ValueT) : nat :=
@@ -723,7 +729,7 @@ Module UnravelLang.
     
     (** Check if universe has reached heat death *)
     Definition is_heat_death (u : Universe) : bool :=
-      Nat.leb 100 u.(total_entropy).
+      Nat.leb default_heat_death u.(total_entropy).
 
     Module ThermodynamicProperties.
       
@@ -1024,7 +1030,7 @@ Module UnravelLang.
       
       (** Simple example that we can actually compute *)
       Example simple_entropy_increase :
-        let '(v, u) := evalT 10 initial_universe [] (EVDiv (EVNum 10) (EVNum 0)) in
+        let '(v, u) := evalT proof_fuel initial_universe [] (EVDiv (EVNum 10) (EVNum 0)) in
         u.(total_entropy) = 1 /\ u.(void_count) = 1.
       Proof.
         simpl.
@@ -1035,9 +1041,8 @@ Module UnravelLang.
       Example double_void_entropy :
         let prog := EVAdd (EVDiv (EVNum 10) (EVNum 0)) 
                           (EVDiv (EVNum 20) (EVNum 0)) in
-        let '(v, u) := evalT 10 initial_universe [] prog in
+        let '(v, u) := evalT proof_fuel initial_universe [] prog in
         u.(total_entropy) = 4 /\ u.(void_count) = 3.
-        (* 1 for first div/0, 1 for second div/0, 2 for combining them (1+1) *)
       Proof.
         simpl.
         split; reflexivity.
@@ -1190,8 +1195,8 @@ Module UnravelLang.
         (** Default recovers from void but doesn't prevent evaluation *)
         Theorem default_recovery_semantics :
           forall u env n,
-          let '(v1, u1) := evalT 100 u env (EVDiv (EVNum 1) (EVNum 0)) in
-          let '(v2, u2) := evalT 100 u env 
+          let '(v1, u1) := evalT default_fuel u env (EVDiv (EVNum 1) (EVNum 0)) in
+          let '(v2, u2) := evalT default_fuel u env 
             (EVDefault (EVDiv (EVNum 1) (EVNum 0)) (EVNum n)) in
           (* Both evaluate the division, so same entropy *)
           u1.(total_entropy) = u2.(total_entropy) /\
@@ -1210,9 +1215,9 @@ Module UnravelLang.
         (** Default prevents void PROPAGATION (the real conservation) *)
         Theorem default_prevents_propagation :
           forall u env,
-          let '(_, u_cascade) := evalT 100 u env 
+          let '(_, u_cascade) := evalT default_fuel u env 
             (EVAdd (EVDiv (EVNum 1) (EVNum 0)) (EVNum 5)) in
-          let '(_, u_stopped) := evalT 100 u env 
+          let '(_, u_stopped) := evalT default_fuel u env 
             (EVAdd (EVDefault (EVDiv (EVNum 1) (EVNum 0)) (EVNum 42)) (EVNum 5)) in
           (* Without default: void propagates, might create more entropy *)
           (* With default: void is caught, no propagation *)
@@ -1504,10 +1509,11 @@ Module UnravelLang.
   End FrameworkConnection.
 
   (* ================================================================ *)
-  (** ** The Bridge: Unravel IS Computational Physics *)
+  (** ** The Bridge: Unravel -> Computational Physics *)
   (* ================================================================ *)
 
   Module UnravelPhysicsBridge.
+    Import Config.
     Import Core.
     Import Eval.
     Import Properties.
@@ -1518,7 +1524,7 @@ Module UnravelLang.
     Import FrameworkConnection.
     Import ImpossibilityAlgebra Core.
     
-    (** THE MASTER THEOREM: Unravel IS computational thermodynamics *)
+    (** Unravel implements computational thermodynamics *)
     Theorem unravel_is_computational_thermodynamics :
       (* 1. Totality - no exceptions, ever *)
       (forall e : Expr, exists v : Value, eval_default e = v) /\
@@ -1561,7 +1567,7 @@ Module UnravelLang.
     Theorem programs_are_universes :
       forall prog : ExprV,
       exists (initial_state final_state : Universe),
-      let '(_, u) := evalT 1000 initial_state [] prog in
+      let '(_, u) := evalT default_fuel initial_state [] prog in
       (* Every program evolves a universe *)
       u = final_state /\
       (* With monotonic entropy *)
@@ -1571,24 +1577,24 @@ Module UnravelLang.
     Proof.
       intro prog.
       exists initial_universe.
-      exists (snd (evalT 1000 initial_universe [] prog)).
-      destruct (evalT 1000 initial_universe [] prog) as [v u] eqn:Heval.
+      exists (snd (evalT default_fuel initial_universe [] prog)).
+      destruct (evalT default_fuel initial_universe [] prog) as [v u] eqn:Heval.
       simpl.
       split; [|split].
       - reflexivity.
       - (* Entropy increases *)
-        pose proof (entropy_second_law 1000 initial_universe [] prog) as Hent.
+        pose proof (entropy_second_law default_fuel initial_universe [] prog) as Hent.
         rewrite Heval in Hent.
         exact Hent.
       - (* Time increases *)
-        pose proof (time_monotonic 1000 initial_universe [] prog) as Htime.
+        pose proof (time_monotonic default_fuel initial_universe [] prog) as Htime.
         rewrite Heval in Htime.
         exact Htime.
     Qed.
     
     (** Helper: Redefine heat death with lower threshold for proof *)
     Definition is_heat_death_provable (u : Universe) : bool :=
-      Nat.leb 10 u.(total_entropy).  (* Lower threshold of 10 instead of 100 *)
+      Nat.leb proof_heat_death u.(total_entropy).
 
     (** Heat death is computationally reachable *)
     Theorem computational_heat_death_provable :
@@ -1614,31 +1620,6 @@ Module UnravelLang.
     Qed.
     
   End UnravelPhysicsBridge.
-
-  (** The point we hope to have shown -- Unravel demonstrates that:
-      
-      1. Computation IS thermodynamics
-        - Evaluation increases entropy
-        - Void propagation is heat flow
-        - Default is Maxwell's demon
-      
-      2. Programming IS physics
-        - Programs are universes
-        - Functions are symmetry transformations
-        - Errors are entropy sources
-      
-      3. omega_veil IS everywhere
-        - In every undefined variable
-        - In every division by zero
-        - In every type error
-        - In every exhausted computation
-      
-      The DAO framework isn't just mathematical philosophy -
-      it's the blueprint for practical languages that compute
-      by exploring their own impossibility.
-      
-      Unravel doesn't model physics. Unravel IS physics.
-  *)
   
   (* ================================================================ *)
   (** ** Example Programs *)
@@ -1708,8 +1689,8 @@ Module UnravelLang.
     Import ThermodynamicUnravelLang.
     Import Examples.
     Import VariableExamples.
+    Import Config.
     
-    (** For extraction to Haskell *)
     Extraction Language Haskell.
     Set Extraction AutoInline.
     Extraction Blacklist Prelude.
@@ -1720,8 +1701,6 @@ Module UnravelLang.
     ["0" "(\n -> n Prelude.+ 1)"]
     "(\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))".
     Extract Inductive list => "[]" ["[]" "(:)"].
-    
-    (* FIX: Map Coq's string to Haskell's String *)
     Extract Inductive string => "Prelude.String" ["[]" "(:)"].
     
     (* Extract Constant WithVariables.lookup => "voidLookup".
@@ -1730,15 +1709,12 @@ Module UnravelLang.
     (* String equality *)
     Extract Constant String.eqb => "(Prelude.==)".
 
-    (* Map ascii to Char *)
     Extract Inductive ascii => "Prelude.Char" 
     ["(\\b0 b1 b2 b3 b4 b5 b6 b7 -> Data.Char.chr (Prelude.fromIntegral ((if b0 then 1 else 0) Prelude.+ (if b1 then 2 else 0) Prelude.+ (if b2 then 4 else 0) Prelude.+ (if b3 then 8 else 0) Prelude.+ (if b4 then 16 else 0) Prelude.+ (if b5 then 32 else 0) Prelude.+ (if b6 then 64 else 0) Prelude.+ (if b7 then 128 else 0))))"]
     "(\fAscii c -> fAscii (let n = Data.Char.ord c in (n `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 2) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 4) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 8) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 16) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 32) `Prelude.mod` 2 Prelude.== 1) ((n `Prelude.div` 64) `Prelude.mod` 2 Prelude.== 1) (n `Prelude.div` 128 Prelude.== 1)))".
 
     Extract Constant Nat.div => "(\n m -> n `Prelude.div` m)".
     Extract Constant Nat.modulo => "(\n m -> n `Prelude.mod` m)".
-    
-    (** Demo programs... rest stays the same **)
     
     Definition demo_division_chain : ExprV :=
       EVLet "x" (EVDiv (EVNum 100) (EVNum 10))
@@ -1776,10 +1752,10 @@ Module UnravelLang.
       end.
     
     Definition run_basic (e : ExprV) : Value :=
-      evalV 1000 [] e.
+      evalV default_fuel [] e.
     
     Definition run_thermo (e : ExprV) : (ValueT * Universe) :=
-      evalT 1000 initial_universe [] e.
+      evalT default_fuel initial_universe [] e.
     
     Definition test_programs : list ExprV :=
       [demo_division_chain;
@@ -1810,6 +1786,10 @@ Module UnravelLang.
       demo_recovery demo_void_check
       simple_let nested_let complex_with_vars
       chaos_generator
+
+      (* Configuration *)
+      Config.proof_fuel Config.default_fuel
+      Config.default_heat_death
       
       (* Helpers *)
       run_basic run_thermo test_programs

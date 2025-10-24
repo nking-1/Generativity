@@ -57,7 +57,7 @@ Instance inhabited_sum_left {A B} `{Inhabited A} : Inhabited (A + B) :=
   inl inhabitant.
 Instance inhabited_list {A} : Inhabited (list A) := nil.
 
-(* All Types can be an AlphaType *)
+(* All non-empty types can be an AlphaType *)
 Instance Alpha_universal (T : Type) `{Inhabited T} : AlphaType := {
   Alphacarrier := T;
   alpha_impossibility := exist _ (fun _ : T => False)
@@ -67,6 +67,36 @@ Instance Alpha_universal (T : Type) `{Inhabited T} : AlphaType := {
   alpha_not_empty := exist _ inhabitant I
 }.
 
+
+(* Let's demonstrate you can use something other than just False *)
+(* Natural numbers with "being less than zero" as the impossible predicate *)
+Definition nat_impossible_pred : nat -> Prop := fun n => n < 0.
+
+Lemma nat_impossible_empty : forall x : nat, ~ nat_impossible_pred x.
+Proof.
+  intro x.
+  unfold nat_impossible_pred.
+  apply Nat.nlt_0_r.
+Qed.
+
+Lemma nat_impossible_unique : 
+  forall Q : nat -> Prop,
+  (forall x : nat, ~ Q x) ->
+  (forall x : nat, Q x <-> nat_impossible_pred x).
+Proof.
+  intros Q HQ x.
+  split.
+  - intro H. exfalso. exact (HQ x H).
+  - intro H. exfalso. exact (nat_impossible_empty x H).
+Qed.
+
+Instance Alpha_nat_negative : AlphaType := {
+  Alphacarrier := nat;
+  alpha_impossibility := 
+    exist _ nat_impossible_pred
+      (conj nat_impossible_empty nat_impossible_unique);
+  alpha_not_empty := exist _ 0 I
+}.
 
 (* Extended examples below - we're just going crazy here for fun to *)
 (* see how far we can push the type system *)
@@ -384,298 +414,3 @@ Instance Alpha_code_universe : AlphaType := {
       (fun Q HQ c => conj (fun H => HQ c H) (fun H => False_ind _ H)));
   alpha_not_empty := exist _ code_unit I
 }.
-
-(* ============================================================ *)
-(*                    Theorems About the Hierarchy               *)
-(* ============================================================ *)
-
-(* Each level of the tower is distinct *)
-(* Lemma tower_levels_distinct@{u} : forall n m : nat,
-  n <> m ->
-  carrier (universe_tower@{u} n) <> carrier (universe_tower@{u} (S m)).
-Proof.
-  intros n m H_neq.
-  (* The carriers have different universe levels, so they can't be equal *)
-  simpl.
-  (* This would require more detailed proof about universe levels *)
-  admit.  (* The full proof would use universe level reasoning *)
-Admitted. *)
-
-(* The diagonal universe genuinely escapes *)
-(* Theorem diagonal_escapes@{u} : 
-  forall (enum : nat -> AlphaCarrier@{u}),
-  ~ exists (n : nat), 
-    carrier (enum n) = carrier (diagonal_universe enum).
-Proof.
-  intros enum [n H_eq].
-  (* The diagonal has universe level u+1, enum n has level u *)
-  (* They can't be equal due to universe inconsistency *)
-  (* Full proof would require universe level arithmetic *)
-  admit.
-Admitted. *)
-
-(* ============================================================ *)
-(*                    The Infinite Chase                         *)
-(* ============================================================ *)
-
-(* Add a new section: Concrete Ouroboros Demonstration *)
-
-(* Module ConcreteOuroboros.
-  
-  (* Let's run ouroboros on nat - starting with just omega_veil and one other predicate *)
-  Definition nat_predicates_at_stage : nat -> (nat -> Prop) -> Prop :=
-    fix stage n :=
-      match n with
-      | 0 => fun P => P = (fun _ => False) \/ P = (fun x => x = 0)
-      | S n' => fun P => 
-          stage n' P \/ 
-          P = (fun x => exists Q, stage n' Q /\ Q x)
-      end.
-  
-  (* Helper: the totality at each stage *)
-  Definition totality_at_stage (n : nat) : nat -> Prop :=
-    fun x => exists Q, nat_predicates_at_stage n Q /\ Q x.
-  
-  (* Show that stages are monotone (everything persists) *)
-  Lemma stage_monotone :
-    forall n P,
-    nat_predicates_at_stage n P ->
-    nat_predicates_at_stage (S n) P.
-  Proof.
-    intros n P H.
-    simpl. left. exact H.
-  Qed.
-  
-  (* Show growth: each stage adds something new *)
-  Lemma nat_ouroboros_grows :
-    forall n,
-    nat_predicates_at_stage (S n) (totality_at_stage n) /\
-    ~ nat_predicates_at_stage n (totality_at_stage n).
-  Proof.
-    intro n.
-    split.
-    - (* The totality appears at the next stage *)
-      simpl. right. reflexivity.
-    - (* The totality is not in the current stage - this would violate no_static_self_totality *)
-      (* For demonstration, we'll show this for stage 0 *)
-      destruct n.
-      + (* Stage 0: only has False and (= 0) *)
-        intro H.
-        simpl in H.
-        destruct H as [H | H].
-        * (* totality_at_stage 0 = False - impossible since it has witnesses *)
-          assert (exists x, totality_at_stage 0 x).
-          { exists 0. unfold totality_at_stage. 
-            exists (fun x => x = 0). split; [right; reflexivity | reflexivity]. }
-          destruct H0 as [x Hx].
-          rewrite H in Hx.
-          exact Hx.
-        * (* totality_at_stage 0 = (= 0) - also impossible *)
-          (* This would mean: (exists Q at stage 0, Q x) iff (x = 0) *)
-          (* But totality_at_stage 0 1 is false while 1 = 0 is false, so they differ *)
-          assert (totality_at_stage 0 0).
-          { unfold totality_at_stage.
-            exists (fun x => x = 0). split; [right; reflexivity | reflexivity]. }
-          rewrite H in H0.
-          (* Now we'd need to show they're different predicates *)
-          (* Let's admit this for now as it gets technical *)
-          admit.
-      + (* Inductive case - similar reasoning *)
-        admit.
-  Admitted.
-  
-  (* Concrete example: count predicates at each stage *)
-    Example stage_0_has_two :
-        nat_predicates_at_stage 0 (fun _ => False) /\
-        nat_predicates_at_stage 0 (fun x => x = 0).
-    Proof.
-        split.
-        - left. reflexivity.
-        - right. reflexivity.
-    Qed.
-
-  Example stage_0_has_two_admitted :
-    nat_predicates_at_stage 0 (fun _ => False) /\
-    nat_predicates_at_stage 0 (fun x => x = 0) /\
-    ~ nat_predicates_at_stage 0 (fun x => x = 1).
-  Proof.
-    split; [|split].
-    - left. reflexivity.
-    - right. reflexivity.
-    - (* This requires functional extensionality or a more careful proof *)
-      (* The functions (x = 1), False, and (x = 0) are all different *)
-      (* but proving this in Coq without extensionality is technical *)
-      admit.
-  Admitted.
-  
-  (* The totality of stage 0 *)
-  Example totality_0_holds_at_0 :
-    totality_at_stage 0 0.
-  Proof.
-    unfold totality_at_stage.
-    exists (fun x => x = 0).
-    split.
-    - right. reflexivity.
-    - reflexivity.
-  Qed.
-  
-  Example totality_0_not_at_1 :
-    ~ totality_at_stage 0 1.
-  Proof.
-    unfold totality_at_stage.
-    intros [Q [HQ H1]].
-    simpl in HQ.
-    destruct HQ as [HQ | HQ].
-    - rewrite HQ in H1. exact H1.
-    - rewrite HQ in H1. 
-      simpl in H1. discriminate.
-  Qed.
-  
-  (* Visualization: Stage 1 has stage 0 plus totality_0 *)
-  Example stage_1_contains_totality_0 :
-    nat_predicates_at_stage 1 (totality_at_stage 0).
-  Proof.
-    simpl. right. reflexivity.
-  Qed.
-  
-  (* We can even compute specific values *)
-  (* Definition compute_stages (max_stage : nat) : list (nat -> Prop) :=
-    (* This would enumerate all predicates up to max_stage *)
-    (* For now, just return a placeholder *)
-    [(fun _ => False); (fun x => x = 0); totality_at_stage 0]. *)
-  
-  (* The process never stops *)
-  Theorem ouroboros_infinite_on_nat :
-    forall n, exists P,
-    nat_predicates_at_stage (S n) P /\
-    ~ nat_predicates_at_stage n P.
-  Proof.
-    intro n.
-    exists (totality_at_stage n).
-    apply nat_ouroboros_grows.
-  Qed.
-  
-End ConcreteOuroboros.
-
-
-Module ConcreteOuroboros_Tagged.
-
-Inductive Tag : nat -> Type :=
-| TFalse : Tag 0
-| TZero  : Tag 0
-| TOne   : Tag 0
-| TKeep  : forall n, Tag n -> Tag (S n)
-| TTotal : forall n, Tag (S n).
-
-(* Mutual recursion: denote on t, totality on n *)
-Fixpoint denote (n:nat) (t:Tag n) {struct t} : nat -> Prop :=
-  match t with
-  | TFalse      => fun _ => False
-  | TZero       => fun x => x = 0
-  | TOne        => fun x => x = 1
-  | TKeep _ t'  => denote _ t'
-  | TTotal n'   => totality n'
-  end
-with totality (n:nat) {struct n} : nat -> Prop :=
-  fun x => exists (u : Tag n), denote _ u x.
-
-(* Stage membership via tags (pointwise ↔), unchanged in spirit *)
-Definition InStage (n:nat) (P:nat -> Prop) : Prop :=
-  exists t:Tag n, forall x, P x <-> denote n t x.
-
-(* Canonical totality predicate is just totality n now *)
-Definition totality_at_stage (n:nat) : nat -> Prop := totality n.
-
-(* Monotonicity via TKeep *)
-Lemma stage_monotone :
-  forall n P, InStage n P -> InStage (S n) P.
-Proof.
-  intros n P [t Heq]. exists (TKeep n t). intro x. simpl. apply Heq.
-Qed.
-
-(* Base separation: at level 0, no tag denotes the union {0,1} *)
-Lemma sep0 : forall t0 : Tag 0, exists x, totality 0 x /\ ~ denote 0 t0 x.
-Proof.
-  intros t0. destruct t0.
-  - (* TFalse *) exists 0. split; [now (exists TZero)| easy].
-  - (* TZero  *) exists 1. split; [now (exists TOne)| now intros ->].
-  - (* TOne   *) exists 0. split; [now (exists TZero)| now intros ->].
-Qed.
-
-(* Lift separation to any n: for any t:Tag n, there is an x in totality n not in t *)
-Lemma sepS :
-  forall n (t : Tag n), exists x, totality n x /\ ~ denote n t x.
-Proof.
-  induction n as [|n IH].
-  - apply sep0.
-  - intros t. (* t : Tag (S n) *)
-    (* t is either TKeep n u or TTotal n; handle by cases. *)
-    destruct t as [ (* impossible at S n *) | | | n' u | n'].
-    all: try discriminate.
-    + (* TKeep n u *)
-      destruct (IH u) as [x [Hin Hnot]]. exists x. split; [exact Hin| simpl; exact Hnot].
-    + (* TTotal n *)
-      (* For TTotal n, pick x separating some u:Tag n from union;
-         but union includes u, so contradiction; instead show directly:
-         totality (S n) ≡ totality n, so use IH on some carried tag. *)
-      (* A simple route: use u:=TZero at level 0, then carry it up with TKeep to level n. *)
-      (* Build a tag at level n that certainly holds at some x, then use IH on that tag. *)
-      destruct (IH (u:=TZero)) as [x [Hin Hnot]].
-      { (* TZero lives at level 0; we need a Tag n. Carry it up n times. *)
-        (* Define a helper to lift TZero: *)
-        revert x Hin Hnot. (* we’ll rebuild below using a small helper lemma if you prefer *)
-        admit. }
-Admitted.
-
-(* The key: totality isn’t representable at the same stage *)
-Lemma totality_not_in_stage :
-  forall n, ~ InStage n (totality n).
-Proof.
-  intros n [t Heq]. destruct (sepS n t) as [x [Hin Hnot]].
-  specialize (Heq x). destruct Heq as [H1 H2]. apply Hnot. apply H2. exact Hin.
-Qed.
-
-(* The new thing at S n is exactly totality n, represented by TTotal n *)
-Lemma in_next_totality :
-  forall n, InStage (S n) (totality n).
-Proof.
-  intros n. exists (TTotal n). intro x. reflexivity.
-Qed.
-
-Theorem ouroboros_infinite_on_nat :
-  forall n, exists P, InStage (S n) P /\ ~ InStage n P.
-Proof.
-  intro n. exists (totality n). split.
-  - apply in_next_totality.
-  - apply totality_not_in_stage.
-Qed.
-
-End ConcreteOuroboros_Tagged. *)
-
-
-(* ============================================================ *)
-(*                    Demonstration                              *)
-(* ============================================================ *)
-(* 
-(* Example: Build a small tower *)
-Definition level_0@{u} := universe_tower@{u} 0.
-Definition level_1@{u} := universe_tower@{u} 1.  
-Definition level_2@{u} := universe_tower@{u} 2.
-
-(* Example: Create a diagonal over the first 3 levels *)
-Definition my_enum@{u} (n : nat) : AlphaCarrier@{u} :=
-  match n with
-  | 0 => level_0
-  | 1 => level_0  (* Repeat for simplicity *)
-  | _ => level_0
-  end.
-
-Definition diagonal_over_levels@{u} := diagonal_universe my_enum.
-
-(* Example: Universe of codes is self-aware *)
-Definition self_aware_universe := code_universe.
-(* It contains codes that can describe itself! *)
-
-(* Example: Product of universe with itself *)
-Definition universe_squared@{u} := product_universe level_0@{u} level_0@{u}.
-*)

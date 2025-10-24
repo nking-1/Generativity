@@ -1,6 +1,6 @@
 (** AlphaFirewall.v
-    Paradox firewalls in AlphaType. AlphaType prevents various paradoxes by making them collapse to omega_veil.
-    This is a good file to add more "Red Teaming" theorems to test the integrity of the system later. *)
+    Let's see if AlphaType is safer than OmegaType.
+    In AlphaType, paradoxes are in the same equivalence class as omega_veil. *)
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 From Stdlib Require Import Setoid.
@@ -174,7 +174,7 @@ Module ParadoxesEqualTheImpossible.
       exact Hnone.
     Qed.
     
-    (* Even more interesting: predicates that would make everything true
+    (* Predicates that would make everything true
       must be impossible *)
     Theorem alpha_trivializing_equals_impossible :
       forall P : Alphacarrier -> Prop,
@@ -201,7 +201,7 @@ Module ParadoxesEqualTheImpossible.
       exact Hempty.
     Qed.
     
-    (* The key theorem: In AlphaType, all paradoxes are the same paradox *)
+    (* In AlphaType, all paradoxes are the same paradox *)
     Theorem alpha_all_paradoxes_are_one :
       forall P Q : Alphacarrier -> Prop,
       (forall x, ~ P x) ->
@@ -214,7 +214,7 @@ Module ParadoxesEqualTheImpossible.
       - intro Qx. destruct (HQ x Qx).
     Qed.
     
-    (* Therefore: there's only one way to be impossible in AlphaType *)
+    (* Therefore: there's only one impossible predicate in AlphaType *)
     Theorem alpha_impossibility_is_unique :
       forall P : Alphacarrier -> Prop,
       (forall x, ~ P x) <->
@@ -321,12 +321,40 @@ Module ParadoxesAreFalse.
       apply all_paradoxes_are_false.
       exact Hempty.
     Qed.
+
+    (* Impossible predicates form a singleton set *)
+    Theorem impossible_predicates_unique :
+      forall P Q : Alphacarrier -> Prop,
+      (forall x, ~ P x) ->
+      (forall x, ~ Q x) ->
+      (forall x, P x <-> Q x).
+    Proof.
+      intros P Q HP HQ x.
+      split; intro H.
+      - exfalso. exact (HP x H).
+      - exfalso. exact (HQ x H).
+    Qed.
+    
+    (* The "nothing" case of circular predicates is omega_veil *)
+    Theorem circular_nothing_is_omega :
+      forall P : Alphacarrier -> Prop,
+      alpha_circular_predicate P ->
+      (forall x, ~ P x) ->
+      (forall x, P x <-> omega_veil x).
+    Proof.
+      intros P Hcirc Hempty.
+      apply AlphaProperties.Core.omega_veil_unique.
+      exact Hempty.
+    Qed.
   End PAF.
 End ParadoxesAreFalse.
 
 
-(** Even more directly: omega_veil IS the constant False function *)
-(* We do need functional extensionality for this *)
+(** Even more directly: omega_veil IS the constant False function 
+    through functional extensionality. Note: We will be working
+    under the intensional philosophy almost everywhere else in this framework,
+    because for us, different ways of expressing False will matter, as you
+    can see from how many ways we found to express "False" already. *)
 Require Import Coq.Logic.FunctionalExtensionality.
 Require Import Coq.Logic.PropExtensionality.
 Module OmegaVeilEqualsFalse.

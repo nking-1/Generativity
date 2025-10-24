@@ -349,9 +349,7 @@ End EmergentGenerative.
 
 
 (* Shows how theological questions could be mapped 
-   to the self-generating system that results from Godelian incompleteness. 
-   In the author's opinion, GenerativeType seems much more intuitive
-   for doing metaphysics in Rocq, though. *)
+   to the self-generating system that results from Godelian incompleteness. *)
 Module EmergentTheology.
   (* Import definitions *)
   Definition stage_collection (Alpha : AlphaType) (a b : Alphacarrier) := 

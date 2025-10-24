@@ -247,6 +247,7 @@ The library is designed for correctness and insight rather than raw speed. Typic
 - API endpoints that always return useful responses
 - Game logic that never breaks player experience
 - Scientific computing with numerical stability guarantees
+- Any situation where you need high availability and reliability
 
 ## License
 
