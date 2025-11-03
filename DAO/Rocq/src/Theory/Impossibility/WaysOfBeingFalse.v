@@ -12,8 +12,6 @@
     Alpha gets consistency through being able to prove what must be False.
     Omega gets completeness through being able to prove everything True.
     Knowledge on the boundary between Alpha and Omega is undecidable.
-    
-    Summary: Alpha always has a path to False. Omega always has a path to True.
 *)
 (** Modal Structure from Impossibility:
     
@@ -107,7 +105,6 @@ Require Import DAO.Logic.Paradox.AlphaFirewall.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
-Require Import DAO.Logic.AlphaTernary.
 From Stdlib Require Import ZArith.
 From Stdlib Require Import Lia.
 
