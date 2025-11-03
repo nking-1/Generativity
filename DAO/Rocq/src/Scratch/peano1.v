@@ -243,6 +243,28 @@ Proof.
     reflexivity.
 Qed.
 
+(* Now prove boundaries as theorems from our positive axioms *)
+Theorem impossible_O_equals_S : forall n : nat, (O = S n) -> False.
+Proof.
+  intros n H.
+  apply (O_not_S n H).
+Qed.
+
+Theorem impossible_S_collision : 
+  forall n m : nat, (S n = S m /\ n <> m) -> False.
+Proof.
+  intros n m [Heq Hneq].
+  apply Hneq.
+  apply (S_injective n m Heq).
+Qed.
+
+Theorem impossible_add_O_neq : forall n : nat, (n + O <> n) -> False.
+Proof.
+  intros n H.
+  apply H.
+  apply add_O_r.
+Qed.
+
 (* Summary of what we've proven! *)
 (** 
    We've built up basic arithmetic from axioms and proven:

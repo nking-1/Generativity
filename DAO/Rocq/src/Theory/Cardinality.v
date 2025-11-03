@@ -110,6 +110,7 @@ Proof.
 Qed.
 
 
+(* Conceptually, "The first type is larger than the second type" *)
 Parameter strictly_larger : Type -> Type -> Prop.
 
 Theorem Omega_contains_set_larger_than_itself :
