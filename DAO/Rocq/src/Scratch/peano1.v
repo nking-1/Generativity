@@ -264,15 +264,3 @@ Proof.
   apply H.
   apply add_O_r.
 Qed.
-
-(* Summary of what we've proven! *)
-(** 
-   We've built up basic arithmetic from axioms and proven:
-   - Addition is commutative and associative
-   - 0 is the identity for addition
-   - Multiplication is commutative and associative  
-   - Multiplication distributes over addition
-   - Basic properties about successors and zero
-   
-   All from just 6 axioms about natural numbers!
-*)

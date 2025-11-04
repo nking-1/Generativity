@@ -1,10 +1,7 @@
 (** AlphaProperties.v
     
     Properties of AlphaType, showing how everything emerges from
-    the unique impossible predicate (omega_veil).
-    
-    Key insight: We can bootstrap inhabitants and distinction from
-    the structure of impossibility itself. *)
+    the unique impossible predicate (omega_veil). *)
 
 Require Import DAO.Core.AlphaType.
 

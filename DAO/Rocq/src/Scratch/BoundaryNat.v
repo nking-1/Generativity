@@ -1,3 +1,6 @@
+Require Import DAO.Core.AlphaType.
+Require Import DAO.Core.AlphaProperties.
+
 (* ================================================================ *)
 (** * BoundaryNat: The Interface *)
 
@@ -26,8 +29,28 @@ Class BoundaryNat := {
       (forall n, P n -> P (succ n)) ->
       forall n, (~ P n) -> False;
   
-  (* Non-emptiness *)
-  boundary_not_empty : exists x : carrier, True
+  (* Non-emptiness - changed from exists to sig *)
+  boundary_not_empty : { x : carrier | True }
+}.
+
+Instance BoundaryNat_is_AlphaType (BN : BoundaryNat) : AlphaType := {
+  Alphacarrier := BN.(carrier);
+  
+  alpha_impossibility := exist _ 
+    (fun x : BN.(carrier) => BN.(zero) = BN.(succ) x)
+    (conj
+      BN.(boundary_zero_not_succ)
+      (fun (Q : BN.(carrier) -> Prop) 
+           (HQ : forall x, ~ Q x) 
+           (x : BN.(carrier)) =>
+        conj
+          (fun (HQx : Q x) => match HQ x HQx with end)
+          (fun (Heq : BN.(zero) = BN.(succ) x) =>
+            match BN.(boundary_zero_not_succ) x Heq with end)
+      )
+    );
+  
+  alpha_not_empty := BN.(boundary_not_empty)
 }.
 
 (* ================================================================ *)
@@ -577,7 +600,7 @@ Instance StandardNat : BoundaryNat := {
     (* Induction principle *)
     Hn (nat_ind P H0 HS n);
   
-  boundary_not_empty := ex_intro _ 0 I
+  boundary_not_empty := exist _ 0 I
 }.
 
 
@@ -654,7 +677,7 @@ Instance ListNat : BoundaryNat := {
       | tt => HS l' IH 
       end) n);
   
-  boundary_not_empty := ex_intro _ nil I
+  boundary_not_empty := exist _ nil I
 }.
 
 (* Helper lemma for list addition *)
@@ -800,15 +823,97 @@ Proof.
 Qed.
 
 
+
 (* ================================================================ *)
-(** * Instance 3: Binary natural numbers *)
+(** * Instance 3: Even natural numbers *)
+
+Require Import Arith.
+
+(* Even numbers represented as their half-value
+   Carrier value n represents the even number 2n
+   So: 0 represents 0, 1 represents 2, 2 represents 4, etc.
+   
+   This makes the structure isomorphic to standard nat,
+   but with different semantic interpretation. *)
+
+Instance EvenNat : BoundaryNat := {
+  carrier := nat;
+  zero := 0;              (* represents 2*0 = 0 *)
+  succ := S;              (* succ n represents 2*(n+1) = 2n+2 *)
+  
+  boundary_zero_not_succ := fun n H =>
+    (* 0 = S n is impossible in standard nat *)
+    match H in _ = s return match s with 0 => True | S _ => False end with
+    | eq_refl => I
+    end;
+  
+  boundary_succ_injective := fun n m H =>
+    (* S n = S m /\ n <> m is impossible *)
+    let (Heq, Hneq) := H in
+    Hneq (f_equal pred Heq);
+  
+  boundary_induction := fun P H0 HS n Hn =>
+    (* Standard nat induction works since every nat is reachable *)
+    Hn (nat_ind P H0 HS n);
+  
+  boundary_not_empty := exist _ 0 I
+}.
+
+(* Addition for even numbers: adding half-values *)
+Instance EvenNatAdd : BoundaryNatWithAdd EvenNat := {
+  add := Nat.add;
+  
+  boundary_add_zero := fun n H =>
+    H (Nat.add_0_r n);
+  
+  boundary_add_succ := fun n m H =>
+    H (Nat.add_succ_r n m)
+}.
+
+(* Multiplication for even numbers: multiplying half-values *)
+Instance EvenNatMul : BoundaryNatWithMul EvenNat EvenNatAdd := {
+  mul := Nat.mul;
+  
+  boundary_mul_zero := fun n H =>
+    H (Nat.mul_0_r n);
+  
+  boundary_mul_succ := fun n m H =>
+    H (Nat.mul_succ_r n m)
+}.
+
+(* ================================================================ *)
+(** * Demonstrate that theorems work for EvenNat *)
+
+Example even_add_comm :
+  forall n m : nat, (n + m <> m + n) -> False.
+Proof.
+  apply (@generic_add_comm EvenNat EvenNatAdd).
+Qed.
+
+Example even_mul_comm :
+  forall n m : nat, (n * m <> m * n) -> False.
+Proof.
+  apply (@generic_mul_comm EvenNat EvenNatAdd EvenNatMul).
+Qed.
+
+Example even_mul_distrib :
+  forall n m p : nat, (n * (m + p) <> n * m + n * p) -> False.
+Proof.
+  apply (@generic_mul_distrib_l EvenNat EvenNatAdd EvenNatMul).
+Qed.
+
+
+
+
+(* ================================================================ *)
+(** * not yet working: Binary natural numbers *)
 
 (* Binary representation: 
    - BZ is zero
    - B0 n is 2n (shift left, add 0)
    - B1 n is 2n+1 (shift left, add 1)
 *)
-Inductive BinNat :=
+(* Inductive BinNat :=
   | BZ : BinNat
   | B0 : BinNat -> BinNat
   | B1 : BinNat -> BinNat.
@@ -829,22 +934,42 @@ Proof.
 Qed.
 
 
-(* Successor is injective *)
 Lemma bin_succ_injective : forall n m, 
   bin_succ n = bin_succ m -> n = m.
 Proof.
   induction n as [|n' IH|n' IH]; intros m H.
-  - (* n = BZ *)
-    destruct m as [|m'|m']; simpl in H; try discriminate H.
-    + reflexivity.
-    + injection H as H. symmetry. exact H.
-  - (* n = B0 n' *)
-    destruct m as [|m'|m']; simpl in H; try discriminate H.
-    injection H as H. subst. reflexivity.
-  - (* n = B1 n' *)
-    destruct m as [|m'|m']; simpl in H; try discriminate H.
-    injection H as H.
-    f_equal.
-    apply IH.
-    exact H.
-Qed.
+  - (* n = BZ, so bin_succ BZ = B1 BZ *)
+    destruct m as [|m'|m']; simpl in H.
+    + (* m = BZ, so bin_succ BZ = B1 BZ *)
+      reflexivity.
+    + (* m = B0 m', so bin_succ (B0 m') = B1 m' *)
+      (* We have B1 BZ = B1 m', so BZ = m' *)
+      injection H as H.
+      (* But we need BZ = B0 m', which contradicts BZ = m' *)
+      (* Actually, this means m' must be BZ *)
+      subst m'. reflexivity.
+    + (* m = B1 m', so bin_succ (B1 m') = B0 (bin_succ m') *)
+      (* We have B1 BZ = B0 (bin_succ m'), which is impossible *)
+      discriminate H.
+      
+  - (* n = B0 n', so bin_succ (B0 n') = B1 n' *)
+    destruct m as [|m'|m']; simpl in H.
+    + (* m = BZ, impossible: B1 n' = B1 BZ *)
+      injection H as H. subst n'. reflexivity.
+    + (* m = B0 m', so B1 n' = B1 m' *)
+      injection H as H. subst m'. reflexivity.
+    + (* m = B1 m', impossible: B1 n' = B0 (bin_succ m') *)
+      discriminate H.
+      
+  - (* n = B1 n', so bin_succ (B1 n') = B0 (bin_succ n') *)
+    destruct m as [|m'|m']; simpl in H.
+    + (* m = BZ, impossible *)
+      discriminate H.
+    + (* m = B0 m', impossible *)
+      discriminate H.
+    + (* m = B1 m', so B0 (bin_succ n') = B0 (bin_succ m') *)
+      injection H as H.
+      f_equal.
+      apply IH.
+      exact H.
+Qed. *)
