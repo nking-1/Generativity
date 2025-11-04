@@ -904,6 +904,117 @@ Qed.
 
 
 
+(* ================================================================ *)
+(** * Instance 4: Functions from unit to nat *)
+
+From Stdlib Require Import FunctionalExtensionality.
+
+(* Numbers as constant functions from unit *)
+Definition FunctionNat : Type := unit -> nat.
+
+Definition fn_zero : FunctionNat := fun _ => 0.
+Definition fn_succ (f : FunctionNat) : FunctionNat := fun _ => S (f tt).
+
+(* Extract the underlying nat value *)
+Definition fn_value (f : FunctionNat) : nat := f tt.
+
+(* Zero is not a successor *)
+Lemma fn_zero_not_succ : forall f : FunctionNat,
+  fn_zero = fn_succ f -> False.
+Proof.
+  intros f H.
+  (* Apply functional extensionality *)
+  assert (H' : fn_value fn_zero = fn_value (fn_succ f)).
+  { unfold fn_value. rewrite H. reflexivity. }
+  unfold fn_value, fn_zero, fn_succ in H'.
+  simpl in H'.
+  discriminate H'.
+Qed.
+
+(* Successor is injective *)
+Lemma fn_succ_injective : forall f g : FunctionNat,
+  fn_succ f = fn_succ g -> f = g.
+Proof.
+  intros f g H.
+  apply functional_extensionality.
+  intro u.
+  destruct u.
+  (* Need to show f tt = g tt *)
+  assert (H' : fn_value (fn_succ f) = fn_value (fn_succ g)).
+  { unfold fn_value. rewrite H. reflexivity. }
+  unfold fn_value, fn_succ in H'.
+  injection H' as H'.
+  exact H'.
+Qed.
+
+(* Induction via underlying nat *)
+Lemma fn_nat_ind : forall P : FunctionNat -> Prop,
+  P fn_zero ->
+  (forall f, P f -> P (fn_succ f)) ->
+  forall f, P f.
+Proof.
+  intros P H0 HS f.
+  (* Convert to induction on the value *)
+  remember (fn_value f) as n.
+  generalize dependent f.
+  induction n as [|n' IHn'].
+  - intros f Hf.
+    (* f represents 0 *)
+    assert (f = fn_zero).
+    { apply functional_extensionality. intro u. destruct u.
+      unfold fn_value, fn_zero in Hf. simpl in Hf.
+      symmetry. exact Hf. }
+    subst. exact H0.
+  - intros f Hf.
+    (* f represents S n', so it's fn_succ of something *)
+    assert (exists g, f = fn_succ g /\ fn_value g = n').
+    { exists (fun _ => n').
+      split.
+      - apply functional_extensionality. intro u. destruct u.
+        unfold fn_succ, fn_value in Hf. simpl in Hf. simpl.
+        symmetry. exact Hf.
+      - unfold fn_value. reflexivity. }
+    destruct H as [g [Hfg Hgval]].
+    subst f.
+    apply HS.
+    apply IHn'.
+    symmetry.
+    exact Hgval.
+Qed.
+
+Instance FunctionNatInstance : BoundaryNat := {
+  carrier := FunctionNat;
+  zero := fn_zero;
+  succ := fn_succ;
+  
+  boundary_zero_not_succ := fn_zero_not_succ;
+  
+  boundary_succ_injective := fun f g H =>
+    let (Heq, Hneq) := H in
+    Hneq (fn_succ_injective f g Heq);
+  
+  boundary_induction := fun P H0 HS f Hn =>
+    Hn (fn_nat_ind P H0 HS f);
+  
+  boundary_not_empty := exist _ fn_zero I
+}.
+
+(* Addition *)
+Definition fn_add (f g : FunctionNat) : FunctionNat :=
+  fun _ => Nat.add (f tt) (g tt).
+
+Instance FunctionNatAdd : BoundaryNatWithAdd FunctionNatInstance := {
+  add := fn_add;
+  
+  boundary_add_zero := fun f H =>
+    H (functional_extensionality (fn_add f fn_zero) f
+      (fun u => match u with tt => Nat.add_0_r (f tt) end));
+  
+  boundary_add_succ := fun f g H =>
+    H (functional_extensionality (fn_add f (fn_succ g)) (fn_succ (fn_add f g))
+      (fun u => match u with tt => Nat.add_succ_r (f tt) (g tt) end))
+}.
+
 
 (* ================================================================ *)
 (** * not yet working: Binary natural numbers *)
