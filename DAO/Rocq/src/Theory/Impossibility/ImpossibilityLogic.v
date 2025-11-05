@@ -346,6 +346,10 @@ Module ImpossibilityLogic.
   
   (* ================================================================ *)
   (** ** Omega Oracles *)
+  (** Note: Omega witnesses any proposition,
+      so it doesn't meet the classical idea of an oracle being something
+      that answers either definitely true or definitely false. Omega can even
+      witness paradoxes like P /\ ~P, which Alpha cannot. *)
   Module OmegaOracles.
     Import ThreeValued.
     
