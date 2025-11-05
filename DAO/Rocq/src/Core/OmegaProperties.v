@@ -162,7 +162,17 @@ Module OmegaProperties.
         exact Hz.
     Qed.
 
-    Theorem no_constraints_iff_constraints_exist {Omega : OmegaType} :
+    (** The Paradox of Omega: No Constraints ↔ Constraints Must Exist
+        
+        Omega is trapped in a necessary paradox:
+        - Forward: Being unconstrained means you can produce anything, 
+                  including your own constraint
+        - Backward: Omega's completeness IS its constraint - it must witness
+                    even the impossible, including predicates that deny its own nature
+                    
+        The biconditional ~A ↔ A isn't a contradiction to avoid - 
+        it's what Omega necessarily IS. *)
+    Theorem omega_constraint_paradox {Omega : OmegaType} :
       ~ (exists R: Omegacarrier -> Prop, 
         forall z: Omegacarrier, R z -> False) <-> 
       (exists P: Omegacarrier -> Prop, 
@@ -170,25 +180,52 @@ Module OmegaProperties.
     Proof.
       split.
       
-      (* Forward: If no constraints exist, then a constraint exists *)
+      (* Forward: Freedom so complete it produces its own constraint.
+        If Omega has no constraints, it is so unconstrained that it can 
+        produce anything - including a constraint itself. *)
       - intro H_no_constraints.
-        (* By omega_completeness, (fun _ => False) has a witness *)
-        destruct (omega_completeness (fun _ : Omegacarrier => False)) as [x Hx].
-        (* But this means we have a constraint! *)
+        (* The constraint we produce: the predicate (fun _ => False) 
+          which should have no witnesses *)
         exfalso.
         apply H_no_constraints.
-        exists (fun _ => False).
+        exists (fun _ : Omegacarrier => False).
         intros z Hz.
         exact Hz.
       
-      (* Backward: If a constraint exists, then no constraints exist *)
+      (* Backward: Omega's completeness IS its constraint.
+        If a constraint exists (something impossible), Omega must witness it
+        by completeness. This forces Omega to prove "no constraints exist"
+        even while satisfying the constraint. Omega must prove its own negation. *)
       - intros [P HP].
-        (* We have P that's impossible (forall x, P x -> False) *)
-        (* But by omega_completeness, P has a witness *)
+        (* P is supposed to be impossible: forall x, P x -> False *)
+        (* But Omega's constraint (completeness) forces it to have a witness *)
         destruct (omega_completeness P) as [x Px].
-        (* This is a contradiction *)
+        (* Omega satisfies the impossible, thus proving constraints don't exist
+          by making the impossible possible. This is Omega's trap. *)
         exfalso.
         exact (HP x Px).
+    Qed.
+
+    (** Corollary: Omega must simultaneously affirm and deny constraint.
+        This is not a flaw - this IS Omega. *)
+    Theorem omega_is_self_negation {Omega : OmegaType} :
+      (~ (exists R: Omegacarrier -> Prop, forall z: Omegacarrier, R z -> False)) /\
+      (exists P: Omegacarrier -> Prop, forall x: Omegacarrier, P x -> False).
+    Proof.
+      split.
+      
+      (* Left: No constraints exist (vacuously, from explosion) *)
+      - intros [R HR].
+        (* By omega_completeness, R must have a witness *)
+        destruct (omega_completeness R) as [x Rx].
+        (* But R x -> False *)
+        exact (HR x Rx).
+      
+      (* Right: A constraint exists (the predicate False, which has a witness in Omega) *)
+      - destruct (omega_completeness (fun _ : Omegacarrier => False)) as [x Hx].
+        exists (fun _ : Omegacarrier => False).
+        intros z Hz.
+        exact Hz.
     Qed.
     
   End Characterization.
