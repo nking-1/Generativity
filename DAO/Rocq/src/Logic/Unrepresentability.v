@@ -205,7 +205,8 @@ Module Unrepresentability.
       (embed : Alphacarrier -> Omegacarrier) :
       ~Godel_Statement alpha_enum embed.
     Proof.
-    Qed.
+      (* TODO: Fill this out *)
+    Admitted.
     
   End Godel.
 

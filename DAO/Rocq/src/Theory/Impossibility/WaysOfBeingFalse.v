@@ -84,7 +84,7 @@ Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
 From Stdlib Require Import ZArith.
 From Stdlib Require Import Lia.
 
-Module WaysOfNotExisting.
+Module WaysOfBeingFalse.
 
   (* ================================================================ *)
   (** ** Every Alphacarrier can be used for contradiction.            *)
@@ -860,4 +860,4 @@ Module WaysOfNotExisting.
     End FunctionConstruction.
   End Functions.
 
-End WaysOfNotExisting.
+End WaysOfBeingFalse.

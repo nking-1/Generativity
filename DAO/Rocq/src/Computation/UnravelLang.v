@@ -24,7 +24,7 @@ Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
 Require Import DAO.Theory.Impossibility.FalseThermodynamics.
 Require Import DAO.Theory.Impossibility.ParadoxNumbers.
-Require Import DAO.Theory.Impossibility.WaysOfNotExisting.
+Require Import DAO.Theory.Impossibility.WaysOfBeingFalse.
 
 Module UnravelLang.
 
@@ -142,6 +142,34 @@ Module UnravelLang.
               | VVoid, _ => VVoid
               | _, VVoid => VVoid
               | _, _ => VVoid
+              end
+
+          (* Comparison Operators *)
+          | EEquals e1 e2 =>
+              match eval fuel' e1, eval fuel' e2 with
+              | VNum n1, VNum n2 => VBool (n1 =? n2)%Z
+              | VBool b1, VBool b2 => VBool (Bool.eqb b1 b2)
+              | VVoid, VVoid => VBool true
+              | VVoid, _ => VVoid  (* Void propagates *)
+              | _, VVoid => VVoid
+              | _, _ => VVoid      (* Type mismatch → void *)
+              end
+              
+          | ELessThan e1 e2 =>
+              match eval fuel' e1, eval fuel' e2 with
+              | VNum n1, VNum n2 => VBool (n1 <? n2)%Z
+              | VVoid, _ => VVoid  (* Void propagates *)
+              | _, VVoid => VVoid
+              | _, _ => VVoid      (* Type error → void *)
+              end
+
+          (* Conditional *)
+          | EIf cond then_branch else_branch =>
+              match eval fuel' cond with
+              | VBool true => eval fuel' then_branch
+              | VBool false => eval fuel' else_branch
+              | VVoid => VVoid     (* Void condition → void *)
+              | _ => VVoid         (* Type error → void *)
               end
           
           (* Void operations *)
@@ -273,8 +301,8 @@ Module UnravelLang.
       eval_default e = VVoid.
     Proof.
       intro e.
-      destruct (eval_default e).
-      - left. exists n. reflexivity.
+      destruct (eval_default e) eqn:Heval.
+      - left. exists z. reflexivity.  (* Changed n to z *)
       - right. left. exists b. reflexivity.
       - right. right. reflexivity.
     Qed.
@@ -294,7 +322,7 @@ Module UnravelLang.
     (** Extended expression language with variables *)
     Inductive ExprV : Type :=
       (* All the existing constructors, lifted *)
-      | EVNum : nat -> ExprV
+      | EVNum : Z -> ExprV
       | EVVoid : ExprV
       | EVBool : bool -> ExprV
       | EVAdd : ExprV -> ExprV -> ExprV
@@ -415,26 +443,26 @@ Module UnravelLang.
       
       (** Simple let binding *)
       Definition simple_let : ExprV :=
-        EVLet "x" (EVNum 10)
-          (EVAdd (EVVar "x") (EVNum 5)).  (* let x = 10 in x + 5 *)
+        EVLet "x" (EVNum 10%Z)
+          (EVAdd (EVVar "x") (EVNum 5%Z)).  (* let x = 10 in x + 5 *)
       
       Example simple_let_result :
-        evalV_empty simple_let = VNum 15.
+        evalV_empty simple_let = VNum 15%Z.
       Proof. reflexivity. Qed.
       
       (** Nested let bindings *)
       Definition nested_let : ExprV :=
-        EVLet "x" (EVNum 10)
-          (EVLet "y" (EVNum 20)
+        EVLet "x" (EVNum 10%Z)
+          (EVLet "y" (EVNum 20%Z)
             (EVAdd (EVVar "x") (EVVar "y"))).  (* let x = 10 in let y = 20 in x + y *)
       
       Example nested_let_result :
-        evalV_empty nested_let = VNum 30.
+        evalV_empty nested_let = VNum 30%Z.
       Proof. reflexivity. Qed.
       
       (** Undefined variable returns void *)
       Definition undefined_var : ExprV :=
-        EVAdd (EVVar "x") (EVNum 5).  (* x + 5, but x is undefined *)
+        EVAdd (EVVar "x") (EVNum 5%Z).  (* x + 5, but x is undefined *)
       
       Example undefined_var_result :
         evalV_empty undefined_var = VVoid.
@@ -442,8 +470,8 @@ Module UnravelLang.
       
       (** Void in let binding *)
       Definition void_binding : ExprV :=
-        EVLet "x" (EVDiv (EVNum 10) (EVNum 0))  (* x = 10/0 = void *)
-          (EVAdd (EVVar "x") (EVNum 5)).        (* x + 5 = void + 5 = void *)
+        EVLet "x" (EVDiv (EVNum 10%Z) (EVNum 0%Z))  (* x = 10/0 = void *)
+          (EVAdd (EVVar "x") (EVNum 5%Z)).        (* x + 5 = void + 5 = void *)
       
       Example void_binding_result :
         evalV_empty void_binding = VVoid.
@@ -451,33 +479,33 @@ Module UnravelLang.
       
       (** Shadowing *)
       Definition shadowing : ExprV :=
-        EVLet "x" (EVNum 10)
-          (EVLet "x" (EVNum 20)  (* Inner x shadows outer x *)
+        EVLet "x" (EVNum 10%Z)
+          (EVLet "x" (EVNum 20%Z)  (* Inner x shadows outer x *)
             (EVVar "x")).
       
       Example shadowing_result :
-        evalV_empty shadowing = VNum 20.
+        evalV_empty shadowing = VNum 20%Z.
       Proof. reflexivity. Qed.
       
       (** Recovery from undefined variable *)
       Definition recover_undefined : ExprV :=
-        EVDefault (EVVar "undefined_var") (EVNum 42).
+        EVDefault (EVVar "undefined_var") (EVNum 42%Z).
       
       Example recover_undefined_result :
-        evalV_empty recover_undefined = VNum 42.
+        evalV_empty recover_undefined = VNum 42%Z.
       Proof. reflexivity. Qed.
       
       (** Complex expression with variables *)
       Definition complex_with_vars : ExprV :=
-        EVLet "divisor" (EVNum 0)
-          (EVLet "result" (EVDiv (EVNum 100) (EVVar "divisor"))  (* 100/0 = void *)
+        EVLet "divisor" (EVNum 0%Z)
+          (EVLet "result" (EVDiv (EVNum 100%Z) (EVVar "divisor"))  (* 100/0 = void *)
             (EVDefault (EVVar "result") 
-              (EVLet "x" (EVNum 10)
-                (EVLet "y" (EVNum 32)
+              (EVLet "x" (EVNum 10%Z)
+                (EVLet "y" (EVNum 32%Z)
                   (EVAdd (EVVar "x") (EVVar "y")))))).  (* Default to 10 + 32 *)
       
       Example complex_with_vars_result :
-        evalV_empty complex_with_vars = VNum 42.
+        evalV_empty complex_with_vars = VNum 42%Z.
       Proof. reflexivity. Qed.
       
     End VariableExamples.
@@ -1267,11 +1295,11 @@ Module UnravelLang.
     Import ImpossibilityAlgebra Core.
     Import FalseThermodynamics.
     Import ParadoxNumbers ParadoxNaturals.
-    Import WaysOfNotExisting.IntensionalFoundation.
-    Import WaysOfNotExisting.Core.
-    Import WaysOfNotExisting.PatternEquivalence.
-    Import WaysOfNotExisting.ConstructionsOfFalse.
-    Import WaysOfNotExisting.ImpossibleAlgebra.
+    Import WaysOfBeingFalse.IntensionalFoundation.
+    Import WaysOfBeingFalse.Core.
+    Import WaysOfBeingFalse.PatternEquivalence.
+    Import WaysOfBeingFalse.ConstructionsOfFalse.
+    Import WaysOfBeingFalse.ImpossibleAlgebra.
     
     Section ConnectionToPatterns.
       Context {Alpha : AlphaType}.

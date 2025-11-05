@@ -1,9 +1,40 @@
 (* AlphaInstances.v - A zoo of AlphaType instances *)
+Require Import DAO.Core.MinimalAlphaType.
 Require Import DAO.Core.AlphaType.
 Require Import Stdlib.Init.Datatypes.
 Require Import Stdlib.Lists.List.
-Require Import PeanoNat.
+From Stdlib Require Import PeanoNat.
 Require Import Stdlib.Vectors.Fin.
+
+(* ============================================================ *)
+(*          Constructing Full AlphaType from Minimal            *)
+(* ============================================================ *)
+
+Section MinimalToFull.
+  Context `{MinimalAlphaType}.
+  
+  (** Can construct full AlphaType from minimal version *)
+  Definition minimal_to_alpha : AlphaType.
+  Proof.
+    refine {|
+      Alphacarrier := Minalphacarrier;
+      alpha_impossibility := _;
+      alpha_not_empty := _
+    |}.
+    - (* Construct the impossibility *)
+      exists (fun x => x <> x).
+      split.
+      + (* No witnesses *)
+        intros x Hneq. exact (Hneq eq_refl).
+      + (* Uniqueness *)
+        intros Q HQ x. split.
+        * intro HQx. exfalso. exact (HQ x HQx).
+        * intro Hneq. exfalso. exact (Hneq eq_refl).
+    - (* Non-emptiness *)
+      exact min_not_empty.
+  Defined.
+
+End MinimalToFull.
 
 (* ============================================================ *)
 (*                    Basic Type Instances                      *)
