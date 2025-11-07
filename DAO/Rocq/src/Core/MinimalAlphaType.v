@@ -33,8 +33,8 @@ End MinimalProperties.
 
 (* ================================================================ *)
 (** * IndirectAlphaType: Pure Boundary Formulation *)
-(* Our initial constraint to prevent collapse: *)
-
+(* Initial constraint to prevent collapse: 
+   A type proving False (empty type) is ruled out. *)
 Class IndirectAlphaType := {
   IndirectAlphacarrier : Type;
   emptiness_impossible : (IndirectAlphacarrier -> False) -> False
@@ -240,55 +240,6 @@ Section OmegaVeilProperties.
 
 End OmegaVeilProperties.
 
-(* ================================================================ *)
-(** * Comparison with Standard AlphaType *)
-
-Section ComparisonWithAlpha.
-  Require Import DAO.Core.AlphaType.
-  
-  (** The standard AlphaType axiomatizes omega_veil's existence and uniqueness.
-      IndirectAlphaType simply DEFINES omega_veil as x <> x and proves the properties.
-      
-      Both approaches give the same mathematics, but IndirectAlphaType is:
-      - Simpler (one axiom instead of two)
-      - More direct (omega_veil is a definition, not an axiom)
-      - Pure boundary (only negative constraint: emptiness impossible)
-      
-      Standard AlphaType:
-        - alpha_impossibility: {P | (no witnesses) ∧ (unique)} (dependent pair axiom)
-        - alpha_not_empty: {x | True} (witness axiom)
-      
-      IndirectAlphaType:
-        - emptiness_impossible: (Carrier -> False) -> False (pure boundary)
-        - omega_veil: fun x => x <> x (definition)
-  *)
-  
-  (** We can construct IndirectAlphaType from AlphaType *)
-  Instance alpha_to_indirect (A : AlphaType) : IndirectAlphaType := {
-    IndirectAlphacarrier := Alphacarrier;
-    emptiness_impossible := fun H =>
-      match alpha_not_empty with
-      | exist _ x _ => H x
-      end
-  }.
-
-  (* Theorem omega_veils_equivalent (A : AlphaType) :
-      let IA := alpha_to_indirect A in
-      forall x : Alphacarrier,
-      omega_veil x <-> @indirect_omega_veil IA x.
-    Proof.
-      intro IA.
-      intro x.
-      simpl.
-      unfold indirect_omega_veil.
-      (* omega_veil is an impossible predicate, so it's equivalent to x <> x *)
-      apply (proj2 (proj2_sig alpha_impossibility) (fun y => y <> y)).
-      (* Need to show x <> x has no witnesses *)
-      intros y Hneq.
-      exact (Hneq eq_refl).
-    Qed. *)
-
-End ComparisonWithAlpha.
 
 (* ================================================================ *)
 (** * Any Inhabited Type is IndirectAlphaType *)

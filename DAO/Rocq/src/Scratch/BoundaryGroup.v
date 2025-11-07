@@ -1249,7 +1249,7 @@ Module BoundaryProofCombinators.
       apply equiv.
       exact HQ.
     Defined.
-    
+
     (** Substitution: if x = y and P x fails, then P y fails *)
     Definition subst_boundary {P : carrier -> Prop} {x y : carrier}
       (Heq : x = y)
@@ -1393,7 +1393,11 @@ Module BoundaryProofCombinators.
       end.
     Proof.
       intros.
-      destruct H; reflexivity.
+      destruct H as [Hfalse | HP].
+      - (* False case *)
+        destruct Hfalse.  (* False eliminates *)
+      - (* P case *)
+        reflexivity.
     Qed.
     
     (** We can define a "proof identity" *)
@@ -1402,7 +1406,6 @@ Module BoundaryProofCombinators.
       intros a H. exact H.
     Defined.
     
-    (** Weakening preserves composition *)
     Theorem weaken_preserves_seq :
       forall {P Q R S : carrier -> Prop}
         (pq : forall a, P a -> Q a)
@@ -1411,7 +1414,11 @@ Module BoundaryProofCombinators.
         (bpS : BoundaryProof S),
       forall a (H : P a \/ R a),
       seq_boundaries (weaken_boundary pq bpQ) (weaken_boundary rs bpS) a H =
-      weaken_boundary (fun a => or_ind (pq a) (rs a))
+      weaken_boundary (fun a H' => 
+                        match H' with
+                        | or_introl HP => or_introl (pq a HP)
+                        | or_intror HR => or_intror (rs a HR)
+                        end)
                       (seq_boundaries bpQ bpS) a H.
     Proof.
       intros.
