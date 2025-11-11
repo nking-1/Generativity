@@ -17,17 +17,42 @@ Module ParadoxNumbers.
 
   Module ParadoxNaturals.
     Import ImpossibilityAlgebra Core.
+
+    (** Here, natural numbers start at 1 - they are constructions beyond void *)
+    (* This might be controversial, but we do it because it works well downstream. *)
+
+    (* Natural numbers are positive constructions *)
+    Inductive PNat : Type :=
+      | POne : PNat              (* First construction = 1 *)
+      | PS : PNat -> PNat.       (* Successor *)
+
+    Fixpoint add (m n : PNat) : PNat :=
+      match m with
+      | POne => PS n
+      | PS m' => PS (add m' n)
+      end.
+
+    Fixpoint mult (m n : PNat) : PNat :=
+      match m with
+      | POne => n
+      | PS m' => add n (mult m' n)
+      end.
+
+    (** Arithmetic *)
+    Theorem one_not_succ : forall n : PNat, POne <> PS n.
+      Proof.
+        intros n H.
+        discriminate H.
+      Qed.
+    
+    Theorem succ_injective : forall m n : PNat, PS m = PS n -> m = n.
+      Proof.
+        intros m n H.
+        injection H. auto.
+      Qed.
   
     Section InductiveParadoxNaturals.
       Context {Alpha : AlphaType}.
-      
-      (** Here, natural numbers start at 1 - they are constructions beyond void *)
-      (* This might be controversial, but we do it because it works well downstream. *)
-      
-      (* Natural numbers are positive constructions *)
-      Inductive PNat : Type :=
-        | POne : PNat              (* First construction = 1 *)
-        | PS : PNat -> PNat.       (* Successor *)
       
       (* Each natural is a construction depth beyond the void *)
       Fixpoint paradox_at (n : PNat) : Alphacarrier -> Prop :=
@@ -55,33 +80,6 @@ Module ParadoxNumbers.
             exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hov).
       Qed.
       
-      (** ** Arithmetic *)
-      
-      Fixpoint add (m n : PNat) : PNat :=
-        match m with
-        | POne => PS n           (* 1 + n = n + 1 *)
-        | PS m' => PS (add m' n)
-        end.
-      
-      Fixpoint mult (m n : PNat) : PNat :=
-        match m with
-        | POne => n              (* 1 * n = n *)
-        | PS m' => add n (mult m' n)
-        end.
-      
-      (** ** Modified Peano Axioms (starting from 1) *)
-      
-      Theorem one_not_succ : forall n : PNat, POne <> PS n.
-      Proof.
-        intros n H.
-        discriminate H.
-      Qed.
-      
-      Theorem succ_injective : forall m n : PNat, PS m = PS n -> m = n.
-      Proof.
-        intros m n H.
-        injection H. auto.
-      Qed.
       
       (** ** Connection to Coq's nat (which includes 0) *)
       

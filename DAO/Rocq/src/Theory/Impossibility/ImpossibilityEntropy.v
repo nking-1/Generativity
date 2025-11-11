@@ -146,6 +146,7 @@ Module ImpossibilityEntropy.
       Context {Alpha : AlphaType}.
       
       (** Impossibility with numerical weight *)
+      (* We define a "certain part" and "impossible part" of logical propositions. *)
       Record WeightedImpossible := {
         certain : Alphacarrier -> Prop;
         weight : nat;

@@ -33,7 +33,7 @@ End MinimalProperties.
 
 (* ================================================================ *)
 (** * IndirectAlphaType: Pure Boundary Formulation *)
-(* Initial constraint to prevent collapse: 
+(* Initial veil to prevent collapse: 
    A type proving False (empty type) is ruled out. *)
 Class IndirectAlphaType := {
   IndirectAlphacarrier : Type;
