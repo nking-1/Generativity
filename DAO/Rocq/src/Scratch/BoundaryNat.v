@@ -3,6 +3,7 @@ Require Import DAO.Core.AlphaProperties.
 
 (* ================================================================ *)
 (** * BoundaryNat: The Interface *)
+(* We make a contract that any Nat carrier must behave. *)
 
 Class BoundaryNat := {
   (* Carrier type *)
@@ -29,7 +30,6 @@ Class BoundaryNat := {
       (forall n, P n -> P (succ n)) ->
       forall n, (~ P n) -> False;
   
-  (* Non-emptiness - changed from exists to sig *)
   boundary_not_empty : { x : carrier | True }
 }.
 
@@ -1016,7 +1016,7 @@ Instance FunctionNatAdd : BoundaryNatWithAdd FunctionNatInstance := {
 }.
 
 
-Require Import DAO.Theory.Impossibility.ParadoxNumbers.
+(* Require Import DAO.Theory.Impossibility.ParadoxNumbers.
 
 Module ParadoxIntBoundary.
   Import ParadoxNumbers.ParadoxIntegers.
@@ -1128,7 +1128,7 @@ Module ParadoxIntBoundary.
     apply generic_add_comm.
   Qed.
   
-End ParadoxIntBoundary.
+End ParadoxIntBoundary. *)
 
 (* Basic boundaries *)
 Print generic_zero_neq_succ_zero.

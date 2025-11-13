@@ -32,34 +32,34 @@ Section MinimalProperties.
 End MinimalProperties.
 
 (* ================================================================ *)
-(** * IndirectAlphaType: Pure Boundary Formulation *)
-(* Initial veil to prevent collapse: 
+(** * AbstractAlphaType: Pure Contract Formulation *)
+(* Initial contract to prevent collapse: 
    A type proving False (empty type) is ruled out. *)
-Class IndirectAlphaType := {
-  IndirectAlphacarrier : Type;
-  emptiness_impossible : (IndirectAlphacarrier -> False) -> False
+Class AbstractAlphaType := {
+  AbstractAlphacarrier : Type;
+  emptiness_impossible : (AbstractAlphacarrier -> False) -> False
 }.
 
 (* ================================================================ *)
 (** * Reproducing MinimalAlphaType Theorems *)
 
-Section IndirectProperties.
-  Context `{IndirectAlphaType}.
+Section AbstractProperties.
+  Context `{AbstractAlphaType}.
 
   (** Show emptiness_impossible axiom is an impossibility *)
-  Theorem indirect_impossible_predicate_exists:
-    exists P : IndirectAlphacarrier -> Prop, forall x, ~ P x.
+  Theorem abstract_impossible_predicate_exists:
+    exists P : AbstractAlphacarrier -> Prop, forall x, ~ P x.
   Proof.
     (* The predicate "carrier is empty" *)
-    exists (fun x => IndirectAlphacarrier -> False).
+    exists (fun x => AbstractAlphacarrier -> False).
     intros x Hempty.
     (* For any x, "carrier is empty" is impossible *)
     exact (emptiness_impossible Hempty).
   Qed.
 
   (** An impossible predicate exists: a thing not being itself *)
-  Theorem indirect_impossible_neq :
-    exists P : IndirectAlphacarrier -> Prop, forall x, ~ P x.
+  Theorem abstract_impossible_neq :
+    exists P : AbstractAlphacarrier -> Prop, forall x, ~ P x.
   Proof.
     exists (fun x => x <> x).
     intros x Hneq.
@@ -67,7 +67,7 @@ Section IndirectProperties.
   Qed.
 
   Theorem identity_neq_impossible :
-    exists P : IndirectAlphacarrier -> Prop, forall x, ~ P x.
+    exists P : AbstractAlphacarrier -> Prop, forall x, ~ P x.
   Proof.
     exists (fun x => x <> x).
     intros x Hneq.
@@ -75,8 +75,8 @@ Section IndirectProperties.
   Qed.
   
   (** All impossible predicates are pointwise equivalent *)
-  Theorem indirect_all_impossible_predicates_pointwise_equal :
-    forall P Q : IndirectAlphacarrier -> Prop,
+  Theorem abstract_all_impossible_predicates_pointwise_equal :
+    forall P Q : AbstractAlphacarrier -> Prop,
     (forall x, ~ P x) -> (forall x, ~ Q x) ->
     forall x, P x <-> Q x.
   Proof.
@@ -87,16 +87,16 @@ Section IndirectProperties.
   Qed.
   
   (** The type is consistent (not empty) *)
-  Theorem indirect_consistent :
-    ~ (IndirectAlphacarrier -> False).
+  Theorem abstract_consistent :
+    ~ (AbstractAlphacarrier -> False).
   Proof.
     intro H'.
     exact (emptiness_impossible H').
   Qed.
   
   (** We can't prove all predicates are impossible *)
-  Theorem indirect_not_all_impossible :
-    ~ (forall P : IndirectAlphacarrier -> Prop, 
+  Theorem abstract_not_all_impossible :
+    ~ (forall P : AbstractAlphacarrier -> Prop, 
         forall x, ~ P x).
   Proof.
     intro H'.
@@ -109,112 +109,112 @@ Section IndirectProperties.
     exact I.
   Qed.
 
-End IndirectProperties.
+End AbstractProperties.
 
 (* ================================================================ *)
-(** * Instances of IndirectAlphaType *)
+(** * Instances of AbstractAlphaType *)
 
-Section IndirectInstances.
+Section AbstractInstances.
 
   (* Instance 1: nat *)
-  Instance nat_indirect : IndirectAlphaType := {
-    IndirectAlphacarrier := nat;
+  Instance nat_abstract : AbstractAlphaType := {
+    AbstractAlphacarrier := nat;
     emptiness_impossible := fun H => H 0
   }.
   
   (* Instance 2: bool *)
-  Instance bool_indirect : IndirectAlphaType := {
-    IndirectAlphacarrier := bool;
+  Instance bool_abstract : AbstractAlphaType := {
+    AbstractAlphacarrier := bool;
     emptiness_impossible := fun H => H true
   }.
   
   (* Instance 3: unit *)
-  Instance unit_indirect : IndirectAlphaType := {
-    IndirectAlphacarrier := unit;
+  Instance unit_abstract : AbstractAlphaType := {
+    AbstractAlphacarrier := unit;
     emptiness_impossible := fun H => H tt
   }.
   
   (* Instance 4: Any non-empty list *)
-  (* Instance nonempty_list_indirect (A : Type) (a : A) : IndirectAlphaType := {
-    IndirectAlphacarrier := list A;
+  (* Instance nonempty_list_abstract (A : Type) (a : A) : AbstractAlphaType := {
+    AbstractAlphacarrier := list A;
     emptiness_impossible := fun H => H (a :: nil)
   }. *)
   
   (* Instance 5: sum types (at least one side inhabited) *)
-  Instance sum_left_indirect (A B : Type) (a : A) : IndirectAlphaType := {
-    IndirectAlphacarrier := A + B;
+  Instance sum_left_abstract (A B : Type) (a : A) : AbstractAlphaType := {
+    AbstractAlphacarrier := A + B;
     emptiness_impossible := fun H => H (inl a)
   }.
   
-  Instance sum_right_indirect (A B : Type) (b : B) : IndirectAlphaType := {
-    IndirectAlphacarrier := A + B;
+  Instance sum_right_abstract (A B : Type) (b : B) : AbstractAlphaType := {
+    AbstractAlphacarrier := A + B;
     emptiness_impossible := fun H => H (inr b)
   }.
 
-End IndirectInstances.
+End AbstractInstances.
 
 (* ================================================================ *)
-(** * Comparison: Direct vs Indirect *)
+(** * Comparison: Direct vs Abstract *)
 
-Section DirectVsIndirect.
+Section DirectVsAbstract.
 
-  (* We can go from direct (MinimalAlpha) to indirect *)
+  (* We can go from direct (MinimalAlpha) to abstract *)
   
-  Instance minimal_to_indirect (M : MinimalAlphaType) : IndirectAlphaType := {
-    IndirectAlphacarrier := Minalphacarrier;
+  Instance minimal_to_abstract (M : MinimalAlphaType) : AbstractAlphaType := {
+    AbstractAlphacarrier := Minalphacarrier;
     emptiness_impossible := fun H => 
       match min_not_empty with
       | exist _ x _ => H x
       end
   }.
   
-  (* But we CANNOT go from indirect to direct constructively! *)
+  (* But we CANNOT go from abstract to direct constructively! *)
   (* This would require: *)
-  (*   (IndirectAlphacarrier -> False) -> False *)
-  (*   → { x : IndirectAlphacarrier | True } *)
+  (*   (AbstractAlphacarrier -> False) -> False *)
+  (*   → { x : AbstractAlphacarrier | True } *)
   (* Which is double-negation elimination for Sigma types *)
   
   (* However, we CAN show they have the same theorems: *)
   
   Theorem same_impossible_predicate :
     forall (M : MinimalAlphaType),
-    let I := minimal_to_indirect M in
+    let I := minimal_to_abstract M in
     (exists P : Minalphacarrier -> Prop, forall x, ~ P x) <->
-    (exists P : IndirectAlphacarrier -> Prop, forall x, ~ P x).
+    (exists P : AbstractAlphacarrier -> Prop, forall x, ~ P x).
   Proof.
     intro M.
     simpl.
     split; intro H; exact H.
   Qed.
 
-End DirectVsIndirect.
+End DirectVsAbstract.
 
 (** omega_veil: a chosen canonical impossible predicate
     All other impossible predicates are pointwise equal to this one.
     Philosophically: A thing is itself because it is not everything else. *)
-Definition indirect_omega_veil {IA : IndirectAlphaType} : IndirectAlphacarrier -> Prop :=
+Definition abstract_omega_veil {IA : AbstractAlphaType} : AbstractAlphacarrier -> Prop :=
   fun x => x <> x.
 
 (* ================================================================ *)
 (** * Properties of omega_veil *)
 
 Section OmegaVeilProperties.
-  Context `{IndirectAlphaType}.
+  Context `{AbstractAlphaType}.
   
   (** omega_veil has no witnesses *)
-  Theorem indirect_omega_veil_has_no_witnesses :
-    forall x : IndirectAlphacarrier, ~ indirect_omega_veil x.
+  Theorem abstract_omega_veil_has_no_witnesses :
+    forall x : AbstractAlphacarrier, ~ abstract_omega_veil x.
   Proof.
     intros x Hneq.
-    unfold indirect_omega_veil in Hneq.
+    unfold abstract_omega_veil in Hneq.
     exact (Hneq eq_refl).
   Qed.
   
   (** omega_veil is pointwise equivalent to any other impossible predicate *)
-  Theorem indirect_omega_veil_pointwise_eq :
-    forall Q : IndirectAlphacarrier -> Prop,
-    (forall x : IndirectAlphacarrier, ~ Q x) ->
-    (forall x : IndirectAlphacarrier, Q x <-> indirect_omega_veil x).
+  Theorem abstract_omega_veil_pointwise_eq :
+    forall Q : AbstractAlphacarrier -> Prop,
+    (forall x : AbstractAlphacarrier, ~ Q x) ->
+    (forall x : AbstractAlphacarrier, Q x <-> abstract_omega_veil x).
   Proof.
     intros Q HQ x.
     split.
@@ -223,18 +223,18 @@ Section OmegaVeilProperties.
       exact (HQ x HQx).
     - intro Hneq.
       exfalso.
-      unfold indirect_omega_veil in Hneq.
+      unfold abstract_omega_veil in Hneq.
       exact (Hneq eq_refl).
   Qed.
   
   (** omega_veil is equivalent to False at every point *)
-  Theorem indirect_omega_veil_is_false :
-    forall x : IndirectAlphacarrier,
-    indirect_omega_veil x <-> False.
+  Theorem abstract_omega_veil_is_false :
+    forall x : AbstractAlphacarrier,
+    abstract_omega_veil x <-> False.
   Proof.
     intro x.
     split.
-    - apply indirect_omega_veil_has_no_witnesses.
+    - apply abstract_omega_veil_has_no_witnesses.
     - intro H'. destruct H'.
   Qed.
 
@@ -242,55 +242,55 @@ End OmegaVeilProperties.
 
 
 (* ================================================================ *)
-(** * Any Inhabited Type is IndirectAlphaType *)
+(** * Any Inhabited Type is AbstractAlphaType *)
 
-Section InhabitedIsIndirect.
+Section InhabitedIsAbstract.
   
   (** The fundamental theorem: inhabitedness is sufficient *)
-  Theorem inhabited_is_indirect_alpha :
+  Theorem inhabited_is_abstract_alpha :
     forall (T : Type),
     T ->  (* If T is inhabited *)
-    IndirectAlphaType.
+    AbstractAlphaType.
   Proof.
     intros T t.
     refine {|
-      IndirectAlphacarrier := T;
+      AbstractAlphacarrier := T;
       emptiness_impossible := fun H => H t
     |}.
   Defined.
   
-  (** Corollary: Any type with a decidable element is IndirectAlpha *)
-  Example nat_inhabited_indirect : IndirectAlphaType :=
-    inhabited_is_indirect_alpha nat 0.
+  (** Corollary: Any type with a decidable element is AbstractAlpha *)
+  Example nat_inhabited_abstract : AbstractAlphaType :=
+    inhabited_is_abstract_alpha nat 0.
   
-  Example bool_inhabited_indirect : IndirectAlphaType :=
-    inhabited_is_indirect_alpha bool true.
+  Example bool_inhabited_abstract : AbstractAlphaType :=
+    inhabited_is_abstract_alpha bool true.
 
-End InhabitedIsIndirect.
+End InhabitedIsAbstract.
 
 (* ================================================================ *)
-(** * Empty Types Cannot Be IndirectAlphaType *)
+(** * Empty Types Cannot Be AbstractAlphaType *)
 
-Section EmptyTypesCannotBeIndirect.
+Section EmptyTypesCannotBeAbstract.
   
-  Theorem indirect_alpha_carrier_not_empty :
-    forall (IA : IndirectAlphaType),
-    ~ (IndirectAlphacarrier -> False).
+  Theorem abstract_alpha_carrier_not_empty :
+    forall (IA : AbstractAlphaType),
+    ~ (AbstractAlphacarrier -> False).
   Proof.
     intros IA Hempty.
     exact (emptiness_impossible Hempty).
   Qed.
   
   (** We can prove: Empty type as carrier is impossible *)
-  Theorem empty_carrier_contradicts_indirect :
+  Theorem empty_carrier_contradicts_abstract :
     forall (T : Type),
     (T -> False) ->  (* T is empty *)
-    forall (IA : IndirectAlphaType),
-    IndirectAlphacarrier <> T.  (* Carrier cannot be T *)
+    forall (IA : AbstractAlphaType),
+    AbstractAlphacarrier <> T.  (* Carrier cannot be T *)
   Proof.
     intros T Hempty IA Heq.
     (* If carrier = T, then carrier -> False *)
-    apply (indirect_alpha_carrier_not_empty IA).
+    apply (abstract_alpha_carrier_not_empty IA).
     intro x.
     rewrite Heq in x.
     exact (Hempty x).
@@ -310,15 +310,15 @@ Section EmptyTypesCannotBeIndirect.
       destruct n.
     Qed.
     
-    (** Cannot construct IndirectAlphaType with NomegaType as carrier *)
-    Theorem nomega_not_indirect_carrier :
-      forall (IA : IndirectAlphaType),
-      IndirectAlphacarrier <> NomegaType.
+    (** Cannot construct AbstractAlphaType with NomegaType as carrier *)
+    Theorem nomega_not_abstract_carrier :
+      forall (IA : AbstractAlphaType),
+      AbstractAlphacarrier <> NomegaType.
     Proof.
-      exact (empty_carrier_contradicts_indirect NomegaType nomega_is_empty).
+      exact (empty_carrier_contradicts_abstract NomegaType nomega_is_empty).
     Qed.
     
     
   End WithNomega.
 
-End EmptyTypesCannotBeIndirect.
+End EmptyTypesCannotBeAbstract.

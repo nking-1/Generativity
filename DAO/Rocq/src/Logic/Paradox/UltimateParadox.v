@@ -191,12 +191,11 @@ Section OmegaVeilAtAbsurdity.
     (* At the absurdity point, impossible is equivalent to always_true *)
     assert (impossible x <-> always_true x) by apply H_equiv.
     
-    (* Since always_true x holds... *)
     apply H.
     exact I.
   Qed.
   
-  (* Therefore, the ultimate absurdity point satisfies EVERY predicate,
+  (* Therefore, the ultimate absurdity point satisfies every predicate,
      including all the impossible ones! *)
   Theorem absurdity_is_everything :
     forall x : Omegacarrier,

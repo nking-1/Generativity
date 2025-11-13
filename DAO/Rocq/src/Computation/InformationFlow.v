@@ -59,12 +59,9 @@ Proof.
   destruct (Nat.ltb (structure sys (t + 1)) (structure sys t)) eqn:H_ltb.
   - (* Case 1: structure sys (t + 1) < structure sys t *)
     apply Nat.ltb_lt in H_ltb.
-    (* Goal is (structure sys t - structure sys (t + 1)) > 0 *)
     lia.
   - (* Case 2: structure sys (t + 1) >= structure sys t *)
     apply Nat.ltb_ge in H_ltb.
-    (* Goal is (structure sys (t + 1) - structure sys t) > 0 *)
-    (* In this branch, lia needs to use H_ltb and H_neq_original. *)
     lia.
 Qed.
 
@@ -75,7 +72,7 @@ Lemma S_is_positive (sys : System) (t : nat) :
   structure sys t > 0.
 Proof.
   pose proof (structure_bounded sys t) as H_bounds.
-  lia. (* S_min < structure t and S_min >= 0 implies structure t > 0 *)
+  lia.
 Qed.
 
 
