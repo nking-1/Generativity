@@ -1,5 +1,7 @@
 (** AlphaType.v: The Consistent but Incomplete Type
-    AlphaType represents a type with at least one impossible predicate
+    AlphaType represents a type with at least one impossible predicate.
+    Certain truths are "veiled" from Omega in order to create space for
+    coherent existence in an AlphaType.
 *)
 
 Class AlphaType := {
@@ -8,8 +10,9 @@ Class AlphaType := {
   (** An impossible predicate:
       1. It has no witnesses
       2. Any other impossible predicate is pointwise equivalent to it
-      Alpha makes no assumptions about intensional vs extensional equality
-      of impossible predicates, but both options are explored in other files. *)
+      3. There may be more than one impossible predicate for an AlphaType
+      4. Alphacarrier's inhabitants exist within the space of possibility left over
+      5. Impossible predicates are pointwise equal to False, but intensionally & syntactically distinct *)
   alpha_impossibility : { P : Alphacarrier -> Prop | 
     (forall x : Alphacarrier, ~ P x) /\
     (forall Q : Alphacarrier -> Prop, 

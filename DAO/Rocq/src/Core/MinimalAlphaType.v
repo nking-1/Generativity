@@ -34,14 +34,12 @@ End MinimalProperties.
 (* ================================================================ *)
 (** * AbstractAlphaType: Pure Contract Formulation *)
 (* Initial contract to prevent collapse: 
-   A type proving False (empty type) is ruled out. *)
+   A type proving False (empty type) is ruled out.
+   This is like ruling out logical explosion. *)
 Class AbstractAlphaType := {
   AbstractAlphacarrier : Type;
   emptiness_impossible : (AbstractAlphacarrier -> False) -> False
 }.
-
-(* ================================================================ *)
-(** * Reproducing MinimalAlphaType Theorems *)
 
 Section AbstractProperties.
   Context `{AbstractAlphaType}.
@@ -189,9 +187,11 @@ Section DirectVsAbstract.
 
 End DirectVsAbstract.
 
-(** omega_veil: a chosen canonical impossible predicate
+(** omega_veil: a chosen canonical impossible predicate that hides Omega's paradoxical completeness.
     All other impossible predicates are pointwise equal to this one.
-    Philosophically: A thing is itself because it is not everything else. *)
+    Philosophically: A thing is itself because it is not everything else (law of identity).
+    Note: We can also just pick fun _ => False. False it iself an impossible prop. We're just
+    making a philosophical point here. *)
 Definition abstract_omega_veil {IA : AbstractAlphaType} : AbstractAlphacarrier -> Prop :=
   fun x => x <> x.
 
