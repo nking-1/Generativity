@@ -3,7 +3,7 @@ Require Import DAO.Core.AlphaProperties.
 
 (* ================================================================ *)
 (** * BoundaryNat: The Interface *)
-(* We make a contract that any Nat carrier must behave. *)
+(* We make an impossibility contract that any Nat carrier must behave. *)
 
 Class BoundaryNat := {
   (* Carrier type *)

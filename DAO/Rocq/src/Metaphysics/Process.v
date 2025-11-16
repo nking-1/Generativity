@@ -1,7 +1,12 @@
+(* Process.v *)
 (* ================================================================ *)
-(*                  Reality "Computes" Itself                       *)
-(*          Process Philosophy / Impermanence Formalization     .   *)
+(*          Process Philosophy / Impermanence Formalization         *)
 (* ================================================================ *)
+(* This module formalizes a generative incompleteness
+   principle that seems to mirror Whitehead's intuitions
+   about prehension, actual occasions, and novelty. Note: this is
+   just the author's intuitive interpretation of the theorem.
+   You may interpret the math any way you like. *)
 
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.

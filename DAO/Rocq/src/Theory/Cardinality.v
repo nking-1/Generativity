@@ -263,3 +263,56 @@ Module SizeParadoxCounting.
     | S n' => size_paradox_succ Omega (size_paradox_nat Omega n')
     end.
 End SizeParadoxCounting.
+
+
+Section OmegaTemporalPerspective.
+  Context {Omega : OmegaType}.
+
+  (* A temporal perspective is defined without paradox_depth.
+     It simply states:
+       - Alpha_sim is an Alpha-like region in Omega.
+       - x is inside that region.
+       - For every internal predicate P that Alpha can talk about,
+         Omega provides "next states" that witness the unfolding of P.
+  *)
+
+  Definition alpha_temporal_perspective
+             (alpha_sim : Omegacarrier -> Prop)
+             (x : Omegacarrier) : Prop :=
+    (* x is inside the simulation *)
+    alpha_sim x /\
+    (* The simulated Alpha has all alpha-structure *)
+    omega_alpha_sim_structure alpha_sim /\
+    (* Temporal unfolding condition *)
+    forall P : Omegacarrier -> Prop,
+      (* P is meaningful inside alpha_sim:
+         either it has a witness or it is uniformly false. *)
+      (exists a, alpha_sim a /\ P a) \/
+      (forall a, alpha_sim a -> ~ P a) ->
+      (* Then there exists a "next state" in the alpha_sim region *)
+      exists next,
+        alpha_sim next /\
+        (* next disagrees with x about P
+           i.e., next is a strictly new informational state *)
+        (P next <-> ~ P x).
+
+  (* The theorem: Omega contains a temporal Alpha viewpoint *)
+  Theorem omega_contains_alpha_temporal_perspective :
+    exists x : Omegacarrier,
+    exists alpha_sim : Omegacarrier -> Prop,
+      alpha_temporal_perspective alpha_sim x.
+  Proof.
+    (* Form the predicate on Omega we want a witness for *)
+    pose (temporal_predicate := fun x : Omegacarrier =>
+      exists alpha_sim : Omegacarrier -> Prop,
+        alpha_temporal_perspective alpha_sim x).
+
+    (* By Omega completeness, we obtain a witness x *)
+    destruct (omega_completeness temporal_predicate) as [x Hx].
+
+    (* Return that witness and the associated alpha_sim *)
+    exists x.
+    exact Hx.
+  Qed.
+
+End OmegaTemporalPerspective.
