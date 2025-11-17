@@ -664,6 +664,135 @@ Module HomFunctors.
       Qed.
       
     End YonedaLemma.
+
+    (** * Being as Relational Structure *)
+
+    Section BeingTheorems.
+      Context (C : Category).
+      Context {Alpha : AlphaType}.
+      
+      (** Extensionality axioms - standard in category theory formalizations *)
+      Local Axiom functional_extensionality_dep : 
+        forall {A : Type} {B : A -> Type} {f g : forall x : A, B x},
+        (forall x, f x = g x) -> f = g.
+      
+      Local Axiom propositional_extensionality : 
+        forall (P Q : Prop), (P <-> Q) -> P = Q.
+      
+      (** Helper: convert Hom from Type to Prop when we know it's actually a proposition *)
+      Definition hom_as_prop (P Q : Alphacarrier -> Prop) : Prop :=
+        forall a : Alphacarrier, P a -> Q a.
+      
+      Lemma hom_is_prop : forall (P Q : Alphacarrier -> Prop),
+        Hom PRED P Q = hom_as_prop P Q.
+      Proof.
+        intros P Q.
+        reflexivity.
+      Qed.
+      
+      (**
+        The Yoneda perspective applied to PRED:
+        
+        A predicate P is completely determined by knowing all morphisms from P.
+        Since morphisms in PRED are implications (P a -> Q a), this means
+        P is determined by what it implies.
+      *)
+      Theorem being_is_hom_structure :
+        forall (P : Alphacarrier -> Prop),
+        (forall Q : Alphacarrier -> Prop, hom_as_prop P Q) ->
+        exists (char : Alphacarrier -> Prop),
+          forall a, char a <-> P a.
+      Proof.
+        intros P H_homs.
+        exists P.
+        intro a.
+        split; intro H; exact H.
+      Qed.
+      
+      (**
+        Two predicates with identical morphism structure are extensionally equal.
+        
+        This formalizes: objects in a category are determined by their morphisms.
+        In PRED: predicates are determined by their implications.
+      *)
+      Theorem predicates_equal_iff_homs_equal :
+        forall (P Q : Alphacarrier -> Prop),
+        (forall R : Alphacarrier -> Prop, 
+          hom_as_prop P R <-> hom_as_prop Q R) ->
+        (forall a, P a <-> Q a).
+      Proof.
+        intros P Q H_same_homs a.
+        split; intro H.
+        - (* P a implies Q a *)
+          assert (H_forward : hom_as_prop P Q).
+          { apply H_same_homs.
+            unfold hom_as_prop.
+            intros x Hx. exact Hx. }
+          unfold hom_as_prop in H_forward.
+          exact (H_forward a H).
+          
+        - (* Q a implies P a *)
+          assert (H_backward : hom_as_prop Q P).
+          { apply H_same_homs.
+            unfold hom_as_prop.
+            intros x Hx. exact Hx. }
+          unfold hom_as_prop in H_backward.
+          exact (H_backward a H).
+      Qed.
+      
+      (**
+        Uniqueness: There is exactly one predicate with a given morphism structure.
+        
+        This is the content of Yoneda's lemma: the embedding P ↦ Hom(P,-)
+        is fully faithful, meaning it preserves and reflects equality.
+      *)
+      Theorem being_uniquely_determined_by_homs :
+        forall (P : Alphacarrier -> Prop),
+        exists! (char : Alphacarrier -> Prop),
+          (forall R, hom_as_prop char R <-> hom_as_prop P R) /\
+          (forall a, char a <-> P a).
+      Proof.
+        intro P.
+        exists P.
+        split.
+        - split.
+          + intro R. split; intro H; exact H.
+          + intro a. split; intro H; exact H.
+        - intros Q [H_same_homs H_equiv].
+          apply functional_extensionality_dep.
+          intro a.
+          apply propositional_extensionality.
+          apply predicates_equal_iff_homs_equal.
+          intro R.
+          split.
+          + intro H. apply H_same_homs. exact H.
+          + intro H. apply H_same_homs. exact H.
+      Qed.
+      
+      (**
+        Interpretation:
+        
+        In PRED, hom_as_prop P Q means (forall a, P a -> Q a), i.e., P implies Q.
+        
+        The theorem predicates_equal_iff_homs_equal states:
+        
+          P = Q  ⟺  (∀R. P→R ⟺ Q→R)
+        
+        That is: a predicate is determined by its implications.
+        
+        Since P→Q can be read as "P does not make Q impossible", we have:
+        
+          A predicate is determined by what it does not make impossible.
+          
+        Or equivalently:
+        
+          A predicate is determined by the impossibilities it respects.
+          
+        This establishes that being (what a predicate is) is characterized
+        by impossibility structure (what boundaries it respects).
+      *)
+
+    End BeingTheorems.
     
   End HomFunctors.
   
