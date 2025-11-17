@@ -296,9 +296,6 @@ Section EmptyTypesCannotBeAbstract.
     exact (Hempty x).
   Qed.
   
-  (** For NomegaType specifically (if you have it defined): *)
-  (* Assuming NomegaType is defined as an empty type wrapper *)
-  
   Section WithNomega.
     (* Hypothetical NomegaType definition *)
     Inductive NomegaType : Type := .

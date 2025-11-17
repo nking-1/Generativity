@@ -214,3 +214,92 @@ Section OmegaVeilAtAbsurdity.
   Qed.
   
 End OmegaVeilAtAbsurdity.
+
+
+
+(* ========================================================= *)
+(*  A Universal Truth Predicate inside an OmegaType universe *)
+(* ========================================================= *)
+
+Require Import DAO.Core.OmegaType.
+
+Section OmegaTruth.
+  Context {Omega : OmegaType}.
+
+  (* We first define that propositions are represented inside Omega
+     as predicates over Omegacarrier. This is intentionally naive
+     and unrestricted — exactly what violates Tarski. *)
+
+  Definition TruthPredicate := Omegacarrier -> Prop.
+
+  (* A universal “truth predicate” that claims to classify *all* truths.
+     In a consistent system this is impossible. In Omega, it is allowed,
+     because Omega witnesses literally anything. *)
+
+  Class OmegaTruth := {
+    Truth : TruthPredicate;
+
+    (* The universal truth axiom:
+       Truth x holds exactly when the represented predicate Q is true. *)
+    Truth_correct :
+      forall (Q : TruthPredicate),
+        exists x : Omegacarrier,
+          (Truth x <-> (exists y : Omegacarrier, Q y))
+  }.
+
+  (* ========================================================= *)
+  (*        CONSTRUCTING AN OMEGA-TRUTH PREDICATE              *)
+  (* ========================================================= *)
+
+  (* Define the Truth predicate — using completeness to populate it. *)
+  Definition OmegaTruthTruth : TruthPredicate :=
+    fun x => True.   (* At Omega's collapse point, EVERYTHING is true *)
+
+  (* Now we show that this Truth predicate satisfies the universal property. *)
+  Theorem OmegaTruth_correct :
+    forall (Q : TruthPredicate),
+      exists x : Omegacarrier, OmegaTruthTruth x <-> (exists y, Q y).
+  Proof.
+    intro Q.
+    destruct (omega_completeness (fun _ => True)) as [x _].
+    exists x.
+    split; intro H.  (* Split the IFF first *)
+    - (* OmegaTruthTruth x -> (exists y, Q y) *)
+      unfold OmegaTruthTruth in H.
+      (* H : True, so we can use omega_completeness *)
+      destruct (omega_completeness Q) as [y Hy].
+      exists y. exact Hy.
+    - (* (exists y, Q y) -> OmegaTruthTruth x *)
+      unfold OmegaTruthTruth.
+      exact I.
+  Qed.
+
+  (* Package everything into the class instance *)
+  Instance OmegaTruthInstance : OmegaTruth := {
+    Truth := OmegaTruthTruth;
+    Truth_correct := OmegaTruth_correct
+  }.
+
+  (* ========================================================= *)
+  (*                 LIAR SENTENCE INSIDE OMEGA               *)
+  (* ========================================================= *)
+
+  (* Define the liar predicate: L x := ¬ Truth x *)
+  Definition LiarPredicate : TruthPredicate :=
+    fun x => ~ Truth x.
+
+  (* The Liar sentence: an element l such that Truth l <-> ¬ Truth l *)
+  Theorem Omega_liar_exists :
+    exists l : Omegacarrier,
+      Truth l <-> ~ Truth l.
+  Proof.
+    (* Use completeness on the paradoxical predicate *)
+    pose (paradox := fun x => Truth x /\ ~ Truth x).
+    destruct (omega_completeness paradox) as [l [Ht Hnt]].
+    exists l.
+    split; intro H.
+    - exact Hnt.
+    - exact Ht.
+  Qed.
+
+End OmegaTruth.

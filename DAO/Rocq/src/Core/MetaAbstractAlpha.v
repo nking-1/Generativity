@@ -123,7 +123,6 @@ End SimpleProperties.
 (* AbstractAlphaType@{u+1} contains AbstractAlphaTypes@{u} *)
 
 Section TowerStructure.
-  (* Or more directly: *)
   Theorem every_abstract_in_meta_carrier :
     forall (A : AbstractAlphaType),
     (* A has type AbstractAlphaType *)
@@ -571,7 +570,7 @@ Require Import String.
 Section OmegaContainsTheGenerator.
   Context {Omega : OmegaType}.
   
-  (* The ACTUAL Python script that generated our arithmetic *)
+  (* The Python script that generated our arithmetic *)
   Definition the_generator_script : string :=
 "#!/usr/bin/env python3
 ""

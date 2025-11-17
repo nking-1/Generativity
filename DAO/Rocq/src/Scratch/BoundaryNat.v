@@ -1016,6 +1016,785 @@ Instance FunctionNatAdd : BoundaryNatWithAdd FunctionNatInstance := {
 }.
 
 
+
+Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
+
+
+
+Module BoundaryClassification.
+  Import ImpossibilityAlgebra.Core.
+
+  (* ================================================================ *)
+  (** ** Classifying Boundary Violations *)
+  (* ================================================================ *)
+  
+  Section BoundaryImpossibilities.
+    Context {BN : BoundaryNat}.
+    
+    (* First, we need to lift BoundaryNat carrier to AlphaType *)
+    Let BN_Alpha := BoundaryNat_is_AlphaType BN.
+    
+    (** The zero-equals-successor predicate is impossible *)
+    Theorem boundary_zero_succ_impossible :
+      @Is_Impossible BN_Alpha (fun x => BN.(zero) = BN.(succ) x).
+    Proof.
+      unfold Is_Impossible.
+      intro a.
+      unfold BN_Alpha, BoundaryNat_is_AlphaType.
+      simpl.
+      split.
+      - intro H. exact H.
+      - intro H. exact H.
+    Qed.
+    
+    (** The successor-non-injective predicate is impossible *)
+    Theorem boundary_succ_non_injective_impossible :
+      forall (n m : BN.(carrier)),
+      @Is_Impossible BN_Alpha 
+        (fun _ => BN.(succ) n = BN.(succ) m /\ n <> m).
+    Proof.
+      intros n m.
+      unfold Is_Impossible.
+      intro a.
+      split.
+      - intro H.
+        (* If succ n = succ m and n ≠ m, that violates boundary *)
+        exfalso.
+        apply (BN.(boundary_succ_injective) n m H).
+      - intro H.
+        (* omega_veil has no witnesses *)
+        exfalso.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
+    Qed.
+    
+    (** Induction failure is impossible *)
+    Theorem boundary_induction_failure_impossible :
+      forall (P : BN.(carrier) -> Prop) (n : BN.(carrier)),
+      P BN.(zero) ->
+      (forall k, P k -> P (BN.(succ) k)) ->
+      @Is_Impossible BN_Alpha (fun _ => ~ P n).
+    Proof.
+      intros P n H0 HS.
+      unfold Is_Impossible.
+      intro a.
+      split.
+      - intro Hnot.
+        (* If ~ P n, that violates induction boundary *)
+        exfalso.
+        apply (BN.(boundary_induction) P H0 HS n Hnot).
+      - intro H.
+        exfalso.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
+    Qed.
+    
+  End BoundaryImpossibilities.
+
+  (* ================================================================ *)
+  (** ** Classifying Actual Structures as Possible *)
+  (* ================================================================ *)
+  
+  
+  Section StructurePossibilities.
+  
+  Theorem standard_nat_possible :
+    @Is_Possible (BoundaryNat_is_AlphaType StandardNat)
+      (fun x => exists n : nat, x = n).
+  Proof.
+    unfold Is_Possible, Is_Impossible.
+    intro H_impossible.
+    destruct (H_impossible 0) as [H_forward _].
+    assert (H_ex : exists n, 0 = n) by (exists 0; reflexivity).
+    apply H_forward in H_ex.
+    unfold BoundaryNat_is_AlphaType in H_ex.
+    simpl in H_ex.
+    discriminate H_ex.
+  Qed.
+  
+  Theorem list_nat_possible :
+    @Is_Possible (BoundaryNat_is_AlphaType ListNat)
+      (fun x => exists l : list unit, x = l).
+  Proof.
+    unfold Is_Possible, Is_Impossible.
+    intro H_impossible.
+    destruct (H_impossible (@nil unit)) as [H_forward _].
+    assert (H_ex : exists l, @nil unit = l) by (exists (@nil unit); reflexivity).
+    apply H_forward in H_ex.
+    unfold BoundaryNat_is_AlphaType in H_ex.
+    simpl in H_ex.
+    discriminate H_ex.
+  Qed.
+  
+  Theorem even_nat_possible :
+    @Is_Possible (BoundaryNat_is_AlphaType EvenNat)
+      (fun x => exists n : nat, x = n).
+  Proof.
+    unfold Is_Possible, Is_Impossible.
+    intro H_impossible.
+    destruct (H_impossible 0) as [H_forward _].
+    assert (H_ex : exists n, 0 = n) by (exists 0; reflexivity).
+    apply H_forward in H_ex.
+    unfold BoundaryNat_is_AlphaType in H_ex.
+    simpl in H_ex.
+    discriminate H_ex.
+  Qed.
+  
+  Theorem function_nat_possible :
+    @Is_Possible (BoundaryNat_is_AlphaType FunctionNatInstance)
+      (fun x => exists f : unit -> nat, x = f).
+  Proof.
+    unfold Is_Possible, Is_Impossible.
+    intro H_impossible.
+    destruct (H_impossible fn_zero) as [H_forward _].
+    assert (H_ex : exists f, fn_zero = f) by (exists fn_zero; reflexivity).
+    apply H_forward in H_ex.
+    unfold BoundaryNat_is_AlphaType in H_ex.
+    simpl in H_ex.
+    unfold fn_zero, fn_succ in H_ex.
+    assert (H_apply := equal_f H_ex tt).
+    simpl in H_apply.
+    discriminate H_apply.
+  Qed.
+  
+End StructurePossibilities.
+
+  (* ================================================================ *)
+  (** ** The Philosophical Theorems *)
+  (* ================================================================ *)
+  
+  Section Philosophy.
+  
+  (** Boundaries define impossibilities *)
+  Theorem boundaries_are_impossibilities :
+    forall (BN : BoundaryNat),
+    let Alpha := BoundaryNat_is_AlphaType BN in
+    (* The boundary violations are impossible *)
+    @Is_Impossible Alpha (fun x => BN.(zero) = BN.(succ) x) /\
+    (forall n m, @Is_Impossible Alpha 
+      (fun _ => BN.(succ) n = BN.(succ) m /\ n <> m)).
+  Proof.
+    intro BN.
+    split.
+    - apply boundary_zero_succ_impossible.
+    - intros n m. apply boundary_succ_non_injective_impossible.
+  Qed.
+  
+  (** Structures that respect boundaries are possible *)
+  Theorem respecting_boundaries_is_possible :
+    (* Standard nat respects boundaries and is possible *)
+    @Is_Possible (BoundaryNat_is_AlphaType StandardNat)
+      (fun x => exists n : nat, x = n) /\
+    (* List nat respects boundaries and is possible *)
+    @Is_Possible (BoundaryNat_is_AlphaType ListNat)
+      (fun x => exists l : list unit, x = l).
+  Proof.
+    split.
+    - apply standard_nat_possible.
+    - apply list_nat_possible.
+  Qed.
+  
+  (** The meta-theorem: Mathematics exists in the space of the possible *)
+  Theorem mathematics_is_possible_space :
+    forall (BN : BoundaryNat),
+    (* Boundaries define what's impossible *)
+    (exists P, @Is_Impossible (BoundaryNat_is_AlphaType BN) P) /\
+    (* Structures exist in what remains possible *)
+    (exists Q, @Is_Possible (BoundaryNat_is_AlphaType BN) Q).
+  Proof.
+    intro BN.
+    split.
+    - (* Impossible: zero = succ x *)
+      exists (fun x => BN.(zero) = BN.(succ) x).
+      apply boundary_zero_succ_impossible.
+    - (* Possible: the carrier itself exists *)
+      exists (fun x => x = x).
+      unfold Is_Possible, Is_Impossible.
+      intro H_impossible.
+      destruct BN.(boundary_not_empty) as [x _].
+      destruct (H_impossible x) as [H_forward _].
+      assert (H_refl : x = x) by reflexivity.
+      apply H_forward in H_refl.
+      unfold BoundaryNat_is_AlphaType in H_refl.
+      simpl in H_refl.
+      apply (BN.(boundary_zero_not_succ) x H_refl).
+  Qed.
+  
+  (** The duality theorem *)
+  Theorem impossibility_possibility_duality :
+    forall (BN : BoundaryNat),
+    let Alpha := BoundaryNat_is_AlphaType BN in
+    (* What's impossible (boundaries) *)
+    @Is_Impossible Alpha (fun x => BN.(zero) = BN.(succ) x) ->
+    (* What's possible (structures) *)
+    @Is_Possible Alpha (fun x => x = x).
+  Proof.
+    intros BN Alpha H_impossible.
+    (* Extract the specific predicate from the existential *)
+    destruct (proj2 (mathematics_is_possible_space BN)) as [Q H_possible].
+    (* Q is some possible predicate, but we want (fun x => x = x) *)
+    (* So let's just prove it directly instead *)
+    unfold Is_Possible, Is_Impossible.
+    intro H_contra.
+    destruct BN.(boundary_not_empty) as [x _].
+    destruct (H_contra x) as [H_forward _].
+    assert (H_refl : x = x) by reflexivity.
+    apply H_forward in H_refl.
+    unfold BoundaryNat_is_AlphaType in H_refl.
+    simpl in H_refl.
+    apply (BN.(boundary_zero_not_succ) x H_refl).
+  Qed.
+  
+End Philosophy.
+
+  (* ================================================================ *)
+  (** ** Classification of Specific Properties *)
+  (* ================================================================ *)
+  
+  (* ================================================================ *)
+(** ** Classification of Specific Properties *)
+(* ================================================================ *)
+
+Section PropertyClassification.
+  
+  (* ============================================================== *)
+  (** *** Direct Truth (Definitely True) *)
+  (* ============================================================== *)
+  
+  (** Equality is possible (directly provable) *)
+  Theorem equality_possible :
+    forall (BN : BoundaryNat),
+    @Is_Possible (BoundaryNat_is_AlphaType BN)
+      (fun x => x = x).
+  Proof.
+    intro BN.
+    unfold Is_Possible, Is_Impossible.
+    intro H_impossible.
+    destruct BN.(boundary_not_empty) as [x _].
+    destruct (H_impossible x) as [H_forward _].
+    assert (H_refl : x = x) by reflexivity.
+    apply H_forward in H_refl.
+    unfold BoundaryNat_is_AlphaType in H_refl.
+    simpl in H_refl.
+    apply (BN.(boundary_zero_not_succ) x H_refl).
+  Qed.
+  
+  (** Existence of carrier is possible *)
+  Theorem carrier_exists_possible :
+    forall (BN : BoundaryNat),
+    @Is_Possible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y : BN.(carrier), y = y).
+  Proof.
+    intro BN.
+    unfold Is_Possible, Is_Impossible.
+    intro H_impossible.
+    destruct BN.(boundary_not_empty) as [x _].
+    destruct (H_impossible x) as [H_forward _].
+    assert (H_ex : exists y : BN.(carrier), y = y) by (exists x; reflexivity).
+    apply H_forward in H_ex.
+    unfold BoundaryNat_is_AlphaType in H_ex.
+    simpl in H_ex.
+    apply (BN.(boundary_zero_not_succ) x H_ex).
+  Qed.
+  
+  (* ============================================================== *)
+  (** *** Direct Impossibility (Boundary Violations) *)
+  (* ============================================================== *)
+  
+  (** Self-non-equality is impossible *)
+  Theorem self_non_equality_impossible :
+    forall (BN : BoundaryNat),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => x <> x).
+  Proof.
+    intro BN.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intro H. exfalso. apply H. reflexivity.
+    - intro H. unfold BoundaryNat_is_AlphaType in H.
+      simpl in H. exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Zero equals successor is impossible (boundary definition) *)
+  Theorem zero_equals_succ_impossible :
+    forall (BN : BoundaryNat),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => BN.(zero) = BN.(succ) x).
+  Proof.
+    intro BN.
+    apply boundary_zero_succ_impossible.
+  Qed.
+  
+  (** Successor non-injectivity is impossible *)
+  Theorem succ_non_injective_impossible :
+    forall (BN : BoundaryNat) (n m : BN.(carrier)),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun _ => BN.(succ) n = BN.(succ) m /\ n <> m).
+  Proof.
+    intros BN n m.
+    apply boundary_succ_non_injective_impossible.
+  Qed.
+  
+  (* ============================================================== *)
+  (** *** Stable Truth (Impossible to Violate) *)
+  (* ============================================================== *)
+  
+  (* ----------- Basic Arithmetic Properties ----------- *)
+  
+  (** Addition commutativity is stable *)
+  Theorem addition_commutativity_stable :
+    forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y : BN.(carrier), BNA.(add) x y <> BNA.(add) y x).
+  Proof.
+    intros BN BNA.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y H_neq].
+      exfalso.
+      apply (@generic_add_comm BN BNA a y H_neq).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Addition associativity is stable *)
+  Theorem addition_associativity_stable :
+    forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y z : BN.(carrier), 
+        BNA.(add) (BNA.(add) x y) z <> BNA.(add) x (BNA.(add) y z)).
+  Proof.
+    intros BN BNA.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y [z H_neq]].
+      exfalso.
+      apply (@generic_add_assoc BN BNA a y z H_neq).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Zero is additive identity (stable) *)
+  Theorem zero_additive_identity_stable :
+    forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => BNA.(add) x BN.(zero) <> x).
+  Proof.
+    intros BN BNA.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intro H_neq.
+      exfalso.
+      apply (BNA.(boundary_add_zero) a H_neq).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Successor distributes over addition (stable) *)
+  Theorem succ_add_stable :
+    forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y : BN.(carrier), 
+        BNA.(add) x (BN.(succ) y) <> BN.(succ) (BNA.(add) x y)).
+  Proof.
+    intros BN BNA.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y H_neq].
+      exfalso.
+      apply (BNA.(boundary_add_succ) a y H_neq).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (* ----------- Multiplication Properties ----------- *)
+  
+  (** Multiplication commutativity is stable *)
+  Theorem multiplication_commutativity_stable :
+    forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN) 
+           (BNM : BoundaryNatWithMul BN BNA),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y : BN.(carrier), BNM.(mul) x y <> BNM.(mul) y x).
+  Proof.
+    intros BN BNA BNM.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y H_neq].
+      exfalso.
+      apply (@generic_mul_comm BN BNA BNM a y H_neq).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Multiplication associativity is stable *)
+  Theorem multiplication_associativity_stable :
+    forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN)
+           (BNM : BoundaryNatWithMul BN BNA),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y z : BN.(carrier), 
+        BNM.(mul) (BNM.(mul) x y) z <> BNM.(mul) x (BNM.(mul) y z)).
+  Proof.
+    intros BN BNA BNM.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y [z H_neq]].
+      exfalso.
+      apply (@generic_mul_assoc BN BNA BNM a y z H_neq).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Left distributivity is stable *)
+  Theorem left_distributivity_stable :
+    forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN)
+           (BNM : BoundaryNatWithMul BN BNA),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y z : BN.(carrier), 
+        BNM.(mul) x (BNA.(add) y z) <> 
+        BNA.(add) (BNM.(mul) x y) (BNM.(mul) x z)).
+  Proof.
+    intros BN BNA BNM.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y [z H_neq]].
+      exfalso.
+      apply (@generic_mul_distrib_l BN BNA BNM a y z H_neq).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Right distributivity is stable *)
+  Theorem right_distributivity_stable :
+    forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN)
+           (BNM : BoundaryNatWithMul BN BNA),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y z : BN.(carrier),
+        BNM.(mul) (BNA.(add) x y) z <> 
+        BNA.(add) (BNM.(mul) x z) (BNM.(mul) y z)).
+  Proof.
+    intros BN BNA BNM.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y [z H_neq]].
+      exfalso.
+      apply (@generic_mul_distrib_r BN BNA BNM a y z H_neq).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Zero is multiplicative annihilator (stable) *)
+  Theorem zero_multiplicative_annihilator_stable :
+    forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN)
+           (BNM : BoundaryNatWithMul BN BNA),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => BNM.(mul) x BN.(zero) <> BN.(zero)).
+  Proof.
+    intros BN BNA BNM.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intro H_neq.
+      exfalso.
+      apply (BNM.(boundary_mul_zero) a H_neq).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (* ----------- Structural Properties ----------- *)
+  
+  (** Successor is injective (stable) *)
+  Theorem successor_injective_stable :
+    forall (BN : BoundaryNat),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y : BN.(carrier), BN.(succ) x = BN.(succ) y /\ x <> y).
+  Proof.
+    intro BN.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y [Heq Hneq]].
+      exfalso.
+      apply (BN.(boundary_succ_injective) a y).
+      split; assumption.
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Induction holds (stable) *)
+  Theorem induction_holds_stable :
+    forall (BN : BoundaryNat) (P : BN.(carrier) -> Prop),
+    P BN.(zero) ->
+    (forall n : BN.(carrier), P n -> P (BN.(succ) n)) ->
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => ~ P x).
+  Proof.
+    intros BN P H_base H_step.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intro H_not.
+      exfalso.
+      apply (BN.(boundary_induction) P H_base H_step a H_not).
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (* ----------- Meta-Properties ----------- *)
+  
+  (** Transitivity of equality is stable *)
+  Theorem equality_transitive_stable :
+    forall (BN : BoundaryNat),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y z : BN.(carrier), x = y /\ y = z /\ x <> z).
+  Proof.
+    intro BN.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y [z [Hxy [Hyz Hxz]]]].
+      exfalso.
+      apply Hxz.
+      rewrite Hxy, Hyz.
+      reflexivity.
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (** Symmetry of equality is stable *)
+  Theorem equality_symmetric_stable :
+    forall (BN : BoundaryNat),
+    @Is_Impossible (BoundaryNat_is_AlphaType BN)
+      (fun x => exists y : BN.(carrier), x = y /\ y <> x).
+  Proof.
+    intro BN.
+    unfold Is_Impossible.
+    intro a.
+    split.
+    - intros [y [Heq Hneq]].
+      exfalso.
+      apply Hneq.
+      symmetry.
+      exact Heq.
+    - intro H.
+      unfold BoundaryNat_is_AlphaType in H.
+      simpl in H.
+      exfalso.
+      apply (BN.(boundary_zero_not_succ) a H).
+  Qed.
+  
+  (* ============================================================== *)
+(** *** Summary Theorems *)
+(* ============================================================== *)
+
+(** All standard arithmetic laws are stable *)
+Theorem arithmetic_laws_stable :
+  forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN)
+         (BNM : BoundaryNatWithMul BN BNA),
+  (* Commutativity *)
+  (@Is_Impossible (BoundaryNat_is_AlphaType BN)
+    (fun x => exists y : BN.(carrier), BNA.(add) x y <> BNA.(add) y x)) /\
+  (@Is_Impossible (BoundaryNat_is_AlphaType BN)
+    (fun x => exists y : BN.(carrier), BNM.(mul) x y <> BNM.(mul) y x)) /\
+  (* Associativity *)
+  (@Is_Impossible (BoundaryNat_is_AlphaType BN)
+    (fun x => exists y z : BN.(carrier), BNA.(add) (BNA.(add) x y) z <> 
+                          BNA.(add) x (BNA.(add) y z))) /\
+  (@Is_Impossible (BoundaryNat_is_AlphaType BN)
+    (fun x => exists y z : BN.(carrier), BNM.(mul) (BNM.(mul) x y) z <> 
+                          BNM.(mul) x (BNM.(mul) y z))) /\
+  (* Distributivity *)
+  (@Is_Impossible (BoundaryNat_is_AlphaType BN)
+    (fun x => exists y z : BN.(carrier), BNM.(mul) x (BNA.(add) y z) <> 
+                          BNA.(add) (BNM.(mul) x y) (BNM.(mul) x z))).
+Proof.
+  intros BN BNA BNM.
+  split. { apply addition_commutativity_stable. }
+  split. { apply multiplication_commutativity_stable. }
+  split. { apply addition_associativity_stable. }
+  split. { apply multiplication_associativity_stable. }
+  apply left_distributivity_stable.
+Qed.
+
+(** Mathematics exists in stable truth *)
+Theorem mathematics_is_stable_truth :
+  forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN),
+  (* Direct truth exists *)
+  (@Is_Possible (BoundaryNat_is_AlphaType BN) (fun x => x = x)) /\
+  (* Boundaries exist (direct impossibility) *)
+  (@Is_Impossible (BoundaryNat_is_AlphaType BN) 
+    (fun x => BN.(zero) = BN.(succ) x)) /\
+  (* Stable truths exist (arithmetic laws) *)
+  (@Is_Impossible (BoundaryNat_is_AlphaType BN)
+    (fun x => exists y : BN.(carrier), BNA.(add) x y <> BNA.(add) y x)).
+Proof.
+  intros BN BNA.
+  split. { apply equality_possible. }
+  split. { apply zero_equals_succ_impossible. }
+  apply addition_commutativity_stable.
+Qed.
+
+End PropertyClassification.
+
+End BoundaryClassification.
+
+
+
+(* Basic boundaries *)
+Print generic_zero_neq_succ_zero.
+
+(* Simple induction *)
+Print generic_no_number_equals_own_successor.
+
+(* Addition helpers *)
+Print generic_O_add_neq.
+Print generic_S_add_neq.
+
+(* The main commutativity proof *)
+Print generic_add_comm.
+
+(* For comparison, one multiplication theorem *)
+Print generic_mul_comm.
+
+(* And if you want to see the accumulate-then-contradict pattern clearly *)
+Print generic_add_assoc.
+
+Print generic_mul_comm.
+
+Print boundary_induction.
+
+
+
+
+(* Require Extraction.
+Extraction Language Haskell.
+Extraction "BoundaryNat.hs" StandardNat generic_add_comm.
+
+(* Extract just the addition operation and instance *)
+Extraction "add.hs" StandardNatAdd add.
+
+
+(* Extract ListNat instance *)
+Extraction "ListNat.hs" ListNat ListNatAdd.
+
+Extraction "boundaries.hs" boundary_add_zero boundary_add_succ. *)
+
+
+
+
+(* ================================================================ *)
+(** * not yet working: Binary natural numbers *)
+
+(* Binary representation: 
+   - BZ is zero
+   - B0 n is 2n (shift left, add 0)
+   - B1 n is 2n+1 (shift left, add 1)
+*)
+(* Inductive BinNat :=
+  | BZ : BinNat
+  | B0 : BinNat -> BinNat
+  | B1 : BinNat -> BinNat.
+
+(* Successor function for binary *)
+Fixpoint bin_succ (n : BinNat) : BinNat :=
+  match n with
+  | BZ => B1 BZ        (* 0 + 1 = 1 *)
+  | B0 n' => B1 n'     (* 2n + 1 = 2n+1 *)
+  | B1 n' => B0 (bin_succ n')  (* 2n+1 + 1 = 2(n+1) *)
+  end.
+
+(* Zero is never a successor *)
+Lemma bin_zero_not_succ : forall n, BZ = bin_succ n -> False.
+Proof.
+  intro n.
+  destruct n; simpl; intro H; discriminate H.
+Qed.
+
+
+Lemma bin_succ_injective : forall n m, 
+  bin_succ n = bin_succ m -> n = m.
+Proof.
+  induction n as [|n' IH|n' IH]; intros m H.
+  - (* n = BZ, so bin_succ BZ = B1 BZ *)
+    destruct m as [|m'|m']; simpl in H.
+    + (* m = BZ, so bin_succ BZ = B1 BZ *)
+      reflexivity.
+    + (* m = B0 m', so bin_succ (B0 m') = B1 m' *)
+      (* We have B1 BZ = B1 m', so BZ = m' *)
+      injection H as H.
+      (* But we need BZ = B0 m', which contradicts BZ = m' *)
+      (* Actually, this means m' must be BZ *)
+      subst m'. reflexivity.
+    + (* m = B1 m', so bin_succ (B1 m') = B0 (bin_succ m') *)
+      (* We have B1 BZ = B0 (bin_succ m'), which is impossible *)
+      discriminate H.
+      
+  - (* n = B0 n', so bin_succ (B0 n') = B1 n' *)
+    destruct m as [|m'|m']; simpl in H.
+    + (* m = BZ, impossible: B1 n' = B1 BZ *)
+      injection H as H. subst n'. reflexivity.
+    + (* m = B0 m', so B1 n' = B1 m' *)
+      injection H as H. subst m'. reflexivity.
+    + (* m = B1 m', impossible: B1 n' = B0 (bin_succ m') *)
+      discriminate H.
+      
+  - (* n = B1 n', so bin_succ (B1 n') = B0 (bin_succ n') *)
+    destruct m as [|m'|m']; simpl in H.
+    + (* m = BZ, impossible *)
+      discriminate H.
+    + (* m = B0 m', impossible *)
+      discriminate H.
+    + (* m = B1 m', so B0 (bin_succ n') = B0 (bin_succ m') *)
+      injection H as H.
+      f_equal.
+      apply IH.
+      exact H.
+Qed. *)
+
+
 (* Require Import DAO.Theory.Impossibility.ParadoxNumbers.
 
 Module ParadoxIntBoundary.
@@ -1129,108 +1908,3 @@ Module ParadoxIntBoundary.
   Qed.
   
 End ParadoxIntBoundary. *)
-
-(* Basic boundaries *)
-Print generic_zero_neq_succ_zero.
-
-(* Simple induction *)
-Print generic_no_number_equals_own_successor.
-
-(* Addition helpers *)
-Print generic_O_add_neq.
-Print generic_S_add_neq.
-
-(* The main commutativity proof *)
-Print generic_add_comm.
-
-(* For comparison, one multiplication theorem *)
-Print generic_mul_comm.
-
-(* And if you want to see the accumulate-then-contradict pattern clearly *)
-Print generic_add_assoc.
-
-Print generic_mul_comm.
-
-Print boundary_induction.
-
-(* ================================================================ *)
-(** * not yet working: Binary natural numbers *)
-
-(* Binary representation: 
-   - BZ is zero
-   - B0 n is 2n (shift left, add 0)
-   - B1 n is 2n+1 (shift left, add 1)
-*)
-(* Inductive BinNat :=
-  | BZ : BinNat
-  | B0 : BinNat -> BinNat
-  | B1 : BinNat -> BinNat.
-
-(* Successor function for binary *)
-Fixpoint bin_succ (n : BinNat) : BinNat :=
-  match n with
-  | BZ => B1 BZ        (* 0 + 1 = 1 *)
-  | B0 n' => B1 n'     (* 2n + 1 = 2n+1 *)
-  | B1 n' => B0 (bin_succ n')  (* 2n+1 + 1 = 2(n+1) *)
-  end.
-
-(* Zero is never a successor *)
-Lemma bin_zero_not_succ : forall n, BZ = bin_succ n -> False.
-Proof.
-  intro n.
-  destruct n; simpl; intro H; discriminate H.
-Qed.
-
-
-Lemma bin_succ_injective : forall n m, 
-  bin_succ n = bin_succ m -> n = m.
-Proof.
-  induction n as [|n' IH|n' IH]; intros m H.
-  - (* n = BZ, so bin_succ BZ = B1 BZ *)
-    destruct m as [|m'|m']; simpl in H.
-    + (* m = BZ, so bin_succ BZ = B1 BZ *)
-      reflexivity.
-    + (* m = B0 m', so bin_succ (B0 m') = B1 m' *)
-      (* We have B1 BZ = B1 m', so BZ = m' *)
-      injection H as H.
-      (* But we need BZ = B0 m', which contradicts BZ = m' *)
-      (* Actually, this means m' must be BZ *)
-      subst m'. reflexivity.
-    + (* m = B1 m', so bin_succ (B1 m') = B0 (bin_succ m') *)
-      (* We have B1 BZ = B0 (bin_succ m'), which is impossible *)
-      discriminate H.
-      
-  - (* n = B0 n', so bin_succ (B0 n') = B1 n' *)
-    destruct m as [|m'|m']; simpl in H.
-    + (* m = BZ, impossible: B1 n' = B1 BZ *)
-      injection H as H. subst n'. reflexivity.
-    + (* m = B0 m', so B1 n' = B1 m' *)
-      injection H as H. subst m'. reflexivity.
-    + (* m = B1 m', impossible: B1 n' = B0 (bin_succ m') *)
-      discriminate H.
-      
-  - (* n = B1 n', so bin_succ (B1 n') = B0 (bin_succ n') *)
-    destruct m as [|m'|m']; simpl in H.
-    + (* m = BZ, impossible *)
-      discriminate H.
-    + (* m = B0 m', impossible *)
-      discriminate H.
-    + (* m = B1 m', so B0 (bin_succ n') = B0 (bin_succ m') *)
-      injection H as H.
-      f_equal.
-      apply IH.
-      exact H.
-Qed. *)
-
-Require Extraction.
-Extraction Language Haskell.
-Extraction "BoundaryNat.hs" StandardNat generic_add_comm.
-
-(* Extract just the addition operation and instance *)
-Extraction "add.hs" StandardNatAdd add.
-
-
-(* Extract ListNat instance *)
-Extraction "ListNat.hs" ListNat ListNatAdd.
-
-Extraction "boundaries.hs" boundary_add_zero boundary_add_succ.
