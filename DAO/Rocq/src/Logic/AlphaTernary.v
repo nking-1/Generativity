@@ -440,7 +440,7 @@ Module AlphaTernary.
           
           Therefore ~P: "Alpha cannot have classical logic"
           
-          This is the core argument of the Diagonal sub-framework:
+          This is the core argument of the Logic sub-framework:
           - Diagonalization shows unrepresentability
           - Unrepresentability prevents classical logic
           - Therefore ternary logic is necessary

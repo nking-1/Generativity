@@ -493,7 +493,7 @@ Module BasicCategoryTheory.
       - Hom(-, A) is a contravariant functor C^op → TYPE
   *)
 
-Module HomFunctors.
+  Module HomFunctors.
     Import Core Constructions Functors.
     
     Section HomFunctorDefinitions.
@@ -796,5 +796,345 @@ Module HomFunctors.
     End BeingTheorems.
     
   End HomFunctors.
+
+  (** * Lawvere's Fixed Point Theorem
+      
+      This module proves Lawvere's Fixed Point Theorem and connects it
+      to the diagonal arguments in the DAO framework, demonstrating that
+      the categorical and impossibility-based perspectives are complementary.
+      
+      Note: This module uses classical logic and functional extensionality,
+      which are standard in category theory but kept local to this module.
+  *)
+
+  Module Lawvere.
+    Import Core Constructions.
+    
+    (* Import diagonal for the connection *)
+    Require Import DAO.Logic.Diagonal.
+    
+    (* ================================================================ *)
+    (** ** Local Axioms and Definitions *)
+    (* ================================================================ *)
+    
+    Section LocalAxioms.
+      
+      (** Functional extensionality - functions equal if equal pointwise *)
+      Axiom functional_extensionality : 
+        forall {A B : Type} {f g : A -> B},
+        (forall x, f x = g x) -> f = g.
+      
+      (** Classical logic - excluded middle *)
+      Axiom classic : forall P : Prop, P \/ ~ P.
+      
+      (** Type equivalence (isomorphism) *)
+      Record Equiv (A B : Type) := {
+        equiv_to : A -> B;
+        equiv_from : B -> A;
+        equiv_to_from : forall b, equiv_to (equiv_from b) = b;
+        equiv_from_to : forall a, equiv_from (equiv_to a) = a
+      }.
+      
+    End LocalAxioms.
+    
+    (* ================================================================ *)
+    (** ** Lawvere's Fixed Point Theorem *)
+    (* ================================================================ *)
+    
+    Section FixedPointTheorem.
+      Context {Alpha : AlphaType}.
+      
+      (** Surjection in TYPE *)
+      Definition surjective {A B : Type} (f : A -> B) : Prop :=
+        forall b : B, exists a : A, f a = b.
+      
+      (** Fixed point of a function *)
+      Definition is_fixed_point {B : Type} (f : B -> B) (b : B) : Prop :=
+        f b = b.
+      
+      (** Lawvere's Fixed Point Theorem (TYPE version)
+          
+          If there exists a surjection e : A → (A → B),
+          then every function f : B → B has a fixed point.
+          
+          This is the categorical heart of all diagonal arguments.
+      *)
+      Theorem lawvere_fixed_point :
+        forall (A B : Type) (e : A -> (A -> B)),
+        surjective e ->
+        forall (f : B -> B),
+        exists (a : A), is_fixed_point f (e a a).
+      Proof.
+        intros A B e Hsurj f.
+        
+        (* Construct the diagonal function: g(x) = f(e(x)(x)) *)
+        pose (g := fun x : A => f (e x x)).
+        
+        (* By surjectivity of e, there exists a such that e(a) = g *)
+        destruct (Hsurj g) as [a Ha].
+        exists a.
+        
+        (* Show: f(e a a) = e a a *)
+        unfold is_fixed_point.
+        
+        (* From e a = g, get pointwise equality *)
+        assert (H_pointwise : forall x, e a x = g x).
+        {
+          intro x.
+          rewrite Ha.
+          reflexivity.
+        }
+        
+        (* Specialize to x = a *)
+        specialize (H_pointwise a).
+        unfold g in H_pointwise.
+        
+        (* Now H_pointwise says: e a a = f (e a a) *)
+        (* We want: f (e a a) = e a a *)
+        symmetry.
+        exact H_pointwise.
+      Qed.
+      
+    End FixedPointTheorem.
+    
+    (* ================================================================ *)
+    (** ** Connection to Cantor's Theorem *)
+    (* ================================================================ *)
+    
+    Section CantorViaLawvere.
+      
+      (** Cantor's theorem: no surjection from A to P(A) 
+          
+          This is Lawvere applied with B = Prop and f = negation.
+      *)
+      Theorem cantor_via_lawvere :
+        forall (A : Type) (e : A -> (A -> Prop)),
+        ~ surjective e.
+      Proof.
+        intros A e Hsurj.
+        
+        (* Apply Lawvere with B = Prop and negation *)
+        pose (neg := fun (P : Prop) => ~ P).
+        
+        destruct (lawvere_fixed_point A Prop e Hsurj neg) as [a Ha].
+        
+        (* Ha says: neg (e a a) = e a a *)
+        (* That is: ~ (e a a) = e a a *)
+        unfold is_fixed_point, neg in Ha.
+        
+        (* This is a propositional equality between ~ e a a and e a a *)
+        (* We derive a contradiction by case analysis *)
+        
+        destruct (classic (e a a)) as [Hyes | Hno].
+        
+        - (* Case: e a a holds *)
+          (* From Ha: ~ e a a = e a a, so ~ e a a also holds *)
+          assert (Hneg : ~ e a a).
+          { rewrite Ha. exact Hyes. }
+          (* Contradiction *)
+          exact (Hneg Hyes).
+          
+        - (* Case: ~ e a a holds *)
+          (* From Ha: ~ e a a = e a a, so e a a also holds *)
+          assert (Hpos : e a a).
+          { rewrite <- Ha. exact Hno. }
+          (* Contradiction *)
+          exact (Hno Hpos).
+      Qed.
+      
+    End CantorViaLawvere.
+    
+    (* ================================================================ *)
+    (** ** Transport via Equivalence *)
+    (* ================================================================ *)
+    
+    Section Transport.
+      Context {Alpha : AlphaType}.
+      
+      (** Transport a predicate along an equivalence *)
+      Definition transport_pred {A B : Type} (equiv : Equiv A B) 
+        (P : A -> Prop) : B -> Prop :=
+        fun b => P (equiv_from A B equiv b).
+      
+      (** Transport an enumeration along an equivalence *)
+      Definition transport_enum {A B : Type} (equiv : Equiv A B)
+        (enum : nat -> option (A -> Prop)) : nat -> option (B -> Prop) :=
+        fun n => 
+          match enum n with
+          | Some P => Some (transport_pred equiv P)
+          | None => None
+          end.
+      
+      (** Convert option enumeration to total function *)
+      Definition enum_to_function {A : Type} (enum : nat -> option (A -> Prop))
+        : nat -> (A -> Prop) :=
+        fun n => match enum n with
+                | Some P => P
+                | None => fun _ => False
+                end.
+      
+      (** Completeness of enumeration *)
+      Definition complete_enumeration {A : Type} (enum : nat -> option (A -> Prop)) : Prop :=
+        forall P : A -> Prop, exists n : nat, enum n = Some P.
+      
+      (** Transport preserves completeness *)
+      Lemma transport_preserves_completeness {A B : Type} (equiv : Equiv A B) :
+        forall (enum : nat -> option (A -> Prop)),
+        complete_enumeration enum ->
+        forall Q : B -> Prop,
+        exists n : nat, transport_enum equiv enum n = Some Q.
+      Proof.
+        intros enum Hcomplete Q.
+        
+        (* Construct the "pullback" of Q along the equivalence *)
+        pose (P := fun a => Q (equiv_to A B equiv a)).
+        
+        (* By completeness, P appears in the enumeration *)
+        destruct (Hcomplete P) as [n Hn].
+        exists n.
+        
+        (* Show that transport_enum enum n = Some Q *)
+        unfold transport_enum.
+        rewrite Hn.
+        
+        (* Now we have: Some (transport_pred equiv P) = Some Q *)
+        (* First apply f_equal to work inside Some *)
+        f_equal.
+        
+        (* Need to show: transport_pred equiv P = Q *)
+        apply functional_extensionality.
+        intro b.
+        unfold transport_pred, P.
+        
+        (* Use the equivalence properties *)
+        rewrite (equiv_to_from A B equiv b).
+        reflexivity.
+      Qed.
+      
+      (** Complete enumeration gives surjection *)
+      Lemma complete_enum_surjective {A : Type} :
+        forall (enum : nat -> option (A -> Prop)),
+        complete_enumeration enum ->
+        surjective (enum_to_function enum).
+      Proof.
+        intros enum Hcomplete.
+        unfold surjective, complete_enumeration.
+        intro P.
+        destruct (Hcomplete P) as [n Hn].
+        exists n.
+        unfold enum_to_function.
+        rewrite Hn.
+        reflexivity.
+      Qed.
+      
+    End Transport.
+    
+    (* ================================================================ *)
+    (** ** Lawvere Prevents Complete Enumeration *)
+    (* ================================================================ *)
+    
+    Section LawverePreventsDiagonal.
+      Context {Alpha : AlphaType}.
+      
+      (** If Alphacarrier is equivalent to nat, then Lawvere prevents complete enumeration *)
+      Theorem lawvere_prevents_complete_enumeration_via_equiv :
+        forall (equiv : Equiv Alphacarrier nat),
+        forall (enum : nat -> option (Alphacarrier -> Prop)),
+        complete_enumeration enum ->
+        False.
+      Proof.
+        intros equiv enum Hcomplete.
+        
+        (* Transport the enumeration along the equivalence *)
+        pose (enum_nat := transport_enum equiv enum).
+        
+        (* By transport_preserves_completeness, enum_nat is also complete *)
+        assert (Hcomplete_nat : forall Q : nat -> Prop, 
+          exists n, enum_nat n = Some Q).
+        {
+          intro Q.
+          exact (transport_preserves_completeness equiv enum Hcomplete Q).
+        }
+        
+        (* Convert to total function *)
+        pose (e := enum_to_function enum_nat).
+        
+        (* This is a surjection nat -> (nat -> Prop) *)
+        assert (Hsurj : surjective e).
+        {
+          unfold surjective.
+          intro P.
+          destruct (Hcomplete_nat P) as [n Hn].
+          exists n.
+          unfold e, enum_to_function.
+          rewrite Hn.
+          reflexivity.
+        }
+        
+        (* But Cantor says no such surjection exists! *)
+        exact (cantor_via_lawvere nat e Hsurj).
+      Qed.
+      
+      (** Corollary: No complete enumeration when Alphacarrier ≃ nat *)
+      Corollary no_complete_enumeration_when_equiv_nat :
+        forall (equiv : Equiv Alphacarrier nat),
+        ~ exists (enum : nat -> option (Alphacarrier -> Prop)),
+          complete_enumeration enum.
+      Proof.
+        intros equiv [enum Hcomplete].
+        exact (lawvere_prevents_complete_enumeration_via_equiv equiv enum Hcomplete).
+      Qed.
+      
+    End LawverePreventsDiagonal.
+    
+    (* ================================================================ *)
+    (** ** Philosophical Connection *)
+    (* ================================================================ *)
+    
+    Section Philosophy.
+      Require Import DAO.Core.OmegaType.
+
+      Context {Alpha : AlphaType} {Omega : OmegaType}.
+      Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
+      Variable embed : Alphacarrier -> Omegacarrier.
+      
+      (** Lawvere's perspective: categorical impossibility via fixed points *)
+      Theorem lawvere_perspective :
+        (* When Alphacarrier ≃ nat, no complete enumeration exists *)
+        (forall equiv : Equiv Alphacarrier nat,
+          ~ complete_enumeration alpha_enum) \/
+        (* Or Alphacarrier is not equivalent to nat *)
+        (~ exists equiv : Equiv Alphacarrier nat, True).
+      Proof.
+        (* This is a tautology expressing the connection *)
+        destruct (classic (exists equiv : Equiv Alphacarrier nat, True)) as [H | H].
+        - left.
+          intros equiv Hcomplete.
+          exact (lawvere_prevents_complete_enumeration_via_equiv equiv alpha_enum Hcomplete).
+        - right. exact H.
+      Qed.
+      
+      (** The two perspectives are complementary:
+          
+          Lawvere (categorical): 
+            "No surjection A → (A → B) because it would give fixed points for any f : B → B"
+            "In particular, f = negation gives a contradiction"
+          
+          Impossibility framework
+            "Diagonal escapes Alpha because it's unrepresentable at the Alpha/Omega boundary"
+            "This is forced by omega_veil (the one impossibility)"
+          
+          Both explain why complete enumeration is impossible.
+          Lawvere explains the categorical pattern.
+          We show omega_veil → boundary → unrepresentability.
+          
+          These are orthogonal perspectives on the same phenomenon:
+          - Lawvere: What structure do all diagonal arguments share? (Fixed points)
+          - Impossibility: Why must this structure exist? (The Alpha/Omega boundary from omega_veil)
+      *)
+      
+    End Philosophy.
+    
+  End Lawvere.
   
 End BasicCategoryTheory.
