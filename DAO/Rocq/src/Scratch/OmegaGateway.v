@@ -109,10 +109,27 @@ Section Gateway.
     forall a, A a -> (Gateway C a <-> imp a).
   Proof.
     intros C CA a Ha.
-    apply imp_unique.
-    (* Show Gateway C has no A-witnesses *)
-    intros x HAx GWx.
-    eapply (Gateway_has_no_A_witnesses C); eauto.
+    
+    (* imp_unique gives us: 
+      (forall x, A x -> ~ Gateway C x) -> 
+      (forall x, A x -> Gateway C x <-> imp x)
+      
+      We want the conclusion at a and Ha specifically.
+    *)
+    
+    (* First, get the implication from imp_unique *)
+    assert (H_equiv : forall x, A x -> (Gateway C x <-> imp x)).
+    {
+      apply imp_unique.
+      (* Show Gateway C has no A-witnesses *)
+      intros x HAx GWx.
+      eapply (Gateway_has_no_A_witnesses C CA x HAx).
+      exact GWx.
+    }
+    
+    (* Now apply to our specific a and Ha *)
+    apply H_equiv.
+    exact Ha.
   Qed.
 
   (** Invariance wrt changing the collection:
