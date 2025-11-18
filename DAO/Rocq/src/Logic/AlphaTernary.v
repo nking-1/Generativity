@@ -341,4 +341,173 @@ Module AlphaTernary.
     End TruthValueMeaning.
   End Examples.
 
+  (* ============================================================ *)
+  (** ** Classical Reasoning Patterns in Alpha *)
+  (* ============================================================ *)
+
+  Module ClassicalReasoning.
+    
+    Section BasicInference.
+      
+      (** Standard modus tollens works in Alpha *)
+      Theorem modus_tollens : forall P Q : Prop,
+        (P -> Q) -> (~Q) -> (~P).
+      Proof.
+        intros P Q Himp HnotQ HP.
+        apply HnotQ.
+        apply Himp.
+        exact HP.
+      Qed.
+      
+      (** Modus tollens for Alpha predicates *)
+      Theorem alpha_modus_tollens {Alpha : AlphaType} :
+        forall (P Q : Alphacarrier -> Prop),
+        (forall a, P a -> Q a) ->
+        (forall a, ~ Q a) ->
+        (forall a, ~ P a).
+      Proof.
+        intros P Q Himp HnotQ a HP.
+        apply (HnotQ a).
+        apply (Himp a).
+        exact HP.
+      Qed.
+      
+    End BasicInference.
+    
+    Section FoundationalMT.
+      Context {Omega : OmegaType} {Alpha : AlphaType}.
+      Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
+      Variable enum_complete : forall A : Alphacarrier -> Prop, 
+        exists n, alpha_enum n = Some A.
+      Variable embed : Alphacarrier -> Omegacarrier.
+      
+      (** The key application: excluded middle implies representability *)
+      Let em_implies_rep := 
+        ExcludedMiddle.alpha_em_makes_diagonal_representable alpha_enum embed.
+      
+      (** Diagonal is not representable *)
+      Let not_rep := 
+        Unrepresentability.Core.omega_diagonal_not_representable 
+          alpha_enum enum_complete embed.
+      
+      (** Therefore by modus tollens: not excluded middle *)
+      Theorem foundational_modus_tollens :
+        ~ ExcludedMiddle.alpha_excluded_middle.
+      Proof.
+        (* This is modus tollens at the foundational level! *)
+        apply (modus_tollens 
+          ExcludedMiddle.alpha_excluded_middle
+          (Unrepresentability.Core.representable 
+            (Diagonal.Omega.om_diagonal alpha_enum embed))).
+        - (* P -> Q *)
+          exact em_implies_rep.
+        - (* ~Q *)
+          exact not_rep.
+      Qed.
+      
+      (** Explicitly spell out the logical structure *)
+      Theorem foundational_mt_explicit :
+        let P := ExcludedMiddle.alpha_excluded_middle in
+        let Q := Unrepresentability.Core.representable 
+                  (Diagonal.Omega.om_diagonal alpha_enum embed) in
+        (P -> Q) /\ (~Q) /\ (~P).
+      Proof.
+        split; [| split].
+        - (* P -> Q *)
+          exact em_implies_rep.
+        - (* ~Q *)
+          exact not_rep.
+        - (* ~P *)
+          exact foundational_modus_tollens.
+      Qed.
+      
+    End FoundationalMT.
+    
+    Section MetaMT.
+      Context {Omega : OmegaType} {Alpha : AlphaType}.
+      Variable alpha_enum : nat -> option (Alphacarrier -> Prop).
+      Variable enum_complete : forall A : Alphacarrier -> Prop, 
+        exists n, alpha_enum n = Some A.
+      Variable embed : Alphacarrier -> Omegacarrier.
+      
+      (** The philosophical reading of our modus tollens:
+          
+          P: "Alpha has excluded middle (classical logic)"
+          Q: "The diagonal is representable in Alpha"
+          
+          P -> Q: "If Alpha had classical logic, the diagonal would be representable"
+          ~Q: "But the diagonal is NOT representable (unrepresentability theorem)"
+          
+          Therefore ~P: "Alpha cannot have classical logic"
+          
+          This is the core argument of the Diagonal sub-framework:
+          - Diagonalization shows unrepresentability
+          - Unrepresentability prevents classical logic
+          - Therefore ternary logic is necessary
+      *)
+      
+      Theorem the_core_argument :
+        (* If Alpha had excluded middle *)
+        ExcludedMiddle.alpha_excluded_middle ->
+        (* Then the diagonal would be representable *)
+        Unrepresentability.Core.representable 
+          (Diagonal.Omega.om_diagonal alpha_enum embed).
+      Proof.
+        exact (ExcludedMiddle.alpha_em_makes_diagonal_representable alpha_enum embed).
+      Qed.
+      
+      Theorem the_impossibility :
+        (* But the diagonal is not representable *)
+        ~ Unrepresentability.Core.representable 
+            (Diagonal.Omega.om_diagonal alpha_enum embed).
+      Proof.
+        exact (Unrepresentability.Core.omega_diagonal_not_representable 
+                alpha_enum enum_complete embed).
+      Qed.
+      
+      Theorem the_conclusion :
+        (* Therefore Alpha cannot have excluded middle *)
+        ~ ExcludedMiddle.alpha_excluded_middle.
+      Proof.
+        (* By modus tollens *)
+        apply (modus_tollens 
+          ExcludedMiddle.alpha_excluded_middle
+          (Unrepresentability.Core.representable 
+            (Diagonal.Omega.om_diagonal alpha_enum embed))).
+        - exact the_core_argument.
+        - exact the_impossibility.
+      Qed.
+      
+      (** Meta-theorem: The entire framework follows from modus tollens on unrepresentability *)
+      Theorem framework_is_modus_tollens :
+        let Classical_Logic := ExcludedMiddle.alpha_excluded_middle in
+        let Diagonal_Representable := 
+          Unrepresentability.Core.representable 
+            (Diagonal.Omega.om_diagonal alpha_enum embed) in
+        
+        (* If classical logic then diagonal representable *)
+        (Classical_Logic -> Diagonal_Representable) /\
+        (* But diagonal not representable *)
+        (~Diagonal_Representable) /\
+        (* Therefore not classical logic *)
+        (~Classical_Logic) /\
+        (* Which means ternary logic *)
+        (~ (forall A : Alphacarrier -> Prop, 
+            (exists a, A a) \/ (forall a, ~ A a))).
+      Proof.
+        split; [| split; [| split]].
+        - (* Classical -> Representable *)
+          exact the_core_argument.
+        - (* ~Representable *)
+          exact the_impossibility.
+        - (* ~Classical *)
+          exact the_conclusion.
+        - (* Ternary logic (same as ~Classical) *)
+          exact the_conclusion.
+      Qed.
+      
+    End MetaMT.
+    
+  End ClassicalReasoning.
+
 End AlphaTernary.
