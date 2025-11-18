@@ -790,6 +790,7 @@ Module HomFunctors.
           
         This establishes that being (what a predicate is) is characterized
         by impossibility structure (what boundaries it respects).
+        Note: We used extensionality and axioms that are technically not entirely constructive.
       *)
 
     End BeingTheorems.

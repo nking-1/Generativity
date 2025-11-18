@@ -1,24 +1,3 @@
-# DAO Framework
-
-DAO (Duality of Alpha and Omega) is a framework that constructs logic and mathematics from first principles based on an interplay of two types: OmegaType, a trivial, fully complete type with a proof for anything, and AlphaType, a consistent but incomplete type that acknowledges impossibility. DAO constructs logic from impossibility: Omega represents total overdetermination, Alpha represents consistent limitation, and their interplay generates mathematics. The framework is named DAO as an homage to the intuitions of Daoism, which strongly aligns with the fundamental principles uncovered by the Omega, Alpha, and Nomega types.
-
-DAO is designed to be a free, open source library for mathematics. Feel free to use it in your work. Please cite the author (Nicholas King) and the record on Zenodo if you use it. DAO is currently in a pre-release stage, so APIs might change significantly in future versions.
-
-## Recommended Reading Order
-Try reading the proofs in `DAO/Rocq/src/Core` in this order:
-
-1. OmegaType.v and OmegaProperties.v - See how triviality results in immediate contradiction.
-2. NomegaType.v and NomegaProperties.v - See how emptiness results in vacuous non-existence.
-3. AlphaType.v and AlphaProperties.v - Observe the beginning of structure emergent from one impossibility.
-
-From there, you can choose to read the proofs as you like:
-
-- `DAO/Rocq/src/Logic` - Shows how ternary logic, diagonal arguments, and classic unrepresentability results emerge.
-- `DAO/Rocq/src/Logic/Paradox` - Shows how Alpha absorbs all paradox into its impossible predicate, while Omega uses paradox constructively.
-- `DAO/Rocq/src/Theory/Impossibility` - Implements a new theory, impossibility theory, from the unique impossible predicate of AlphaType.
-- `DAO/Rocq/src/Classical` - Defines ClassicalAlphaType, which explicitly uses the law of excluded middle (classical logic), and then rebuilds classical mathematics using it.
-- `DAO/Rocq/src/Metaphysics/Process.v` - Builds a generative incompleteness theorem that conceptually echoes process philosophy / impermanence (anicca)
-
 # **DAO Framework**
 
 **DAO (Duality of Alpha and Omega)** is a foundational framework that reconstructs logic and mathematics from first principles using *impossibility* as its primitive concept. It is based on the interaction of two types:

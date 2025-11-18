@@ -103,42 +103,42 @@ Module Diagonal.
       Variable embed : Alphacarrier -> Omegacarrier.
       
       (** Omega witnesses the diagonal *)
-Theorem diagonal_exists :
-  exists x : Omegacarrier, om_diagonal alpha_enum embed x.
-Proof.
-  apply omega_completeness.
-Qed.
+      Theorem diagonal_exists :
+        exists x : Omegacarrier, om_diagonal alpha_enum embed x.
+      Proof.
+        apply omega_completeness.
+      Qed.
 
-(** But Omega also witnesses the negation *)
-Theorem diagonal_does_not_exist :
-  exists x : Omegacarrier, ~ om_diagonal alpha_enum embed x.
-Proof.
-  (* The predicate "not om_diagonal" also has a witness in Omega *)
-  pose (not_diag := fun x => ~ om_diagonal alpha_enum embed x).
-  apply (omega_completeness not_diag).
-Qed.
+      (** But Omega also witnesses the negation *)
+      Theorem diagonal_does_not_exist :
+        exists x : Omegacarrier, ~ om_diagonal alpha_enum embed x.
+      Proof.
+        (* The predicate "not om_diagonal" also has a witness in Omega *)
+        pose (not_diag := fun x => ~ om_diagonal alpha_enum embed x).
+        apply (omega_completeness not_diag).
+      Qed.
 
-(** Omega witnesses contradictory predicates about the diagonal *)
-Theorem omega_diagonal_paradox :
-  (exists x : Omegacarrier, om_diagonal alpha_enum embed x) /\
-  (exists y : Omegacarrier, ~ om_diagonal alpha_enum embed y).
-Proof.
-  split.
-  - apply diagonal_exists.
-  - apply diagonal_does_not_exist.
-Qed.
+      (** Omega witnesses contradictory predicates about the diagonal *)
+      Theorem omega_diagonal_paradox :
+        (exists x : Omegacarrier, om_diagonal alpha_enum embed x) /\
+        (exists y : Omegacarrier, ~ om_diagonal alpha_enum embed y).
+      Proof.
+        split.
+        - apply diagonal_exists.
+        - apply diagonal_does_not_exist.
+      Qed.
 
-(** Or even stronger: there exists a point satisfying both *)
-Theorem omega_witnesses_contradiction :
-  exists x : Omegacarrier, 
-    om_diagonal alpha_enum embed x /\ ~ om_diagonal alpha_enum embed x.
-Proof.
-  (* This is just omega_has_paradoxes applied to the diagonal *)
-  pose (diag := om_diagonal alpha_enum embed).
-  destruct (OmegaProperties.Paradoxes.omega_has_paradoxes diag) as [x Hx].
-  exists x.
-  exact Hx.
-Qed.
+      (** Or even stronger: there exists a point satisfying both *)
+      Theorem omega_witnesses_contradiction :
+        exists x : Omegacarrier, 
+          om_diagonal alpha_enum embed x /\ ~ om_diagonal alpha_enum embed x.
+      Proof.
+        (* This is just omega_has_paradoxes applied to the diagonal *)
+        pose (diag := om_diagonal alpha_enum embed).
+        destruct (OmegaProperties.Paradoxes.omega_has_paradoxes diag) as [x Hx].
+        exists x.
+        exact Hx.
+      Qed.
 
       (** The price Omega pays to see everything is to not distinguish truth and falsehood *)
       Theorem diagonal_exists_iff_not_exists :

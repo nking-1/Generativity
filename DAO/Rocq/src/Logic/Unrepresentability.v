@@ -104,6 +104,7 @@ Module Unrepresentability.
   
   Module Godel.
     Import Core.
+    Import Diagonal.Omega.
     
     (** Alpha can make claims about its own predicates *)
     Definition Alpha_Claims {Alpha : AlphaType} 
@@ -205,8 +206,16 @@ Module Unrepresentability.
       (embed : Alphacarrier -> Omegacarrier) :
       ~Godel_Statement alpha_enum embed.
     Proof.
-      (* TODO: Fill this out *)
-    Admitted.
+      unfold Godel_Statement.
+      intro H_exists.
+      
+      (* Omega witnesses the contradiction about the diagonal *)
+      destruct (@Diagonal.Omega.omega_witnesses_contradiction Omega Alpha alpha_enum embed) 
+        as [x [Hx Hnx]].
+      
+      (* This gives us: om_diagonal x ∧ ¬om_diagonal x, which is False *)
+      exact (Hnx Hx).
+    Qed.
     
   End Godel.
 
