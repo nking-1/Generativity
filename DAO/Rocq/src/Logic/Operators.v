@@ -1,8 +1,5 @@
 (** * Operators.v
-    
     Symbolic operator calculus for DAO (ASCII-only, scoped notation)
-    Makes proofs 10-100x shorter and more intuitive
-    
     Usage:
       Require Import DAO.Logic.Operators.
       Open Scope dao_scope.

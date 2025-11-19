@@ -771,21 +771,13 @@ Module BasicCategoryTheory.
       
       (**
         Interpretation:
-        
         In PRED, hom_as_prop P Q means (forall a, P a -> Q a), i.e., P implies Q.
-        
         The theorem predicates_equal_iff_homs_equal states:
-        
           P = Q  ⟺  (∀R. P→R ⟺ Q→R)
-        
         That is: a predicate is determined by its implications.
-        
         Since P→Q can be read as "P does not make Q impossible", we have:
-        
           A predicate is determined by what it does not make impossible.
-          
         Or equivalently:
-        
           A predicate is determined by the impossibilities it respects.
           
         This establishes that being (what a predicate is) is characterized
@@ -1134,6 +1126,127 @@ Module BasicCategoryTheory.
       *)
       
     End Philosophy.
+
+    (** * Omega_veil as Lawvere's Impossibility Witness *)
+    Section OmegaVeilFixedPoint.
+      Context {Alpha : AlphaType}.
+      
+      (** The Russell/Lawvere diagonal construction *)
+      Definition russell_diagonal (e : Alphacarrier -> (Alphacarrier -> Prop)) 
+        (a : Alphacarrier) : Prop :=
+        ~ e a a.
+      
+      (** Lawvere's construction produces a self-negating point *)
+      Theorem lawvere_gives_self_negating_point :
+        forall (e : Alphacarrier -> (Alphacarrier -> Prop)),
+        surjective e ->
+        exists (a : Alphacarrier),
+          e a a <-> ~ e a a.
+      Proof.
+        intros e Hsurj.
+        (* The diagonal function *)
+        pose (diag := russell_diagonal e).
+        (* By surjectivity, diag appears in the enumeration *)
+        destruct (Hsurj diag) as [a Ha].
+        exists a.
+        (* Unfold: e a = diag, so e a a = diag a = ~ e a a *)
+        assert (Hdiag : diag a = ~ e a a) by reflexivity.
+        split; intro H.
+        - (* e a a -> ~ e a a *)
+          rewrite Ha in H.
+          rewrite Hdiag in H.
+          exact H.
+        - (* ~ e a a -> e a a *)
+          rewrite Ha.
+          rewrite Hdiag.
+          exact H.
+      Qed.
+      
+      Lemma self_negating_predicate_impossible :
+        forall (a : Alphacarrier),
+        ~ exists (P : Alphacarrier -> Prop), P a <-> ~ P a.
+      Proof.
+        intros a [P Hself].
+        destruct Hself as [H_forward H_backward].
+        destruct (classic (P a)) as [HP | HnP].
+        - exact (H_forward HP HP).
+        - exact (HnP (H_backward HnP)).
+      Qed.
+      
+      (** Therefore: surjection is impossible (Cantor's theorem) *)
+      Theorem surjection_impossible_via_lawvere :
+        ~ exists (e : Alphacarrier -> (Alphacarrier -> Prop)), surjective e.
+      Proof.
+        intros [e Hsurj].
+        (* Lawvere gives us a self-negating point *)
+        destruct (lawvere_gives_self_negating_point e Hsurj) as [a Hself].
+        (* But self-negating points are impossible *)
+        apply (self_negating_predicate_impossible a).
+        exists (e a).
+        exact Hself.
+      Qed.
+      
+      Corollary complete_enumeration_impossible_when_equiv :
+        forall (equiv : Equiv Alphacarrier nat),
+        forall (enum : nat -> option (Alphacarrier -> Prop)),
+        ~ complete_enumeration enum.
+      Proof.
+        intros equiv enum Hcomplete.
+        (* Use the transport machinery from earlier *)
+        exact (lawvere_prevents_complete_enumeration_via_equiv equiv enum Hcomplete).
+      Qed.
+      
+      (** * Connection to Omega_veil *)
+      
+      (** Alternative formulation: The Lawvere fixed point witnesses omega_veil
+          
+          We can also view this through the lens of impossibility:
+          A self-negating point would witness omega_veil if it could exist.
+      *)
+      Theorem self_negating_would_witness_omega_veil :
+        (exists (P : Alphacarrier -> Prop) (a : Alphacarrier), P a <-> ~ P a) ->
+        exists (a : Alphacarrier), omega_veil a.
+      Proof.
+        intros [P [a Hself]].
+        exists a.
+        (* From P a <-> ~ P a, derive False *)
+        exfalso.
+        destruct Hself as [H_forward H_backward].
+        destruct (classic (P a)) as [HP | HnP].
+        - (* HP : P a, so ~ P a by forward direction *)
+          exact (H_forward HP HP).
+        - (* HnP : ~ P a, so P a by backward direction *)
+          exact (HnP (H_backward HnP)).
+      Qed.
+      
+      (** But omega_veil has no witnesses *)
+      Theorem omega_veil_has_no_witnesses_anywhere :
+        ~ exists (a : Alphacarrier), omega_veil a.
+      Proof.
+        intros [a Hveil].
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hveil).
+      Qed.
+      
+      (** The fundamental connection:
+          
+          Lawvere's theorem:     surjection → self-negating point
+          Impossibility theory:  self-negating point → omega_veil
+          Alpha's consistency:   omega_veil has no witnesses
+          
+          Therefore: no surjection (incompleteness)
+      *)
+      Theorem lawvere_incompleteness_via_omega_veil :
+        ~ exists (e : Alphacarrier -> (Alphacarrier -> Prop)), surjective e.
+      Proof.
+        intros [e Hsurj].
+        apply omega_veil_has_no_witnesses_anywhere.
+        apply self_negating_would_witness_omega_veil.
+        destruct (lawvere_gives_self_negating_point e Hsurj) as [a Hself].
+        exists (e a), a.
+        exact Hself.
+      Qed.
+      
+    End OmegaVeilFixedPoint.
     
   End Lawvere.
   

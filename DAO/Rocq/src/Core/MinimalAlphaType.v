@@ -296,26 +296,26 @@ Section EmptyTypesCannotBeAbstract.
     exact (Hempty x).
   Qed.
   
-  Section WithNomega.
-    (* Hypothetical NomegaType definition *)
-    Inductive NomegaType : Type := .
+  Section WithVoid.
+    (* Hypothetical VoidType definition *)
+    Inductive VoidType : Type := .
     
-    Theorem nomega_is_empty :
-      NomegaType -> False.
+    Theorem void_is_empty :
+      VoidType -> False.
     Proof.
       intro n.
       destruct n.
     Qed.
     
-    (** Cannot construct AbstractAlphaType with NomegaType as carrier *)
-    Theorem nomega_not_abstract_carrier :
+    (** Cannot construct AbstractAlphaType with VoidType as carrier *)
+    Theorem void_not_abstract_carrier :
       forall (IA : AbstractAlphaType),
-      AbstractAlphacarrier <> NomegaType.
+      AbstractAlphacarrier <> VoidType.
     Proof.
-      exact (empty_carrier_contradicts_abstract NomegaType nomega_is_empty).
+      exact (empty_carrier_contradicts_abstract VoidType void_is_empty).
     Qed.
     
     
-  End WithNomega.
+  End WithVoid.
 
 End EmptyTypesCannotBeAbstract.

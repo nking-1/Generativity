@@ -5,11 +5,11 @@
 
   Intent
   ------
-  We show, *constructively*, that for any Alpha-like substructure living
+  We show that for any Alpha-like substructure living
   inside a richer host (not necessarily Omega; no classical axioms),
   there is a canonical "gateway" predicate — a pointwise equivalent
   representative of the unique-impossible predicate — that plays the
-  role of a fixed reference to what lies *beyond* the substructure.
+  role of a fixed reference to what lies beyond the substructure.
 
   The only mild extra ingredient we assume about a given "collection"
   C of predicates (think: what the current stage can talk about) is
@@ -22,16 +22,10 @@
   the one place you can safely point at the beyond is the unique
   impossibility; any attempt to reify “the whole you’re in” (its
   totality) collapses into that veil at the boundary.
-
-  Notes
-  -----
-  • Entirely intuitionistic: no use of Excluded Middle, etc.
-  • We do *not* assume any Omega completeness here.
-  • We stay in pointwise equivalence (↔), so no functional
-    extensionality is needed.
 *)
 
-Require Import Coq.Logic.PropExtensionality  (* not used; here just to signal we avoid it *).
+(* Can we not use this? Technically makes it not fully constructive, but this is valid if we're working in HoTT *)
+Require Import Stdlib.Logic.PropExtensionality.
 
 Section Gateway.
 
@@ -48,7 +42,6 @@ Section Gateway.
   Variable A_nonempty : exists x, A x.
 
   Variable imp : Carrier -> Prop.
-  Hypothesis imp_no_witnesses : forall x, A x -> ~ imp x.
   Hypothesis imp_unique :
     forall Q : Carrier -> Prop,
       (forall x, A x -> ~ Q x) ->
@@ -69,15 +62,6 @@ Section Gateway.
   *)
   Definition Gateway (C : Collection) : Carrier -> Prop :=
     fun a => A a -> ~ totality_of C a.
-
-  (** Mild, constructive assumption tying C to A:
-      the collection C is aware of (contains) the membership predicate A.
-      This is the only place we relate "what A can talk about" to A itself.
-  *)
-  Hypothesis C_contains_A : forall (C : Collection), C A -> True.
-  (* We’ll use C A as an *assumption* where needed; the hypothesis above
-     is just a placeholder to stress it’s not logically heavy. To get
-     the main theorem we’ll quantify over C with (C A) as premise. *)
 
   (** Core Lemma: If a collection C contains A itself,
       then Gateway C has *no witnesses inside A*.
