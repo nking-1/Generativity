@@ -2,9 +2,8 @@ module Main where
 
 import ThermoParser
 import ThermoTypeSystem
-import ThermoLangV2
+import ThermoLang
 import UnravelMonad
-import qualified Prelude
 import Prelude hiding (div, (/))
 
 -- ==========================================
@@ -64,7 +63,7 @@ runScript name code = do
                     
                     -- 3. EXECUTE
                     putStrLn "   Executing..."
-                    let (res, u) = run (compile ast Prelude.mempty)
+                    let (res, u) = run (compile ast mempty) -- Fixed: Prelude.mempty -> mempty
                     
                     putStrLn $ "   Result:  " ++ show res
                     putStrLn $ "   Entropy: " ++ show (totalEntropy u)

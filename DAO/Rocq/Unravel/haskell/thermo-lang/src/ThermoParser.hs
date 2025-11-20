@@ -5,7 +5,7 @@ import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Control.Monad.Combinators.Expr
 import Data.Void
-import ThermoLangV2
+import ThermoLang
 
 -- ==========================================
 -- 1. PARSER INFRASTRUCTURE
@@ -13,26 +13,21 @@ import ThermoLangV2
 
 type Parser = Parsec Void String
 
--- Whitespace consumer
 sc :: Parser ()
 sc = L.space space1 lineCmnt blockCmnt
   where
     lineCmnt  = L.skipLineComment "//"
     blockCmnt = L.skipBlockComment "/*" "*/"
 
--- Lexeme wrapper (consumes trailing whitespace)
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
 
--- Static symbols
 symbol :: String -> Parser String
 symbol = L.symbol sc
 
--- Reserved keywords
 keyword :: String -> Parser String
 keyword w = lexeme (string w <* notFollowedBy alphaNumChar)
 
--- Identifiers (variables)
 identifier :: Parser String
 identifier = (lexeme . try) (p >>= check)
   where
@@ -41,11 +36,9 @@ identifier = (lexeme . try) (p >>= check)
     reserved = ["if", "then", "else", "let", "in", "true", "false", 
                 "map", "fold", "repeat", "shield", "recover", "log"]
 
--- Integers
 integer :: Parser Int
 integer = lexeme L.decimal
 
--- Parentheses
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 
@@ -57,9 +50,8 @@ brackets = between (symbol "[") (symbol "]")
 -- ==========================================
 
 pTerm :: Parser Term
-pTerm = makeExprBuilder pTermPart operatorTable
+pTerm = makeExprParser pTermPart operatorTable
 
--- The atom of the language
 pTermPart :: Parser Term
 pTermPart = choice
   [ parens pTerm
@@ -76,8 +68,6 @@ pTermPart = choice
   , pVar
   ]
 
--- --- PRIMITIVES ---
-
 pInt :: Parser Term
 pInt = IntVal <$> integer
 
@@ -93,86 +83,76 @@ pList = do
     items <- brackets (pTerm `sepBy` symbol ",")
     return (ListVal items)
 
--- --- CONTROL FLOW ---
-
 pIf :: Parser Term
 pIf = do
-    keyword "if"
+    _ <- keyword "if"
     cond <- pTerm
-    keyword "then"
+    _ <- keyword "then"
     t1 <- pTerm
-    keyword "else"
+    _ <- keyword "else"
     t2 <- pTerm
     return (If cond t1 t2)
 
 pLet :: Parser Term
 pLet = do
-    keyword "let"
+    _ <- keyword "let"
     name <- identifier
-    symbol "="
+    _ <- symbol "="
     val <- pTerm
-    keyword "in"
+    _ <- keyword "in"
     body <- pTerm
     return (Let name val body)
 
--- --- DATA PROCESSING ---
-
--- Syntax: map(var -> body, list)
 pMap :: Parser Term
 pMap = do
-    keyword "map"
-    symbol "("
+    _ <- keyword "map"
+    _ <- symbol "("
     var <- identifier
-    symbol "->"
+    _ <- symbol "->"
     body <- pTerm
-    symbol ","
+    _ <- symbol ","
     listExpr <- pTerm
-    symbol ")"
+    _ <- symbol ")"
     return (Map var body listExpr)
 
--- Syntax: fold(acc, var -> body, init, list)
 pFold :: Parser Term
 pFold = do
-    keyword "fold"
-    symbol "("
+    _ <- keyword "fold"
+    _ <- symbol "("
     acc <- identifier
-    symbol ","
+    _ <- symbol ","
     var <- identifier
-    symbol "->"
+    _ <- symbol "->"
     body <- pTerm
-    symbol ","
+    _ <- symbol ","
     initExpr <- pTerm
-    symbol ","
+    _ <- symbol ","
     listExpr <- pTerm
-    symbol ")"
+    _ <- symbol ")"
     return (Fold acc var body initExpr listExpr)
 
--- --- SPECIAL OPS ---
-
--- Syntax: repeat(n) { body }
 pRepeat :: Parser Term
 pRepeat = do
-    keyword "repeat"
-    symbol "("
+    _ <- keyword "repeat"
+    _ <- symbol "("
     n <- integer
-    symbol ")"
-    symbol "{"
+    _ <- symbol ")"
+    _ <- symbol "{"
     body <- pTerm
-    symbol "}"
+    _ <- symbol "}"
     return (Repeat n body)
 
--- Syntax: shield expr recover default
 pShield :: Parser Term
 pShield = do
-    keyword "shield"
+    _ <- keyword "shield"
     tryExpr <- pTerm
-    keyword "recover"
+    _ <- keyword "recover"
     fallback <- pTerm
     return (Shield tryExpr fallback)
 
 pLog :: Parser Term
 pLog = do
-    keyword "log"
+    _ <- keyword "log"
     msg <- lexeme (char '"' >> manyTill L.charLiteral (char '"'))
     val <- pTerm
     return (Log msg val)

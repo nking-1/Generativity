@@ -1,4 +1,4 @@
-module ThermoLangV2 where
+module ThermoLang where
 
 import UnravelMonad
 import qualified Prelude
