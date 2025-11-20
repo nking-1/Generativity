@@ -65,6 +65,17 @@ impl Universe {
         }
     }
     
+    /// Create universe from constituent parts
+    ///
+    /// Used internally for parallel universe merging
+    pub(crate) fn from_parts(total_entropy: u64, time_step: u64, void_count: u64) -> Self {
+        Self {
+            total_entropy,
+            time_step,
+            void_count,
+        }
+    }
+    
     /// Get total accumulated entropy
     pub fn total_entropy(&self) -> u64 {
         self.total_entropy

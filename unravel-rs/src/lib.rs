@@ -33,14 +33,20 @@ mod void_info;
 mod universe;
 mod unravel;
 mod ops;
+mod compute;
+mod interop;
 
 pub use void_info::{VoidInfo, VoidSource};
 pub use universe::Universe;
 pub use unravel::{Unravel, UResult};
-pub use ops::{divide, add, multiply};
+pub use ops::{divide, add, multiply, divide_zc};
+pub use compute::{Compute, Pure, Crumble, Bind, Map, Recover, CombineWith, ParallelCombine, ParallelMode};
+pub use interop::{from_result, ResultExt};
 
 // Re-export commonly used items
 pub mod prelude {
     pub use crate::{Unravel, UResult, VoidInfo, VoidSource, Universe};
     pub use crate::ops::*;
+    pub use crate::compute::{Compute, Pure, Bind, ParallelMode, ParallelCombine};
+    pub use crate::interop::{from_result, ResultExt};
 }

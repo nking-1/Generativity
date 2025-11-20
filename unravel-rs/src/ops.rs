@@ -1,6 +1,7 @@
 //! Common operations with thermodynamic tracking
 
 use crate::{Unravel, VoidInfo, VoidSource};
+use crate::compute::{Pure, Crumble, Compute};
 
 /// Division with thermodynamic tracking
 ///
@@ -16,6 +17,36 @@ pub fn divide(numerator: i64, denominator: i64) -> Unravel<i64> {
         Unravel::crumble(void)
     } else {
         Unravel::pure(numerator / denominator)
+    }
+}
+
+/// Zero-cost division (trait-based)
+///
+/// This version uses the trait-based Compute system for maximum performance.
+/// The compiler can fully inline this into a state machine.
+pub fn divide_zc(numerator: i64, denominator: i64) -> impl Compute<Output = i64> {
+    if denominator == 0 {
+        let void = VoidInfo::new(0, VoidSource::DivByZero { numerator });
+        DivideCompute::Invalid(Crumble::new(void))
+    } else {
+        DivideCompute::Valid(Pure::new(numerator / denominator))
+    }
+}
+
+enum DivideCompute {
+    Valid(Pure<i64>),
+    Invalid(Crumble<i64>),
+}
+
+impl Compute for DivideCompute {
+    type Output = i64;
+    
+    #[inline]
+    fn compute(self, universe: crate::Universe) -> (crate::UResult<i64>, crate::Universe) {
+        match self {
+            DivideCompute::Valid(pure) => pure.compute(universe),
+            DivideCompute::Invalid(crumble) => crumble.compute(universe),
+        }
     }
 }
 

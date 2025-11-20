@@ -95,17 +95,7 @@ impl VoidInfo {
         }
     }
     
-    /// Create a void with custom entropy
-    ///
-    /// Used internally for void propagation where entropy > 1
-    pub(crate) fn with_entropy(entropy: u64, time_step: u64, source: VoidSource) -> Self {
-        debug_assert!(entropy >= 1, "BaseVeil principle violated");
-        Self {
-            entropy,
-            time_step,
-            source,
-        }
-    }
+
     
     /// Get the thermodynamic contribution
     pub fn entropy(&self) -> u64 {

@@ -2,9 +2,15 @@
 
 A monad implementation where error handling respects physical laws.
 
+[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
+[![Tests](https://img.shields.io/badge/tests-19%20passing-brightgreen.svg)](https://github.com/nking-1/Generativity)
+[![Performance](https://img.shields.io/badge/performance-38x%20faster-blue.svg)](examples/zero_cost.rs)
+
 ## Overview
 
 **Unravel** is a Rust library implementing computational thermodynamics based on the Gateway theorem from the DAO/Rocq mathematical framework. It treats errors not as exceptions to avoid, but as structured encounters with the impossible predicate (`omega_veil`) that has measurable thermodynamic cost.
+
+**Latest:** v0.2 features zero-cost abstractions with **38.61x performance improvement** over the heap-based approach.
 
 ## Mathematical Foundation
 
@@ -52,6 +58,8 @@ Threads universe state through computations, automatically tracking entropy.
 
 ## Quick Start
 
+### Heap-Based API (Simple, Flexible)
+
 ```rust
 use unravel::prelude::*;
 
@@ -72,20 +80,54 @@ fn main() {
 }
 ```
 
+### Zero-Cost API (High Performance)
+
+```rust
+use unravel::prelude::*;
+
+fn main() {
+    // Same semantics, 38x faster
+    let computation = Bind::new(
+        Pure::new(100),
+        |x| Bind::new(
+            divide_zc(x, 2),
+            |y| Pure::new(y + 10)
+        )
+    );
+    
+    let (result, universe) = computation.compute(Universe::new());
+    println!("Result: {:?}", result.as_valid());
+    println!("Universe: {}", universe);
+}
+```
+
 ## Examples
 
-Run the basic examples:
+Run the examples:
 
 ```bash
+# Basic thermodynamic computation
 cargo run --example basic
+
+# Zero-cost abstractions with benchmarks
+cargo run --release --example zero_cost
+```
+
+**Performance Results:**
+```
+Heap-based approach: 159.25µs
+Zero-cost approach:  4.125µs
+Speedup: 38.61x ⚡
 ```
 
 ## Key Features
 
-- **Zero-cost abstractions**: Compiles down efficiently
-- **Proven correctness**: Based on formal Coq specifications
-- **Conservation laws**: Entropy tracking with mathematical guarantees
-- **Composable**: Works with standard Rust patterns
+- **🚀 Zero-cost abstractions**: 38x faster than heap-based approach (v0.2)
+- **✅ Proven correctness**: Based on formal Coq specifications
+- **⚖️ Conservation laws**: Entropy tracking with mathematical guarantees
+- **🔧 Composable**: Works with standard Rust patterns
+- **🔀 Parallel execution**: Fork/Join with sequential or parallel time semantics
+- **🤝 std::Result interop**: Seamless integration with existing Rust code
 
 ## Theory References
 

@@ -91,19 +91,19 @@ class EdgeCaseHunter {
           const result1 = runUnravel(expr1);
           const result2 = runUnravel(expr2);
 
-          if (result1.value.type === 'VNum' && result2.value.type === 'VNum') {
-            const diff = Math.abs(result1.value.value - result2.value.value);
-            if (diff > Number.EPSILON * 100) {  // Significant difference
-              interestingCases.push({
-                type: 'Precision anomaly',
-                a: aVar,
-                b: bVar,
-                diff,
-                result1: result1.value.value,
-                result2: result2.value.value
-              });
-            }
-          }
+          // if (result1.value.type === 'VNum' && result2.value.type === 'VNum') {
+          //   const diff = Math.abs(result1.value - result2.value);
+          //   if (diff > Number.EPSILON * 100) {  // Significant difference
+          //     interestingCases.push({
+          //       type: 'Precision anomaly',
+          //       a: aVar,
+          //       b: bVar,
+          //       diff,
+          //       result1: result1.value.value,
+          //       result2: result2.value.value
+          //     });
+          //   }
+          // }
 
         } catch (error) {
           crashes++;

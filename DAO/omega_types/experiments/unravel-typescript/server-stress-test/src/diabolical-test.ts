@@ -53,7 +53,7 @@ const DIABOLICAL_CONFIGS = {
 
 class DiabolicalTester {
   private universe = new ProductionUniverse();
-  private statistics = {
+  public statistics = {
     operationsAttempted: 0,
     systemCrashes: 0,
     mathematicalViolations: 0,
