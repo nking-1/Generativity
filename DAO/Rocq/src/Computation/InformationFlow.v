@@ -1008,6 +1008,8 @@ Section MetaProof.
   Qed.
 End MetaProof.
 
+
+
 (* Section UniquenessIMax.
 
   Context {Omega : OmegaType} {Alpha : AlphaType}.

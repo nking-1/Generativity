@@ -24,7 +24,6 @@
   totality) collapses into that veil at the boundary.
 *)
 
-(* Can we not use this? Technically makes it not fully constructive, but this is valid if we're working in HoTT *)
 Require Import Stdlib.Logic.PropExtensionality.
 
 Section Gateway.

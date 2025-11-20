@@ -4,6 +4,7 @@
 
 import Unravel
 import Prelude hiding (lookup)
+import Control.Monad (when)
 
 -- Helper to show thermodynamic results
 showThermo :: Prod ValueT Universe -> String
@@ -181,16 +182,22 @@ testFuelMechanismReference = do
         ("High complexity", foldl1 EVAdd [EVNum n | n <- [1..100]]),
         ("Exponential", massiveNesting 15),
         ("Deep nesting", deepLetNesting 50)
-      ]
+        ]
   
   putStrLn "Fuel consumption analysis:"
   mapM_ (\(name, expr) -> do
-    let result = run_basic expr
-    putStrLn $ "  " ++ name ++ ": " ++ show result
+    let Pair v u = run_thermo expr
+    putStrLn $ "  " ++ name ++ ": " ++ showValue v
     
-    when (result == VVoid) $
-      putStrLn $ "    ⛽ FUEL EXHAUSTED (expected for complex expressions)"
+    -- Report entropy generation from evaluation
+    putStrLn $ "    Entropy: " ++ show (total_entropy u) ++ ", Time: " ++ show (time_step u)
     ) fuelTests
+
+-- Helper to display values
+showValue :: ValueT -> String
+showValue (VTNum n) = "Num(" ++ show n ++ ")"
+showValue (VTBool b) = "Bool(" ++ show b ++ ")"
+showValue (VTVoid (VInfo e t s)) = "Void(entropy=" ++ show e ++ ")"
 
 -- Helper functions matching the stress test patterns
 massiveNesting :: Integer -> ExprV
@@ -210,8 +217,6 @@ deepLetNesting n =
 main :: IO ()
 main = do
   putStrLn "😈 DIABOLICAL STRESS TEST OF HASKELL REFERENCE IMPLEMENTATION"
-  putStrLn "Testing formal Unravel extracted from Coq proofs"
-  putStrLn "Designed to validate TypeScript implementation behavior\n"
   
   testEntropyBombReference
   testMathematicalLawsReference
@@ -220,10 +225,3 @@ main = do
   testFuelMechanismReference
   
   putStrLn "\n🏆 HASKELL REFERENCE STRESS TEST COMPLETE"
-  putStrLn "🎯 KEY QUESTIONS ANSWERED:"
-  putStrLn "  1. Does reference show time evolution anomalies like TypeScript?"
-  putStrLn "  2. How do mathematical laws hold under extreme stress in reference?"
-  putStrLn "  3. What are the engineering limits of the formal implementation?"
-  putStrLn "  4. Is TypeScript behavior consistent with Haskell reference?"
-  
-  putStrLn "\n🌀 Formal reference implementation tested with diabolical rigor! 🌀"

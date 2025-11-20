@@ -22,8 +22,6 @@ Open Scope Z_scope.
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
-Require Import DAO.Theory.Impossibility.FalseThermodynamics.
-Require Import DAO.Theory.Impossibility.ParadoxNumbers.
 Require Import DAO.Theory.Impossibility.WaysOfBeingFalse.
 
 Module UnravelLang.
@@ -1293,8 +1291,6 @@ Module UnravelLang.
     Import Eval.
     Import WithVariables.
     Import ImpossibilityAlgebra Core.
-    Import FalseThermodynamics.
-    Import ParadoxNumbers ParadoxNaturals.
     Import WaysOfBeingFalse.IntensionalFoundation.
     Import WaysOfBeingFalse.Core.
     Import WaysOfBeingFalse.PatternEquivalence.
