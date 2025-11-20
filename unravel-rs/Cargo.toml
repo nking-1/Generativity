@@ -1,0 +1,24 @@
+[package]
+name = "unravel"
+version = "0.1.0"
+edition = "2021"
+authors = ["Nicholas King"]
+license = "MIT OR Apache-2.0"
+description = "Thermodynamic computation: Error handling grounded in physics"
+repository = "https://github.com/nking-1/Generativity"
+keywords = ["monad", "thermodynamics", "impossibility", "algebra", "gateway"]
+categories = ["algorithms", "mathematics", "science"]
+
+[lib]
+name = "unravel"
+path = "src/lib.rs"
+
+[dependencies]
+
+[dev-dependencies]
+
+[[example]]
+name = "basic"
+path = "examples/basic.rs"
+
+
