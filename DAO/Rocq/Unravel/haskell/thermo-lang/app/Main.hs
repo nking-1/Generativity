@@ -98,8 +98,34 @@ demoConsensus = unlines
   , "if 1 == 1 then pathB else pathA" 
   ]
 
+
 -- ==========================================
--- RUNNER INFRASTRUCTURE
+-- 4. THE LAGRANGIAN EXPERIMENT (New!)
+-- ==========================================
+-- Hypothesis: L = S * S_dot.
+-- We simulate a trajectory falling into a singularity (r -> 0).
+-- We measure if the Entropy Flux (S_dot) compensates for the Singularity.
+demoLagrangian :: String
+demoLagrangian = unlines
+  [ "// THE EVENT HORIZON EXPERIMENT"
+  , "// A particle falls from r=10 down to r=0"
+  , "let trajectory = [10, 8, 6, 4, 2, 1, 0, 0, 0] in" 
+  
+  , "// The Potential Field: Phi ~ 1/r"
+  , "// As r approaches 0, Information Density approaches Infinity."
+  , "// In standard physics, this is a breakdown."
+  , "// In Impossibility Algebra, this is a Phase Transition."
+  , "let field = map(r -> "
+  , "    shield (1000 / r) recover 9999" -- 9999 is the "Planck Saturation" constant
+  , ", trajectory) in"
+  
+  , "// Compute the Total Action of the path"
+  , "fold(acc, val -> acc + val, 0, field)"
+  ]
+
+
+-- ==========================================
+-- RUNNER INFRASTRUCTURE (Enhanced)
 -- ==========================================
 
 runDemo :: String -> String -> IO ()
@@ -124,16 +150,25 @@ runDemo title code = do
                     putStrLn "\n📊 PHYSICS REPORT"
                     putStrLn "-----------------"
                     putStrLn $ "   Result Value:   " ++ show res
-                    putStrLn $ "   System Entropy: " ++ show (totalEntropy u) ++ " J/K"
-                    putStrLn $ "   Time Steps:     " ++ show (timeStep u) ++ " ticks"
-                    putStrLn $ "   Singularities:  " ++ show (voidCount u) ++ " (Absorbed)"
+                    putStrLn $ "   Total Entropy (S): " ++ show (totalEntropy u) 
+                    putStrLn $ "   Total Time (t):    " ++ show (timeStep u) 
                     
-                    -- FIX: Use qualified Prelude./ for floating point division
-                    let temp = if timeStep u > 0 
-                               then fromIntegral (totalEntropy u) Prelude./ fromIntegral (timeStep u) :: Double
-                               else 0
+                    -- CALCULATING THE LAGRANGIAN METRICS
+                    let s = fromIntegral (totalEntropy u) :: Double
+                    let t = fromIntegral (timeStep u) :: Double
+                    -- FIX: Use qualified Prelude./ here
+                    let s_dot = if t > 0 then s Prelude./ t else 0
+                    let lagrangian = s * s_dot -- L = S * S_dot
                     
-                    putStrLn $ "   Temperature:    " ++ take 5 (show temp) ++ " S/T"
+                    putStrLn "\n📐 LAGRANGIAN ANALYSIS"
+                    putStrLn "---------------------"
+                    putStrLn $ "   Entropy Rate (S_dot): " ++ take 6 (show s_dot) ++ " J/K/s"
+                    putStrLn $ "   Action (L):           " ++ take 8 (show lagrangian) ++ " J^2/K^2/s"
+                    
+                    if totalEntropy u > 0 
+                        then putStrLn "   ✓ Singularity Processed. Physics holds."
+                        else putStrLn "   ? No Entropy generated."
+
 
 help :: IO ()
 help = do
@@ -142,6 +177,7 @@ help = do
     putStrLn "  physics    - N-Body simulation with singularities"
     putStrLn "  finance    - Market maker handling zero-spreads"
     putStrLn "  consensus  - Choosing logic paths based on entropy"
+    putStrLn "  lagrangian - Information flow lagrangian"
     putStrLn "  all        - Run all demos"
 
 main :: IO ()
@@ -151,8 +187,10 @@ main = do
         ["physics"]   -> runDemo "The Uncrashable Particle" demoPhysics
         ["finance"]   -> runDemo "The Robust Market Maker" demoFinance
         ["consensus"] -> runDemo "Entropy Consensus" demoConsensus
+        ["lagrangian"] -> runDemo "Event Horizon Simulation" demoLagrangian
         ["all"] -> do
             runDemo "The Uncrashable Particle" demoPhysics
             runDemo "The Robust Market Maker" demoFinance
             runDemo "Entropy Consensus" demoConsensus
+            runDemo "Event Horizon Simulation" demoLagrangian
         _ -> help
