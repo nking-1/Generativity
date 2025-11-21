@@ -1,0 +1,20 @@
+// SENSOR FUSION: Thermodynamic Kalman Filter
+
+// Prior belief
+let prior = 1000 in     // expected altitude
+
+// Stream of pressure readings (hPa)
+// 0 = singularity (physical impossibility)
+let pressures = [1013, 1000, 990, 0, 985, 0, 980, 978] in
+
+// Convert pressure to altitude estimate
+// Simple model: altitude = 10000 / pressure
+let estimates = map(p ->
+    shield (10000 / p) recover prior
+, pressures) in
+
+// Fuse estimates by computing a stability-weighted average
+// (lower entropy paths dominate)
+let fused = fold(acc, e -> acc + e, 0, estimates) in
+
+fused

@@ -7,7 +7,6 @@ import UnravelMonad
 import qualified Prelude
 import Prelude hiding (div, (/))
 import System.Environment (getArgs)
--- Removed unused Data.List import
 
 -- ==========================================
 -- 1. THE UNCRASHABLE PHYSICS ENGINE
@@ -170,27 +169,71 @@ runDemo title code = do
                         else putStrLn "   ? No Entropy generated."
 
 
+runFile :: FilePath -> IO ()
+runFile path = do
+    putStrLn $ "\n📄 Loading script: " ++ path
+    exists <- Prelude.readFile path
+
+    putStrLn "1. Compiling..."
+    case parseThermo exists of
+        Left err -> putStrLn $ "❌ PARSE ERROR:\n" ++ err
+        Right ast -> do
+            case analyzeTyped ast of
+                Left typeErr -> putStrLn $ "🛑 TYPE ERROR: " ++ show typeErr
+                Right stats -> do
+                    putStrLn $ "   Predicted Entropy Bound: " ++ show (maxEntropy stats)
+                    
+                    putStrLn "2. Executing in Thermodynamic Sandbox..."
+                    let (res, u) = run (compile ast Prelude.mempty)
+                    
+                    putStrLn "\n📊 PROGRAM REPORT"
+                    putStrLn "-----------------"
+                    putStrLn $ "   Result Value:   " ++ show res
+                    putStrLn $ "   Total Entropy (S): " ++ show (totalEntropy u)
+                    putStrLn $ "   Total Time (t):    " ++ show (timeStep u)
+
+                    -- Lagrangian
+                    let s = fromIntegral (totalEntropy u) :: Double
+                    let t = fromIntegral (timeStep u) :: Double
+                    let s_dot = if t > 0 then s Prelude./ t else 0
+                    let lagrangian = s * s_dot
+
+                    putStrLn "\n📐 LAGRANGIAN ANALYSIS"
+                    putStrLn "---------------------"
+                    putStrLn $ "   Entropy Rate (S_dot): " ++ take 6 (show s_dot)
+                    putStrLn $ "   Action (L):           " ++ take 8 (show lagrangian)
+                    
+                    if totalEntropy u > 0
+                        then putStrLn "   ✓ Singularity Processed. Physics holds."
+                        else putStrLn "   ? No Entropy generated."
+
+
 help :: IO ()
 help = do
     putStrLn "Usage: thermo [demo-name]"
-    putStrLn "\nAvailable Demos:"
-    putStrLn "  physics    - N-Body simulation with singularities"
-    putStrLn "  finance    - Market maker handling zero-spreads"
-    putStrLn "  consensus  - Choosing logic paths based on entropy"
-    putStrLn "  lagrangian - Information flow lagrangian"
-    putStrLn "  all        - Run all demos"
+    putStrLn "\nAvailable Commands:"
+    putStrLn "  physics      - N-Body simulation with singularities"
+    putStrLn "  finance      - Market maker handling zero-spreads"
+    putStrLn "  consensus    - Choosing logic paths based on entropy"
+    putStrLn "  lagrangian   - Information flow Lagrangian"
+    putStrLn "  all          - Run all demos"
+    putStrLn "  run <file>   - Run a .thermo script from disk"
+
 
 main :: IO ()
 main = do
     args <- getArgs
     case args of
-        ["physics"]   -> runDemo "The Uncrashable Particle" demoPhysics
-        ["finance"]   -> runDemo "The Robust Market Maker" demoFinance
-        ["consensus"] -> runDemo "Entropy Consensus" demoConsensus
+        ["physics"]    -> runDemo "The Uncrashable Particle" demoPhysics
+        ["finance"]    -> runDemo "The Robust Market Maker" demoFinance
+        ["consensus"]  -> runDemo "Entropy Consensus" demoConsensus
         ["lagrangian"] -> runDemo "Event Horizon Simulation" demoLagrangian
         ["all"] -> do
             runDemo "The Uncrashable Particle" demoPhysics
             runDemo "The Robust Market Maker" demoFinance
             runDemo "Entropy Consensus" demoConsensus
             runDemo "Event Horizon Simulation" demoLagrangian
+
+        ["run", path] -> runFile path
+
         _ -> help

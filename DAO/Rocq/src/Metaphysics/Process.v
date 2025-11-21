@@ -531,10 +531,6 @@ Module EmergentTheology.
         apply (@Derive_NoSelfTotality.stage_total_vs_collection_total Alpha a b n x).
     Qed.
     
-    (* ============================================================ *)
-    (* The Ultimate Theological Theorem                             *)
-    (* ============================================================ *)
-    
     Theorem theology_emerges_from_incompleteness :
       (* From just no_self_totality and two distinct points, we get: *)
       
