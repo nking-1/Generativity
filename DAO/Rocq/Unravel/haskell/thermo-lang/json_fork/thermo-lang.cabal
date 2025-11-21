@@ -1,0 +1,42 @@
+cabal-version:      3.0
+name:               thermo-lang
+version:            0.1.0.0
+synopsis:           A Thermodynamic Language for Data Engineering
+license:            MIT
+build-type:         Simple
+
+common shared-properties
+    ghc-options: -Wall
+    default-language: GHC2021
+    default-extensions: 
+        OverloadedStrings
+        LambdaCase
+        RecordWildCards
+
+library
+    import:           shared-properties
+    exposed-modules:  UnravelMonad
+                    , ThermoLang
+                    , ThermoTypeSystem
+                    , ThermoParser
+                    , ThermoJSON
+    build-depends:    base >= 4.17 && < 5
+                    , containers
+                    , megaparsec
+                    , parser-combinators
+                    , text
+                    , aeson
+                    , bytestring
+                    , unordered-containers
+                    , vector
+    hs-source-dirs:   src
+
+executable thermo
+    import:           shared-properties
+    main-is:          Main.hs
+    other-modules:    Demos
+    build-depends:    base >= 4.17 && < 5
+                    , thermo-lang
+                    , containers
+                    , bytestring
+    hs-source-dirs:   app

@@ -102,7 +102,7 @@ demoConsensus = unlines
 -- ==========================================
 -- 4. THE LAGRANGIAN EXPERIMENT (New!)
 -- ==========================================
--- Hypothesis: L = S * S_dot.
+-- Entropy Flow Lagrangian Hypothesis: L = S * S_dot.
 -- We simulate a trajectory falling into a singularity (r -> 0).
 -- We measure if the Entropy Flux (S_dot) compensates for the Singularity.
 demoLagrangian :: String

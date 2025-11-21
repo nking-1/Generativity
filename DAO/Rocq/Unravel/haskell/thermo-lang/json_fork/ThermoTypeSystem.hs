@@ -1,0 +1,131 @@
+module ThermoTypeSystem where
+
+import ThermoLang
+import qualified Data.Map as Map
+import Data.Map (Map)
+import Control.Monad (foldM)
+
+data Type 
+    = TyInt 
+    | TyBool 
+    | TyString
+    | TyList Type
+    | TyJson      -- Dynamic JSON Object
+    | TyAny 
+    deriving (Show, Eq)
+
+data TypeError 
+    = Mismatch Type Type String 
+    | NotList Type 
+    | NotObject Type
+    | UndefinedVar String
+    | EmptyListWithoutContext
+    deriving (Show, Eq)
+
+type TypeContext = Map String Type
+
+expect :: Type -> Type -> String -> Either TypeError ()
+expect TyAny _ _ = Right () 
+expect _ TyAny _ = Right ()
+expect expected actual ctx = 
+    if expected == actual 
+    then Right () 
+    else Left (Mismatch expected actual ctx)
+
+infer :: Term -> TypeContext -> Either TypeError Type
+infer term ctx = case term of
+    
+    IntVal _  -> Right TyInt
+    BoolVal _ -> Right TyBool
+    StrVal _  -> Right TyString
+    
+    Var s -> case Map.lookup s ctx of
+        Just t  -> Right t
+        Nothing -> Left (UndefinedVar s)
+    
+    ListVal [] -> Right (TyList TyAny) 
+    ListVal (x:xs) -> do
+        tHead <- infer x ctx
+        _ <- foldM (\expectedT el -> do
+            tElem <- infer el ctx
+            expect expectedT tElem "List Element"
+            return expectedT
+            ) tHead xs
+        return (TyList tHead)
+
+    Add t1 t2 -> do
+        t1Type <- infer t1 ctx
+        t2Type <- infer t2 ctx
+        expect TyInt t1Type "Add Left"
+        expect TyInt t2Type "Add Right"
+        return TyInt
+
+    Div t1 t2 -> do
+        t1Type <- infer t1 ctx
+        t2Type <- infer t2 ctx
+        expect TyInt t1Type "Div Left"
+        expect TyInt t2Type "Div Right"
+        return TyInt
+
+    Eq t1 t2 -> do
+        t1Type <- infer t1 ctx
+        t2Type <- infer t2 ctx
+        expect t1Type t2Type "Equality"
+        return TyBool
+
+    If cond t1 t2 -> do
+        condT <- infer cond ctx
+        expect TyBool condT "If Condition"
+        t1T <- infer t1 ctx
+        t2T <- infer t2 ctx
+        expect t1T t2T "If Branches"
+        return t1T
+
+    Let name val body -> do
+        valT <- infer val ctx
+        infer body (Map.insert name valT ctx)
+
+    Map var body listTerm -> do
+        listT <- infer listTerm ctx
+        case listT of
+            TyList elemT -> do
+                retT <- infer body (Map.insert var elemT ctx)
+                return (TyList retT)
+            _ -> Left (NotList listT)
+
+    Fold accName varName body initTerm listTerm -> do
+        initT <- infer initTerm ctx
+        listT <- infer listTerm ctx
+        case listT of
+            TyList elemT -> do
+                let bodyCtx = Map.insert accName initT (Map.insert varName elemT ctx)
+                bodyT <- infer body bodyCtx
+                expect initT bodyT "Fold Accumulator"
+                return initT
+            _ -> Left (NotList listT)
+
+    Repeat _ body -> do
+        _ <- infer body ctx
+        return TyInt 
+
+    Shield try fallback -> do
+        t1 <- infer try ctx
+        t2 <- infer fallback ctx
+        expect t1 t2 "Shield Fallback"
+        return t1
+        
+    Log _ t -> infer t ctx
+    
+    -- Field Access
+    Get _ obj -> do
+        t <- infer obj ctx
+        case t of
+            TyJson -> Right TyJson -- JSON fields are dynamic
+            -- We could add TyRecord later
+            _ -> Left (NotObject t)
+
+analyzeTyped :: Term -> Either TypeError ProgramStats
+analyzeTyped term = 
+    case infer term Map.empty of
+        Left err -> Left err
+        Right _  -> Right (analyze term Map.empty)

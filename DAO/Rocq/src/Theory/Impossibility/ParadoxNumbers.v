@@ -3,7 +3,9 @@
     Numbers as construction depths of paradoxes.
     All paradoxes equal omega_veil, but we can use omega_veil as a "fixed point"
     kind of like the empty set, to build different levels of nested paradox, for arithmetic.
-    Intensional expression of False matters here.
+    Intensional expression of False matters here. The end result is a wheel arithmetic that
+    handles indeterminate forms like 1/0 gracefully by channeling it to the bottom
+    element omega_veil.
 *)
 
 Require Import DAO.Core.AlphaType.
