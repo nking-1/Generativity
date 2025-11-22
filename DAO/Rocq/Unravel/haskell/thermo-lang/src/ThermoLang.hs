@@ -10,20 +10,29 @@ import qualified Data.Map as Map
 -- 1. THE AST
 -- ==========================================
 data Term 
+    -- Primitives
     = IntVal Int
     | BoolVal Bool
     | ListVal [Term]
     | Var String
+    
+    -- Arithmetic (Wheel Theory Support)
     | Add Term Term
     | Sub Term Term
     | Mul Term Term
     | Div Term Term 
+    
+    -- Logic
     | Eq Term Term
     | If Term Term Term
+    
+    -- Binding & Control
     | Let String Term Term
     | Map String Term Term 
     | Fold String String Term Term Term
     | Repeat Int Term 
+    
+    -- Thermodynamic Primitives
     | Shield Term Term 
     | Log String Term
     | GetEntropy 
@@ -232,6 +241,7 @@ compile term env = case term of
                     let (r, u') = runUnravel computation u
                     in case r of
                         Valid val -> case val of
+                            -- The Collapse triggers Entropy
                             VInf  -> runUnravel (crumble (LogicError "Collapsed Infinity")) u'
                             VNull -> runUnravel (crumble (LogicError "Collapsed Nullity")) u'
                             _     -> (Valid val, u')

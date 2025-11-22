@@ -8,7 +8,7 @@ import qualified Prelude
 import Prelude hiding (div, (/))
 import System.Environment (getArgs)
 
--- [Demos unchanged]
+-- [Demos]
 demoPhysics :: String
 demoPhysics = unlines
   [ "// PARAMETERS"
@@ -151,17 +151,16 @@ runExecution prog = do
     putStrLn $ "   Result Value:    " ++ show res
     putStrLn $ "   Total Entropy (S): " ++ show (totalEntropy u) 
     putStrLn $ "   Total Time (t):    " ++ show (timeStep u) 
-    putStrLn $ "   Holographic Sig:   " ++ show (boundary u)
+    putStrLn $ "   Holographic Sig:   " ++ show (boundaryValue u)
 
     -- RECONSTRUCTION
     putStrLn "\n🕰️  HOLOGRAPHIC RECONSTRUCTION (Time Machine)"
     putStrLn "-------------------------------------------"
-    let history = reconstruct (boundary u)
+    let history = reconstruct (boundaryValue u)
     if null history
         then putStrLn "   (Vacuum State / No Singularities)"
         else do
             putStrLn $ "   Found " ++ show (length history) ++ " distinct causal events:"
-            -- Fix: mapM_ over the list of paths
             mapM_ (\p -> do
                 putStrLn "   --- EVENT ---"
                 printPath "   " p

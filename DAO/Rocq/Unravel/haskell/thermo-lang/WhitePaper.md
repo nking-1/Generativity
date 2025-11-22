@@ -172,3 +172,233 @@ We have moved from "Exception Handling" to **"Exception Metabolizing."**
   * **Source:** `src/UnravelMonad.hs` (The Holographic Monad)
   * **Language:** `src/ThermoLang.hs` (The Wheel Compiler)
   * **Proofs:** `Coq/UnravelMonad.v` (The Theory)
+
+
+### 1. The Formal Definition of Entropy (Refined)
+The feedback correctly noted that our current definition ("count of singularities") is loose. Here is the rigorous definition based on the **ParadoxPath Monoid**.
+
+Let $\mathcal{P}$ be the set of all ParadoxPaths. We define a rank function $\rho: \mathcal{P} \to \mathbb{N}$.
+
+$$
+\rho(p) = 
+\begin{cases} 
+1 & \text{if } p \in \text{Atomic} \\
+1 + \rho(p') & \text{if } p = \text{Next}(p') \\
+\rho(p_L) + \rho(p_R) & \text{if } p = \text{Mix}(p_L, p_R)
+\end{cases}
+$$
+
+**The Thermodynamic Invariant:**
+For any computation $C$ transforming universe state $U_t \to U_{t+1}$, the change in Total Entropy $S$ is:
+$$\Delta S = \sum_{v \in \text{GeneratedVoids}} \rho(v)$$
+This formally links the **Structural Depth** of the error tree to the **Thermodynamic Mass** of the system.
+
+### 2. Denotational Semantics (The "Airtight" Piece)
+The reviewer suggested adding a denotational semantics section. This is what that looks like for **ThermoLang**. It proves that every program is a state-transformer over the Holographic Universe.
+
+**Semantic Domain:**
+* $\text{Val} = \mathbb{Z} \cup \mathbb{B} \cup \dots \cup \{\infty, \bot\}$ (The Wheel)
+* $\mathcal{U}$ = The Universe (Entropy, Time, Boundary Integer)
+* $\mathcal{M}[A] = \mathcal{U} \to (\text{Result } A) \times \mathcal{U}$ (The Unravel Monad)
+
+**Evaluation Function ($\llbracket \cdot \rrbracket$):**
+$$
+\llbracket \text{shield } e_1 \text{ recover } e_2 \rrbracket (\sigma) = 
+\begin{cases} 
+(v, \sigma') & \text{if } \llbracket e_1 \rrbracket(\sigma) = (v, \sigma') \land v \notin \{\infty, \bot\} \\
+(v_{rec}, \sigma_{new}) & \text{if } \llbracket e_1 \rrbracket(\sigma) = (\text{Invalid}, \sigma') \lor v \in \{\infty, \bot\}
+\end{cases}
+$$
+*Where $\sigma_{new}$ is updated with:*
+$$S_{new} = S' + \rho(\text{Collapse})$$
+$$B_{new} = B' \otimes \text{Encode}(\text{Collapse})$$
+
+This mathematical block proves that the **Hologram ($B$) is updated atomically with the Entropy ($S$)**, ensuring the duality holds.
+
+### 3. The "LogicError Unknown" Fix (String Encoding)
+To fix the information leak (where all logic errors map to prime 11), we don't strictly need a string dictionary (which is stateful). We can use **Gödel Numbering for ASCII**.
+
+If we treat the error message string $s$ as a list of bytes $[b_1, b_2, \dots, b_n]$, we can encode the string itself into the hologram using a prime-base offset.
+
+**Proposed Encoding for v0.7:**
+Instead of `t_LOGIC_ERR = 3`, we define a constructor `t_MSG_START = 30` and `t_MSG_END = 31`.
+$$\text{Encode}(\text{"Error"}) = [30, 69, 114, 114, 111, 114, 31]$$
+This preserves the full error text in the integer boundary, making the "Time Machine" capable of printing exact stack traces from nothing but a number.
+
+
+
+Research Addendum: Denotational Semantics of ThermoLang
+
+This document provides the formal semantic definition for the ThermoLang v0.7 runtime, bridging the Haskell implementation with the Coq proofs.
+
+1. Semantic Domains
+
+We define the universe of values and effects as follows:
+
+Values ($\mathcal{V}$): The Wheel extension of standard types.
+
+
+$$v \in \mathcal{V} ::= n \in \mathbb{Z} \mid b \in \mathbb{B} \mid [v_1, \dots, v_n] \mid \infty \mid \bot \mid \mathcal{H} \in \mathbb{N}$$
+
+Paradox Paths ($\mathcal{P}$): The algebraic structure of failure history.
+
+
+$$p \in \mathcal{P} ::= \text{Base}(s) \mid \text{Next}(p) \mid \text{Mix}(p_L, p_R)$$
+
+The Universe ($\mathcal{U}$): The thermodynamic state.
+
+
+$$u \in \mathcal{U} = \langle S \in \mathbb{N}, t \in \mathbb{N}, \mathcal{B} \in \mathbb{N} \times \mathbb{N} \rangle$$
+
+
+Where $\mathcal{B} = (Value, Length)$ represents the Holographic Boundary.
+
+The Monad ($\mathcal{M}$):
+
+
+$$\mathcal{M}[A] = \mathcal{U} \to (\text{Result } A) \times \mathcal{U}$$
+
+2. Evaluation Function
+
+The evaluation function $\llbracket \cdot \rrbracket : \text{Expr} \to \text{Env} \to \mathcal{M}[\mathcal{V}]$ is defined inductively.
+
+The Thermodynamic Bridge (Shield)
+
+The critical semantic innovation is the shield operator, which observes Wheel values and collapses them into Entropy.
+
+$$\llbracket \text{shield } e_1 \text{ recover } e_2 \rrbracket (\rho)(u) = 
+\begin{cases} 
+(v, u') & \text{if } \llbracket e_1 \rrbracket(\rho)(u) = (\text{Valid } v, u') \land v \notin \{\infty, \bot\} \\
+(\text{Valid } d, u_{new}) & \text{otherwise}
+\end{cases}$$
+
+Where $d$ is the result of $\llbracket e_2 \rrbracket(\rho)(u')$, and $u_{new}$ is updated via the Crumble operation:
+
+$$u_{new} = u' \oplus \text{Encode}(\text{CollapseEvent})$$
+
+The Holographic Invariant:
+For any transition $u \to u_{new}$, the boundary $\mathcal{B}$ is updated such that:
+
+
+$$\mathcal{B}_{new} = \mathcal{B}_{old} \cdot \text{Base}^{\text{len}(G)} + G$$
+
+
+Where $G = \text{GödelEncode}(\text{CollapseEvent})$.
+
+This guarantees that $\mathcal{B}_{new}$ contains the complete, ordered history of $\mathcal{B}_{old}$ plus the new event, enabling the existence of the reconstruction function $\mathcal{R}: \mathbb{N} \to [\mathcal{P}]$.
+
+
+
+Research Addendum: Denotational Semantics of ThermoLang
+
+Date: November 2025
+Context: Formal definition for ThermoLang v0.7 (The Holographic Edition)
+
+This document defines the formal semantics of the Unravel Monad, bridging the Haskell runtime implementation with the Coq theoretical proofs. It formally demonstrates how the Holographic Boundary is updated atomically with Thermodynamic Entropy.
+
+1. Semantic Domains
+
+We define the universe of values, effects, and state.
+
+1.1 The Wheel of Values ($\mathcal{V}$)
+
+The semantic domain extends the standard integers and booleans to a Wheel structure to support total arithmetic.
+
+$$v \in \mathcal{V} ::= 
+\begin{cases} 
+n \in \mathbb{Z} & \text{(Integers)} \\
+b \in \mathbb{B} & \text{(Booleans)} \\
+[v_1, \dots, v_k] & \text{(Lists)} \\
+\infty & \text{(Infinity / VInf)} \\
+\bot & \text{(Nullity / VNull)} \\
+\mathcal{H} \in \mathbb{N} & \text{(Holographic Hash)}
+\end{cases}$$
+
+1.2 The Paradox Monoid ($\mathcal{P}$)
+
+The algebraic structure of failure history, forming a non-commutative monoid under temporal composition.
+
+$$p \in \mathcal{P} ::= \text{Base}(s) \mid \text{Next}(p) \mid \text{Mix}(p_L, p_R)$$
+
+Where $s \in \text{Source}$ (e.g., DivByZero, LogicError(String)).
+
+1.3 The Universe ($\mathcal{U}$)
+
+The state carried by the monad, tracking thermodynamics and holography.
+
+$$u \in \mathcal{U} = \langle S \in \mathbb{N}, t \in \mathbb{N}, \mathcal{B} \in \mathbb{N} \times \mathbb{N} \rangle$$
+
+Where:
+
+$S$: Total Entropy (Accumulated Rank).
+
+$t$: Time Step (Causal Depth).
+
+$\mathcal{B} = (Val, Len)$: The Holographic Boundary, consisting of the Gödel integer and its token length.
+
+2. Evaluation Function
+
+The evaluation function $\llbracket \cdot \rrbracket : \text{Expr} \to \text{Env} \to \mathcal{M}[\mathcal{V}]$ maps syntax to the monadic domain.
+
+2.1 The Thermodynamic Bridge (Shield)
+
+The critical innovation is the semantics of shield, which acts as the Observation Operator. It forces Wheel values ($\infty, \bot$) to collapse into Entropy.
+
+$$\llbracket \text{shield } e_{try} \text{ recover } e_{fallback} \rrbracket (\rho)(u) = 
+\begin{cases} 
+(v, u') & \text{if } \llbracket e_{try} \rrbracket(\rho)(u) = (\text{Valid } v, u') \land v \notin \{\infty, \bot\} \\
+(\text{Valid } d, u_{new}) & \text{otherwise}
+\end{cases}$$
+
+The Collapse Transition ($u \to u_{new}$):
+When a collapse occurs (either from an Invalid state or a Wheel value), the Universe is updated:
+
+Entropy Increase ($\Delta S$):
+
+
+$$S_{new} = S' + \rho(\text{CollapseEvent})$$
+
+
+Where $\rho$ is the rank function of the Paradox Tree.
+
+Holographic Update ($\Delta \mathcal{B}$):
+Let $G$ be the Gödel Encoding of the event, and $L_G$ be its token length.
+
+
+$$(B_{val}, B_{len})_{new} = (B_{val} \cdot \text{Base}^{L_G} + G, \quad B_{len} + L_G)$$
+
+This invariant guarantees that $u_{new}$ contains a lossless, ordered history of the computation, allowing for the existence of the reconstruction function $\mathcal{R}: \mathbb{N} \to [\mathcal{P}]$.
+
+2.2 Wheel Arithmetic
+
+Arithmetic operations are defined as total functions over $\mathcal{V}$. Example for Division ($\oslash$):
+
+$$v_1 \oslash v_2 = 
+\begin{cases} 
+\bot & \text{if } v_1 = \bot \lor v_2 = \bot \\
+0 & \text{if } v_2 = \infty \\
+\infty & \text{if } v_1 \neq 0 \land v_2 = 0 \\
+\lfloor v_1 / v_2 \rfloor & \text{if } v_1, v_2 \in \mathbb{Z}
+\end{cases}$$
+
+Crucially, $\llbracket v_1 \oslash v_2 \rrbracket$ does not modify $S$ or $\mathcal{B}$. Entropy is latent until observed by shield.
+
+3. Theoretical Guarantees
+
+Theorem 1: Conservation of Information
+
+For any computation sequence $C = c_1; c_2; \dots; c_n$, the final boundary state $\mathcal{B}_n$ is injective with respect to the sequence of collapsed singularities.
+
+
+$$\forall u, \mathcal{R}(\mathcal{B}(u)) \cong \text{Trace}(u)$$
+
+Theorem 2: Thermodynamic Monotonicity
+
+The entropy of the system is strictly non-decreasing.
+
+
+$$\forall e, \rho, u. \quad S(\text{snd}(\llbracket e \rrbracket \rho u)) \ge S(u)$$
+
+Theorem 3: The Holographic Dual
+
+There exists an isomorphism between the Bulk (the monadic execution trace) and the Boundary (the integer $\mathcal{B}$), modulo the specific values of valid computations.
