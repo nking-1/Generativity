@@ -1,0 +1,11 @@
+// TEST: The Ghost in the Machine
+// We generate a value that looks clean (100).
+// But we ask the Universe for its holographic signature.
+
+let ghost_val = shield (100 / 0) recover 100 in
+
+let sig = hologram in
+
+// If sig > 0, the ghost is real.
+// We return [Value, ProofOfFailure]
+[ghost_val, sig]

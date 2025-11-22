@@ -6,22 +6,34 @@ import Prelude hiding (div, (/), id)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
--- [AST unchanged]
+-- ==========================================
+-- 1. THE AST
+-- ==========================================
 data Term 
     = IntVal Int
     | BoolVal Bool
     | ListVal [Term]
     | Var String
+    
+    -- Arithmetic
     | Add Term Term
     | Sub Term Term
     | Mul Term Term
     | Div Term Term 
+    
+    -- Logic
     | Eq Term Term
+    | Lt Term Term -- NEW
+    | Gt Term Term -- NEW
     | If Term Term Term
+    
+    -- Binding & Control
     | Let String Term Term
     | Map String Term Term 
     | Fold String String Term Term Term
     | Repeat Int Term 
+    
+    -- Thermodynamic Primitives
     | Shield Term Term 
     | Log String Term
     | GetEntropy 
@@ -90,7 +102,7 @@ wheelDiv (VInt _) (VInt 0) = VInf
 wheelDiv (VInt a) (VInt b) = VInt (a `Prelude.div` b)
 wheelDiv _ _ = VNull
 
--- [Static Analysis unchanged]
+-- [Static Analysis]
 data ProgramStats = ProgramStats {
     maxEntropy :: Int,
     timeCost   :: Int,
@@ -118,7 +130,11 @@ analyze term ctx = case term of
     Sub t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Mul t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Div t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
+    
     Eq t1 t2  -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
+    Lt t1 t2  -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
+    Gt t1 t2  -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
+
     If cond t1 t2 -> 
         let sC = analyze cond ctx
             s1 = analyze t1 ctx
@@ -156,7 +172,7 @@ analyze term ctx = case term of
         analyze try ctx <> analyze fallback ctx
     Log _ t -> analyze t ctx
 
--- [Compiler - Minor Update for Introspection]
+-- [Compiler]
 compile :: Term -> Map String UVal -> Unravel UVal
 compile term env = case term of
     IntVal i  -> return (VInt i)
@@ -183,10 +199,23 @@ compile term env = case term of
         v1 <- compile t1 env
         v2 <- compile t2 env
         return (wheelDiv v1 v2)
+    
+    -- Comparison
     Eq t1 t2 -> do
         v1 <- compile t1 env
         v2 <- compile t2 env
         return (VBool (v1 Prelude.== v2))
+    
+    Lt t1 t2 -> do
+        v1 <- compile t1 env >>= asInt
+        v2 <- compile t2 env >>= asInt
+        return (VBool (v1 Prelude.< v2))
+
+    Gt t1 t2 -> do
+        v1 <- compile t1 env >>= asInt
+        v2 <- compile t2 env >>= asInt
+        return (VBool (v1 Prelude.> v2))
+
     If cond t1 t2 -> do
         b <- compile cond env >>= asBool
         if b then compile t1 env else compile t2 env
@@ -228,6 +257,7 @@ compile term env = case term of
                     let (r, u') = runUnravel computation u
                     in case r of
                         Valid val -> case val of
+                            -- The Collapse triggers Entropy
                             VInf  -> runUnravel (crumble (LogicError "Collapsed Infinity")) u'
                             VNull -> runUnravel (crumble (LogicError "Collapsed Nullity")) u'
                             _     -> (Valid val, u')

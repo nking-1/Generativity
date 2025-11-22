@@ -1,11 +1,10 @@
 module UnravelMonad where
 
 import Prelude hiding (div, (/))
-import qualified Prelude
 import Data.Char (ord, chr)
 
 -- ==========================================
--- 1. THE PRIMITIVE TYPES (Ontology)
+-- 1. ONTOLOGY (The Primitive Types)
 -- ==========================================
 
 data VoidSource 
@@ -15,10 +14,11 @@ data VoidSource
     | VoidNeutral 
     deriving (Show, Eq, Ord)
 
+-- The genealogical tree of failure
 data ParadoxPath
     = BaseVeil VoidSource             
-    | SelfContradict ParadoxPath      -- Adds Temporal Entropy
-    | Compose ParadoxPath ParadoxPath -- Adds Structural Entropy
+    | SelfContradict ParadoxPath      -- Temporal evolution
+    | Compose ParadoxPath ParadoxPath -- Structural entanglement
     deriving (Show, Eq)
 
 data VoidInfo = VoidInfo {
@@ -28,60 +28,46 @@ data VoidInfo = VoidInfo {
 data UResult a 
     = Valid a 
     | Invalid VoidInfo 
-    deriving (Show, Eq, Prelude.Functor)
+    deriving (Show, Eq, Functor)
 
--- NEW: The Physical Universe State
+-- The Physical Universe State
 data Universe = Universe {
-    -- The Entropy Tensor
-    structEntropy  :: Int,     -- Branching / Entanglement complexity
-    timeEntropy    :: Int,     -- Temporal depth of paradoxes
-    
-    timeStep       :: Int,
-    voidCount      :: Int,
-    boundaryValue  :: Integer,
-    boundaryLength :: Int 
+    structEntropy  :: Int,     -- Complexity (Branching)
+    timeEntropy    :: Int,     -- Age (Depth)
+    timeStep       :: Int,     -- Global clock
+    voidCount      :: Int,     -- Number of singularities encountered
+    boundaryValue  :: Integer, -- The Hologram (Gödel Number)
+    boundaryLength :: Int      -- Token count for append safety
 } deriving (Show, Eq)
 
--- Helper to get total scalar entropy
+-- Helper: Total Scalar Entropy
 totalEntropy :: Universe -> Int
-totalEntropy u = structEntropy u Prelude.+ timeEntropy u
+totalEntropy u = structEntropy u + timeEntropy u
 
 -- ==========================================
--- 2. THE HOLOGRAPHIC ENCODING (Gödel ASCII)
+-- 2. HOLOGRAPHIC ENCODING (Gödel ASCII)
 -- ==========================================
 
--- Tokens
-t_VOID_NEUTRAL :: Integer
+-- Tokens (Bytecode for the Hologram)
+t_VOID_NEUTRAL, t_DIV_ZERO, t_ROOT_ENTROPY :: Integer
 t_VOID_NEUTRAL = 0
-
-t_DIV_ZERO :: Integer
-t_DIV_ZERO = 1
-
-t_ROOT_ENTROPY :: Integer
+t_DIV_ZERO     = 1
 t_ROOT_ENTROPY = 2
 
-t_MSG_OPEN :: Integer
-t_MSG_OPEN = 30
-
-t_MSG_CLOSE :: Integer
+t_MSG_OPEN, t_MSG_CLOSE :: Integer
+t_MSG_OPEN  = 30
 t_MSG_CLOSE = 31
 
-t_SEQ_OP :: Integer
-t_SEQ_OP = 10  
-
-t_MIX_OPEN :: Integer
-t_MIX_OPEN = 20 
-
-t_MIX_MID :: Integer
-t_MIX_MID = 21  
-
-t_MIX_CLOSE :: Integer
+t_SEQ_OP, t_MIX_OPEN, t_MIX_MID, t_MIX_CLOSE :: Integer
+t_SEQ_OP    = 10
+t_MIX_OPEN  = 20 
+t_MIX_MID   = 21  
 t_MIX_CLOSE = 22 
 
 holographicBase :: Integer
 holographicBase = 256
 
--- ENCODER
+-- Encoder: Tree -> [Tokens]
 flattenPath :: ParadoxPath -> [Integer]
 flattenPath (BaseVeil src) = case src of
     VoidNeutral -> [] 
@@ -89,7 +75,7 @@ flattenPath (BaseVeil src) = case src of
     RootEntropy -> [t_ROOT_ENTROPY]
     LogicError msg -> 
         [t_MSG_OPEN] 
-        ++ Prelude.map (Prelude.fromIntegral . ord) msg 
+        ++ map (fromIntegral . ord) msg 
         ++ [t_MSG_CLOSE]
 
 flattenPath (SelfContradict p) = 
@@ -97,26 +83,26 @@ flattenPath (SelfContradict p) =
 flattenPath (Compose p1 p2) = 
     [t_MIX_OPEN] ++ flattenPath p1 ++ [t_MIX_MID] ++ flattenPath p2 ++ [t_MIX_CLOSE]
 
--- COMPRESSOR
+-- Compressor: [Tokens] -> Integer (Little Endian)
 compress :: [Integer] -> Integer
-compress digits = Prelude.foldr (\d acc -> d Prelude.+ (holographicBase Prelude.* acc)) 0 digits
+compress digits = foldr (\d acc -> d + (holographicBase * acc)) 0 digits
 
--- DECOMPRESSOR
+-- Decompressor: Integer -> [Tokens]
 decompress :: Integer -> [Integer]
 decompress 0 = []
 decompress n = 
-    let (rest, digit) = n `Prelude.divMod` holographicBase
+    let (rest, digit) = n `divMod` holographicBase
     in digit : decompress rest
 
--- APPENDER (Chronological)
+-- Appender: Concatenates history safely (Old ++ New)
 appendHologram :: Integer -> Int -> Integer -> Int -> (Integer, Int)
 appendHologram valOld lenOld valNew lenNew = 
-    let shiftForNew = holographicBase Prelude.^ lenOld
-        newVal = valOld Prelude.+ (valNew Prelude.* shiftForNew)
-        newLen = lenOld Prelude.+ lenNew
+    let shiftForNew = holographicBase ^ lenOld
+        newVal = valOld + (valNew * shiftForNew)
+        newLen = lenOld + lenNew
     in (newVal, newLen)
 
--- RECONSTRUCTOR PARSERS
+-- Parsers for Reconstruction
 parsePath :: [Integer] -> Maybe (ParadoxPath, [Integer])
 parsePath [] = Nothing
 
@@ -124,10 +110,10 @@ parsePath (x:xs) | x == t_DIV_ZERO = Just (BaseVeil DivByZero, xs)
 parsePath (x:xs) | x == t_ROOT_ENTROPY = Just (BaseVeil RootEntropy, xs)
 
 parsePath (x:xs) | x == t_MSG_OPEN = 
-    let (msgCodes, rest) = Prelude.break (== t_MSG_CLOSE) xs
+    let (msgCodes, rest) = break (== t_MSG_CLOSE) xs
     in case rest of
         (_:restAfterClose) -> 
-            let msg = Prelude.map (chr . Prelude.fromIntegral) msgCodes
+            let msg = map (chr . fromIntegral) msgCodes
             in Just (BaseVeil (LogicError msg), restAfterClose)
         [] -> Nothing 
 
@@ -147,6 +133,7 @@ parsePath (x:xs) | x == t_MIX_OPEN = do
 
 parsePath _ = Nothing
 
+-- Public Reconstructor: Integer -> History
 reconstruct :: Integer -> [ParadoxPath]
 reconstruct 0 = []
 reconstruct n = 
@@ -158,24 +145,24 @@ reconstruct n =
         Nothing -> []
 
 -- ==========================================
--- 3. THE MONAD & TENSOR RANK
+-- 3. THE UNRAVEL MONAD & TENSOR RANK
 -- ==========================================
 
 newtype Unravel a = Unravel { 
     runUnravel :: Universe -> (UResult a, Universe) 
-} deriving (Prelude.Functor)
+} deriving (Functor)
 
--- Rank Tensor: (Struct, Time)
+-- Rank Tensor: (Structural, Temporal)
 rankOf :: ParadoxPath -> (Int, Int)
 rankOf (BaseVeil VoidNeutral) = (0, 0)
-rankOf (BaseVeil _) = (0, 1) -- Atomic adds 1 unit of Time entropy (creation event)
+rankOf (BaseVeil _) = (0, 1)
 rankOf (SelfContradict p) = 
     let (s, t) = rankOf p 
-    in (s, t Prelude.+ 1) -- Adds Time Entropy
+    in (s, t + 1)
 rankOf (Compose p1 p2) = 
     let (s1, t1) = rankOf p1
         (s2, t2) = rankOf p2
-    in (s1 Prelude.+ s2 Prelude.+ 1, t1 Prelude.+ t2) -- Adds Structural Entropy
+    in (s1 + s2 + 1, t1 + t2)
 
 combineVoids :: VoidInfo -> VoidInfo -> VoidInfo
 combineVoids (VoidInfo p1) (VoidInfo p2) = 
@@ -200,7 +187,7 @@ instance Applicative Unravel where
                     
                     pathTokens = flattenPath newPath
                     boundVal   = compress pathTokens
-                    boundLen   = Prelude.length pathTokens
+                    boundLen   = length pathTokens
                     
                     (finalBound, finalLen) = appendHologram 
                                                 (boundaryValue uTimed) (boundaryLength uTimed)
@@ -226,11 +213,10 @@ instance Monad Unravel where
                 let oldPath = genealogy i
                     newPath = SelfContradict oldPath 
                     newInfo = VoidInfo newPath
-                    (dS, dT) = rankOf newPath
                     
                     pathTokens = flattenPath newPath
                     boundVal   = compress pathTokens
-                    boundLen   = Prelude.length pathTokens
+                    boundLen   = length pathTokens
                     
                     (finalBound, finalLen) = appendHologram 
                                                 (boundaryValue uTimed) (boundaryLength uTimed)
@@ -238,8 +224,8 @@ instance Monad Unravel where
 
                     uEvolved = uTimed { boundaryValue = finalBound
                                       , boundaryLength = finalLen 
-                                      , structEntropy = structEntropy uTimed -- No new struct for sequence
-                                      , timeEntropy = timeEntropy uTimed + 1 -- Add time evolution cost
+                                      , structEntropy = structEntropy uTimed 
+                                      , timeEntropy = timeEntropy uTimed + 1 
                                       } 
                 in (Invalid newInfo, uEvolved)
 
@@ -248,7 +234,6 @@ instance Monad Unravel where
 -- ==========================================
 
 bigBang :: Universe
--- S_struct, S_time, t, voids, boundary, b_len
 bigBang = Universe 0 0 0 0 0 0
 
 run :: Unravel a -> (UResult a, Universe)
@@ -262,7 +247,7 @@ crumble src = Unravel $ \u ->
         
         pathTokens = flattenPath path
         boundVal   = compress pathTokens
-        boundLen   = Prelude.length pathTokens
+        boundLen   = length pathTokens
         
         (finalBound, finalLen) = appendHologram 
                                     (boundaryValue u) (boundaryLength u)
@@ -305,7 +290,7 @@ harvest (x:xs) = Unravel $ \u ->
                  
                  pathTokens = flattenPath newPath
                  boundVal   = compress pathTokens
-                 boundLen   = Prelude.length pathTokens
+                 boundLen   = length pathTokens
                  
                  (finalBound, finalLen) = appendHologram 
                                             (boundaryValue uFinal) (boundaryLength uFinal)
@@ -318,53 +303,27 @@ harvest (x:xs) = Unravel $ \u ->
              in (Invalid newInfo, uMerge)
 
 -- ==========================================
--- 5. THE REVERSIBLE STEPPER (Time Travel)
+-- 5. THE TIME MACHINE (Reversible Stepper)
 -- ==========================================
 
--- Reverses the Universe by one causal event.
--- This is the inverse of 'crumble'/'shield'.
 stepBackward :: Universe -> Maybe Universe
 stepBackward u 
-    | boundaryValue u == 0 = Nothing -- Big Bang
+    | boundaryValue u == 0 = Nothing 
     | otherwise = 
-        let tokens = decompress (boundaryValue u)
-        in case parsePath tokens of
-            -- We found the LAST event (because append puts it at the end of the list/high bits? 
-            -- Wait, append puts old in LOW bits.
-            -- So decompress returns [Old...New].
-            -- So parsePath will parse Old first.
-            -- For true backward stepping, we need to pop the END of the list.
-            -- This is inefficient with singly linked lists but correct.
-            Just (path, rest) -> 
-                -- Wait, if we parse from the front, we are removing the OLDEST event.
-                -- That's "Rewind to Start".
-                -- To "Step Back", we need the NEWEST event.
-                -- Since tokens are [Old...New], we need to parse from the end.
-                -- This requires a bidirectional parser or just reversing the tokens.
-                let revTokens = Prelude.reverse tokens 
-                    -- Now [New...Old] (reversed structure)
-                    -- But our parsePath expects normal structure.
-                    -- We actually need to find the split point.
-                    -- For v0.8, let's implement "Rewind Start" (pop oldest) as proof of concept.
-                    -- Or better: Just implement reconstruct and pop last.
-                    history = reconstruct (boundaryValue u)
-                in case Prelude.reverse history of
-                    [] -> Nothing
-                    (lastEvent : previousEvents) -> 
-                        -- We found the last event. Now we subtract its entropy.
-                        let (dS, dT) = rankOf lastEvent
-                            -- Rebuild boundary from previous events
-                            -- Ideally we'd have a "pop" function on the integer directly
-                            -- but rebuilding is safe.
-                            prevBoundList = Prelude.concatMap flattenPath (Prelude.reverse previousEvents)
-                            prevBoundVal  = compress prevBoundList
-                            prevBoundLen  = Prelude.length prevBoundList
-                            
-                        in Just u {
-                            structEntropy = structEntropy u Prelude.- dS,
-                            timeEntropy   = timeEntropy u Prelude.- dT,
-                            voidCount     = voidCount u Prelude.- 1,
-                            boundaryValue = prevBoundVal,
-                            boundaryLength = prevBoundLen
-                        }
-            Nothing -> Nothing
+        let history = reconstruct (boundaryValue u)
+        in case reverse history of
+            [] -> Nothing
+            (lastEvent : previousEvents) -> 
+                let (dS, dT) = rankOf lastEvent
+                    
+                    prevBoundList = concatMap flattenPath (reverse previousEvents)
+                    prevBoundVal  = compress prevBoundList
+                    prevBoundLen  = length prevBoundList
+                    
+                in Just u {
+                    structEntropy = structEntropy u - dS,
+                    timeEntropy   = timeEntropy u - dT,
+                    voidCount     = voidCount u - 1,
+                    boundaryValue = prevBoundVal,
+                    boundaryLength = prevBoundLen
+                }

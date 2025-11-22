@@ -26,7 +26,6 @@ symbol :: String -> Parser String
 symbol = L.symbol sc
 
 keyword :: String -> Parser String
--- FIXED: Added 'try' to allow backtracking if a variable starts with a keyword prefix
 keyword w = lexeme (try (string w <* notFollowedBy (alphaNumChar <|> char '_')))
 
 identifier :: Parser String
@@ -176,7 +175,9 @@ operatorTable =
     , InfixL (Div <$ symbol "/") ]
   , [ InfixL (Add <$ symbol "+")
     , InfixL (Sub <$ symbol "-") ]
-  , [ InfixL (Eq  <$ symbol "==") ]
+  , [ InfixL (Eq  <$ symbol "==") 
+    , InfixL (Lt  <$ symbol "<")
+    , InfixL (Gt  <$ symbol ">") ]
   ]
 
 -- ==========================================

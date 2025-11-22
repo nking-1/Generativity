@@ -1,0 +1,17 @@
+// TEST: Thermodynamic Circuit Breaker
+// We process a stream of numbers.
+// If we hit a few errors, the system realizes it is unstable
+// and switches to a "Safe Mode" (returning the accumulator)
+// to prevent further entropy generation.
+
+let stream = [10, 0, 0, 5, 2, 0] in
+
+fold(acc, x ->
+    // INTROSPECTION: Check global entropy
+    if entropy > 1 then
+        // Circuit Open! Stop processing to save the universe.
+        acc
+    else
+        // Circuit Closed. Process normally.
+        shield (acc / x) recover acc
+, 1000, stream)

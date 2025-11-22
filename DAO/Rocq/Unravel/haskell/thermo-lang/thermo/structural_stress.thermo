@@ -1,0 +1,15 @@
+// TEST: Structural Entropy Generation
+// We map over a list of zeros. Each triggers a singularity.
+// The 'harvest' mechanism must merge these Void paths.
+// Since they happen in a list context (spatial), not just sequential time,
+// this should generate Structural Entropy.
+
+let matrix = [0, 0, 0, 0] in
+
+let results = map(x -> 
+    // Each division creates a local singularity
+    shield (100 / x) recover 0
+, matrix) in
+
+// We return the results to force evaluation
+results

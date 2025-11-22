@@ -1,0 +1,16 @@
+// TEST: Wheel Theory Physics
+// We create Infinity. We use it. We resolve it.
+
+// 1. Create Infinity (Valid VInf, Entropy = 0)
+let infinity = 1 / 0 in
+
+// 2. Do math with it (1000 + Inf = Inf)
+let big_inf = infinity + 1000 in
+
+// 3. Invert it (10 / Inf = 0). 
+// This is the "Wheel" property. It resolves back to a valid integer!
+let zero = 10 / big_inf in
+
+// 4. Trigger a Singularity using the derived zero
+// This is the only step that should generate entropy.
+shield (500 / zero) recover 42

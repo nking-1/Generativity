@@ -56,11 +56,15 @@ infer term ctx = case term of
     Mul t1 t2 -> checkMath t1 t2 "Mul" ctx
     Div t1 t2 -> checkMath t1 t2 "Div" ctx
 
+    -- Comparisons (Input Int, Output Bool)
     Eq t1 t2 -> do
         t1Type <- infer t1 ctx
         t2Type <- infer t2 ctx
         expect t1Type t2Type "Equality"
         return TyBool
+
+    Lt t1 t2 -> checkCompare t1 t2 "LessThan" ctx
+    Gt t1 t2 -> checkCompare t1 t2 "GreaterThan" ctx
 
     If cond t1 t2 -> do
         condT <- infer cond ctx
@@ -105,9 +109,6 @@ infer term ctx = case term of
         
     Log _ t -> infer t ctx
 
-    -- Introspection
-    -- We treat Entropy and Holograms as Integers in the static system
-    -- to allow them to be used in calculations/lists easily.
     GetEntropy -> Right TyInt
     GetHologram -> Right TyInt
 
@@ -119,6 +120,15 @@ checkMath t1 t2 op ctx = do
     expect TyInt t1Type (op ++ " Left")
     expect TyInt t2Type (op ++ " Right")
     return TyInt
+
+-- Helper for numeric comparison
+checkCompare :: Term -> Term -> String -> TypeContext -> Either TypeError Type
+checkCompare t1 t2 op ctx = do
+    t1Type <- infer t1 ctx
+    t2Type <- infer t2 ctx
+    expect TyInt t1Type (op ++ " Left")
+    expect TyInt t2Type (op ++ " Right")
+    return TyBool
 
 analyzeTyped :: Term -> Either TypeError ProgramStats
 analyzeTyped term = 
