@@ -6,42 +6,29 @@ import Prelude hiding (div, (/), id)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
--- ==========================================
--- 1. THE AST
--- ==========================================
+-- [AST unchanged]
 data Term 
-    -- Primitives
     = IntVal Int
     | BoolVal Bool
     | ListVal [Term]
     | Var String
-    
-    -- Arithmetic (Wheel Theory Support)
     | Add Term Term
     | Sub Term Term
     | Mul Term Term
     | Div Term Term 
-    
-    -- Logic
     | Eq Term Term
     | If Term Term Term
-    
-    -- Binding & Control
     | Let String Term Term
     | Map String Term Term 
     | Fold String String Term Term Term
     | Repeat Int Term 
-    
-    -- Thermodynamic Primitives
     | Shield Term Term 
     | Log String Term
     | GetEntropy 
     | GetHologram 
     deriving (Show, Eq)
 
--- ==========================================
--- 2. RUNTIME VALUES (The Wheel)
--- ==========================================
+-- [Runtime Values unchanged]
 data UVal 
     = VInt Int
     | VBool Bool
@@ -51,7 +38,7 @@ data UVal
     | VHash Integer 
     deriving (Show, Eq)
 
--- Helpers
+-- [Helpers unchanged]
 asInt :: UVal -> Unravel Int
 asInt (VInt i) = return i
 asInt VInf     = crumble (LogicError "Collapsed Infinity to Int")
@@ -66,7 +53,7 @@ asList :: UVal -> Unravel [UVal]
 asList (VList l) = return l
 asList _         = crumble (LogicError "Type Mismatch: Expected List")
 
--- Wheel Arithmetic
+-- [Wheel Arithmetic unchanged]
 wheelAdd :: UVal -> UVal -> UVal
 wheelAdd VNull _ = VNull
 wheelAdd _ VNull = VNull
@@ -103,7 +90,7 @@ wheelDiv (VInt _) (VInt 0) = VInf
 wheelDiv (VInt a) (VInt b) = VInt (a `Prelude.div` b)
 wheelDiv _ _ = VNull
 
--- Static Analysis
+-- [Static Analysis unchanged]
 data ProgramStats = ProgramStats {
     maxEntropy :: Int,
     timeCost   :: Int,
@@ -169,7 +156,7 @@ analyze term ctx = case term of
         analyze try ctx <> analyze fallback ctx
     Log _ t -> analyze t ctx
 
--- Compiler
+-- [Compiler - Minor Update for Introspection]
 compile :: Term -> Map String UVal -> Unravel UVal
 compile term env = case term of
     IntVal i  -> return (VInt i)
@@ -241,7 +228,6 @@ compile term env = case term of
                     let (r, u') = runUnravel computation u
                     in case r of
                         Valid val -> case val of
-                            -- The Collapse triggers Entropy
                             VInf  -> runUnravel (crumble (LogicError "Collapsed Infinity")) u'
                             VNull -> runUnravel (crumble (LogicError "Collapsed Nullity")) u'
                             _     -> (Valid val, u')

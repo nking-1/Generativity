@@ -8,7 +8,7 @@ import qualified Prelude
 import Prelude hiding (div, (/))
 import System.Environment (getArgs)
 
--- [Demos]
+-- [Demos unchanged]
 demoPhysics :: String
 demoPhysics = unlines
   [ "// PARAMETERS"
@@ -114,7 +114,6 @@ demoTimeMachine = unlines
   , "[s1, s2, hologram]"
   ]
 
--- Pretty printer for ParadoxPath
 printPath :: String -> ParadoxPath -> IO ()
 printPath indent p = case p of
     BaseVeil src -> putStrLn $ indent ++ "💥 " ++ show src
@@ -149,9 +148,10 @@ runExecution prog = do
     putStrLn "\n📊 PHYSICS REPORT"
     putStrLn "-----------------"
     putStrLn $ "   Result Value:    " ++ show res
-    putStrLn $ "   Total Entropy (S): " ++ show (totalEntropy u) 
-    putStrLn $ "   Total Time (t):    " ++ show (timeStep u) 
-    putStrLn $ "   Holographic Sig:   " ++ show (boundaryValue u)
+    putStrLn $ "   Entropy Tensor:  " ++ "[Struct=" ++ show (structEntropy u) ++ ", Time=" ++ show (timeEntropy u) ++ "]"
+    putStrLn $ "   Total Entropy:   " ++ show (totalEntropy u)
+    putStrLn $ "   Total Time (t):  " ++ show (timeStep u) 
+    putStrLn $ "   Holographic Sig: " ++ show (boundaryValue u)
 
     -- RECONSTRUCTION
     putStrLn "\n🕰️  HOLOGRAPHIC RECONSTRUCTION (Time Machine)"
@@ -170,11 +170,18 @@ runExecution prog = do
     let s = fromIntegral (totalEntropy u) :: Double
     let t = fromIntegral (timeStep u) :: Double
     let s_dot = if t > 0 then s Prelude./ t else 0
+    
+    -- Acceleration (S_ddot)
+    -- Since we don't have history of S(t), we approximate using mean acceleration from 0
+    -- S_ddot = S / t^2
+    let s_ddot = if t > 0 then s_dot Prelude./ t else 0
+    
     let lagrangian = s * s_dot 
     
     putStrLn "\n📐 LAGRANGIAN ANALYSIS"
     putStrLn "---------------------"
     putStrLn $ "   Entropy Rate (S_dot): " ++ take 6 (show s_dot) ++ " J/K/s"
+    putStrLn $ "   Accel (S_ddot):       " ++ take 6 (show s_ddot) ++ " J/K/s^2"
     putStrLn $ "   Action (L):           " ++ take 8 (show lagrangian) ++ " J^2/K^2/s"
     
     if totalEntropy u > 0 
