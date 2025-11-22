@@ -17,8 +17,8 @@ data VoidSource
 -- The genealogical tree of failure
 data ParadoxPath
     = BaseVeil VoidSource             
-    | SelfContradict ParadoxPath      -- Temporal evolution
-    | Compose ParadoxPath ParadoxPath -- Structural entanglement
+    | SelfContradict ParadoxPath      -- Temporal evolution (Next)
+    | Compose ParadoxPath ParadoxPath -- Structural entanglement (Mix)
     deriving (Show, Eq)
 
 data VoidInfo = VoidInfo {
@@ -83,7 +83,7 @@ flattenPath (SelfContradict p) =
 flattenPath (Compose p1 p2) = 
     [t_MIX_OPEN] ++ flattenPath p1 ++ [t_MIX_MID] ++ flattenPath p2 ++ [t_MIX_CLOSE]
 
--- Compressor: [Tokens] -> Integer (Little Endian)
+-- Compressor: [Tokens] -> Integer (Little Endian: Head is B^0)
 compress :: [Integer] -> Integer
 compress digits = foldr (\d acc -> d + (holographicBase * acc)) 0 digits
 
@@ -95,6 +95,7 @@ decompress n =
     in digit : decompress rest
 
 -- Appender: Concatenates history safely (Old ++ New)
+-- Places 'Old' in low bits (parsed first), 'New' in high bits (parsed last)
 appendHologram :: Integer -> Int -> Integer -> Int -> (Integer, Int)
 appendHologram valOld lenOld valNew lenNew = 
     let shiftForNew = holographicBase ^ lenOld
@@ -133,7 +134,7 @@ parsePath (x:xs) | x == t_MIX_OPEN = do
 
 parsePath _ = Nothing
 
--- Public Reconstructor: Integer -> History
+-- Public Reconstructor: Integer -> History [Oldest ... Newest]
 reconstruct :: Integer -> [ParadoxPath]
 reconstruct 0 = []
 reconstruct n = 
@@ -155,7 +156,7 @@ newtype Unravel a = Unravel {
 -- Rank Tensor: (Structural, Temporal)
 rankOf :: ParadoxPath -> (Int, Int)
 rankOf (BaseVeil VoidNeutral) = (0, 0)
-rankOf (BaseVeil _) = (0, 1)
+rankOf (BaseVeil _) = (0, 1) -- Atomic event: 1 unit of time depth
 rankOf (SelfContradict p) = 
     let (s, t) = rankOf p 
     in (s, t + 1)
@@ -180,6 +181,7 @@ instance Applicative Unravel where
             (Invalid i, Valid _)    -> (Invalid i, uTimed)
             (Valid _, Invalid i)    -> (Invalid i, uTimed)
             
+            -- STRUCTURAL MERGE
             (Invalid i1, Invalid i2) -> 
                 let newPath = Compose (genealogy i1) (genealogy i2)
                     newInfo = VoidInfo newPath
@@ -193,6 +195,7 @@ instance Applicative Unravel where
                                                 (boundaryValue uTimed) (boundaryLength uTimed)
                                                 boundVal boundLen
                     
+                    -- Add full tensor rank of new structure
                     uFinal  = uTimed { structEntropy = structEntropy uTimed + dS
                                      , timeEntropy   = timeEntropy uTimed + dT
                                      , voidCount     = voidCount uTimed + 1 
@@ -209,6 +212,7 @@ instance Monad Unravel where
         in case res of
             Valid val -> runUnravel (f val) uTimed
             
+            -- TIME EVOLUTION
             Invalid i -> 
                 let oldPath = genealogy i
                     newPath = SelfContradict oldPath 
@@ -222,6 +226,8 @@ instance Monad Unravel where
                                                 (boundaryValue uTimed) (boundaryLength uTimed)
                                                 boundVal boundLen
 
+                    -- Update: Only increment Time entropy by 1.
+                    -- We don't re-add the entropy of the oldPath.
                     uEvolved = uTimed { boundaryValue = finalBound
                                       , boundaryLength = finalLen 
                                       , structEntropy = structEntropy uTimed 
@@ -283,6 +289,7 @@ harvest (x:xs) = Unravel $ \u ->
         (Invalid _, Valid rest) -> (Valid rest, uFinal) 
         (Valid _, Invalid i)    -> (Invalid i, uFinal)
         
+        -- HARVEST MERGE
         (Invalid i1, Invalid i2) -> 
              let newPath = Compose (genealogy i1) (genealogy i2)
                  newInfo = VoidInfo newPath
@@ -310,12 +317,15 @@ stepBackward :: Universe -> Maybe Universe
 stepBackward u 
     | boundaryValue u == 0 = Nothing 
     | otherwise = 
+        -- Reconstruct returns [Oldest ... Newest]
         let history = reconstruct (boundaryValue u)
-        in case reverse history of
+        in case reverse history of -- [Newest ... Oldest]
             [] -> Nothing
             (lastEvent : previousEvents) -> 
                 let (dS, dT) = rankOf lastEvent
                     
+                    -- Rebuild the boundary from [Oldest ... 2ndNewest]
+                    -- We reverse previousEvents to get back to [Oldest ... 2ndNewest]
                     prevBoundList = concatMap flattenPath (reverse previousEvents)
                     prevBoundVal  = compress prevBoundList
                     prevBoundLen  = length prevBoundList
