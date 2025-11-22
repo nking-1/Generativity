@@ -8,9 +8,8 @@ import qualified Prelude
 import Prelude hiding (div, (/))
 import System.Environment (getArgs)
 
--- ==========================================
--- 1. THE UNCRASHABLE PHYSICS ENGINE
--- ==========================================
+-- [Demos remain mostly same, adding reconstruction logic to runner]
+
 demoPhysics :: String
 demoPhysics = unlines
   [ "// PARAMETERS"
@@ -18,25 +17,19 @@ demoPhysics = unlines
   , "let drag    = 2 in"
   , ""
   , "// PARTICLE STATE: [Mass, Position, Velocity]"
-  , "// Particle 2 is at 0 (Singularity Risk!)"
   , "let p1 = [10, 5, 0] in"
   , "let p2 = [10, 0, 0] in "
   , ""
   , "// PHYSICS KERNEL"
-  , "let trajectory = [5, 4, 3, 2, 1, 0, 1, 2] in" -- 0 is the collision
+  , "let trajectory = [5, 4, 3, 2, 1, 0, 1, 2] in"
   , ""
   , "let forces = map(r -> "
-  , "    // The Shield: If r=0, physics breaks. We recover with Max Force (100)."
   , "    shield (gravity / r) recover 100"
   , ", trajectory) in"
   , ""
-  , "// INTEGRATION"
   , "fold(acc, f -> acc + f, 0, forces)"
   ]
 
--- ==========================================
--- 2. THE ROBUST MARKET MAKER
--- ==========================================
 demoFinance :: String
 demoFinance = unlines
   [ "// ORDER BOOK SNAPSHOTS: [Bid, Ask]"
@@ -47,66 +40,49 @@ demoFinance = unlines
   , "  [95,  98]   // Normal"
   , "] in"
   , ""
-  , "// METRIC: MidPoint / Spread"
   , "let metrics = map(row -> "
   , "    let bid = 0 in" 
   , "    // SIMULATION: We are mapping 'spread' values directly"
   , "    1000 / row"
-  , ", [5, 0, 100, 3]) in" -- 0 represents the crossed book
+  , ", [5, 0, 100, 3]) in" 
   , ""
-  , "// AGGREGATE RISK"
   , "fold(acc, m -> acc + m, 0, metrics)"
   ]
 
--- ==========================================
--- 3. THE ENTROPY CONSENSUS
--- ==========================================
 demoConsensus :: String
 demoConsensus = unlines
   [ "// PATH A: Risky Optimization"
   , "let pathA = "
   , "  let x = 10 in"
   , "  let y = 0 in"
-  , "  x / y" -- High Entropy (Void)
+  , "  x / y" 
   , "in"
   , ""
   , "// PATH B: Conservative Logic (Shielded)"
   , "let pathB = "
   , "  let x = 10 in"
   , "  let y = 0 in"
-  , "  shield (x / y) recover 0" -- Low Entropy (1 unit)
+  , "  shield (x / y) recover 0"
   , "in"
   , ""
-  , "// DECISION: In v0.4 we can check the entropy directly!"
   , "if entropy == 0 then pathA else pathB" 
   ]
 
--- ==========================================
--- 4. THE LAGRANGIAN EXPERIMENT
--- ==========================================
 demoLagrangian :: String
 demoLagrangian = unlines
   [ "// THE EVENT HORIZON EXPERIMENT"
   , "let trajectory = [10, 8, 6, 4, 2, 1, 0, 0, 0] in" 
   , ""
-  , "// The Potential Field: Phi ~ 1/r"
   , "let field = map(r -> "
-  , "    shield (1000 / r) recover 9999" -- 9999 is the "Planck Saturation" constant
+  , "    shield (1000 / r) recover 9999" 
   , ", trajectory) in"
   , ""
-  , "// Compute the Total Action of the path"
   , "fold(acc, val -> acc + val, 0, field)"
   ]
 
--- ==========================================
--- 5. VERIFIABLE COMPUTATION (Holography)
--- ==========================================
 demoVerifiable :: String
 demoVerifiable = unlines
   [ "// DEMO: Verifiable Computation (AdS/CFT)"
-  , "// We produce the same result value (100) via two different realities."
-  , "// The Hologram proves which reality we inhabited."
-  , ""
   , "// Reality 1: The Clean Path (100 / 1)"
   , "let clean_run = "
   , "    let val = 100 / 1 in"
@@ -119,20 +95,13 @@ demoVerifiable = unlines
   , "    [val, hologram]"
   , "in"
   , ""
-  , "// Return both to compare signatures."
-  , "// Result: [ [100, 0], [100, <Hash>] ]"
   , "[clean_run, shielded_run]"
   ]
-
--- ==========================================
--- RUNNER INFRASTRUCTURE (The Static Optimizer)
--- ==========================================
 
 runAnalysis :: ProgramStats -> IO ()
 runAnalysis stats = do
     let s = fromIntegral (maxEntropy stats) :: Double
     let t = fromIntegral (timeCost stats) :: Double
-    -- Action = S * (S_dot) = S * (S/t)
     let action = if t > 0 then s * (s Prelude./ t) else 0
     
     putStrLn $ "   Predicted Entropy: " ++ show (maxEntropy stats)
@@ -153,11 +122,19 @@ runExecution prog = do
     putStrLn $ "   Result Value:    " ++ show res
     putStrLn $ "   Total Entropy (S): " ++ show (totalEntropy u) 
     putStrLn $ "   Total Time (t):    " ++ show (timeStep u) 
-    
-    -- Holographic Output
-    putStrLn $ "   Holographic Sig:   " ++ show (boundaryHash u)
+    putStrLn $ "   Holographic Sig:   " ++ show (boundary u)
 
-    -- Runtime Lagrangian
+    -- RECONSTRUCTION
+    putStrLn "\n🕰️  HOLOGRAPHIC RECONSTRUCTION (Time Machine)"
+    putStrLn "-------------------------------------------"
+    let events = reconstruct (boundary u)
+    if null events 
+        then putStrLn "   (No Singularities Detected)"
+        else do
+            putStrLn $ "   Found " ++ show (length events) ++ " collapsed events:"
+            mapM_ (\e -> putStrLn $ "   - " ++ show e) events
+
+    -- LAGRANGIAN
     let s = fromIntegral (totalEntropy u) :: Double
     let t = fromIntegral (timeStep u) :: Double
     let s_dot = if t > 0 then s Prelude./ t else 0
