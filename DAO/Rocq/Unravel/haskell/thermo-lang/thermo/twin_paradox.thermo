@@ -1,0 +1,24 @@
+// EXPERIMENT: The Twin Paradox
+// Does processing paradoxes cost 'Time'?
+
+// Twin A: The Control Group
+// Performs n simple additions.
+let twin_a = fn(n) ->
+    let start_time = ticks in
+    let _ = repeat(n) { 1 + 1 } in
+    ticks - start_time
+in
+
+// Twin B: The Traveller
+// Performs n shielded singularity traversals.
+let twin_b = fn(n) ->
+    let start_time = ticks in
+    let _ = repeat(n) { shield(1/0) recover 0 } in
+    ticks - start_time
+in
+
+let n = 10 in
+[
+    call(twin_a, [n]), // Expected: Low time cost
+    call(twin_b, [n])  // Expected: High time cost (Time Dilation due to Paradox)
+]

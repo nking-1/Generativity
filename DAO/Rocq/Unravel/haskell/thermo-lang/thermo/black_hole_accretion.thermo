@@ -1,0 +1,14 @@
+// EXPERIMENT: Black Hole Accretion Disk
+// We feed a black hole a stream of matter.
+// Some matter is "Dark" (0) and causes paradoxes.
+
+let accretion_disk = [10, 20, 0, 30, 0, 0, 40] in
+
+let process_matter = fn(mass) ->
+    // We return the current Hologram state after each meal
+    let energy = shield (1000 / mass) recover 0 in
+    hologram
+in
+
+// Map the process over the disk to see the history of the event horizon
+map(m -> call(process_matter, [m]), accretion_disk)

@@ -1,6 +1,6 @@
 (** * ThermoVerification.v
     
-    Formal verification of the ThermoLang v0.8 Runtime.
+    Formal verification of the ThermoLang v0.9 Runtime.
     This bridges the abstract Impossibility Algebra with the 
     concrete Haskell implementation.
 *)
@@ -86,32 +86,33 @@ Module ThermoRuntime.
   Parameter Base : Z.
   Hypothesis Base_large : Base > 256.
 
-  (** The append operation from Haskell *)
-  Definition append_hologram (oldVal : Z) (oldLen : nat) 
-                             (newVal : Z) (newLen : nat) : Z :=
-    oldVal + (newVal * (Z.pow Base (Z.of_nat oldLen))).
+  (** The append operation from Haskell v0.9
+      newVal = valOld + (valNew * shiftForNew)
+      where shiftForNew = Base ^ lenOld 
+      (Note: Haskell puts old in low bits, new in high bits) *)
+  Definition append_hologram (valOld : Z) (lenOld : nat) 
+                             (valNew : Z) (lenNew : nat) : Z :=
+    valOld + (valNew * (Z.pow Base (Z.of_nat lenOld))).
 
   (** THEOREM: The Time Machine Theorem (Reversibility)
       If we append an event, we can uniquely recover the previous state. 
       This proves that history is not destroyed by the Monad. *)
   Theorem holographic_reversibility :
     forall (h_old h_new : Z) (len_old len_new : nat),
-    h_old < (Z.pow Base (Z.of_nat len_old)) -> (* Invariant: Hash fits in length *)
-    h_new < (Z.pow Base (Z.of_nat len_new)) -> 
+    0 <= h_old < (Z.pow Base (Z.of_nat len_old)) -> (* Invariant: Old hash fits in length *)
+    0 <= h_new -> 
     let combined := append_hologram h_old len_old h_new len_new in
     (* We can recover h_old via modulo arithmetic *)
     combined mod (Z.pow Base (Z.of_nat len_old)) = h_old.
   Proof.
     intros.
     unfold append_hologram.
-    (* (old + new * shift) mod shift = old *)
+    (* (old + new * shift) mod shift = old mod shift = old *)
     rewrite Z.add_comm.
     rewrite Z_mod_plus_full.
     apply Z.mod_small.
-    split.
-    - (* h_old >= 0 assumed for Z encodings *) admit.
-    - assumption.
-  Admitted.
+    assumption.
+  Qed.
 
   (* ================================================================ *)
   (** ** 4. The Unravel Monad Semantics *)

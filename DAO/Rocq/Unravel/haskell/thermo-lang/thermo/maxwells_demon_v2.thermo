@@ -1,0 +1,20 @@
+// EXPERIMENT: Maxwell's Demon (Entropy-Aware Filter)
+
+let risky_calc = fn(x) ->
+    // Capture entropy state BEFORE
+    let s_start = entropy in
+    
+    // Try a dangerous calculation
+    let val = shield (100 / x) recover 999 in
+    
+    // Capture entropy state AFTER
+    let s_end = entropy in
+    
+    // The Demon's Gate:
+    // Only return the value if NO entropy was generated (s_end == s_start).
+    // Otherwise, return -1 (Rejected).
+    if s_end == s_start then val else (0 - 1)
+in
+
+let data = [10, 5, 0, 2, 0] in
+map(x -> call(risky_calc, [x]), data)
