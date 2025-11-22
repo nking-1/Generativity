@@ -6,7 +6,9 @@ import Prelude hiding (div, (/), id)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
--- [AST remains the same]
+-- ==========================================
+-- 1. THE AST
+-- ==========================================
 data Term 
     = IntVal Int
     | BoolVal Bool
@@ -24,21 +26,23 @@ data Term
     | Repeat Int Term 
     | Shield Term Term 
     | Log String Term
-    | GetEntropy
-    | GetHologram
+    | GetEntropy 
+    | GetHologram 
     deriving (Show, Eq)
 
--- [UVal Update: VHash stores Integer]
+-- ==========================================
+-- 2. RUNTIME VALUES (The Wheel)
+-- ==========================================
 data UVal 
     = VInt Int
     | VBool Bool
     | VList [UVal]
-    | VInf
-    | VNull
-    | VHash Integer     -- Updated to Integer
+    | VInf          
+    | VNull         
+    | VHash Integer 
     deriving (Show, Eq)
 
--- [Helpers]
+-- Helpers
 asInt :: UVal -> Unravel Int
 asInt (VInt i) = return i
 asInt VInf     = crumble (LogicError "Collapsed Infinity to Int")
@@ -53,7 +57,7 @@ asList :: UVal -> Unravel [UVal]
 asList (VList l) = return l
 asList _         = crumble (LogicError "Type Mismatch: Expected List")
 
--- [Wheel Arithmetic]
+-- Wheel Arithmetic
 wheelAdd :: UVal -> UVal -> UVal
 wheelAdd VNull _ = VNull
 wheelAdd _ VNull = VNull
@@ -86,11 +90,11 @@ wheelDiv _ VNull = VNull
 wheelDiv _ VInf  = VInt 0
 wheelDiv VInf _  = VInf
 wheelDiv (VInt 0) (VInt 0) = VNull
-wheelDiv (VInt a) (VInt 0) = VInf
+wheelDiv (VInt _) (VInt 0) = VInf
 wheelDiv (VInt a) (VInt b) = VInt (a `Prelude.div` b)
 wheelDiv _ _ = VNull
 
--- [Static Analysis]
+-- Static Analysis
 data ProgramStats = ProgramStats {
     maxEntropy :: Int,
     timeCost   :: Int,
@@ -156,7 +160,7 @@ analyze term ctx = case term of
         analyze try ctx <> analyze fallback ctx
     Log _ t -> analyze t ctx
 
--- [Compiler]
+-- Compiler
 compile :: Term -> Map String UVal -> Unravel UVal
 compile term env = case term of
     IntVal i  -> return (VInt i)

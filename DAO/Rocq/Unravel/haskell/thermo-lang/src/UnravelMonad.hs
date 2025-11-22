@@ -13,27 +13,11 @@ data VoidSource
     | RootEntropy 
     deriving (Show, Eq, Ord)
 
--- THE PERIODIC TABLE OF PARADOX
--- We map fundamental singularities to Prime Numbers.
--- This allows for unique factorization (Reversibility).
-primeOf :: VoidSource -> Integer
-primeOf DivByZero = 2
-primeOf RootEntropy = 3
-primeOf (LogicError "Collapsed Infinity") = 5
-primeOf (LogicError "Collapsed Nullity") = 7
-primeOf (LogicError _) = 11 -- Generic logic errors clump here for now
-
 data ParadoxPath
     = BaseVeil VoidSource             
     | SelfContradict ParadoxPath      
     | Compose ParadoxPath ParadoxPath 
     deriving (Show, Eq)
-
--- Rank calculation (Thermodynamic Weight)
-entropyOf :: ParadoxPath -> Int
-entropyOf (BaseVeil _) = 1
-entropyOf (SelfContradict p) = 1 + entropyOf p
-entropyOf (Compose p1 p2) = entropyOf p1 + entropyOf p2
 
 data VoidInfo = VoidInfo {
     genealogy :: ParadoxPath
@@ -44,30 +28,132 @@ data UResult a
     | Invalid VoidInfo 
     deriving (Show, Eq, Prelude.Functor)
 
+-- The Hologram is now an infinite-precision Integer acting as a Gödel Number
 data Universe = Universe {
     totalEntropy :: Int,
     timeStep     :: Int,
     voidCount    :: Int,
-    -- NEW: The Reversible Holographic Boundary (Product of Primes)
-    boundary     :: Integer
+    boundary     :: Integer 
 } deriving (Show, Eq)
 
 -- ==========================================
--- 2. THE DREAM MONAD (The Container)
+-- 2. THE HOLOGRAPHIC ENCODING (Gödel Numbering)
+-- ==========================================
+
+-- Tokens
+t_DIV_ZERO :: Integer
+t_DIV_ZERO = 1
+
+t_ROOT_ENTROPY :: Integer
+t_ROOT_ENTROPY = 2
+
+t_LOGIC_ERR :: Integer
+t_LOGIC_ERR = 3 
+
+-- Structural Markers 
+t_SEQ_OP :: Integer
+t_SEQ_OP = 10  
+
+t_MIX_OPEN :: Integer
+t_MIX_OPEN = 20 
+
+t_MIX_MID :: Integer
+t_MIX_MID = 21  
+
+t_MIX_CLOSE :: Integer
+t_MIX_CLOSE = 22 
+
+-- Base 100 for readable digits
+holographicBase :: Integer
+holographicBase = 100
+
+-- ENCODER: Tree -> [Tokens]
+flattenPath :: ParadoxPath -> [Integer]
+flattenPath (BaseVeil src) = case src of
+    DivByZero -> [t_DIV_ZERO]
+    RootEntropy -> [t_ROOT_ENTROPY]
+    LogicError _ -> [t_LOGIC_ERR] 
+flattenPath (SelfContradict p) = 
+    [t_SEQ_OP] ++ flattenPath p
+flattenPath (Compose p1 p2) = 
+    [t_MIX_OPEN] ++ flattenPath p1 ++ [t_MIX_MID] ++ flattenPath p2 ++ [t_MIX_CLOSE]
+
+-- COMPRESSOR: [Tokens] -> Integer
+-- d0 + d1*B + d2*B^2 ...
+compress :: [Integer] -> Integer
+compress digits = Prelude.foldr (\d acc -> d Prelude.+ (holographicBase Prelude.* acc)) 0 digits
+
+-- DECOMPRESSOR: Integer -> [Tokens]
+decompress :: Integer -> [Integer]
+decompress 0 = []
+decompress n = 
+    let (rest, digit) = n `Prelude.divMod` holographicBase
+    in digit : decompress rest
+
+-- APPENDER: Combines two holograms (H_old ++ H_new)
+-- This requires knowing the "length" (magnitude) of H_new to shift H_old correctly.
+-- Since we don't track length, we'll cheat slightly by decompressing H_new only.
+-- Ideally we'd track (Integer, Int) for (Value, Length).
+appendHologram :: Integer -> Integer -> Integer
+appendHologram old new = 
+    let newTokens = decompress new -- This is reversed (least significant first)
+        shift     = (holographicBase Prelude.^ (Prelude.length newTokens))
+    in new Prelude.+ (old Prelude.* shift)
+
+-- RECONSTRUCTOR: [Tokens] -> (ParadoxPath, RemainingTokens)
+parsePath :: [Integer] -> Maybe (ParadoxPath, [Integer])
+parsePath [] = Nothing
+
+-- Atomic
+parsePath (x:xs) | x == t_DIV_ZERO = Just (BaseVeil DivByZero, xs)
+parsePath (x:xs) | x == t_ROOT_ENTROPY = Just (BaseVeil RootEntropy, xs)
+parsePath (x:xs) | x == t_LOGIC_ERR = Just (BaseVeil (LogicError "Unknown"), xs)
+
+-- Sequence (Next p)
+parsePath (x:xs) | x == t_SEQ_OP = do
+    (p, rest) <- parsePath xs
+    Just (SelfContradict p, rest)
+
+-- Branch (Compose p1 p2)
+parsePath (x:xs) | x == t_MIX_OPEN = do
+    (p1, rest1) <- parsePath xs
+    case rest1 of
+        (m:rest2) | m == t_MIX_MID -> do
+            (p2, rest3) <- parsePath rest2
+            case rest3 of
+                (c:rest4) | c == t_MIX_CLOSE -> Just (Compose p1 p2, rest4)
+                _ -> Nothing
+        _ -> Nothing
+
+parsePath _ = Nothing
+
+-- The Public Reconstructor Function
+-- Returns a LIST of paths because the boundary accumulates multiple events
+reconstruct :: Integer -> [ParadoxPath]
+reconstruct 0 = []
+reconstruct n = 
+    let tokens = Prelude.reverse (decompress n) -- Fix endianness for parsing
+    in case parsePath tokens of
+        Just (p, rest) -> 
+            -- If we found a path, we need to process the rest of the tokens
+            -- Convert remaining tokens back to integer to recurse (inefficient but correct for v0.6)
+            let remainingInt = compress (Prelude.reverse rest)
+            in p : reconstruct remainingInt
+        Nothing -> [] -- Garbled history or done
+
+-- ==========================================
+-- 3. THE MONAD
 -- ==========================================
 
 newtype Unravel a = Unravel { 
     runUnravel :: Universe -> (UResult a, Universe) 
 } deriving (Prelude.Functor)
 
-combineVoids :: VoidInfo -> VoidInfo -> VoidInfo
-combineVoids (VoidInfo p1) (VoidInfo p2) = 
-    VoidInfo (Compose p1 p2)
-
--- Entangle: The Universe remembers the Event via Multiplication
--- This is commutative, so order is lost, but content is conserved perfectly.
-entangle :: Integer -> VoidSource -> Integer
-entangle current src = current * (primeOf src)
+-- Entropy Rank
+rankOf :: ParadoxPath -> Int
+rankOf (BaseVeil _) = 1
+rankOf (SelfContradict p) = 1 + rankOf p
+rankOf (Compose p1 p2) = rankOf p1 + rankOf p2
 
 instance Applicative Unravel where
     pure x = Unravel $ \u -> (Valid x, u)
@@ -80,14 +166,17 @@ instance Applicative Unravel where
             (Valid func, Valid val) -> (Valid (func val), uTimed)
             (Invalid i, Valid _)    -> (Invalid i, uTimed)
             (Valid _, Invalid i)    -> (Invalid i, uTimed)
+            
             (Invalid i1, Invalid i2) -> 
-                let newVoid = combineVoids i1 i2
-                    -- Note: The Universe state u'' ALREADY contains the prime factors 
-                    -- from running f and x. We don't need to multiply again here,
-                    -- or we would double-count. We only add the structural entropy.
-                    uFinal  = uTimed { totalEntropy = totalEntropy uTimed + entropyOf (genealogy newVoid) 
-                                     , voidCount = voidCount uTimed + 1 }
-                in (Invalid newVoid, uFinal)
+                let newPath = Compose (genealogy i1) (genealogy i2)
+                    newInfo = VoidInfo newPath
+                    newBoundary = compress (flattenPath newPath)
+                    
+                    -- APPEND, DON'T REPLACE
+                    uFinal  = uTimed { totalEntropy = totalEntropy uTimed + rankOf newPath 
+                                     , voidCount = voidCount uTimed + 1 
+                                     , boundary = appendHologram (boundary uTimed) newBoundary }
+                in (Invalid newInfo, uFinal)
 
 instance Monad Unravel where
     return = pure
@@ -97,27 +186,40 @@ instance Monad Unravel where
             uTimed = u' { timeStep = timeStep u' + 1 } 
         in case res of
             Valid val -> runUnravel (f val) uTimed
-            Invalid i -> (Invalid i, uTimed)
+            
+            Invalid i -> 
+                let oldPath = genealogy i
+                    newPath = SelfContradict oldPath 
+                    newInfo = VoidInfo newPath
+                    newBoundary = compress (flattenPath newPath)
+                    
+                    -- Note: Here we conceptually "Replace" because we are evolving the *same* error 
+                    -- forward in time, not adding a new one. However, if we want to keep the 
+                    -- full history trace, we should probably append too.
+                    -- For v0.6, we will just append the *new evolution* to the log.
+                    uEvolved = uTimed { boundary = appendHologram (boundary uTimed) newBoundary } 
+                in (Invalid newInfo, uEvolved)
 
 -- ==========================================
--- 3. THE PRIMITIVES (The API)
+-- 4. PRIMITIVES
 -- ==========================================
 
 bigBang :: Universe
-bigBang = Universe 0 0 0 1 -- Init boundary at 1 (Identity)
+bigBang = Universe 0 0 0 0
 
 run :: Unravel a -> (UResult a, Universe)
 run prog = runUnravel prog bigBang
 
--- The Event Generator
 crumble :: VoidSource -> Unravel a
 crumble src = Unravel $ \u ->
     let path = BaseVeil src
         info = VoidInfo path
-        -- CRITICAL: This is where the Event is recorded in the Hologram
+        bound = compress (flattenPath path)
+        
+        -- CRITICAL FIX: Append to history, don't overwrite!
         u'   = u { totalEntropy = totalEntropy u + 1 
                  , voidCount = voidCount u + 1 
-                 , boundary = entangle (boundary u) src }
+                 , boundary = appendHologram (boundary u) bound }
     in (Invalid info, u')
 
 currentEntropy :: Unravel Int
@@ -142,31 +244,11 @@ harvest (x:xs) = Unravel $ \u ->
         (Valid val, Valid rest) -> (Valid (val : rest), uFinal)
         (Invalid _, Valid rest) -> (Valid rest, uFinal) 
         (Valid _, Invalid i)    -> (Invalid i, uFinal)
+        
         (Invalid i1, Invalid i2) -> 
-             let combined = combineVoids i1 i2 
-             in (Invalid combined, uFinal)
-
--- ==========================================
--- 4. THE TIME MACHINE (Reconstructor)
--- ==========================================
-
--- Inverse of primeOf
-sourceFromPrime :: Integer -> Maybe VoidSource
-sourceFromPrime 2 = Just DivByZero
-sourceFromPrime 3 = Just RootEntropy
-sourceFromPrime 5 = Just (LogicError "Collapsed Infinity")
-sourceFromPrime 7 = Just (LogicError "Collapsed Nullity")
-sourceFromPrime 11 = Just (LogicError "Generic Logic Error")
-sourceFromPrime _ = Nothing
-
--- The Factorization Loop
-reconstruct :: Integer -> [VoidSource]
-reconstruct 1 = []
-reconstruct n = 
-    let factors = [2, 3, 5, 7, 11]
-        found = Prelude.filter (\p -> n `Prelude.rem` p == 0) factors
-    in case found of
-        [] -> [] -- Should not happen if system is closed
-        (p:_) -> case sourceFromPrime p of
-            Just src -> src : reconstruct (n `Prelude.div` p)
-            Nothing -> []
+             let newPath = Compose (genealogy i1) (genealogy i2)
+                 newInfo = VoidInfo newPath
+                 newBoundary = compress (flattenPath newPath)
+                 -- Append here too
+                 uMerge = uFinal { boundary = appendHologram (boundary uFinal) newBoundary }
+             in (Invalid newInfo, uMerge)

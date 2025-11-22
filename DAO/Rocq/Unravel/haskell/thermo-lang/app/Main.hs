@@ -8,8 +8,7 @@ import qualified Prelude
 import Prelude hiding (div, (/))
 import System.Environment (getArgs)
 
--- [Demos remain mostly same, adding reconstruction logic to runner]
-
+-- [Demos unchanged]
 demoPhysics :: String
 demoPhysics = unlines
   [ "// PARAMETERS"
@@ -98,6 +97,36 @@ demoVerifiable = unlines
   , "[clean_run, shielded_run]"
   ]
 
+demoTimeMachine :: String
+demoTimeMachine = unlines
+  [ "// DEMO: The Time Machine (Structure Reconstruction)"
+  , "// We create a nested failure structure."
+  , ""
+  , "// 1. A simple singularity"
+  , "let s1 = shield (1/0) recover 0 in"
+  , ""
+  , "// 2. A nested recovery (Branching)"
+  , "let s2 = shield ("
+  , "    shield (1/0) recover 0" 
+  , ") recover 0 in"
+  , ""
+  , "// Result is irrelevant, we want the Hologram."
+  , "[s1, s2, hologram]"
+  ]
+
+-- Pretty printer for ParadoxPath
+printPath :: String -> ParadoxPath -> IO ()
+printPath indent p = case p of
+    BaseVeil src -> putStrLn $ indent ++ "💥 " ++ show src
+    SelfContradict next -> do
+        putStrLn $ indent ++ "⏳ Time Step (Next) ->"
+        printPath (indent ++ "  ") next
+    Compose p1 p2 -> do
+        putStrLn $ indent ++ "🔀 Entangled Branch {"
+        printPath (indent ++ "  L: ") p1
+        printPath (indent ++ "  R: ") p2
+        putStrLn $ indent ++ "}"
+
 runAnalysis :: ProgramStats -> IO ()
 runAnalysis stats = do
     let s = fromIntegral (maxEntropy stats) :: Double
@@ -127,12 +156,16 @@ runExecution prog = do
     -- RECONSTRUCTION
     putStrLn "\n🕰️  HOLOGRAPHIC RECONSTRUCTION (Time Machine)"
     putStrLn "-------------------------------------------"
-    let events = reconstruct (boundary u)
-    if null events 
-        then putStrLn "   (No Singularities Detected)"
+    let history = reconstruct (boundary u)
+    if null history
+        then putStrLn "   (Vacuum State / No Singularities)"
         else do
-            putStrLn $ "   Found " ++ show (length events) ++ " collapsed events:"
-            mapM_ (\e -> putStrLn $ "   - " ++ show e) events
+            putStrLn $ "   Found " ++ show (length history) ++ " distinct causal events:"
+            -- Fix: mapM_ over the list of paths
+            mapM_ (\p -> do
+                putStrLn "   --- EVENT ---"
+                printPath "   " p
+                ) history
 
     -- LAGRANGIAN
     let s = fromIntegral (totalEntropy u) :: Double
@@ -190,6 +223,7 @@ help = do
     putStrLn "  consensus    - Choosing logic paths based on entropy"
     putStrLn "  lagrangian   - Information flow Lagrangian"
     putStrLn "  verifiable   - Holographic proof of computation"
+    putStrLn "  timemachine  - Demo of structural reconstruction"
     putStrLn "  all          - Run all demos"
     putStrLn "  run <file>   - Run a .thermo script from disk"
 
@@ -202,12 +236,14 @@ main = do
         ["consensus"]  -> runDemo "Entropy Consensus" demoConsensus
         ["lagrangian"] -> runDemo "Event Horizon Simulation" demoLagrangian
         ["verifiable"] -> runDemo "Holographic Verification" demoVerifiable
+        ["timemachine"] -> runDemo "The Time Machine" demoTimeMachine
         ["all"] -> do
             runDemo "The Uncrashable Particle" demoPhysics
             runDemo "The Robust Market Maker" demoFinance
             runDemo "Entropy Consensus" demoConsensus
             runDemo "Event Horizon Simulation" demoLagrangian
             runDemo "Holographic Verification" demoVerifiable
+            runDemo "The Time Machine" demoTimeMachine
 
         ["run", path] -> runFile path
 
