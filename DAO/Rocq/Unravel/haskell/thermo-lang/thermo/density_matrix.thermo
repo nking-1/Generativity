@@ -1,0 +1,22 @@
+// EXPERIMENT: The Density Matrix
+// We compare two systems to see if Density correctly identifies stability.
+
+// System A: Heavy Industry (Clean)
+// We do lots of work (multiplication charges Mass).
+// No singularities.
+let sys_A = fn(_) ->
+    let val = 10 * 10 * 10 * 10 * 10 in
+    [mass, density] 
+in
+
+// System B: Unstable Reactor (Dirty)
+// We do very little work, but we hit a singularity.
+let sys_B = fn(_) ->
+    let val = shield(1/0) recover 0 in
+    [mass, density] 
+in
+
+[
+    call(sys_A, []), // Expected: High Mass, Density 0
+    call(sys_B, [])  // Expected: Low Mass, Density > 0
+]

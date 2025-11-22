@@ -8,7 +8,6 @@ import qualified Prelude
 import Prelude hiding (div, (/))
 import System.Environment (getArgs)
 
--- [Demos unchanged]
 demoPhysics :: String
 demoPhysics = unlines
   [ "// PARAMETERS"
@@ -150,6 +149,7 @@ runExecution prog = do
     putStrLn $ "   Result Value:    " ++ show res
     putStrLn $ "   Entropy Tensor:  " ++ "[Struct=" ++ show (structEntropy u) ++ ", Time=" ++ show (timeEntropy u) ++ "]"
     putStrLn $ "   Total Entropy:   " ++ show (totalEntropy u)
+    putStrLn $ "   Work Done (Mass):" ++ show (mass u)
     putStrLn $ "   Total Time (t):  " ++ show (timeStep u) 
     putStrLn $ "   Holographic Sig: " ++ show (boundaryValue u)
 
@@ -171,11 +171,7 @@ runExecution prog = do
     let t = fromIntegral (timeStep u) :: Double
     let s_dot = if t > 0 then s Prelude./ t else 0
     
-    -- Acceleration (S_ddot)
-    -- Since we don't have history of S(t), we approximate using mean acceleration from 0
-    -- S_ddot = S / t^2
     let s_ddot = if t > 0 then s_dot Prelude./ t else 0
-    
     let lagrangian = s * s_dot 
     
     putStrLn "\n📐 LAGRANGIAN ANALYSIS"

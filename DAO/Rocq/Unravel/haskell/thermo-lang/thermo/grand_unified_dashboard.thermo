@@ -1,0 +1,14 @@
+// EXPERIMENT: The Grand Unified Dashboard
+// We prove we can export mixed-type telemetry from the engine.
+
+let _ = shield(1/0) recover 0 in
+let _ = 10 * 10 in // Generate mass
+
+[
+    mass,      // Int
+    entropy,   // Int
+    rate,      // Int (Fixed Point)
+    density,   // Int (Fixed Point)
+    hologram,  // Hash (Integer)
+    ticks      // Int
+]

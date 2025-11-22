@@ -1,0 +1,28 @@
+// EXPERIMENT: Gravitational Response Field (v2)
+// We map a mass-injection function over a range of inputs.
+// We return the full physics tensor for each run.
+
+let inject_mass = fn(m) ->
+    repeat(m) {
+        shield(100 / 0) recover 0
+    }
+in
+
+let measure_response = fn(m) ->
+    // 1. Inject Singularity Mass
+    let _ = call(inject_mass, [m]) in
+    
+    // 2. Read the Physics Tensor
+    [
+        m,          // Input Mass
+        entropy,    // Total S
+        struct,     // Structural S
+        time,       // Temporal S
+        rate,       // S_dot (Stability)
+        density,    // S / Work (Fragility)
+        hologram    // Causal Signature
+    ]
+in
+
+// Scan across Mass = 1, 5, 20
+map(m -> call(measure_response, [m]), [1, 5, 20])

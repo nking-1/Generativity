@@ -15,29 +15,24 @@ data Term
     | ListVal [Term]
     | Var String
     
-    -- Functions
     | Fn [String] Term      
     | Call Term [Term]      
 
-    -- Arithmetic
     | Add Term Term
     | Sub Term Term
     | Mul Term Term
     | Div Term Term 
     
-    -- Logic
     | Eq Term Term
     | Lt Term Term 
     | Gt Term Term 
     | If Term Term Term
     
-    -- Binding & Control
     | Let String Term Term
     | Map String Term Term 
     | Fold String String Term Term Term
-    | Repeat Term Term  -- CHANGED: Int -> Term (Dynamic Loop)
+    | Repeat Term Term 
     
-    -- Thermodynamic Primitives
     | Shield Term Term 
     | Log String Term
     
@@ -47,7 +42,14 @@ data Term
     | GetTime
     | GetVoids
     | GetTicks
-    | GetHologram 
+    | GetHologram
+    
+    -- NEW PHYSICS v1.0
+    | GetMass
+    | GetRate    -- Entropy / Time
+    | GetDensity -- Entropy / Mass
+    | Evolve Term -- Artificially age the universe
+    
     deriving (Show, Eq)
 
 -- ==========================================
@@ -63,7 +65,6 @@ data UVal
     | VClosure [String] Term (Map String UVal)
     deriving (Show, Eq)
 
--- Helpers
 asInt :: UVal -> Unravel Int
 asInt (VInt i) = return i
 asInt VInf     = crumble (LogicError "Collapsed Infinity to Int")
@@ -147,6 +148,11 @@ analyze term ctx = case term of
     GetVoids -> mempty
     GetTicks -> mempty
     GetHologram -> mempty
+    GetMass -> mempty
+    GetRate -> mempty
+    GetDensity -> mempty
+    
+    Evolve t -> analyze t ctx
 
     Fn _ body -> analyze body ctx
     Call f args -> 
@@ -155,6 +161,7 @@ analyze term ctx = case term of
         in sF <> sArgs <> ProgramStats 0 1 True
 
     ListVal xs -> Prelude.foldMap (\t -> analyze t ctx) xs
+    
     Add t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Sub t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Mul t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
@@ -162,6 +169,7 @@ analyze term ctx = case term of
     Eq t1 t2  -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Lt t1 t2  -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Gt t1 t2  -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
+    
     If cond t1 t2 -> 
         let sC = analyze cond ctx
             s1 = analyze t1 ctx
@@ -189,17 +197,12 @@ analyze term ctx = case term of
             (batchSize Prelude.* maxEntropy sBody) 
             (batchSize Prelude.* timeCost sBody) 
             (isSafe sBody)
-            
-    -- Dynamic Repeat Analysis
-    Repeat nTerm body -> 
-        let sN = analyze nTerm ctx
-            sBody = analyze body ctx
-            heuristicLoops = 10 -- Assume 10 loops for static cost
-        in sN <> ProgramStats 
-            (heuristicLoops Prelude.* maxEntropy sBody) 
-            (heuristicLoops Prelude.* timeCost sBody) 
+    Repeat n body -> 
+        let sBody = analyze body ctx
+        in ProgramStats 
+            (10 Prelude.* maxEntropy sBody) 
+            (10 Prelude.* timeCost sBody) 
             (isSafe sBody)
-
     Shield try fallback -> 
         analyze try ctx <> analyze fallback ctx
     Log _ t -> analyze t ctx
@@ -228,22 +231,28 @@ compile term env = case term of
                 let newEnv = Prelude.foldr (\(k,v) m -> Map.insert k v m) closureEnv (Prelude.zip args argVals)
                 compile body newEnv
 
+    -- Arithmetic Charges Mass (Work)
     Add t1 t2 -> do
         v1 <- compile t1 env
         v2 <- compile t2 env
+        work 1
         return (wheelAdd v1 v2)
     Sub t1 t2 -> do
         v1 <- compile t1 env
         v2 <- compile t2 env
+        work 1
         return (wheelSub v1 v2)
     Mul t1 t2 -> do
         v1 <- compile t1 env
         v2 <- compile t2 env
+        work 1
         return (wheelMul v1 v2)
     Div t1 t2 -> do
         v1 <- compile t1 env
         v2 <- compile t2 env
+        work 1
         return (wheelDiv v1 v2)
+    
     Eq t1 t2 -> do
         v1 <- compile t1 env
         v2 <- compile t2 env
@@ -270,6 +279,28 @@ compile term env = case term of
     GetVoids -> VInt <$> getVoidCount
     GetTicks -> VInt <$> getTimeStep
     GetHologram -> VHash <$> getHologram
+    
+    -- New Physics Observables
+    GetMass -> VInt <$> getMass
+    
+    GetRate -> do
+        s <- currentEntropy
+        t <- getTimeStep
+        -- Fixed Point: 1000 * S / t
+        let r = if t Prelude.> 0 then (1000 Prelude.* s) `Prelude.div` t else 0
+        return (VInt r)
+
+    GetDensity -> do
+        s <- currentEntropy
+        m <- getMass
+        -- Fixed Point: 1000 * S / m
+        let d = if m Prelude.> 0 then (1000 Prelude.* s) `Prelude.div` m else 0
+        return (VInt d)
+
+    Evolve nTerm -> do
+        n <- compile nTerm env >>= asInt
+        evolveTime n
+        return (VInt n)
 
     Map var body listTerm -> do
         listVals <- compile listTerm env >>= asList
@@ -287,14 +318,11 @@ compile term env = case term of
                     ) (return initVal) listVals
         return final
 
-    -- Dynamic Repeat Implementation
     Repeat nTerm body -> do
         count <- compile nTerm env >>= asInt
         if count Prelude.<= 0 
             then return (VInt 0)
             else do
-                -- Execute count-1 times for side effects (entropy)
-                -- We use a simple recursive helper to avoid replicating code logic
                 let loop k | k Prelude.<= 1 = compile body env
                            | Prelude.otherwise = do
                                _ <- compile body env

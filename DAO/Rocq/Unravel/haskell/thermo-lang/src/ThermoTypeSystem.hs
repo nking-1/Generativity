@@ -59,12 +59,18 @@ infer term ctx = case term of
     ListVal [] -> Right (TyList TyAny) 
     ListVal (x:xs) -> do
         tHead <- infer x ctx
-        _ <- foldM (\expectedT el -> do
+        -- RELAXED TYPING: If types mismatch, fallback to TyAny (Heterogeneous List)
+        -- This enables [Int, Int, Hash] dashboards
+        finalType <- foldM (\currentT el -> do
             tElem <- infer el ctx
-            expect expectedT tElem "List Element"
-            return expectedT
+            if currentT == tElem || currentT == TyAny 
+                then return tElem 
+                else return TyAny -- Mismatch -> List of Any
             ) tHead xs
-        return (TyList tHead)
+        
+        if finalType == TyAny 
+            then return (TyList TyAny)
+            else return (TyList finalType)
 
     Add t1 t2 -> checkMath t1 t2 "Add" ctx
     Sub t1 t2 -> checkMath t1 t2 "Sub" ctx
@@ -74,7 +80,7 @@ infer term ctx = case term of
     Eq t1 t2 -> do
         t1Type <- infer t1 ctx
         t2Type <- infer t2 ctx
-        expect t1Type t2Type "Equality"
+        -- Relax equality to Any
         return TyBool
 
     Lt t1 t2 -> checkCompare t1 t2 "LessThan" ctx
@@ -85,8 +91,8 @@ infer term ctx = case term of
         expect TyBool condT "If Condition"
         t1T <- infer t1 ctx
         t2T <- infer t2 ctx
-        expect t1T t2T "If Branches"
-        return t1T
+        -- Relax If branches to Any if mismatch
+        if t1T == t2T then return t1T else return TyAny
 
     Let name val body -> do
         valT <- infer val ctx
@@ -107,11 +113,10 @@ infer term ctx = case term of
             TyList elemT -> do
                 let bodyCtx = Map.insert accName initT (Map.insert varName elemT ctx)
                 bodyT <- infer body bodyCtx
-                expect initT bodyT "Fold Accumulator"
-                return initT
+                -- Relax fold accumulator to Any if needed
+                if initT == bodyT then return initT else return TyAny
             _ -> Left (NotList listT)
 
-    -- UPDATED: Repeat now checks nTerm
     Repeat nTerm body -> do
         nType <- infer nTerm ctx
         expect TyInt nType "Repeat Count"
@@ -121,8 +126,7 @@ infer term ctx = case term of
     Shield try fallback -> do
         t1 <- infer try ctx
         t2 <- infer fallback ctx
-        expect t1 t2 "Shield Fallback"
-        return t1
+        if t1 == t2 then return t1 else return TyAny
         
     Log _ t -> infer t ctx
 
@@ -131,7 +135,15 @@ infer term ctx = case term of
     GetTime -> Right TyInt
     GetVoids -> Right TyInt
     GetTicks -> Right TyInt
-    GetHologram -> Right TyInt
+    GetHologram -> Right TyInt -- We treat Hash as Int for now in static analysis
+    GetMass -> Right TyInt
+    GetRate -> Right TyInt
+    GetDensity -> Right TyInt
+    
+    Evolve t -> do
+        tType <- infer t ctx
+        expect TyInt tType "Evolve Time"
+        return TyInt
 
 checkMath :: Term -> Term -> String -> TypeContext -> Either TypeError Type
 checkMath t1 t2 op ctx = do

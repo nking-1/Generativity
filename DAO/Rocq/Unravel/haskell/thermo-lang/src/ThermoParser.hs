@@ -27,13 +27,12 @@ keyword w = lexeme (try (string w <* notFollowedBy (alphaNumChar <|> char '_')))
 identifier :: Parser String
 identifier = (lexeme . try) (p >>= check)
   where
-    -- FIXED: Allow underscores at the start of identifiers to support 'let _ = ...'
     p       = (:) <$> (letterChar <|> char '_') <*> many (alphaNumChar <|> char '_')
     check x = if x `elem` reserved then fail $ "keyword " ++ show x ++ " cannot be an identifier" else return x
     reserved = ["if", "then", "else", "let", "in", "true", "false", 
                 "map", "fold", "repeat", "shield", "recover", "log", 
                 "entropy", "struct", "time", "voids", "ticks", "hologram",
-                "fn", "call"]
+                "fn", "call", "mass", "rate", "density", "evolve"]
 
 integer :: Parser Int
 integer = lexeme L.decimal
@@ -65,6 +64,10 @@ pTermPart = choice
   , pTime
   , pVoids
   , pTicks
+  , pMass    -- NEW
+  , pRate    -- NEW
+  , pDensity -- NEW
+  , pEvolve  -- NEW
   , pList
   , pBool
   , pInt
@@ -134,12 +137,11 @@ pFold = do
     _ <- symbol ")"
     return (Fold acc var body initExpr listExpr)
 
--- UPDATED: repeat(term) instead of repeat(int)
 pRepeat :: Parser Term
 pRepeat = do
     _ <- keyword "repeat"
     _ <- symbol "("
-    n <- pTerm -- Changed from integer
+    n <- pTerm
     _ <- symbol ")"
     _ <- symbol "{"
     body <- pTerm
@@ -179,14 +181,25 @@ pCall = do
     _ <- symbol ")"
     return (Call f args)
 
+pEvolve :: Parser Term
+pEvolve = do
+    _ <- keyword "evolve"
+    _ <- symbol "("
+    n <- pTerm
+    _ <- symbol ")"
+    return (Evolve n)
+
 -- Observables
-pEntropy, pStruct, pTime, pVoids, pTicks, pHologram :: Parser Term
+pEntropy, pStruct, pTime, pVoids, pTicks, pHologram, pMass, pRate, pDensity :: Parser Term
 pEntropy  = GetEntropy <$ keyword "entropy"
 pStruct   = GetStruct  <$ keyword "struct"
 pTime     = GetTime    <$ keyword "time"
 pVoids    = GetVoids   <$ keyword "voids"
 pTicks    = GetTicks   <$ keyword "ticks"
 pHologram = GetHologram <$ keyword "hologram"
+pMass     = GetMass    <$ keyword "mass"
+pRate     = GetRate    <$ keyword "rate"
+pDensity  = GetDensity <$ keyword "density"
 
 operatorTable :: [[Operator Parser Term]]
 operatorTable =

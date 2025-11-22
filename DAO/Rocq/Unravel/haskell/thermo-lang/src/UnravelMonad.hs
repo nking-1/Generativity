@@ -34,6 +34,10 @@ data Universe = Universe {
     timeEntropy    :: Int,     
     timeStep       :: Int,     
     voidCount      :: Int,     
+    
+    -- NEW: Mass (Successful Work)
+    mass           :: Int,
+
     boundaryValue  :: Integer, 
     boundaryLength :: Int      
 } deriving (Show, Eq)
@@ -42,7 +46,7 @@ totalEntropy :: Universe -> Int
 totalEntropy u = structEntropy u + timeEntropy u
 
 -- ==========================================
--- 2. HOLOGRAPHY
+-- 2. HOLOGRAPHIC ENCODING
 -- ==========================================
 
 t_VOID_NEUTRAL, t_DIV_ZERO, t_ROOT_ENTROPY :: Integer
@@ -195,15 +199,17 @@ instance Monad Unravel where
                 in (Invalid newInfo, uEvolved)
 
 -- ==========================================
--- 4. PRIMITIVES & OBSERVABLES
+-- 4. PRIMITIVES
 -- ==========================================
 
 bigBang :: Universe
-bigBang = Universe 0 0 0 0 0 0
+-- S_s, S_t, t, v, m, B, L
+bigBang = Universe 0 0 0 0 0 0 0
 
 run :: Unravel a -> (UResult a, Universe)
 run prog = runUnravel prog bigBang
 
+-- Singularities generate Entropy
 crumble :: VoidSource -> Unravel a
 crumble src = Unravel $ \u ->
     let path = BaseVeil src
@@ -221,6 +227,14 @@ crumble src = Unravel $ \u ->
                  , boundaryValue = finalBound
                  , boundaryLength = finalLen }
     in (Invalid info, u')
+
+-- WORK: Doing normal stuff generates Mass
+work :: Int -> Unravel ()
+work amount = Unravel $ \u -> (Valid (), u { mass = mass u + amount })
+
+-- ARTIFICIAL AGING: Moving through time without doing work
+evolveTime :: Int -> Unravel ()
+evolveTime dt = Unravel $ \u -> (Valid (), u { timeStep = timeStep u + dt })
 
 recover :: Unravel a -> a -> Unravel a
 recover (Unravel op) defaultVal = Unravel $ \u ->
@@ -254,7 +268,7 @@ harvest (x:xs) = Unravel $ \u ->
                                  , timeEntropy = timeEntropy uFinal + dT }
              in (Invalid newInfo, uMerge)
 
--- NEW: First-Class Observables
+-- OBSERVABLES
 getStructEntropy :: Unravel Int
 getStructEntropy = Unravel $ \u -> (Valid (structEntropy u), u)
 
@@ -273,9 +287,13 @@ getBoundaryLen = Unravel $ \u -> (Valid (boundaryLength u), u)
 getHologram :: Unravel Integer
 getHologram = Unravel $ \u -> (Valid (boundaryValue u), u)
 
+getMass :: Unravel Int
+getMass = Unravel $ \u -> (Valid (mass u), u)
+
 currentEntropy :: Unravel Int
 currentEntropy = Unravel $ \u -> (Valid (totalEntropy u), u)
 
+-- RECONSTRUCTION
 stepBackward :: Universe -> Maybe Universe
 stepBackward u 
     | boundaryValue u == 0 = Nothing 

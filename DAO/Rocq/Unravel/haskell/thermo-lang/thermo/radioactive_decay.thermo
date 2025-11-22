@@ -1,0 +1,17 @@
+// EXPERIMENT: Radioactive Decay (Time Evolution)
+// We test if the 'rate' observable responds to the flow of time.
+
+// 1. The "Flash": Create entropy immediately
+let _ = shield(1/0) recover 0 in
+
+// 2. Measure Initial Rate (High)
+let r_init = rate in
+
+// 3. The "Long Wait": Evolve time forward without doing work
+// This simulates system idle time or bit-rot latency.
+let _ = evolve(1000) in
+
+// 4. Measure Final Rate (Should be lower)
+let r_final = rate in
+
+[r_init, r_final]
