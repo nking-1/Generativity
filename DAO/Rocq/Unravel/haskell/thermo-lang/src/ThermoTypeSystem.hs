@@ -9,6 +9,7 @@ data Type
     = TyInt 
     | TyBool 
     | TyList Type 
+    | TyFunc [Type] Type 
     | TyAny 
     deriving (Show, Eq)
 
@@ -17,6 +18,7 @@ data TypeError
     | NotList Type 
     | UndefinedVar String 
     | EmptyListWithoutContext
+    | NotFunction Type
     deriving (Show, Eq)
 
 type TypeContext = Map String Type
@@ -39,10 +41,24 @@ infer term ctx = case term of
         Just t  -> Right t
         Nothing -> Left (UndefinedVar s)
     
+    Fn args body -> do
+        let argCtx = foldr (\arg m -> Map.insert arg TyAny m) ctx args
+        retType <- infer body argCtx
+        let argTypes = replicate (length args) TyAny
+        return (TyFunc argTypes retType)
+
+    Call f args -> do
+        fType <- infer f ctx
+        case fType of
+            TyFunc _ ret -> do 
+                _ <- mapM (\a -> infer a ctx) args
+                return ret
+            TyAny -> Right TyAny
+            _ -> Left (NotFunction fType)
+
     ListVal [] -> Right (TyList TyAny) 
     ListVal (x:xs) -> do
         tHead <- infer x ctx
-        -- Check homogeneity of the list
         _ <- foldM (\expectedT el -> do
             tElem <- infer el ctx
             expect expectedT tElem "List Element"
@@ -50,13 +66,11 @@ infer term ctx = case term of
             ) tHead xs
         return (TyList tHead)
 
-    -- Arithmetic
     Add t1 t2 -> checkMath t1 t2 "Add" ctx
     Sub t1 t2 -> checkMath t1 t2 "Sub" ctx
     Mul t1 t2 -> checkMath t1 t2 "Mul" ctx
     Div t1 t2 -> checkMath t1 t2 "Div" ctx
 
-    -- Comparisons (Input Int, Output Bool)
     Eq t1 t2 -> do
         t1Type <- infer t1 ctx
         t2Type <- infer t2 ctx
@@ -97,7 +111,10 @@ infer term ctx = case term of
                 return initT
             _ -> Left (NotList listT)
 
-    Repeat _ body -> do
+    -- UPDATED: Repeat now checks nTerm
+    Repeat nTerm body -> do
+        nType <- infer nTerm ctx
+        expect TyInt nType "Repeat Count"
         _ <- infer body ctx
         return TyInt 
 
@@ -110,9 +127,12 @@ infer term ctx = case term of
     Log _ t -> infer t ctx
 
     GetEntropy -> Right TyInt
+    GetStruct -> Right TyInt
+    GetTime -> Right TyInt
+    GetVoids -> Right TyInt
+    GetTicks -> Right TyInt
     GetHologram -> Right TyInt
 
--- Helper for arithmetic
 checkMath :: Term -> Term -> String -> TypeContext -> Either TypeError Type
 checkMath t1 t2 op ctx = do
     t1Type <- infer t1 ctx
@@ -121,7 +141,6 @@ checkMath t1 t2 op ctx = do
     expect TyInt t2Type (op ++ " Right")
     return TyInt
 
--- Helper for numeric comparison
 checkCompare :: Term -> Term -> String -> TypeContext -> Either TypeError Type
 checkCompare t1 t2 op ctx = do
     t1Type <- infer t1 ctx

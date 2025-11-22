@@ -7,10 +7,6 @@ import Control.Monad.Combinators.Expr
 import Data.Void
 import ThermoLang
 
--- ==========================================
--- 1. PARSER INFRASTRUCTURE
--- ==========================================
-
 type Parser = Parsec Void String
 
 sc :: Parser ()
@@ -31,10 +27,13 @@ keyword w = lexeme (try (string w <* notFollowedBy (alphaNumChar <|> char '_')))
 identifier :: Parser String
 identifier = (lexeme . try) (p >>= check)
   where
-    p       = (:) <$> letterChar <*> many (alphaNumChar <|> char '_')
+    -- FIXED: Allow underscores at the start of identifiers to support 'let _ = ...'
+    p       = (:) <$> (letterChar <|> char '_') <*> many (alphaNumChar <|> char '_')
     check x = if x `elem` reserved then fail $ "keyword " ++ show x ++ " cannot be an identifier" else return x
     reserved = ["if", "then", "else", "let", "in", "true", "false", 
-                "map", "fold", "repeat", "shield", "recover", "log", "entropy", "hologram"]
+                "map", "fold", "repeat", "shield", "recover", "log", 
+                "entropy", "struct", "time", "voids", "ticks", "hologram",
+                "fn", "call"]
 
 integer :: Parser Int
 integer = lexeme L.decimal
@@ -44,10 +43,6 @@ parens = between (symbol "(") (symbol ")")
 
 brackets :: Parser a -> Parser a
 brackets = between (symbol "[") (symbol "]")
-
--- ==========================================
--- 2. TERM PARSERS
--- ==========================================
 
 pTerm :: Parser Term
 pTerm = makeExprParser pTermPart operatorTable
@@ -62,8 +57,14 @@ pTermPart = choice
   , pRepeat
   , pShield
   , pLog
+  , pFn     
+  , pCall   
   , pHologram
   , pEntropy
+  , pStruct
+  , pTime
+  , pVoids
+  , pTicks
   , pList
   , pBool
   , pInt
@@ -133,11 +134,12 @@ pFold = do
     _ <- symbol ")"
     return (Fold acc var body initExpr listExpr)
 
+-- UPDATED: repeat(term) instead of repeat(int)
 pRepeat :: Parser Term
 pRepeat = do
     _ <- keyword "repeat"
     _ <- symbol "("
-    n <- integer
+    n <- pTerm -- Changed from integer
     _ <- symbol ")"
     _ <- symbol "{"
     body <- pTerm
@@ -159,15 +161,32 @@ pLog = do
     val <- pTerm
     return (Log msg val)
 
-pEntropy :: Parser Term
-pEntropy = GetEntropy <$ keyword "entropy"
+pFn :: Parser Term
+pFn = do
+    _ <- keyword "fn"
+    args <- parens (identifier `sepBy` symbol ",")
+    _ <- symbol "->"
+    body <- pTerm
+    return (Fn args body)
 
-pHologram :: Parser Term
+pCall :: Parser Term
+pCall = do
+    _ <- keyword "call"
+    _ <- symbol "("
+    f <- pTerm
+    _ <- symbol ","
+    args <- brackets (pTerm `sepBy` symbol ",")
+    _ <- symbol ")"
+    return (Call f args)
+
+-- Observables
+pEntropy, pStruct, pTime, pVoids, pTicks, pHologram :: Parser Term
+pEntropy  = GetEntropy <$ keyword "entropy"
+pStruct   = GetStruct  <$ keyword "struct"
+pTime     = GetTime    <$ keyword "time"
+pVoids    = GetVoids   <$ keyword "voids"
+pTicks    = GetTicks   <$ keyword "ticks"
 pHologram = GetHologram <$ keyword "hologram"
-
--- ==========================================
--- 3. OPERATOR PRECEDENCE
--- ==========================================
 
 operatorTable :: [[Operator Parser Term]]
 operatorTable =
@@ -179,10 +198,6 @@ operatorTable =
     , InfixL (Lt  <$ symbol "<")
     , InfixL (Gt  <$ symbol ">") ]
   ]
-
--- ==========================================
--- 4. PUBLIC API
--- ==========================================
 
 parseThermo :: String -> Either String Term
 parseThermo input = 

@@ -1,25 +1,30 @@
-// Gravitational Response Curve (Observable Quantities Only)
+// EXPERIMENT: Gravitational Response Curve
+// We inject increasing amounts of Singularity Mass.
+// We measure the Universe's response in Time and Structure entropy.
 
-let L1 = [0,0] in
-let L2 = [0,0,0,0,0] in
-let L3 = [0,0,0,0,0,0,0,0,0,0] in
+// Define our injector function
+let inject = fn(mass) -> 
+    repeat(mass) { 
+        shield(100 / 0) recover 0 
+    } 
+in
 
-// Inject curvature: each division collapses Infinity
-let seq1 = map(x -> shield (100 / x) recover 0, L1) in
-let e1 = entropy in
-let b1 = hologram in
+// Define our measurement function
+let sample = fn(mass) ->
+    let _ = call(inject, [mass]) in
+    [
+        mass, 
+        entropy, // Total S
+        struct,  // Structural
+        time,    // Temporal
+        voids    // Singularity Count
+    ]
+in
 
-let seq2 = map(x -> shield (100 / x) recover 0, L2) in
-let e2 = entropy in
-let b2 = hologram in
+// Run the experiment for Mass = 2, 5, 10
+let results = map(m -> 
+    call(sample, [m]) 
+, [2, 5, 10]) 
+in
 
-let seq3 = map(x -> shield (100 / x) recover 0, L3) in
-let e3 = entropy in
-let b3 = hologram in
-
-// Response curve: [ (#events, entropy, holographic_sig) ]
-[
-  [2,  e1, b1],
-  [5,  e2, b2],
-  [10, e3, b3]
-]
+results

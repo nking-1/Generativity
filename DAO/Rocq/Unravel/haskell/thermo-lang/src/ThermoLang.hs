@@ -15,6 +15,10 @@ data Term
     | ListVal [Term]
     | Var String
     
+    -- Functions
+    | Fn [String] Term      
+    | Call Term [Term]      
+
     -- Arithmetic
     | Add Term Term
     | Sub Term Term
@@ -23,24 +27,32 @@ data Term
     
     -- Logic
     | Eq Term Term
-    | Lt Term Term -- NEW
-    | Gt Term Term -- NEW
+    | Lt Term Term 
+    | Gt Term Term 
     | If Term Term Term
     
     -- Binding & Control
     | Let String Term Term
     | Map String Term Term 
     | Fold String String Term Term Term
-    | Repeat Int Term 
+    | Repeat Term Term  -- CHANGED: Int -> Term (Dynamic Loop)
     
     -- Thermodynamic Primitives
     | Shield Term Term 
     | Log String Term
+    
+    -- Observables
     | GetEntropy 
+    | GetStruct
+    | GetTime
+    | GetVoids
+    | GetTicks
     | GetHologram 
     deriving (Show, Eq)
 
--- [Runtime Values unchanged]
+-- ==========================================
+-- 2. RUNTIME VALUES
+-- ==========================================
 data UVal 
     = VInt Int
     | VBool Bool
@@ -48,9 +60,10 @@ data UVal
     | VInf          
     | VNull         
     | VHash Integer 
+    | VClosure [String] Term (Map String UVal)
     deriving (Show, Eq)
 
--- [Helpers unchanged]
+-- Helpers
 asInt :: UVal -> Unravel Int
 asInt (VInt i) = return i
 asInt VInf     = crumble (LogicError "Collapsed Infinity to Int")
@@ -65,7 +78,11 @@ asList :: UVal -> Unravel [UVal]
 asList (VList l) = return l
 asList _         = crumble (LogicError "Type Mismatch: Expected List")
 
--- [Wheel Arithmetic unchanged]
+asFunc :: UVal -> Unravel ([String], Term, Map String UVal)
+asFunc (VClosure args body env) = return (args, body, env)
+asFunc _ = crumble (LogicError "Type Mismatch: Expected Function")
+
+-- Wheel Arithmetic
 wheelAdd :: UVal -> UVal -> UVal
 wheelAdd VNull _ = VNull
 wheelAdd _ VNull = VNull
@@ -102,7 +119,7 @@ wheelDiv (VInt _) (VInt 0) = VInf
 wheelDiv (VInt a) (VInt b) = VInt (a `Prelude.div` b)
 wheelDiv _ _ = VNull
 
--- [Static Analysis]
+-- Static Analysis
 data ProgramStats = ProgramStats {
     maxEntropy :: Int,
     timeCost   :: Int,
@@ -123,18 +140,28 @@ analyze term ctx = case term of
     IntVal _  -> mempty
     BoolVal _ -> mempty
     Var _     -> mempty
+    
     GetEntropy -> mempty 
+    GetStruct -> mempty
+    GetTime -> mempty
+    GetVoids -> mempty
+    GetTicks -> mempty
     GetHologram -> mempty
+
+    Fn _ body -> analyze body ctx
+    Call f args -> 
+        let sF = analyze f ctx 
+            sArgs = Prelude.foldMap (\a -> analyze a ctx) args
+        in sF <> sArgs <> ProgramStats 0 1 True
+
     ListVal xs -> Prelude.foldMap (\t -> analyze t ctx) xs
     Add t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Sub t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Mul t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Div t1 t2 -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
-    
     Eq t1 t2  -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Lt t1 t2  -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
     Gt t1 t2  -> analyze t1 ctx <> analyze t2 ctx <> ProgramStats 0 1 True
-
     If cond t1 t2 -> 
         let sC = analyze cond ctx
             s1 = analyze t1 ctx
@@ -162,17 +189,22 @@ analyze term ctx = case term of
             (batchSize Prelude.* maxEntropy sBody) 
             (batchSize Prelude.* timeCost sBody) 
             (isSafe sBody)
-    Repeat n body -> 
-        let sBody = analyze body ctx
-        in ProgramStats 
-            (n Prelude.* maxEntropy sBody) 
-            (n Prelude.* timeCost sBody) 
+            
+    -- Dynamic Repeat Analysis
+    Repeat nTerm body -> 
+        let sN = analyze nTerm ctx
+            sBody = analyze body ctx
+            heuristicLoops = 10 -- Assume 10 loops for static cost
+        in sN <> ProgramStats 
+            (heuristicLoops Prelude.* maxEntropy sBody) 
+            (heuristicLoops Prelude.* timeCost sBody) 
             (isSafe sBody)
+
     Shield try fallback -> 
         analyze try ctx <> analyze fallback ctx
     Log _ t -> analyze t ctx
 
--- [Compiler]
+-- Compiler
 compile :: Term -> Map String UVal -> Unravel UVal
 compile term env = case term of
     IntVal i  -> return (VInt i)
@@ -183,6 +215,19 @@ compile term env = case term of
     Var s -> case Map.lookup s env of
         Just v  -> return v
         Nothing -> crumble (LogicError $ "Var not found: " ++ s)
+    
+    Fn args body -> return (VClosure args body env)
+    
+    Call fExpr argExprs -> do
+        funcVal <- compile fExpr env
+        argVals <- Prelude.mapM (\e -> compile e env) argExprs
+        (args, body, closureEnv) <- asFunc funcVal
+        if Prelude.length args Prelude./= Prelude.length argVals 
+            then crumble (LogicError "Arity Mismatch")
+            else do
+                let newEnv = Prelude.foldr (\(k,v) m -> Map.insert k v m) closureEnv (Prelude.zip args argVals)
+                compile body newEnv
+
     Add t1 t2 -> do
         v1 <- compile t1 env
         v2 <- compile t2 env
@@ -199,35 +244,33 @@ compile term env = case term of
         v1 <- compile t1 env
         v2 <- compile t2 env
         return (wheelDiv v1 v2)
-    
-    -- Comparison
     Eq t1 t2 -> do
         v1 <- compile t1 env
         v2 <- compile t2 env
         return (VBool (v1 Prelude.== v2))
-    
     Lt t1 t2 -> do
         v1 <- compile t1 env >>= asInt
         v2 <- compile t2 env >>= asInt
         return (VBool (v1 Prelude.< v2))
-
     Gt t1 t2 -> do
         v1 <- compile t1 env >>= asInt
         v2 <- compile t2 env >>= asInt
         return (VBool (v1 Prelude.> v2))
-
     If cond t1 t2 -> do
         b <- compile cond env >>= asBool
         if b then compile t1 env else compile t2 env
     Let name val body -> do
         v <- compile val env
         compile body (Map.insert name v env)
-    GetEntropy -> do
-        e <- currentEntropy
-        return (VInt e)
-    GetHologram -> do
-        h <- getHologram
-        return (VHash h)
+    
+    -- Observables
+    GetEntropy -> VInt <$> currentEntropy
+    GetStruct -> VInt <$> getStructEntropy
+    GetTime -> VInt <$> getTimeEntropy
+    GetVoids -> VInt <$> getVoidCount
+    GetTicks -> VInt <$> getTimeStep
+    GetHologram -> VHash <$> getHologram
+
     Map var body listTerm -> do
         listVals <- compile listTerm env >>= asList
         let ops = Prelude.map (\val -> compile body (Map.insert var val env)) listVals
@@ -243,11 +286,21 @@ compile term env = case term of
                         folder acc val
                     ) (return initVal) listVals
         return final
-    Repeat n body -> 
-        if n Prelude.<= 0 then return (VInt 0)
-        else do
-            _ <- compile body env 
-            compile (Repeat (n Prelude.- 1) body) env
+
+    -- Dynamic Repeat Implementation
+    Repeat nTerm body -> do
+        count <- compile nTerm env >>= asInt
+        if count Prelude.<= 0 
+            then return (VInt 0)
+            else do
+                -- Execute count-1 times for side effects (entropy)
+                -- We use a simple recursive helper to avoid replicating code logic
+                let loop k | k Prelude.<= 1 = compile body env
+                           | Prelude.otherwise = do
+                               _ <- compile body env
+                               loop (k Prelude.- 1)
+                loop count
+
     Shield try fallback -> 
         let computation = compile try env
             backup      = compile fallback env 
@@ -257,7 +310,6 @@ compile term env = case term of
                     let (r, u') = runUnravel computation u
                     in case r of
                         Valid val -> case val of
-                            -- The Collapse triggers Entropy
                             VInf  -> runUnravel (crumble (LogicError "Collapsed Infinity")) u'
                             VNull -> runUnravel (crumble (LogicError "Collapsed Nullity")) u'
                             _     -> (Valid val, u')
