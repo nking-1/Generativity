@@ -1,7 +1,7 @@
 module UnravelMonad where
 
 import Prelude hiding (div, (/))
-import qualified Prelude
+import Data.Bits (xor, shiftL, shiftR)
 
 -- ==========================================
 -- 1. THE PRIMITIVE TYPES (Ontology)
@@ -10,24 +10,45 @@ import qualified Prelude
 data VoidSource 
     = DivByZero 
     | LogicError String 
-    | Propagation VoidSource VoidSource 
     | RootEntropy 
     deriving (Show, Eq)
 
+data ParadoxPath
+    = BaseVeil VoidSource             
+    | SelfContradict ParadoxPath      
+    | Compose ParadoxPath ParadoxPath 
+    deriving (Show, Eq)
+
+-- "Rank" calculation
+entropyOf :: ParadoxPath -> Int
+entropyOf (BaseVeil _) = 1
+entropyOf (SelfContradict p) = 1 + entropyOf p
+entropyOf (Compose p1 p2) = entropyOf p1 + entropyOf p2
+
+-- "Holographic" Hash calculation (Rolling hash)
+hashPath :: ParadoxPath -> Int
+hashPath (BaseVeil src) = case src of
+    DivByZero -> 101
+    LogicError s -> length s
+    RootEntropy -> 999
+hashPath (SelfContradict p) = (hashPath p `shiftL` 1) `xor` 0xABC
+hashPath (Compose p1 p2) = hashPath p1 `xor` (hashPath p2 `shiftR` 1)
+
 data VoidInfo = VoidInfo {
-    entropy :: Int,
-    source  :: VoidSource
+    genealogy :: ParadoxPath
 } deriving (Show, Eq)
 
 data UResult a 
     = Valid a 
     | Invalid VoidInfo 
-    deriving (Show, Eq, Prelude.Functor)
+    deriving (Show, Eq, Functor)
 
 data Universe = Universe {
     totalEntropy :: Int,
     timeStep     :: Int,
-    voidCount    :: Int
+    voidCount    :: Int,
+    -- NEW: The Holographic Boundary (AdS/CFT Trace)
+    boundaryHash :: Int
 } deriving (Show, Eq)
 
 -- ==========================================
@@ -36,11 +57,16 @@ data Universe = Universe {
 
 newtype Unravel a = Unravel { 
     runUnravel :: Universe -> (UResult a, Universe) 
-} deriving (Prelude.Functor)
+} deriving (Functor)
 
 combineVoids :: VoidInfo -> VoidInfo -> VoidInfo
-combineVoids (VoidInfo e1 s1) (VoidInfo e2 s2) = 
-    VoidInfo (e1 + e2) (Propagation s1 s2)
+combineVoids (VoidInfo p1) (VoidInfo p2) = 
+    VoidInfo (Compose p1 p2)
+
+-- Helper to mix state into the hologram
+entangle :: Int -> Int -> Int
+entangle current newInfo = 
+    (current `shiftL` 3) `xor` newInfo `xor` 0xDEADBEEF
 
 instance Applicative Unravel where
     pure x = Unravel $ \u -> (Valid x, u)
@@ -55,8 +81,10 @@ instance Applicative Unravel where
             (Valid _, Invalid i)    -> (Invalid i, uTimed)
             (Invalid i1, Invalid i2) -> 
                 let newVoid = combineVoids i1 i2
-                    uFinal  = uTimed { totalEntropy = totalEntropy uTimed + entropy newVoid 
-                                     , voidCount = voidCount uTimed + 1 }
+                    pathHash = hashPath (genealogy newVoid)
+                    uFinal  = uTimed { totalEntropy = totalEntropy uTimed + entropyOf (genealogy newVoid) 
+                                     , voidCount = voidCount uTimed + 1 
+                                     , boundaryHash = entangle (boundaryHash uTimed) pathHash }
                 in (Invalid newVoid, uFinal)
 
 instance Monad Unravel where
@@ -74,27 +102,27 @@ instance Monad Unravel where
 -- ==========================================
 
 bigBang :: Universe
-bigBang = Universe 0 0 0
+bigBang = Universe 0 0 0 0 -- Init hash 0
 
 run :: Unravel a -> (UResult a, Universe)
 run prog = runUnravel prog bigBang
 
 crumble :: VoidSource -> Unravel a
 crumble src = Unravel $ \u ->
-    let info = VoidInfo 1 src 
+    let path = BaseVeil src
+        info = VoidInfo path
+        h    = hashPath path
         u'   = u { totalEntropy = totalEntropy u + 1 
-                 , voidCount = voidCount u + 1 }
+                 , voidCount = voidCount u + 1 
+                 , boundaryHash = entangle (boundaryHash u) h }
     in (Invalid info, u')
 
-uDiv :: Int -> Int -> Unravel Int
-uDiv _ 0 = crumble DivByZero
-uDiv n d = return (n `Prelude.div` d)
+currentEntropy :: Unravel Int
+currentEntropy = Unravel $ \u -> (Valid (totalEntropy u), u)
 
-(|+|) :: Unravel Int -> Unravel Int -> Unravel Int
-x |+| y = (Prelude.+) Prelude.<$> x Prelude.<*> y
-
-(|*|) :: Unravel Int -> Unravel Int -> Unravel Int
-x |*| y = (Prelude.*) Prelude.<$> x Prelude.<*> y
+-- NEW: Access the Hologram
+getHologram :: Unravel Int
+getHologram = Unravel $ \u -> (Valid (boundaryHash u), u)
 
 recover :: Unravel a -> a -> Unravel a
 recover (Unravel op) defaultVal = Unravel $ \u ->
@@ -103,24 +131,15 @@ recover (Unravel op) defaultVal = Unravel $ \u ->
         Valid v   -> (Valid v, u')
         Invalid _ -> (Valid defaultVal, u') 
 
--- ==========================================
--- 4. THE RESILIENT HARVESTER
--- ==========================================
-
--- Takes a list of potentially void computations.
--- Returns only the valid results, but absorbs the entropy of the failures.
 harvest :: [Unravel a] -> Unravel [a]
 harvest [] = return []
 harvest (x:xs) = Unravel $ \u ->
     let (res, u') = runUnravel x u
         (resRest, uFinal) = runUnravel (harvest xs) u'
     in case (res, resRest) of
-        -- Both valid: Prepend and continue
         (Valid val, Valid rest) -> (Valid (val : rest), uFinal)
-        
-        -- Head failed: Drop head, keep rest, entropy already in uFinal
-        (Invalid _, Valid rest) -> (Valid rest, uFinal)
-        
-        -- Tail failed: Propagate failure (shouldn't happen if harvest works)
+        (Invalid _, Valid rest) -> (Valid rest, uFinal) 
         (Valid _, Invalid i)    -> (Invalid i, uFinal)
-        (Invalid _, Invalid i)  -> (Invalid i, uFinal)
+        (Invalid i1, Invalid i2) -> 
+             let combined = combineVoids i1 i2 
+             in (Invalid combined, uFinal)

@@ -1,0 +1,20 @@
+// DEMO: Verifiable Computation (AdS/CFT)
+// We produce the same result value (100) via two different realities.
+// The Hologram proves which reality we inhabited.
+
+// Reality 1: The Clean Path
+let clean_run = 
+    let val = 100 / 1 in
+    [val, hologram] 
+in
+
+// Reality 2: The Shielded Path
+// The result is recovered to be 100, indistinguishable from Reality 1.
+// BUT, the Singularity (1/0) leaves a permanent mark on the Hologram.
+let shielded_run = 
+    let val = shield (100 / 0) recover 100 in
+    [val, hologram]
+in
+
+// We return both realities to compare signatures
+[clean_run, shielded_run]

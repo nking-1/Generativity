@@ -26,15 +26,16 @@ symbol :: String -> Parser String
 symbol = L.symbol sc
 
 keyword :: String -> Parser String
-keyword w = lexeme (string w <* notFollowedBy alphaNumChar)
+-- FIXED: Added 'try' to allow backtracking if a variable starts with a keyword prefix
+keyword w = lexeme (try (string w <* notFollowedBy (alphaNumChar <|> char '_')))
 
 identifier :: Parser String
 identifier = (lexeme . try) (p >>= check)
   where
-    p       = (:) <$> letterChar <*> many alphaNumChar
+    p       = (:) <$> letterChar <*> many (alphaNumChar <|> char '_')
     check x = if x `elem` reserved then fail $ "keyword " ++ show x ++ " cannot be an identifier" else return x
     reserved = ["if", "then", "else", "let", "in", "true", "false", 
-                "map", "fold", "repeat", "shield", "recover", "log"]
+                "map", "fold", "repeat", "shield", "recover", "log", "entropy", "hologram"]
 
 integer :: Parser Int
 integer = lexeme L.decimal
@@ -62,6 +63,8 @@ pTermPart = choice
   , pRepeat
   , pShield
   , pLog
+  , pHologram
+  , pEntropy
   , pList
   , pBool
   , pInt
@@ -157,14 +160,22 @@ pLog = do
     val <- pTerm
     return (Log msg val)
 
+pEntropy :: Parser Term
+pEntropy = GetEntropy <$ keyword "entropy"
+
+pHologram :: Parser Term
+pHologram = GetHologram <$ keyword "hologram"
+
 -- ==========================================
 -- 3. OPERATOR PRECEDENCE
 -- ==========================================
 
 operatorTable :: [[Operator Parser Term]]
 operatorTable =
-  [ [ InfixL (Div <$ symbol "/") ]
-  , [ InfixL (Add <$ symbol "+") ]
+  [ [ InfixL (Mul <$ symbol "*")
+    , InfixL (Div <$ symbol "/") ]
+  , [ InfixL (Add <$ symbol "+")
+    , InfixL (Sub <$ symbol "-") ]
   , [ InfixL (Eq  <$ symbol "==") ]
   ]
 

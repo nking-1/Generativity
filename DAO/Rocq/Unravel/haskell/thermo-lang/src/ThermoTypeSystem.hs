@@ -8,14 +8,14 @@ import Control.Monad (foldM)
 data Type 
     = TyInt 
     | TyBool 
-    | TyList Type
+    | TyList Type 
     | TyAny 
     deriving (Show, Eq)
 
 data TypeError 
     = Mismatch Type Type String 
     | NotList Type 
-    | UndefinedVar String
+    | UndefinedVar String 
     | EmptyListWithoutContext
     deriving (Show, Eq)
 
@@ -42,7 +42,7 @@ infer term ctx = case term of
     ListVal [] -> Right (TyList TyAny) 
     ListVal (x:xs) -> do
         tHead <- infer x ctx
-        -- Fix: bind result to _, rename elem to el
+        -- Check homogeneity of the list
         _ <- foldM (\expectedT el -> do
             tElem <- infer el ctx
             expect expectedT tElem "List Element"
@@ -50,19 +50,11 @@ infer term ctx = case term of
             ) tHead xs
         return (TyList tHead)
 
-    Add t1 t2 -> do
-        t1Type <- infer t1 ctx
-        t2Type <- infer t2 ctx
-        expect TyInt t1Type "Add Left"
-        expect TyInt t2Type "Add Right"
-        return TyInt
-
-    Div t1 t2 -> do
-        t1Type <- infer t1 ctx
-        t2Type <- infer t2 ctx
-        expect TyInt t1Type "Div Left"
-        expect TyInt t2Type "Div Right"
-        return TyInt
+    -- Arithmetic
+    Add t1 t2 -> checkMath t1 t2 "Add" ctx
+    Sub t1 t2 -> checkMath t1 t2 "Sub" ctx
+    Mul t1 t2 -> checkMath t1 t2 "Mul" ctx
+    Div t1 t2 -> checkMath t1 t2 "Div" ctx
 
     Eq t1 t2 -> do
         t1Type <- infer t1 ctx
@@ -112,6 +104,21 @@ infer term ctx = case term of
         return t1
         
     Log _ t -> infer t ctx
+
+    -- Introspection
+    -- We treat Entropy and Holograms as Integers in the static system
+    -- to allow them to be used in calculations/lists easily.
+    GetEntropy -> Right TyInt
+    GetHologram -> Right TyInt
+
+-- Helper for arithmetic
+checkMath :: Term -> Term -> String -> TypeContext -> Either TypeError Type
+checkMath t1 t2 op ctx = do
+    t1Type <- infer t1 ctx
+    t2Type <- infer t2 ctx
+    expect TyInt t1Type (op ++ " Left")
+    expect TyInt t2Type (op ++ " Right")
+    return TyInt
 
 analyzeTyped :: Term -> Either TypeError ProgramStats
 analyzeTyped term = 
