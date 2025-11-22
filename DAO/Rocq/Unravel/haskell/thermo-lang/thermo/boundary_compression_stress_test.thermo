@@ -1,0 +1,9 @@
+// Observe scaling of boundary integer size under repeated identical events.
+// If hologram length grows strictly linearly, boundary obeys area law.
+// If nonlinear, emergent bulk curvature.
+
+let xs = [0,0,0,0,0,0,0,0,0,0] in
+
+let ys = map(x -> shield (100/x) recover 0, xs) in
+
+[hologram, entropy]

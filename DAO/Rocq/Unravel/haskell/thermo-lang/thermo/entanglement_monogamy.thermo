@@ -1,0 +1,10 @@
+// Do two entangled voids “exclude” the third?
+
+let x = shield (1/0) recover 0 in
+let y = shield (1/0) recover 0 in
+
+let e1 = [x, y] in
+let e2 = [x] in     // reuse the same void
+let e3 = [y] in
+
+[hologram, entropy]

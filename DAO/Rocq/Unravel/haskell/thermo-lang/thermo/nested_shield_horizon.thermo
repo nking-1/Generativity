@@ -1,0 +1,14 @@
+// Does entropy accumulate only on the outermost collapse?  Or at every layer?
+// This reveals whether shielding acts like a horizon or like multiple observers.
+
+let outer =
+    shield(
+        shield(
+            shield(
+                1 / 0
+            ) recover 0
+        ) recover 0
+    ) recover 0
+in
+
+[hologram, entropy]

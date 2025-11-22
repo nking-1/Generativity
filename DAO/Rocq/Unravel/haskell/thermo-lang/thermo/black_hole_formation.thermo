@@ -1,0 +1,54 @@
+// ===========================================================
+//   BLACK HOLE FORMATION TEST
+//   Three geodesics: safe, near-miss, catastrophic
+// ===========================================================
+
+// ---------------------------
+// 1. THE SAFE GEODESIC
+// ---------------------------
+let safe = fold(acc, r ->
+    shield (acc / r) recover acc
+, 1000, [10,8,6,4,2]) in
+
+let holo_safe = hologram in
+
+
+
+// ---------------------------
+// 2. THE NEAR-MISS GEODESIC
+// This approaches a curvature singularity (r=0)
+// but shield prevents collapse.
+// ---------------------------
+let near = fold(acc, r ->
+    shield (acc / r) recover (acc + 1)
+, 1000, [10,5,2,1,0]) in
+
+let holo_near = hologram in
+
+
+
+// ---------------------------
+// 3. THE COLLAPSE GEODESIC
+// This intentionally drives repeated singularities
+// to test runaway entropy and hologram saturation.
+// ---------------------------
+
+let collapse = fold(acc, r ->
+    // Unshielded → collapse → shield afterwards
+    let raw = (acc / r) in
+    shield raw recover 1
+, 1, [0,0,0,0,0,0,0,0,0,0]) in
+
+let holo_collapse = hologram in
+
+
+
+// ---------------------------
+// 4. Return the full state vector:
+//    [safe, near, collapse, holograms]
+// ---------------------------
+[
+  [safe, holo_safe],
+  [near, holo_near],
+  [collapse, holo_collapse]
+]

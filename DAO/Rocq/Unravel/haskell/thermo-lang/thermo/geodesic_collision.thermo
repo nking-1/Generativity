@@ -1,0 +1,52 @@
+// EXPERIMENT: Geodesic Collision in a Curved Entropy Field
+
+// --------------------------------------
+// G1: WEAK CURVATURE GEODESIC
+// --------------------------------------
+let g1_steps = [10, 8, 6, 4, 2] in
+
+let g1 = fold(acc, r ->
+    shield (100 / r) recover acc
+, 0, g1_steps) in
+
+let sig1 = hologram in
+
+// Snapshot entropy after G1
+let e1 = entropy in
+
+// --------------------------------------
+// G2: STRONG CURVATURE GEODESIC
+// --------------------------------------
+let g2_steps = [5, 4, 3, 2, 1] in
+
+let g2 = fold(acc, r ->
+    shield (200 / r) recover acc
+, 0, g2_steps) in
+
+let sig2 = hologram in
+
+// Snapshot entropy after G2
+let e2 = entropy in
+
+// --------------------------------------
+// ANALYSIS VALUES (all grammar-safe)
+// --------------------------------------
+
+// Normalized holographic signatures for comparison
+let n1 = sig1 / 1000 in
+let n2 = sig2 / 1000 in
+
+let holo_sep = n1 - n2 in
+let entropy_sep = e2 - e1 in
+
+// --------------------------------------
+// RETURN DIAGNOSTIC PACKET
+// --------------------------------------
+[
+  sig1,      // hologram after first geodesic
+  sig2,      // hologram after second geodesic
+  holo_sep,  // normalized holographic separation
+  entropy_sep,
+  g1,
+  g2
+]

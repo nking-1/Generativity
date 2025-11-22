@@ -1,0 +1,49 @@
+// EXPERIMENT: Geodesic Collision in a Curved Entropy Field
+// --------------------------------------------------------
+// We launch two "geodesics" (computation paths) that experience
+// different curvature (entropy gradients).
+//
+// The first geodesic moves through a shallow curvature;
+// the second moves through a deep one.
+//
+// We expect the holographic signatures to *focus* —
+// i.e., their difference shrinks — as we approach a region
+// of high singularity density.
+
+// --------------------------------------
+// G1: WEAK CURVATURE GEODESIC
+// --------------------------------------
+let g1_steps = [10, 8, 6, 4, 2] in
+
+let g1 = fold(acc, r ->
+    shield (100 / r) recover acc
+, 0, g1_steps) in
+
+let sig1 = hologram in
+
+// --------------------------------------
+// G2: STRONG CURVATURE GEODESIC
+// --------------------------------------
+let g2_steps = [5, 4, 3, 2, 1] in
+
+let g2 = fold(acc, r ->
+    shield (200 / r) recover acc
+, 0, g2_steps) in
+
+let sig2 = hologram in
+
+// --------------------------------------
+// RETURN DATA FOR ANALYSIS
+// --------------------------------------
+// We can't write log(sig1 - sig2), so we approximate
+// focusing by taking the log of sig1, then subtracting sig2.
+//
+// Return: [sig1, g1, sig2, g2, log(sig1) - sig2]
+
+[
+  sig1,
+  g1,
+  sig2,
+  g2,
+  log sig1 - sig2
+]

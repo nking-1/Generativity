@@ -1,0 +1,25 @@
+// Gravitational Response Curve (Observable Quantities Only)
+
+let L1 = [0,0] in
+let L2 = [0,0,0,0,0] in
+let L3 = [0,0,0,0,0,0,0,0,0,0] in
+
+// Inject curvature: each division collapses Infinity
+let seq1 = map(x -> shield (100 / x) recover 0, L1) in
+let e1 = entropy in
+let b1 = hologram in
+
+let seq2 = map(x -> shield (100 / x) recover 0, L2) in
+let e2 = entropy in
+let b2 = hologram in
+
+let seq3 = map(x -> shield (100 / x) recover 0, L3) in
+let e3 = entropy in
+let b3 = hologram in
+
+// Response curve: [ (#events, entropy, holographic_sig) ]
+[
+  [2,  e1, b1],
+  [5,  e2, b2],
+  [10, e3, b3]
+]

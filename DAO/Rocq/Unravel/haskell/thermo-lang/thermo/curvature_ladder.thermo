@@ -1,0 +1,13 @@
+// Tests how entropy grows with iterative self-contradiction depth
+// Goal:
+// Measure how structural vs temporal entropy rises with depth.
+// If time-entropy grows linearly but struct-entropy grows sublinearly or superlinearly, we get curvature-like behavior
+let x = 1 in
+
+let p0 = shield (x / 0) recover 0 in
+let p1 = shield (p0 / 0) recover 0 in
+let p2 = shield (p1 / 0) recover 0 in
+let p3 = shield (p2 / 0) recover 0 in
+let p4 = shield (p3 / 0) recover 0 in
+
+[hologram, entropy]

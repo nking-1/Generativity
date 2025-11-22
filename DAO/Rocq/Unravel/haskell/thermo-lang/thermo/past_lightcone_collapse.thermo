@@ -1,0 +1,7 @@
+// Test whether a void propagates entropy forward in time, and whether shielded voids “infect” downstream values
+
+let upstream = shield (1/0) recover 0 in
+let downstream = upstream + 5 in
+let collapsed = shield (downstream / upstream) recover 0 in
+
+[hologram, entropy]

@@ -1,0 +1,10 @@
+// Does merging in lists produce a multi-way “GHZ-like” entangled signature?
+let a = shield (1/0) recover 0 in
+let b = shield (1/0) recover 0 in
+let c = shield (1/0) recover 0 in
+
+let r1 = [a,b] in
+let r2 = [b,c] in
+let r3 = [a,c] in
+
+[hologram, entropy]

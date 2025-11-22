@@ -1,0 +1,14 @@
+// Check commutativity vs ordering: does the hologram preserve sequence identity?
+let a =
+    let x = shield (100/0) recover 0 in
+    let y = shield (100/0) recover 0 in
+    hologram
+in
+
+let b =
+    let y = shield (100/0) recover 0 in
+    let x = shield (100/0) recover 0 in
+    hologram
+in
+
+[a, b, (a == b)]
