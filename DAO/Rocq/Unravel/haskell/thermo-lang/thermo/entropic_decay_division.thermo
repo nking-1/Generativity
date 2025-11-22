@@ -1,0 +1,23 @@
+// STRESS TEST: The Toxic Fold (Corrected)
+// We start with 10000. 
+// If we hit a singularity (0), we shield it.
+// The "Penalty" for shielding is that our accumulator gets halved.
+// This simulates signal degradation without needing subtraction.
+
+let divisors = [10, 0, 5, 0, 2] in
+
+fold(acc, x ->
+    // If x is 0, divide acc by 2 (Decay)
+    // Otherwise, normal division
+    shield (acc / x) recover (acc / 2)
+, 10000, divisors)
+
+// Trace:
+// 1. 10000 / 10 = 1000
+// 2. 1000 / 0 -> Fail -> Recover (1000 / 2) = 500. Entropy +1.
+// 3. 500 / 5 = 100
+// 4. 100 / 0 -> Fail -> Recover (100 / 2) = 50. Entropy +1.
+// 5. 50 / 2 = 25
+//
+// Expected Result: 25
+// Expected Entropy: 2

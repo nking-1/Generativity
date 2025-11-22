@@ -1,0 +1,23 @@
+// STRESS TEST: The Toxic Fold
+// We start with 1000. 
+// We divide by a sequence of numbers.
+// If we hit 0, we don't just recover a static value, 
+// we recover by degrading the accumulator (subtracting penalty).
+
+let divisors = [10, 0, 5, 0, 2] in
+
+fold(acc, x ->
+    // Try to divide acc by x. 
+    // If x is 0, we shield, and the new acc becomes acc - 100 (penalty)
+    shield (acc / x) recover (acc + (0 - 100))
+, 1000, divisors)
+
+// Trace:
+// 1. 1000 / 10 = 100
+// 2. 100 / 0 -> Fail -> Recover (100 - 100) = 0
+// 3. 0 / 5 = 0
+// 4. 0 / 0 -> Fail -> Recover (0 - 100) = -100
+// 5. -100 / 2 = -50
+//
+// Expected Result: -50
+// Expected Entropy: 2

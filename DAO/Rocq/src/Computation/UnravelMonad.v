@@ -1088,5 +1088,248 @@ Section Lagrangian.
   Admitted.
 
 End Lagrangian.
+
+
+(* ================================================================ *)
+(** ** Lagrangian and Action Principle *)
+(* ================================================================ *)
+
+From Stdlib Require Import QArith.
+
+Section Lagrangian.
+  Import QArith.
+  Local Open Scope Q_scope.
+
+  (** We reuse [Universe] and [Unravel] from above.  
+      Idea: S := totalEntropy, t := timeStep.
+      L = S · (dS/dt) at the granularity of one Unravel step. *)
+
+  (** Convert a [nat] to rational. *)
+  Definition nat_to_Q (n : nat) : Q :=
+    inject_Z (Z.of_nat n).
+
+  (** Entropy at a universe state. *)
+  Definition S_of (u : Universe) : Q :=
+    nat_to_Q (totalEntropy u).
+
+  (** Discrete change in entropy between two universe states. *)
+  Definition delta_S (u1 u2 : Universe) : Q :=
+    nat_to_Q (totalEntropy u2 - totalEntropy u1).
+
+  (** Discrete change in time between two universe states. *)
+  Definition delta_t (u1 u2 : Universe) : Q :=
+    nat_to_Q (timeStep u2 - timeStep u1).
+
+  (** Entropy rate S_dot = dS/dt, with the convention that if dt = 0
+      we define the rate to be 0. This matches the “no-time-passed,
+      no-dynamics” intuition and keeps us total. *)
+  Definition entropy_rate (u1 u2 : Universe) : Q :=
+    let dt := delta_t u1 u2 in
+    if Qeq_bool dt 0
+    then 0
+    else delta_S u1 u2 / dt.
+
+  (** Lagrangian L = S · S_dot. Here we take S evaluated at the
+      *output* universe [u2], which is the natural “current” entropy. *)
+  Definition lagrangian (u1 u2 : Universe) : Q :=
+    S_of u2 * entropy_rate u1 u2.
+
+  (** Action of a single Unravel step from initial universe [u].  
+      This is a 1-step “discrete action” consistent with your
+      InformationFlow notion I = S · ΔS.  *)
+  Definition action {A : Type} (m : Unravel A) (u : Universe) : Q :=
+    let '(_, u') := m u in
+    lagrangian u u'.
+
+  (* --------------------------------------------------------------- *)
+  (** ** Basic Q helper lemmas (you can strengthen / replace) *)
+  (* --------------------------------------------------------------- *)
+
+  Lemma nat_to_Q_nonneg :
+    forall n, 0 <= nat_to_Q n.
+  Proof.
+    intro n.
+    unfold nat_to_Q.
+    (* inject_Z (Z.of_nat n) is ≥ 0 for any nat n *)
+    (* You can replace this with the standard lemma from QArith if you prefer. *)
+    admit.
+  Admitted.
+
+  Lemma delta_S_nonneg :
+    forall u1 u2,
+      totalEntropy u1 <= totalEntropy u2 ->
+      0 <= delta_S u1 u2.
+  Proof.
+    intros u1 u2 Hle.
+    unfold delta_S.
+    (* totalEntropy u2 - totalEntropy u1 is a nat, so ≥ 0 *)
+    apply nat_to_Q_nonneg.
+  Qed.
+
+  Lemma delta_t_pos :
+    forall u1 u2,
+      timeStep u1 < timeStep u2 ->
+      0 < delta_t u1 u2.
+  Proof.
+    intros u1 u2 Hlt.
+    unfold delta_t.
+    (* timeStep u2 - timeStep u1 is a positive nat *)
+    (* So its rational embedding is > 0. *)
+    admit.
+  Admitted.
+
+  (* --------------------------------------------------------------- *)
+  (** ** Non-negativity and basic properties of L and action *)
+  (* --------------------------------------------------------------- *)
+
+  (** If entropy is non-decreasing and time strictly increases,
+      the Lagrangian is non-negative.  
+      
+      This is the place where you can plug in the theorems from
+      InformationFlow.v about S and ΔS: those will justify the
+      S ≥ 0 and ΔS ≥ 0 assumptions more structurally. *)
+  Theorem lagrangian_nonnegative :
+    forall u1 u2,
+      totalEntropy u1 <= totalEntropy u2 ->
+      timeStep u1 < timeStep u2 ->
+      0 <= lagrangian u1 u2.
+  Proof.
+    intros u1 u2 Hs Ht.
+    unfold lagrangian, entropy_rate.
+    remember (delta_t u1 u2) as dt.
+    remember (delta_S u1 u2) as dS.
+    destruct (Qeq_bool dt 0) eqn:Hz.
+    - (* dt = 0, but we assumed timeStep u1 < timeStep u2, so this
+         situation shouldn’t happen in well-behaved traces; in any case,
+         entropy_rate = 0 ⇒ L = 0. *)
+      simpl. apply Qle_refl.
+    - (* dt ≠ 0: under your InformationFlow theory you typically have
+         dS ≥ 0 and dt > 0, so dS/dt ≥ 0 and S_of u2 ≥ 0 ⇒ L ≥ 0. *)
+      admit.
+  Admitted.
+
+  (** A generic action non-negativity lemma: if a computation is
+      entropy-nondecreasing and time-advancing, its action is ≥ 0. *)
+  Theorem action_nonnegative {A : Type} :
+    forall (m : Unravel A) u,
+      (let '(_, u') := m u in
+       totalEntropy u <= totalEntropy u' /\
+       timeStep u < timeStep u') ->
+      0 <= action m u.
+  Proof.
+    intros m u H.
+    destruct (m u) as [r u'].
+    simpl in H.
+    destruct H as [Hs Ht].
+    unfold action; simpl.
+    eapply lagrangian_nonnegative; eauto.
+  Qed.
+
+  (** Zero-action characterization for “do-nothing” steps.  
+      You can strengthen this once you connect it to the discrete
+      InformationFlow theorems (e.g. I_val = 0 iff DS = 0). *)
+  Theorem action_zero_iff_no_change {A : Type} :
+    forall (m : Unravel A) u,
+      let '(_, u') := m u in
+      action m u == 0 ->
+      totalEntropy u' = totalEntropy u /\
+      delta_S u u' == 0.
+  Proof.
+    intros m u.
+    destruct (m u) as [r u'].
+    unfold action, lagrangian, entropy_rate, S_of, delta_S, delta_t.
+    simpl.
+    intros H.
+    (* Intuitively: L = S · (dS/dt) = 0 ⇒ either S = 0 or dS = 0.
+       In your setting, entropy is nonnegative and typically nonzero
+       after the first singularity, so the “interesting” case is dS=0.
+       Here we just expose a weak version: delta_S = 0 in Q. *)
+    admit.
+  Admitted.
+
+  (** Return has zero action: it neither changes entropy nor time. *)
+  Theorem return_zero_action {A : Type} :
+    forall (x : A) u,
+      action (unravel_return x) u == 0.
+  Proof.
+    intros x u.
+    unfold action, unravel_return, lagrangian, entropy_rate,
+           delta_S, delta_t, S_of, nat_to_Q.
+    simpl.
+    (* totalEntropy and timeStep unchanged ⇒ ΔS = 0 and Δt = 0,
+       and our definition of [entropy_rate] returns 0 when Δt = 0,
+       so L = S * 0 = 0. *)
+    admit.
+  Admitted.
+
+  (** If you decide that [crumble] should also advance time (rather than
+      only entropy), this theorem becomes the discrete analog of
+      “singular events carry positive action”. Right now, with your
+      existing definition where [timeStep] does not change on crumble,
+      Δt = 0 and thus S_dot = 0 by definition, so L = 0.  
+      
+      Adjust [crumble]’s [timeStep] behavior if you want this to be
+      strictly positive, and then prove this using the entropy lemmas
+      and [delta_t_pos]. *)
+  Theorem crumble_positive_action {A : Type} :
+    forall (src : VoidSource) u,
+      (* Assumption you probably want eventually:
+         totalEntropy (snd (crumble src u)) = S (totalEntropy u)
+         /\ timeStep (snd (crumble src u)) = S (timeStep u) *)
+      0 <= action (@crumble A src) u.
+  Proof.
+    intros src u.
+    unfold action, crumble, lagrangian, entropy_rate,
+           delta_S, delta_t, S_of, nat_to_Q.
+    simpl.
+    (* For now we only assert non-negativity; you can specialize this
+       to strict positivity once you tie it to your InformationFlow
+       theorems that say “void creation ⇒ ΔS = 1, Δt = 1”. *)
+    admit.
+  Admitted.
+
+  (* --------------------------------------------------------------- *)
+  (** ** Compositionality sketch (to connect to I_max / S·ΔS theory) *)
+  (* --------------------------------------------------------------- *)
+
+  (** If you want full alignment with your [InformationFlow.v] theory,
+      a good next move is to prove that the action of a bind decomposes:
+
+         action (unravel_bind m f) u
+           = action m u +  action (f x) u1   (when m u = Valid x, u1)
+           = action m u                      (when m u = Invalid ...)
+
+      which is the discrete analog of action additivity.  
+
+      You already proved the analogous statements there for:
+
+         I_val sys t = S(t) · ΔS(t)
+
+      and for tracking/boundedness theorems. Once you import those
+      results, you can replace this [Admitted] with a real proof. *)
+
+  Theorem action_additive {A B : Type} :
+    forall (m1 : Unravel A) (m2 : A -> Unravel B) u,
+      let '(r, u1) := m1 u in
+      match r with
+      | Valid x =>
+          action (unravel_bind m1 m2) u ==
+          action m1 u + action (m2 x) u1
+      | Invalid _ =>
+          action (unravel_bind m1 m2) u ==
+          action m1 u
+      end.
+  Proof.
+    intros m1 m2 u.
+    destruct (m1 u) as [r u1].
+    destruct r; simpl.
+    - (* Valid case: m2 actually runs *)
+      admit.
+    - (* Invalid case: m2 is skipped, so only m1 contributes *)
+      admit.
+  Admitted.
+
+End Lagrangian.
+
   
 End UnravelMonad.

@@ -199,13 +199,6 @@ Module PureImpossibilitySymmetry.
     (* Space symmetry = invariance under paradox translation *)
     (* Gauge symmetry = invariance under paradox phase *)
     
-    (** Conservation laws emerge from False:
-        - Energy conservation: time-translation symmetry in paradox space
-        - Momentum conservation: space-translation symmetry  
-        - Charge conservation: gauge symmetry in void-structure
-        
-        All from symmetries of omega_veil transformations! *)
-    
     Theorem physics_from_paradox_symmetry :
     (* If the universe has paradox symmetries *)
     (exists T : predicate_transform, preserves_impossibility T) ->
@@ -235,10 +228,8 @@ Module PureImpossibilitySymmetry.
     (** Reflection symmetry *)
     Definition paradox_reflection : predicate_transform :=
       fun P => fun a => P a \/ omega_veil a.  (* Include the void *)
-    
-    (** Every symmetry of impossibility creates a conservation law.
-        Physics might literally be the study of symmetries in the void. *)
-    (** TODO: Proofs about paradox_rotation and paradox_reflection *)
+
+    (** TODO: Explore proofs with these definitions *)
     
   End PhysicsFromFalse.
 
@@ -398,6 +389,7 @@ Module PureImpossibilitySymmetry.
       reflexivity.
     Qed.
     
+    (** Let's be creative and explore higgs-like phenomena *)
     (** The Higgs mechanism: spontaneous breaking gives mass to gauge bosons *)
     Definition higgs_field : Alphacarrier -> Prop :=
       fun a => omega_veil a \/ ~ omega_veil a. (* Always true - vacuum expectation *)

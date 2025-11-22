@@ -1,0 +1,16 @@
+// STRESS TEST: The Harvester Filter
+// We have a list of denominators. Some are 0.
+// We do NOT shield the division. 
+// Standard map would crash or return [Valid, Invalid, Valid].
+// Unravel's 'harvest' should silently drop the Invalid ones but keep the Entropy.
+
+let denominators = [1, 0, 2, 0, 5] in
+
+// We calculate 100 / x
+// Expected Result: [100, 50, 20] (Length 3)
+// Expected Entropy: 2 (The two zeros)
+let results = map(x -> 
+    100 / x
+, denominators) in
+
+results

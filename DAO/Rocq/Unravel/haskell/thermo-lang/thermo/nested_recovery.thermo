@@ -1,0 +1,14 @@
+// STRESS TEST: Nested Shielding
+// We attempt a calculation that fails.
+// The recovery attempts a calculation that ALSO fails.
+// The final recovery succeeds.
+// Expected: Result = 42, Entropy = 2 (DivByZero + DivByZero)
+
+let val = 
+    shield (100 / 0) 
+    recover (
+        shield (200 / 0) 
+        recover 42
+    )
+in 
+val
