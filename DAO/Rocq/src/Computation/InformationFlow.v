@@ -124,6 +124,8 @@ Proof.
 Qed.
 
 
+(* Connecting to physics a bit here *)
+(* Note that L = S*dS/dt trivially satisfies the euler-lagrange equation, interestingly *)
 (* UV_finite: Every system has a maximum information flow bound. *)
 Theorem UV_finite :
   forall sys : System,
