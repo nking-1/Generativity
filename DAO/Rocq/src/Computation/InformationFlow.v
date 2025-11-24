@@ -124,6 +124,31 @@ Proof.
 Qed.
 
 
+(* UV_finite: Every system has a maximum information flow bound. *)
+Theorem UV_finite :
+  forall sys : System,
+  exists I_max : nat,
+  forall t : nat,
+  I_val sys t <= I_max.
+Proof.
+  intro sys.
+  exists (S_max sys * (S_max sys - S_min sys)).
+  intro t.
+  pose proof (I_val_bounded sys t) as H.
+  lia.
+Qed.
+
+(* IR_finite: Every system has non-zero information flow at all times. *)
+Theorem IR_finite :
+  forall sys : System,
+  forall t : nat,
+  I_val sys t > 0.
+Proof.
+  intros sys t.
+  apply I_val_is_positive.
+Qed.
+
+
 (* ============================================================ *)
 (* The Core I_max Theorem: Systems Cannot Maximize Both S and DS *)
 (* ============================================================ *)
@@ -457,6 +482,7 @@ Section OmegaAlphaConnection.
   Qed.
 
 End OmegaAlphaConnection.
+
 
 
 (* ============================================================ *)

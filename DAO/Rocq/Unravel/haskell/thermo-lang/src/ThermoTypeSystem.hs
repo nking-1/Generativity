@@ -9,7 +9,7 @@ data Type
     = TyInt 
     | TyBool 
     | TyList Type 
-    | TyFunc [Type] Type 
+    | TyFunc [Type] Type -- Basic Function Type support
     | TyAny 
     deriving (Show, Eq)
 
@@ -41,6 +41,7 @@ infer term ctx = case term of
         Just t  -> Right t
         Nothing -> Left (UndefinedVar s)
     
+    -- Functions: We infer arguments as TyAny in the body context for flexibility
     Fn args body -> do
         let argCtx = foldr (\arg m -> Map.insert arg TyAny m) ctx args
         retType <- infer body argCtx
@@ -51,6 +52,7 @@ infer term ctx = case term of
         fType <- infer f ctx
         case fType of
             TyFunc _ ret -> do 
+                -- We don't strictly check arg types against TyAny placeholders yet
                 _ <- mapM (\a -> infer a ctx) args
                 return ret
             TyAny -> Right TyAny
@@ -59,29 +61,29 @@ infer term ctx = case term of
     ListVal [] -> Right (TyList TyAny) 
     ListVal (x:xs) -> do
         tHead <- infer x ctx
-        -- RELAXED TYPING: If types mismatch, fallback to TyAny (Heterogeneous List)
-        -- This enables [Int, Int, Hash] dashboards
+        -- Relaxed typing for heterogeneous lists (dashboards)
         finalType <- foldM (\currentT el -> do
             tElem <- infer el ctx
             if currentT == tElem || currentT == TyAny 
                 then return tElem 
-                else return TyAny -- Mismatch -> List of Any
+                else return TyAny
             ) tHead xs
         
         if finalType == TyAny 
             then return (TyList TyAny)
             else return (TyList finalType)
 
+    -- Arithmetic
     Add t1 t2 -> checkMath t1 t2 "Add" ctx
     Sub t1 t2 -> checkMath t1 t2 "Sub" ctx
     Mul t1 t2 -> checkMath t1 t2 "Mul" ctx
     Div t1 t2 -> checkMath t1 t2 "Div" ctx
 
+    -- Logic & Comparison
     Eq t1 t2 -> do
         t1Type <- infer t1 ctx
         t2Type <- infer t2 ctx
-        -- Relax equality to Any
-        return TyBool
+        return TyBool -- Equality works on everything
 
     Lt t1 t2 -> checkCompare t1 t2 "LessThan" ctx
     Gt t1 t2 -> checkCompare t1 t2 "GreaterThan" ctx
@@ -91,7 +93,6 @@ infer term ctx = case term of
         expect TyBool condT "If Condition"
         t1T <- infer t1 ctx
         t2T <- infer t2 ctx
-        -- Relax If branches to Any if mismatch
         if t1T == t2T then return t1T else return TyAny
 
     Let name val body -> do
@@ -113,7 +114,6 @@ infer term ctx = case term of
             TyList elemT -> do
                 let bodyCtx = Map.insert accName initT (Map.insert varName elemT ctx)
                 bodyT <- infer body bodyCtx
-                -- Relax fold accumulator to Any if needed
                 if initT == bodyT then return initT else return TyAny
             _ -> Left (NotList listT)
 
@@ -130,12 +130,13 @@ infer term ctx = case term of
         
     Log _ t -> infer t ctx
 
+    -- Observables
     GetEntropy -> Right TyInt
     GetStruct -> Right TyInt
     GetTime -> Right TyInt
     GetVoids -> Right TyInt
     GetTicks -> Right TyInt
-    GetHologram -> Right TyInt -- We treat Hash as Int for now in static analysis
+    GetHologram -> Right TyInt
     GetMass -> Right TyInt
     GetRate -> Right TyInt
     GetDensity -> Right TyInt
