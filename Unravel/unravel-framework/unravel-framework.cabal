@@ -1,10 +1,7 @@
 cabal-version:      3.0
 name:               unravel-framework
-version:            0.1.0.0
+version:            0.1.1.0
 synopsis:           A Thermodynamic Error Handling Framework for Haskell
-description:        A monad transformer library that implements Impossibility Algebra,
-                    allowing for total, reversible, and entropy-aware error handling
-                    in production systems.
 license:            MIT
 author:             The DAO Framework Team
 build-type:         Simple
@@ -16,26 +13,21 @@ common shared-properties
 library
     import:           shared-properties
     hs-source-dirs:   src
-    
-    -- The modules you can import in other projects
     exposed-modules:  Data.Unravel.Universe
                     , Control.Monad.Unravel
                     , Control.Monad.Unravel.SafeIO
-    
-    -- Dependencies required for the Monad Transformer logic
     build-depends:    base >= 4.17 && < 5
-                    -- StateT
                     , mtl
-                    -- MonadThrow, MonadCatch
                     , exceptions
-                    -- MonadIO
                     , transformers
 
 executable unravel-demo
     import:           shared-properties
     hs-source-dirs:   app
     main-is:          Main.hs
-    
-    -- Depends on the library defined above
+    other-modules:    Demos.Reactor
+                    , Demos.DataScience
     build-depends:    base
                     , unravel-framework
+                    , mtl
+                    , transformers
