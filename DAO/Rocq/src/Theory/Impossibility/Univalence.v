@@ -147,18 +147,25 @@ Section OmegaUnivalence.
   Qed.
 
   (** 2. All contradictions have the same paradox-depth *)
-  Theorem Omega_same_depth :
-    forall P : Omega,
-    Is_Impossible P ->
-    pure_predicate_action P = POne.
-  Proof.
-    intros P HP.
-    unfold pure_predicate_action.
-    (* impossible_decidable is needed; assume constructive case *)
-    destruct (impossible_decidable P) as [_ | Hcontra].
-    - reflexivity.
-    - contradiction.
-  Qed.
+  Section OmegaSameDepth.
+    Context (dec :
+      forall P : Alphacarrier -> Prop,
+        {Is_Impossible P} + {~ Is_Impossible P}).
+
+    Let Omega := Alphacarrier -> Prop.
+
+    Theorem Omega_same_depth :
+      forall P : Omega,
+        Is_Impossible P ->
+        pure_predicate_action dec P = POne.
+    Proof.
+      intros P HP.
+      unfold pure_predicate_action.
+      destruct (dec P) as [Himp | Hnot].
+      - reflexivity.
+      - exfalso. apply Hnot, HP.
+    Qed.
+  End OmegaSameDepth.
 
   (** 3. Omega_veil is the unique (up to equivalence) impossible predicate *)
   Theorem Omega_unique :
