@@ -7,8 +7,7 @@ module Control.Monad.Unravel where
 import Data.Unravel.Universe
 import Control.Monad.State.Strict
 import Control.Monad.IO.Class
-import Control.Monad.Catch (MonadThrow, MonadCatch, catch, SomeException, displayException)
-import qualified Data.List as List
+import Data.Functor.Identity (Identity)
 
 -- The Result Type (Internal)
 data UResult a 
@@ -123,8 +122,8 @@ shield action def = UnravelT $ do
     res <- runUnravelT_ action
     case res of
         Valid a -> return (Valid a)
-        Invalid p -> do
-            -- We keep the universe changes (entropy), but return Valid
+        -- Fixed: replaced 'p' with '_' to silence unused match warning
+        Invalid _ -> do 
             return (Valid def)
 
 -- Work (Mass)

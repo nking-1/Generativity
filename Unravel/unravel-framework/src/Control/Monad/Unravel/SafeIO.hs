@@ -1,21 +1,22 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Control.Monad.Unravel.SafeIO where
 
 import Control.Monad.Unravel
 import Data.Unravel.Universe
 import Control.Monad.IO.Class
-import Control.Exception (try, IOException, SomeException, displayException)
+import Control.Exception (try, SomeException, displayException)
 
 -- | Safely execute an IO action.
 -- If it throws ANY exception, it crumbles into Entropy.
--- Because 'crumble' returns 'Invalid', the result 'a' is technically never returned.
--- This must be used inside a 'shield' to be useful, or propagate the error.
-safeIO :: (MonadIO m) => IO a -> UnravelT m a
+safeIO :: forall m a. (MonadIO m) => IO a -> UnravelT m a
 safeIO action = do
-    -- We perform the IO in the base monad, capturing exceptions
-    result <- liftIO (try action :: IO (Either SomeException a))
+    -- We catch SomeException. We don't constrain 'a' explicitly in the expression,
+    -- we let GHC infer it from the return type.
+    result <- liftIO (try action)
     case result of
         Right val -> return val
-        Left err  -> crumble (IOException (displayException err))
+        Left (err :: SomeException) -> crumble (IOException (displayException err))
 
 -- | A safe wrapper for Division to prove we handle pure exceptions too
 safeDiv :: (Monad m) => Int -> Int -> UnravelT m Int

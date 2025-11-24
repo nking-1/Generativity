@@ -24,9 +24,12 @@ library
     
     -- Dependencies required for the Monad Transformer logic
     build-depends:    base >= 4.17 && < 5
-                    , mtl           -- StateT
-                    , exceptions    -- MonadThrow, MonadCatch
-                    , transformers  -- MonadIO
+                    -- StateT
+                    , mtl
+                    -- MonadThrow, MonadCatch
+                    , exceptions
+                    -- MonadIO
+                    , transformers
 
 executable unravel-demo
     import:           shared-properties

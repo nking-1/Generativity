@@ -1,7 +1,6 @@
 module Data.Unravel.Universe where
 
-import Data.Char (ord, chr)
-import Data.Bits (xor, shiftL)
+import Data.Char (ord)
 
 -- ==========================================
 -- 1. PHYSICS ONTOLOGY
@@ -10,7 +9,7 @@ import Data.Bits (xor, shiftL)
 data VoidSource 
     = DivByZero 
     | LogicError String 
-    | IOException String  -- NEW: For wrapping real IO errors
+    | IOException String
     | RootEntropy 
     | VoidNeutral 
     deriving (Show, Eq, Ord)
