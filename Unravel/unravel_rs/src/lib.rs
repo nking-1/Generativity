@@ -1,5 +1,5 @@
 pub mod universe;
-use crate::universe::*; 
+use crate::universe::*;
 
 // ==========================================
 // 1. THE RESULT TYPE (Wheel)
@@ -72,7 +72,62 @@ impl<T> Unravel<T> {
 }
 
 // ==========================================
-// 3. PRIMITIVES
+// 3. THE ENTANGLEMENT OPERATOR (Applicative)
+// ==========================================
+
+// Fixed: Added 'T' to the generic type parameters <A, B, T, F>
+pub fn entangle<A, B, T, F>(ua: Unravel<A>, ub: Unravel<B>, combiner: F) -> Unravel<T> 
+where F: FnOnce(A, B) -> T 
+{
+    let mut u_new = Universe::new();
+    
+    // 1. Merge base stats
+    u_new.mass = ua.universe.mass + ub.universe.mass;
+    u_new.time_step = std::cmp::max(ua.universe.time_step, ub.universe.time_step);
+    
+    // 2. Concatenate Holograms (Order: A then B)
+    let (b_val, b_len) = append_hologram(
+        &ua.universe.boundary_value, ua.universe.boundary_length,
+        &ub.universe.boundary_value, ub.universe.boundary_length
+    );
+    u_new.boundary_value = b_val;
+    u_new.boundary_length = b_len;
+
+    // 3. Handle Result Merging
+    let res = match (ua.result, ub.result) {
+        (UVal::Valid(a), UVal::Valid(b)) => UVal::Valid(combiner(a, b)),
+        
+        // If both are entropy, we get STRUCTURAL ENTROPY (Compose)
+        (UVal::Invalid(p1), UVal::Invalid(p2)) => {
+             u_new.struct_entropy = ua.universe.total_entropy() + ub.universe.total_entropy() + 1;
+             let mixed_path = ParadoxPath::Compose(Box::new(p1), Box::new(p2));
+             UVal::Invalid(mixed_path)
+        },
+        
+        // Domination rules for Wheel values
+        (UVal::Nullity, _) => UVal::Nullity,
+        (_, UVal::Nullity) => UVal::Nullity,
+        (UVal::Infinity, _) => UVal::Infinity,
+        (_, UVal::Infinity) => UVal::Infinity,
+        
+        // Single failure cases
+        (UVal::Invalid(p), _) => {
+             u_new.struct_entropy += ua.universe.struct_entropy;
+             u_new.time_entropy += ua.universe.time_entropy;
+             UVal::Invalid(p)
+        },
+        (_, UVal::Invalid(p)) => {
+             u_new.struct_entropy += ub.universe.struct_entropy;
+             u_new.time_entropy += ub.universe.time_entropy;
+             UVal::Invalid(p)
+        }
+    };
+    
+    Unravel { result: res, universe: u_new }
+}
+
+// ==========================================
+// 4. PRIMITIVES
 // ==========================================
 
 pub fn crumble<T>(src: VoidSource) -> Unravel<T> {
@@ -102,7 +157,7 @@ pub fn work(amount: u64) -> Unravel<()> {
 }
 
 // ==========================================
-// 4. THE SHIELD (Thermodynamic Observation)
+// 5. THE SHIELD
 // ==========================================
 
 pub fn shield<T: Clone, F>(op: F, recover_val: T) -> Unravel<T>
