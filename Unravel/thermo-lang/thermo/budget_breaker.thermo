@@ -1,0 +1,29 @@
+// ATTACK VECTOR 1: Exponential Work via Nested Maps
+// Can we create O(n^3) work and slip past static analysis?
+
+let big_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20] in
+
+// First map: 20 operations
+let layer1 = map(x -> x * 2, big_list) in
+
+// Second map over first: 20 * 20 = 400 operations?
+let layer2 = map(x -> 
+    fold(acc, y -> acc + y, 0, layer1)
+, layer1) in
+
+// Third map: 20 * 400 = 8000 operations?
+let layer3 = map(x ->
+    fold(acc, y -> acc + (y * x), 0, layer2)
+, layer2) in
+
+// Fourth map: 20 * 8000 = 160000 operations??
+let layer4 = map(x ->
+    fold(acc, y -> acc + y, 0, layer3)
+, layer3) in
+
+// Add some shield operations for fun
+let shielded = map(x ->
+    shield (x / (x - x)) recover 999
+, layer4) in
+
+fold(acc, x -> acc + x, 0, shielded)
