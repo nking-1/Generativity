@@ -1,0 +1,53 @@
+// TWO BODY PROBLEM WITH COLLISION
+// Tests: Does computational entropy spike when r→0?
+
+let _ = gaslimit(500) in
+
+// Initial conditions (Sun and comet on collision course)
+let sun_x = 0 in
+let sun_y = 0 in
+let sun_mass = 1000 in
+
+let comet_x = 100 in
+let comet_y = 0 in
+let comet_mass = 1 in
+let comet_vx = 0-5 in  // Moving toward sun (workaround for negative)
+let comet_vy = 0 in
+
+// Gravitational constant
+let G = 1 in
+
+// Simulate 30 timesteps
+let timesteps = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30] in
+
+// Track how many singularities we hit
+let singularity_count = fold(count, step ->
+    // Current distance (simplified, just using initial for all steps)
+    let dx = comet_x - (step * 5) in  // Comet moves 5 units per step
+    let dy = 0 in
+    
+    // Distance: r = sqrt(dx² + dy²)
+    // For simplicity, r ≈ |dx|
+    let r = dx in
+    
+    // CRITICAL: Force = G*M*m/r²
+    // When r gets small, this EXPLODES → infinity!
+    let force = shield (
+        (G * sun_mass * comet_mass) / (r * r)
+    ) recover 999999 in  // Infinite force marker
+    
+    // Did we hit singularity?
+    let hit = if force == 999999 then 1 else 0 in
+    
+    count + hit
+    
+, 0, timesteps) in
+
+// Final report
+[
+    singularity_count,  // How many r=0 events?
+    entropy,            // Computational entropy
+    mass,               // Work done
+    rate,               // Failure rate
+    hologram            // Event record
+]

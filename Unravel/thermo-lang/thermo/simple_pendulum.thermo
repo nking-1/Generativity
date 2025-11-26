@@ -1,0 +1,51 @@
+// SIMPLE PENDULUM SIMULATION
+// Using scalar values instead of lists
+// Tests: Does energy remain constant despite computational costs?
+
+let _ = gaslimit(1000) in
+
+// Initial conditions (scalars, not lists!)
+let theta_0 = 30 in      // Initial angle (degrees)
+let omega_0 = 0 in       // Initial angular velocity
+let length = 10 in       // Pendulum length
+let g = 10 in            // Gravity
+
+// Timesteps
+let steps = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20] in
+
+// Simulate using fold (state = angle, angular_velocity)
+let simulation = fold(state, t ->
+    // Extract current state (we'll pass as single value, use it twice)
+    let theta = state in   // Current angle
+    let omega = state in   // Current angular velocity
+    
+    // Angular acceleration: alpha = -(g/L) * sin(theta)
+    // Approximation: sin(theta) ≈ theta for small angles
+    let alpha = shield (
+        0 - (g * theta) / length
+    ) recover 0 in
+    
+    // Update angular velocity: omega' = omega + alpha * dt
+    let new_omega = omega + alpha in
+    
+    // Update angle: theta' = theta + omega * dt  
+    let new_theta = theta + new_omega in
+    
+    new_theta  // Return new state (simplified - just angle)
+    
+, theta_0, steps) in
+
+// Compute energy at end
+let final_theta = simulation in
+let potential = g * length * final_theta in  // PE ≈ mgh ≈ mgL*theta
+let kinetic = 0 in  // KE would need omega, but we lost it
+
+// Compare physical vs computational
+[
+    final_theta,    // Final angle (physical)
+    potential,      // Final PE (physical)
+    entropy,        // Computational failures
+    mass,           // Computational work
+    rate,           // Computational failure rate
+    hologram        // Record
+]

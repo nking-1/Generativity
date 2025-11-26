@@ -1,0 +1,48 @@
+// 1D HEAT DIFFUSION
+// Physical entropy (temperature smoothing) vs Computational entropy
+// This is THE test - does the analogy hold?
+
+let _ = gaslimit(1200) in
+
+// Temperature distribution (10 points)
+let temps = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10] in
+
+// Diffusion coefficient
+let alpha = 2 in
+
+// Diffuse heat (each point averages with neighbors)
+let diffused = map(t ->
+    // Heat diffusion: T_new = T + alpha*(T_left + T_right - 2*T)
+    // Simplified: just move toward average
+    let avg = 55 in  // Average temp (precomputed)
+    let diff = t - avg in
+    let new_t = t - (diff / 4) in  // Quarter step toward mean
+    new_t
+, temps) in
+
+// Physical entropy: variance should decrease (temperatures equalize)
+let variance_before = fold(acc, t ->
+    let diff = t - 55 in
+    acc + diff * diff
+, 0, temps) in
+
+let variance_after = fold(acc, t ->
+    let diff = t - 55 in
+    acc + diff * diff
+, 0, diffused) in
+
+// Physical entropy increased = variance decreased
+let physical_entropy_increase = variance_before - variance_after in
+
+// Computational entropy
+let computational_entropy = entropy in
+
+[
+    diffused,                      // Final temperatures
+    variance_before,               // Initial temperature variance  
+    variance_after,                // Final temperature variance
+    physical_entropy_increase,     // Physical entropy (should be positive)
+    computational_entropy,         // Computational entropy
+    mass,                          // Work done
+    hologram                       // Record
+]

@@ -1,0 +1,140 @@
+// THERMODYNAMIC GAS SIMULATION
+// Simulate PHYSICAL thermodynamics (heat, collisions, entropy)
+// While measuring COMPUTATIONAL thermodynamics (mass, entropy, hologram)
+// The ultimate test: Does the analogy hold under stress?
+
+let _ = gaslimit(2000) in
+
+// PARTICLE STATE: [position, velocity, temperature]
+// 10 particles in a box
+let particles = [
+    [10, 5, 100],   // Hot particle, moving right
+    [20, 3, 100],
+    [30, -2, 80],   // Cooler particle, moving left
+    [40, 4, 90],
+    [50, -3, 70],   // Cold particle
+    [60, 2, 110],   // Hot particle
+    [70, -4, 60],   // Coldest particle
+    [80, 1, 95],
+    [90, -1, 85],
+    [100, 0, 75]
+] in
+
+// PHYSICS CONSTANTS
+let dt = 1 in              // Time step
+let box_size = 100 in      // Periodic boundary
+let collision_radius = 5 in
+
+// STEP 1: UPDATE POSITIONS (Ballistic motion)
+let moved = map(p -> 
+    let pos = p in       // Simulating: p[0]
+    let vel = p in       // Simulating: p[1]
+    let temp = p in      // Simulating: p[2]
+    
+    let new_pos = pos + vel * dt in
+    
+    // Periodic boundary conditions
+    let wrapped = if new_pos > box_size 
+                  then new_pos - box_size
+                  else if new_pos < 0
+                       then new_pos + box_size
+                       else new_pos in
+    
+    [wrapped, vel, temp]
+, particles) in
+
+// STEP 2: COMPUTE PAIRWISE DISTANCES (N² complexity!)
+// This will be EXPENSIVE and might hit gas limit
+let collision_check = map(p1 -> 
+    // For each particle, check against all others
+    let collisions = map(p2 -> 
+        let pos1 = p1 in
+        let pos2 = p2 in
+        
+        // Distance calculation
+        let dx = pos1 - pos2 in
+        let dist_sq = dx * dx in
+        
+        // Collision if distance < radius
+        // Division by distance for force - SINGULARITY POSSIBLE!
+        shield (
+            if dist_sq < collision_radius * collision_radius
+            then 1000 / dist_sq  // Force ~ 1/r² (DIVERGES at r=0!)
+            else 0
+        ) recover 9999  // Infinite force if too close!
+    , moved) in
+    
+    // Sum forces on this particle
+    fold(acc, f -> acc + f, 0, collisions)
+, moved) in
+
+// STEP 3: HEAT TRANSFER (Physical Entropy Generation)
+// Hot particles transfer heat to cold neighbors
+let after_heat_transfer = map(p -> 
+    let pos = p in
+    let vel = p in
+    let temp = p in
+    
+    // Average temperature of neighbors (simplified diffusion)
+    let neighbor_temps = map(other -> 
+        let other_temp = other in
+        other_temp
+    , moved) in
+    
+    let avg_temp = shield (
+        fold(acc, t -> acc + t, 0, neighbor_temps) / 10
+    ) recover temp in
+    
+    // Heat diffusion: move toward average
+    let new_temp = temp + (avg_temp - temp) / 4 in
+    
+    [pos, vel, new_temp]
+, moved) in
+
+// STEP 4: COMPUTE PHYSICAL OBSERVABLES
+// These are SIMULATED physics properties
+let total_kinetic = fold(acc, p -> 
+    let vel = p in
+    acc + vel * vel
+, 0, after_heat_transfer) in
+
+let total_thermal = fold(acc, p ->
+    let temp = p in
+    acc + temp
+, 0, after_heat_transfer) in
+
+// Physical energy (should be conserved!)
+let total_energy = total_kinetic + total_thermal in
+
+// Physical entropy (increases via heat diffusion)
+// S_physical ~ -Σ T_i log(T_i) (simplified)
+let temp_variance = fold(acc, p ->
+    let temp = p in
+    let diff = temp - 85 in  // Rough average
+    acc + diff * diff
+, 0, after_heat_transfer) in
+
+// STEP 5: FINAL STATE
+let final_state = [
+    after_heat_transfer,  // Final particle states
+    total_energy,         // Physical energy
+    temp_variance,        // Physical entropy proxy
+    collision_check       // Forces (might contain infinities!)
+] in
+
+// STEP 6: THE MIRROR COMPARISON
+// Physical observables vs Computational observables
+shield ([
+    // === PHYSICAL THERMODYNAMICS ===
+    total_energy,      // Physical energy (conserved?)
+    temp_variance,     // Physical entropy (increased?)
+    
+    // === COMPUTATIONAL THERMODYNAMICS ===
+    entropy,           // Computational entropy (failures)
+    mass,              // Computational work (operations)
+    rate,              // Computational failure rate
+    density,           // Computational fragility
+    
+    // === THE MIRROR ===
+    hologram           // Complete computational history
+]) recover [0, 0, entropy, mass, rate, density, hologram]

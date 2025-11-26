@@ -1,17 +1,43 @@
-// TEST: Thermodynamic Circuit Breaker
-// We process a stream of numbers.
-// If we hit a few errors, the system realizes it is unstable
-// and switches to a "Safe Mode" (returning the accumulator)
-// to prevent further entropy generation.
+// circuit_breaker.thermo
+// System that monitors its own health and adapts
 
-let stream = [10, 0, 0, 5, 2, 0] in
+let initial_budget = 300 in
+let _ = gaslimit(initial_budget) in
 
-fold(acc, x ->
-    // INTROSPECTION: Check global entropy
-    if entropy > 1 then
-        // Circuit Open! Stop processing to save the universe.
-        acc
-    else
-        // Circuit Closed. Process normally.
-        shield (acc / x) recover acc
-, 1000, stream)
+// Dangerous workload (could fail)
+let dangerous_tasks = [10, 20, 30, 40, 50, 0, 60, 70, 80, 0, 90] in
+
+// Process with health checks
+let checkpoint1 = [mass, entropy, rate, density] in
+
+let batch1 = map(x -> 
+    shield (100 / x) recover 999
+, [10, 20, 30]) in
+
+let health_after_batch1 = [mass, entropy, rate, density] in
+
+// Adaptive: If system unhealthy, skip dangerous work
+let should_continue = if density < 500 then true else false in
+
+let batch2 = if should_continue
+    then map(x -> shield (100 / x) recover 999, [40, 50, 0, 60])
+    else [0, 0, 0, 0]
+in
+
+let health_after_batch2 = [mass, entropy, rate, density] in
+
+let batch3 = if density < 500
+    then map(x -> shield (100 / x) recover 999, [70, 80, 0, 90])
+    else [0, 0, 0, 0]
+in
+
+// Full diagnostic report
+[
+    checkpoint1,
+    batch1,
+    health_after_batch1,
+    batch2,
+    health_after_batch2,
+    batch3,
+    [entropy, mass, rate, density, hologram]
+]

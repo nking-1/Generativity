@@ -1,0 +1,69 @@
+// TWO-BODY ORBITAL SIMULATION
+// Test: Do conservation laws hold despite computational limits?
+
+let _ = gaslimit(1500) in
+
+// Sun at origin, Earth orbiting
+let sun = [0, 0, 0, 0, 1000] in      // [x, y, vx, vy, mass]
+let earth = [100, 0, 0, 10, 1] in
+
+// Gravitational constant
+let G = 1 in
+
+// Simulate orbit for N timesteps
+let timesteps = [1,2,3,4,5,6,7,8,9,10,
+                 11,12,13,14,15,16,17,18,19,20] in
+
+let orbit = fold(earth_state, t -> 
+    let x = earth_state in
+    let y = earth_state in
+    let vx = earth_state in
+    let vy = earth_state in
+    let m = earth_state in
+    
+    // Distance to sun
+    let r_sq = x*x + y*y in
+    let r = shield (1000 / r_sq) recover 1000 in  // Avoid sqrt, approximate
+    
+    // Gravitational force F = GMm/r²
+    let force = shield (G * 1000 * m / r_sq) recover 0 in
+    
+    // Acceleration components
+    let ax = shield (force * x / r) recover 0 in
+    let ay = shield (force * y / r) recover 0 in
+    
+    // Update velocity (Euler integration)
+    let new_vx = vx - ax in
+    let new_vy = vy - ay in
+    
+    // Update position
+    let new_x = x + new_vx in
+    let new_y = y + new_vy in
+    
+    [new_x, new_y, new_vx, new_vy, m]
+    
+, earth, timesteps) in
+
+// Check conserved quantities
+let final_x = orbit in
+let final_y = orbit in
+let final_vx = orbit in
+let final_vy = orbit in
+
+// Energy: E = (1/2)mv² - GMm/r
+let kinetic = (final_vx * final_vx + final_vy * final_vy) / 2 in
+let r_final = final_x * final_x + final_y * final_y in
+let potential = shield (0 - 1000 / r_final) recover 0 in
+let total_energy = kinetic + potential in
+
+// Angular momentum: L = m(xv_y - yv_x)
+let angular_momentum = final_x * final_vy - final_y * final_vx in
+
+[
+    orbit,              // Final state
+    total_energy,       // Should be conserved
+    angular_momentum,   // Should be conserved
+    entropy,            // Computational cost
+    mass,               // Computational work
+    hologram            // Singularity record
+]

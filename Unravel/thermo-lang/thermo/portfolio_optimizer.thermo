@@ -1,0 +1,44 @@
+// portfolio_optimizer.thermo
+// Real-world: Asset allocation with circuit breakers
+// TODO: Needs list indexing in language to run properly
+
+let _ = gaslimit(500) in
+
+// Portfolio: [Stock Value, Volatility (risk)]
+let assets = [
+    [100, 5],   // Low risk, low return
+    [150, 15],  // Medium risk
+    [200, 30],  // High risk
+    [80, 3],    // Very safe
+    [300, 50],  // Very risky
+    [120, 10],
+    [180, 25],
+    [90, 4]
+] in
+
+// Calculate Sharpe ratio (return / risk) for each asset
+let sharpe_ratios = map(asset -> 
+    let value = asset in  // Simulating: asset[0]
+    let risk = asset in   // Simulating: asset[1]
+    
+    shield (
+        // Risk-adjusted return (higher is better)
+        // If risk is zero, we get infinity (handled gracefully)
+        let ratio = 1000 / risk in
+        ratio * value  // Weight by value
+    ) recover 0  // Zero weight for problematic assets
+, assets) in
+
+// Total portfolio score
+let total_score = fold(acc, score -> acc + score, 0, sharpe_ratios) in
+
+// Check if we hit thermodynamic limits (system stress)
+let system_health = [
+    total_score,
+    entropy,      // How many failures?
+    mass,         // Computational cost
+    density,      // Code fragility (entropy/mass)
+    rate          // Failure rate
+] in
+
+system_health

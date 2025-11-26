@@ -1,0 +1,45 @@
+// HEAT DIFFUSION WITH TIGHT GAS LIMIT
+// Forces partial failure to test entropy correlation
+
+let _ = gaslimit(60) in  // Very tight limit!
+
+// Hot rod with cold ends
+let temps = [10, 10, 10, 100, 100, 100, 10, 10, 10, 10] in
+
+// Expensive diffusion (lots of operations)
+let diffused = map(t ->
+    // Simulate expensive heat equation
+    let step1 = t * 2 in
+    let step2 = step1 / 2 in
+    let step3 = step2 * 3 in
+    let step4 = step3 / 3 in  // Burning gas...
+    let step5 = step4 * 5 in
+    let step6 = shield (step5 / 5) recover 999 in  // Might hit limit
+    
+    // Move toward mean
+    let avg = 55 in
+    let diff = step6 - avg in
+    let result = shield (t - (diff / 4)) recover 999 in
+    result
+, temps) in
+
+// Count failures (999 markers)
+let failures = fold(count, t ->
+    if t == 999 then count + 1 else count
+, 0, diffused) in
+
+// Physical entropy: did temperatures equalize?
+let variance = fold(acc, t ->
+    let diff = if t == 999 then 0 else t - 55 in
+    acc + (diff * diff)
+, 0, diffused) in
+
+[
+    diffused,           // Final temps (some might be 999)
+    failures,           // How many failed?
+    variance,           // Physical entropy (variance)
+    entropy,            // Computational entropy
+    mass,               // Work before hitting limit
+    rate,               // Failure rate
+    hologram
+]

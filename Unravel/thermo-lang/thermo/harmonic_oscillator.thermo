@@ -1,0 +1,52 @@
+// HARMONIC OSCILLATOR (Spring-Mass System)
+// Testing: Energy conservation vs computational cost
+
+let _ = gaslimit(800) in
+
+// Spring parameters
+let k = 5 in        // Spring constant
+let m = 10 in       // Mass
+let x_0 = 10 in     // Initial displacement
+let v_0 = 0 in      // Initial velocity
+
+// Simulate oscillation
+let timesteps = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] in
+
+// We'll alternate storing position and velocity in results
+let final_position = fold(position, t ->
+    // Force: F = -kx
+    let force = 0 - k * position in
+    
+    // Acceleration: a = F/m
+    let acceleration = shield (force / m) recover 0 in
+    
+    // Simplified update (Euler integration)
+    // In real physics: x' = x + v*dt, v' = v + a*dt
+    // Here we can only track one variable at a time
+    let new_position = position + acceleration in
+    
+    new_position
+    
+, x_0, timesteps) in
+
+// Physical energy (would be E = (1/2)kx² + (1/2)mv²)
+// But we can only compute potential energy
+let potential_energy = (k * final_position * final_position) / 2 in
+
+// Initial energy (all potential)
+let initial_energy = (k * x_0 * x_0) / 2 in
+
+// Energy conservation check
+let energy_diff = shield (
+    initial_energy - potential_energy
+) recover 0 in
+
+[
+    final_position,     // Where did it end up?
+    potential_energy,   // Current PE
+    energy_diff,        // How much energy "lost"?
+    entropy,            // Computational entropy
+    mass,               // Computational work
+    density,            // Fragility
+    hologram
+]
