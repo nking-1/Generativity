@@ -1,4 +1,4 @@
-(* Process.v *)
+(* Process.v - Incompletness theorem, but as a generative process *)
 (* ================================================================ *)
 (*          Process Philosophy / Impermanence Formalization         *)
 (* ================================================================ *)

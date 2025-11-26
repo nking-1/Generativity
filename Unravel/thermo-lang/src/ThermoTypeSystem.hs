@@ -140,6 +140,10 @@ infer term ctx = case term of
     GetMass -> Right TyInt
     GetRate -> Right TyInt
     GetDensity -> Right TyInt
+    SetGasLimit t -> do
+        tType <- infer t ctx
+        expect TyInt tType "GasLimit"
+        return TyInt
     
     Evolve t -> do
         tType <- infer t ctx

@@ -1,0 +1,13 @@
+// gas_clear_failure.thermo
+let _ = gaslimit(30) in
+
+let items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] in
+
+// Make each item expensive: repeat creates lots of work
+let results = map(x -> 
+    shield (
+        repeat(10) { x + x }  // 10 mass per item
+    ) recover 999
+, items) in
+
+[results, entropy, mass, hologram]

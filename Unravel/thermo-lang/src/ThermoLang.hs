@@ -49,6 +49,7 @@ data Term
     | GetRate    -- Entropy / Time
     | GetDensity -- Entropy / Mass
     | Evolve Term -- Artificially age the universe
+    | SetGasLimit Term
     
     deriving (Show, Eq)
 
@@ -153,6 +154,7 @@ analyze term ctx = case term of
     GetDensity -> mempty
     
     Evolve t -> analyze t ctx
+    SetGasLimit t -> analyze t ctx
 
     Fn _ body -> analyze body ctx
     Call f args -> 
@@ -301,6 +303,11 @@ compile term env = case term of
         n <- compile nTerm env >>= asInt
         evolveTime n
         return (VInt n)
+
+    SetGasLimit limitTerm -> do
+        limit <- compile limitTerm env >>= asInt
+        setGasLimit limit
+        return (VInt limit)
 
     Map var body listTerm -> do
         listVals <- compile listTerm env >>= asList

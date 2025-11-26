@@ -1,0 +1,9 @@
+// Nested loops hitting gas limit
+
+let _ = gaslimit(100) in
+
+let outer = repeat(20) {
+    repeat(10) { 1 + 1 }  // Inner: 20 mass, Outer: attempts 20 times
+} in
+
+[outer, entropy, mass, hologram]

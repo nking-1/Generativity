@@ -198,8 +198,11 @@ runDemo title code = do
             case analyzeTyped ast of
                 Left typeErr -> putStrLn $ "🛑 TYPE ERROR: " ++ show typeErr
                 Right stats -> do
-                    runAnalysis stats
-                    runExecution (compile ast Prelude.mempty)
+                    case build ast of
+                        Rejected reason -> putStrLn $ "❌ REJECTED: " ++ reason
+                        Accepted _ prog -> do
+                            runAnalysis stats
+                            runExecution prog
 
 runFile :: FilePath -> IO ()
 runFile path = do

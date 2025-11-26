@@ -280,7 +280,7 @@ Section ClassAxiomsAreOmegaVeils.
     apply H_not_P.
     apply H_axiom.
   Qed.
-  
+
   (* ================================================================ *)
   (** ** The Deep Truth *)
   

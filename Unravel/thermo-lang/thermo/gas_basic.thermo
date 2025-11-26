@@ -1,0 +1,12 @@
+// Basic test: Does gas limit stop computation?
+
+let _ = gaslimit(50) in
+
+// Each arithmetic op costs 1 mass
+// This should hit the limit around iteration 50
+
+let counter = repeat(100) {
+    1 + 1 + 1 + 1 + 1  // 5 mass per iteration
+} in
+
+[counter, entropy, mass, hologram]

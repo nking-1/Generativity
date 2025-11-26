@@ -32,7 +32,7 @@ identifier = (lexeme . try) (p >>= check)
     reserved = ["if", "then", "else", "let", "in", "true", "false", 
                 "map", "fold", "repeat", "shield", "recover", "log", 
                 "entropy", "struct", "time", "voids", "ticks", "hologram",
-                "fn", "call", "mass", "rate", "density", "evolve"]
+                "fn", "call", "mass", "rate", "density", "evolve", "gaslimit"]
 
 integer :: Parser Int
 integer = lexeme L.decimal
@@ -64,10 +64,11 @@ pTermPart = choice
   , pTime
   , pVoids
   , pTicks
-  , pMass    -- NEW
-  , pRate    -- NEW
-  , pDensity -- NEW
-  , pEvolve  -- NEW
+  , pMass
+  , pRate
+  , pDensity
+  , pEvolve
+  , pGasLimit
   , pList
   , pBool
   , pInt
@@ -188,6 +189,14 @@ pEvolve = do
     n <- pTerm
     _ <- symbol ")"
     return (Evolve n)
+
+pGasLimit :: Parser Term
+pGasLimit = do
+    _ <- keyword "gaslimit"
+    _ <- symbol "("
+    limit <- pTerm
+    _ <- symbol ")"
+    return (SetGasLimit limit)
 
 -- Observables
 pEntropy, pStruct, pTime, pVoids, pTicks, pHologram, pMass, pRate, pDensity :: Parser Term

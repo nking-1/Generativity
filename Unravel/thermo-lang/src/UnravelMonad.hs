@@ -10,6 +10,7 @@ import Data.Char (ord, chr)
 data VoidSource 
     = DivByZero 
     | LogicError String 
+    | ResourceExhaustion
     | RootEntropy 
     | VoidNeutral 
     deriving (Show, Eq, Ord)
@@ -34,10 +35,8 @@ data Universe = Universe {
     timeEntropy    :: Int,     
     timeStep       :: Int,     
     voidCount      :: Int,     
-    
-    -- NEW: Mass (Successful Work)
     mass           :: Int,
-
+    gasLimit       :: Maybe Int, -- Nothing = unlimited
     boundaryValue  :: Integer, 
     boundaryLength :: Int      
 } deriving (Show, Eq)
@@ -49,10 +48,11 @@ totalEntropy u = structEntropy u + timeEntropy u
 -- 2. HOLOGRAPHIC ENCODING
 -- ==========================================
 
-t_VOID_NEUTRAL, t_DIV_ZERO, t_ROOT_ENTROPY :: Integer
+t_VOID_NEUTRAL, t_DIV_ZERO, t_ROOT_ENTROPY, t_RESOURCE_EXHAUSTION :: Integer
 t_VOID_NEUTRAL = 0
 t_DIV_ZERO     = 1
 t_ROOT_ENTROPY = 2
+t_RESOURCE_EXHAUSTION = 3
 
 t_MSG_OPEN, t_MSG_CLOSE :: Integer
 t_MSG_OPEN  = 30
@@ -72,6 +72,7 @@ flattenPath (BaseVeil src) = case src of
     VoidNeutral -> [] 
     DivByZero -> [t_DIV_ZERO]
     RootEntropy -> [t_ROOT_ENTROPY]
+    ResourceExhaustion -> [t_RESOURCE_EXHAUSTION]
     LogicError msg -> 
         [t_MSG_OPEN] ++ map (fromIntegral . ord) msg ++ [t_MSG_CLOSE]
 flattenPath (SelfContradict p) = 
@@ -99,6 +100,7 @@ parsePath :: [Integer] -> Maybe (ParadoxPath, [Integer])
 parsePath [] = Nothing
 parsePath (x:xs) | x == t_DIV_ZERO = Just (BaseVeil DivByZero, xs)
 parsePath (x:xs) | x == t_ROOT_ENTROPY = Just (BaseVeil RootEntropy, xs)
+parsePath (x:xs) | x == t_RESOURCE_EXHAUSTION = Just (BaseVeil ResourceExhaustion, xs)
 parsePath (x:xs) | x == t_MSG_OPEN = 
     let (msgCodes, rest) = break (== t_MSG_CLOSE) xs
     in case rest of
@@ -203,8 +205,8 @@ instance Monad Unravel where
 -- ==========================================
 
 bigBang :: Universe
--- S_s, S_t, t, v, m, B, L
-bigBang = Universe 0 0 0 0 0 0 0
+-- S_s, S_t, t, v, m, gas, B, L
+bigBang = Universe 0 0 0 0 0 Nothing 0 0
 
 run :: Unravel a -> (UResult a, Universe)
 run prog = runUnravel prog bigBang
@@ -230,7 +232,18 @@ crumble src = Unravel $ \u ->
 
 -- WORK: Doing normal stuff generates Mass
 work :: Int -> Unravel ()
-work amount = Unravel $ \u -> (Valid (), u { mass = mass u + amount })
+work amount = Unravel $ \u -> 
+    let newMass = mass u + amount
+    in case gasLimit u of
+        Nothing -> (Valid (), u { mass = newMass })  -- No limit
+        Just limit -> 
+            if newMass > limit 
+            then runUnravel (crumble ResourceExhaustion) u
+            else (Valid (), u { mass = newMass })
+
+-- Set thermodynamic budget for computation
+setGasLimit :: Int -> Unravel ()
+setGasLimit limit = Unravel $ \u -> (Valid (), u { gasLimit = Just limit })
 
 -- ARTIFICIAL AGING: Moving through time without doing work
 evolveTime :: Int -> Unravel ()

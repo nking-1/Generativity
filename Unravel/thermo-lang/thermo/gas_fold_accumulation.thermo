@@ -1,0 +1,13 @@
+let _ = gaslimit(40) in
+
+let numbers = [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
+               5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+               5, 5, 5, 5, 5, 5, 5, 5, 5, 5] in  // 30 items
+
+let total = shield (
+    fold(acc, x -> 
+        acc + x + x  // 2 mass per iteration = 60 mass total
+    , 0, numbers)
+) recover 999 in
+
+[total, entropy, mass, hologram]
