@@ -166,19 +166,20 @@ runExecution prog = do
                 printPath "   " p
                 ) history
 
-    -- LAGRANGIAN
+    -- INFORMATION FLOW
     let s = fromIntegral (totalEntropy u) :: Double
     let t = fromIntegral (timeStep u) :: Double
     let s_dot = if t > 0 then s Prelude./ t else 0
     
     let s_ddot = if t > 0 then s_dot Prelude./ t else 0
-    let lagrangian = s * s_dot 
+    let information_flow = s * s_dot 
     
-    putStrLn "\n📐 LAGRANGIAN ANALYSIS"
+    putStrLn "\n📐 INFORMATION FLOW ANALYSIS"
     putStrLn "---------------------"
+    putStrLn $ "   Entropy (S):           " ++ take 8 (show s) ++ " J^2/K^2/s"
     putStrLn $ "   Entropy Rate (S_dot): " ++ take 6 (show s_dot) ++ " J/K/s"
-    putStrLn $ "   Accel (S_ddot):       " ++ take 6 (show s_ddot) ++ " J/K/s^2"
-    putStrLn $ "   Action (L):           " ++ take 8 (show lagrangian) ++ " J^2/K^2/s"
+    putStrLn $ "   Entropy Accel (S_ddot):       " ++ take 6 (show s_ddot) ++ " J/K/s^2"
+    putStrLn $ "   Error Flow (I_error):           " ++ take 8 (show information_flow) ++ " J^2/K^2/s"
     
     if totalEntropy u > 0 
         then putStrLn "   ✓ Singularity Processed. Physics holds."

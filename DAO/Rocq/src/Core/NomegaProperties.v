@@ -92,7 +92,7 @@ Module NomegaProperties.
 
     (** A minimal axiom: functions from empty types are equal.
         This is much weaker than full functional extensionality. *)
-    Axiom empty_function_ext : 
+    Local Axiom empty_function_ext : 
       forall {A B : Type} (empty : A -> False),
       forall (f g : A -> B), f = g.
 
