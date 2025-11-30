@@ -822,15 +822,9 @@ End WaysOfBeingFalse.
   But they're undefined in different ways.
   These different ways are different mathematical objects.
   
-  This framework's view: Mathematics isn't about what's true or false.
+  This framework's view: Mathematics is not only about what's true or false.
   It's about how things are true or false. The construction is the content.
   Intensionality matters everywhere - for True AND False.
-  
-  ----------------------------------------------------------------
-  
-  Every mathematical object is a unique pattern of failing to exist completely.
-  These patterns are intensionally distinct (different stories) but 
-  extensionally equivalent (all equal omega_veil).
   
   The framework shows that difference and unity coexist:
   - russell_pattern ≠ liar_pattern (different constructions)
