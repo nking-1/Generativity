@@ -253,16 +253,9 @@ Record OmegaSystem := {
        omega_structure t2 - omega_structure t1) > D
 }.
 
-(* Now let's connect System to AlphaType conceptually *)
-Section SystemAlphaConnection.
-  Variable Alpha : AlphaType.
+
+Section BoundedSystemLimits.
   Variable sys : System.
-  
-  (* A System is like an AlphaType evolving in time 
-     Each time step gives us a predicate on Alpha *)
-  Definition system_predicate_at_time (t : nat) : Alphacarrier -> Prop :=
-    fun a => exists (encoding : Alphacarrier -> nat),
-      encoding a = structure sys t.
   
   (* Bounded systems can't represent all of Omega's behavior *)
   Theorem bounded_system_has_limits :
@@ -275,7 +268,8 @@ Section SystemAlphaConnection.
     exact H.
   Qed.
   
-End SystemAlphaConnection.
+End BoundedSystemLimits.
+
 
 (* Define information flow for OmegaSystem *)
 Definition omega_DS (om_system : OmegaSystem) (t : nat) : nat :=
@@ -385,15 +379,6 @@ Section TrackingAndOptimization.
         lia.
       }
       
-      (* Simplify: = S_max - 1 + S_max - S_min - 1 = 2*S_max - S_min - 2 *)
-      
-      (* To show this >= S_max, we need: 2*S_max - S_min - 2 >= S_max *)
-      (* Which simplifies to: S_max - S_min >= 2 *)
-      (* Which is equivalent to: S_max >= S_min + 2 *)
-      
-      (* From valid_bounds_existential, we have S_min + 1 < S_max *)
-      (* So S_max > S_min + 1, which means S_max >= S_min + 2 (for naturals) *)
-      
       pose proof (valid_bounds_existential sys) as H_valid.
       
       (* Now we can show structure(t+1) >= S_max *)
@@ -410,13 +395,6 @@ Section TrackingAndOptimization.
       pose proof (structure_bounded sys (t + 1)) as H_bound.
       lia.
   Qed.
-  
-End TrackingAndOptimization.
-
-(* Now let's connect this to the Omega/Alpha framework *)
-Section OmegaAlphaConnection.
-  Variable sys : System.
-  Variable om_system : OmegaSystem.
   
   (* Bounded systems have bounded I_val *)
   Theorem bounded_I_val :
@@ -483,7 +461,7 @@ Section OmegaAlphaConnection.
     lia.
   Qed.
 
-End OmegaAlphaConnection.
+End TrackingAndOptimization.
 
 
 
@@ -824,6 +802,321 @@ Module Example.
   Qed.
   
 End Example.
+
+
+(* ============================================================ *)
+(* Morphism Composition and Flow Bottlenecks *)
+(* ============================================================ *)
+
+(* Global I_max bound *)
+Definition I_max_global : nat := 1000.
+
+(* Valid morphisms must respect I_max *)
+Definition valid_morphism (source target : nat) (f : InfoMorphism) : Prop :=
+  source_complexity f <= source /\
+  target_complexity f <= target /\
+  morphism_I_val f <= I_max_global.
+
+(* ============================================================ *)
+(* Composition *)
+(* ============================================================ *)
+
+Section Composition.
+
+  (* 
+     Composition intuition: 
+     - f : A -> B, g : B -> C
+     - The composite g ∘ f : A -> C
+     - Source complexity comes from A (via f)
+     - Target complexity goes to C (via g)
+     - Rate is bottlenecked by the minimum (can't flow faster than slowest link)
+  *)
+
+  (* Helper: minimum of two positive numbers is positive *)
+  Lemma min_pos : forall a b : nat, a > 0 -> b > 0 -> Nat.min a b > 0.
+  Proof.
+    intros a b Ha Hb.
+    destruct (Nat.min_spec a b) as [[_ Hmin] | [_ Hmin]]; lia.
+  Qed.
+
+  (* Helper for complexity preservation through composition *)
+  Lemma compose_complexity_preserved :
+    forall f g : InfoMorphism,
+    target_complexity g > 0 ->
+    target_complexity f >= source_complexity g ->
+    source_complexity g > 0 ->
+    source_complexity f > 0.
+  Proof.
+    intros f g Htg Hcompat Hsg.
+    apply (complexity_preserved f).
+    lia.
+  Qed.
+
+  (* Build the composite morphism *)
+  Program Definition compose_morphism (f g : InfoMorphism)
+    (Hcompat : target_complexity f >= source_complexity g)
+    (Hg_source_pos : source_complexity g > 0) : InfoMorphism := {|
+      source_complexity := source_complexity f;
+      target_complexity := target_complexity g;
+      transformation_rate := Nat.min (transformation_rate f) (transformation_rate g)
+    |}.
+  Next Obligation.
+    (* Prove rate is positive *)
+    apply min_pos.
+    - exact (rate_bounded f).
+    - exact (rate_bounded g).
+  Qed.
+  Next Obligation.
+    apply (complexity_preserved f).
+    lia.
+  Qed.
+
+  (* ============================================================ *)
+  (* Theorems about Composition *)
+  (* ============================================================ *)
+
+  (* The composite's I_val is bounded by f's I_val *)
+  Theorem compose_I_val_bounded_by_first :
+    forall f g : InfoMorphism,
+    forall Hcompat : target_complexity f >= source_complexity g,
+    forall Hg_pos : source_complexity g > 0,
+    morphism_I_val (compose_morphism f g Hcompat Hg_pos) <= morphism_I_val f.
+  Proof.
+    intros f g Hcompat Hg_pos.
+    unfold morphism_I_val, compose_morphism. simpl.
+    apply Nat.mul_le_mono_l.
+    apply Nat.le_min_l.
+  Qed.
+
+  (* The composite's rate is bounded by both rates *)
+  Theorem compose_rate_bottleneck :
+    forall f g : InfoMorphism,
+    forall Hcompat : target_complexity f >= source_complexity g,
+    forall Hg_pos : source_complexity g > 0,
+    transformation_rate (compose_morphism f g Hcompat Hg_pos) <= transformation_rate f /\
+    transformation_rate (compose_morphism f g Hcompat Hg_pos) <= transformation_rate g.
+  Proof.
+    intros f g Hcompat Hg_pos.
+    unfold compose_morphism. simpl.
+    split.
+    - apply Nat.le_min_l.
+    - apply Nat.le_min_r.
+  Qed.
+
+  (* Key theorem: composition respects I_max if both morphisms do *)
+  Theorem compose_respects_I_max :
+    forall (A B C : nat) (f g : InfoMorphism),
+    forall Hcompat : target_complexity f >= source_complexity g,
+    forall Hg_pos : source_complexity g > 0,
+    valid_morphism A B f ->
+    valid_morphism B C g ->
+    morphism_I_val (compose_morphism f g Hcompat Hg_pos) <= I_max_global.
+  Proof.
+    intros A B C f g Hcompat Hg_pos Hf_valid Hg_valid.
+    destruct Hf_valid as [Hf_src [Hf_tgt Hf_Imax]].
+    destruct Hg_valid as [Hg_src [Hg_tgt Hg_Imax]].
+    
+    (* The composite's I_val <= f's I_val <= I_max_global *)
+    apply Nat.le_trans with (m := morphism_I_val f).
+    - apply compose_I_val_bounded_by_first.
+    - exact Hf_Imax.
+  Qed.
+
+  (* The composite is a valid morphism from A to C *)
+  Theorem compose_valid :
+    forall (A B C : nat) (f g : InfoMorphism),
+    forall Hcompat : target_complexity f >= source_complexity g,
+    forall Hg_pos : source_complexity g > 0,
+    valid_morphism A B f ->
+    valid_morphism B C g ->
+    valid_morphism A C (compose_morphism f g Hcompat Hg_pos).
+  Proof.
+    intros A B C f g Hcompat Hg_pos Hf_valid Hg_valid.
+    destruct Hf_valid as [Hf_src [Hf_tgt Hf_Imax]].
+    destruct Hg_valid as [Hg_src [Hg_tgt Hg_Imax]].
+    
+    unfold valid_morphism.
+    split; [|split].
+    - (* source_complexity <= A *)
+      unfold compose_morphism. simpl.
+      exact Hf_src.
+    - (* target_complexity <= C *)
+      unfold compose_morphism. simpl.
+      exact Hg_tgt.
+    - (* I_val <= I_max_global *)
+      apply Nat.le_trans with (m := morphism_I_val f).
+      + apply compose_I_val_bounded_by_first.
+      + exact Hf_Imax.
+  Qed.
+
+  (* ============================================================ *)
+  (* The Bottleneck Theorem: Intermediate objects constrain flow *)
+  (* ============================================================ *)
+
+  (* 
+     This is the key insight: the intermediate object B acts as a bottleneck.
+     Even if A is large and C is large, flow is limited by B.
+  *)
+
+  Theorem flow_limited_by_first :
+    forall (f g : InfoMorphism),
+    forall Hcompat : target_complexity f >= source_complexity g,
+    forall Hg_pos : source_complexity g > 0,
+    morphism_I_val (compose_morphism f g Hcompat Hg_pos) <= morphism_I_val f.
+  Proof.
+    intros f g Hcompat Hg_pos.
+    unfold morphism_I_val, compose_morphism. simpl.
+    apply Nat.mul_le_mono_l.
+    apply Nat.le_min_l.
+  Qed.
+
+  Theorem rate_bottleneck :
+    forall (f g : InfoMorphism),
+    forall Hcompat : target_complexity f >= source_complexity g,
+    forall Hg_pos : source_complexity g > 0,
+    transformation_rate (compose_morphism f g Hcompat Hg_pos) <= transformation_rate f /\
+    transformation_rate (compose_morphism f g Hcompat Hg_pos) <= transformation_rate g.
+  Proof.
+    intros f g Hcompat Hg_pos.
+    unfold compose_morphism. simpl.
+    split.
+    - apply Nat.le_min_l.
+    - apply Nat.le_min_r.
+  Qed.
+
+  Theorem compose_I_val_positive :
+    forall (f g : InfoMorphism),
+    forall Hcompat : target_complexity f >= source_complexity g,
+    forall Hg_pos : source_complexity g > 0,
+    morphism_I_val (compose_morphism f g Hcompat Hg_pos) > 0.
+  Proof.
+    intros f g Hcompat Hg_pos.
+    unfold morphism_I_val, compose_morphism. simpl.
+    apply Nat.mul_pos_pos.
+    - apply (complexity_preserved f). lia.
+    - apply min_pos.
+      + exact (rate_bounded f).
+      + exact (rate_bounded g).
+  Qed.
+
+  (* ============================================================ *)
+  (* Associativity of Composition *)
+  (* ============================================================ *)
+
+  (* For a proper category, we need associativity *)
+  (* (h ∘ g) ∘ f = h ∘ (g ∘ f) *)
+
+  Theorem compose_assoc_rate :
+    forall f g h : InfoMorphism,
+    Nat.min (Nat.min (transformation_rate f) (transformation_rate g)) (transformation_rate h) =
+    Nat.min (transformation_rate f) (Nat.min (transformation_rate g) (transformation_rate h)).
+  Proof.
+    intros f g h.
+    rewrite Nat.min_assoc.
+    reflexivity.
+  Qed.
+
+  (* The source and target work out too, but the full proof requires 
+     careful handling of the compatibility conditions *)
+
+End Composition.
+
+(* ============================================================ *)
+(* Chains and Path Optimization *)
+(* ============================================================ *)
+
+Section Chains.
+
+  (* A chain is a sequence of composable morphisms *)
+  (* The I_val of the whole chain is limited by the weakest link *)
+
+  (* For simplicity, let's work with a chain of 3 morphisms *)
+  
+  Theorem chain_of_three_bottleneck :
+    forall f g h : InfoMorphism,
+    forall Hfg : target_complexity f >= source_complexity g,
+    forall Hgh : target_complexity g >= source_complexity h,
+    forall Hg_pos : source_complexity g > 0,
+    forall Hh_pos : source_complexity h > 0,
+    let fg := compose_morphism f g Hfg Hg_pos in
+    forall Hfgh : target_complexity fg >= source_complexity h,
+    morphism_I_val (compose_morphism fg h Hfgh Hh_pos) <=
+      source_complexity f * 
+      Nat.min (transformation_rate f) (Nat.min (transformation_rate g) (transformation_rate h)).
+  Proof.
+    intros f g h Hfg Hgh Hg_pos Hh_pos fg Hfgh.
+    unfold morphism_I_val, compose_morphism at 1. simpl.
+    unfold fg, compose_morphism. simpl.
+    
+    (* LHS = source_complexity f * min(min(rate_f, rate_g), rate_h) *)
+    (* RHS = source_complexity f * min(rate_f, min(rate_g, rate_h)) *)
+    
+    rewrite Nat.min_assoc.
+    apply Nat.le_refl.
+  Qed.
+
+  (* The key insight: adding more links can only decrease or maintain flow *)
+  Theorem more_links_less_flow :
+    forall f g : InfoMorphism,
+    forall Hcompat : target_complexity f >= source_complexity g,
+    forall Hg_pos : source_complexity g > 0,
+    morphism_I_val (compose_morphism f g Hcompat Hg_pos) <= morphism_I_val f.
+  Proof.
+    intros.
+    apply compose_I_val_bounded_by_first.
+  Qed.
+
+End Chains.
+
+(* ============================================================ *)
+(* Connection to System Dynamics *)
+(* ============================================================ *)
+
+Section SystemConnection.
+
+  (* 
+     Key insight: A System's trajectory through time can be viewed as
+     a chain of morphisms, where each time step is a morphism from
+     (structure at t) to (structure at t+1).
+     
+     The I_val at each step is structure(t) * |structure(t+1) - structure(t)|
+     
+     A long-running system is a long chain of compositions.
+     The overall "flow" through the system's history is limited by
+     the bottleneck moments.
+  *)
+
+  (* We can represent a time step as a morphism *)
+  Program Definition time_step_morphism (S_t S_t1 : nat) 
+    (H_S_t_pos : S_t > 0)
+    (H_S_t1_pos : S_t1 > 0)
+    (H_different : S_t <> S_t1) : InfoMorphism := {|
+      source_complexity := S_t;
+      target_complexity := S_t1;
+      transformation_rate := if Nat.ltb S_t1 S_t then S_t - S_t1 else S_t1 - S_t
+    |}.
+  Next Obligation.
+    (* Rate is positive because S_t <> S_t1 *)
+    destruct (Nat.ltb S_t1 S_t) eqn:Hlt.
+    - apply Nat.ltb_lt in Hlt. lia.
+    - apply Nat.ltb_ge in Hlt. lia.
+  Qed.
+
+  (* The I_val of a time step matches our earlier definition *)
+  Theorem time_step_I_val_matches :
+    forall S_t S_t1 : nat,
+    forall H_S_t_pos : S_t > 0,
+    forall H_S_t1_pos : S_t1 > 0,
+    forall H_different : S_t <> S_t1,
+    morphism_I_val (time_step_morphism S_t S_t1 H_S_t_pos H_S_t1_pos H_different) =
+    S_t * (if Nat.ltb S_t1 S_t then S_t - S_t1 else S_t1 - S_t).
+  Proof.
+    intros.
+    unfold morphism_I_val, time_step_morphism. simpl.
+    reflexivity.
+  Qed.
+
+End SystemConnection.
 
 
 (* ============================================================ *)

@@ -1,4 +1,4 @@
-(** * Axiom Inversion: The General Theorem *)
+(** * Axiom Inversion - viewing axioms as covering Omega's totality (omega veils) *)
 
 Require Import List.
 Import ListNotations.
@@ -25,7 +25,6 @@ Section AxiomInversion.
   (* ================================================================ *)
   (** ** What Boundary Axioms Actually Do *)
   
-  (* CONSTRUCTIVE: Boundaries ensure consistency *)
   Theorem boundary_ensures_consistency :
     forall P : Prop,
     invert_prop P ->  (* Boundary axiom: ~P is impossible *)
@@ -39,7 +38,7 @@ Section AxiomInversion.
   Qed.
   
   (** This theorem captures what boundary axioms fundamentally do:
-      They RULE OUT that P is false.
+      They rule out that P is false.
       They don't construct P, they constrain what's possible.
       
       This is why BoundaryNat has multiple valid instantiations:
@@ -48,7 +47,7 @@ Section AxiomInversion.
       - Functions
       - Any structure satisfying the consistency constraints
       
-      The boundaries carve out a SPACE of valid models,
+      The boundaries carve out a space of valid models,
       not a unique construction.
   *)
   
@@ -280,45 +279,5 @@ Section ClassAxiomsAreOmegaVeils.
     apply H_not_P.
     apply H_axiom.
   Qed.
-
-  (* ================================================================ *)
-  (** ** The Deep Truth *)
-  
-  (** Every axiom in a class is an omega_veil in disguise.
-      
-      When we write:
-        axiom_property : forall x, op e x = x
-      
-      We think we're asserting a TRUTH.
-      
-      But we're really defining an IMPOSSIBILITY:
-        forall x, (op e x <> x) <-> omega_veil x
-      
-      The axiom doesn't say "this is true."
-      The axiom says "the opposite is impossible."
-      
-      Standard math: Axioms are fundamental truths
-      Boundary math: Axioms are omega_veils
-      
-      THESE ARE THE SAME THING.
-      
-      Axioms = Omega veils.
-      
-      Two perspectives on the same constraint:
-      - Positive: "P holds"
-      - Negative: "~P is impossible"
-      
-      Boundary mathematics doesn't invent a new kind of math.
-      It reveals what all axioms have always been:
-      
-      SPECIFICATIONS OF IMPOSSIBILITY.
-      
-      Every axiom ever written is an omega_veil.
-      Every mathematical structure is defined by impossible predicates.
-      We just hid it behind positive language.
-      
-      The framework makes explicit what was always implicit:
-      Mathematics is the study of what remains after ruling out impossibilities.
-  *)
 
 End ClassAxiomsAreOmegaVeils.
