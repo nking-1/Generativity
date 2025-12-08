@@ -613,3 +613,215 @@ Proof.
       apply Halive. lia. }
     nia.
 Qed.
+
+
+Lemma cumulative_S_bounded : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall start len,
+  (forall i, i < len -> alive (T (start + i))) ->
+  cumulative_S T start len <= len * cap.
+Proof.
+  intros T Hvalid cap Hcap start len.
+  generalize dependent start.
+  induction len.
+  - intros start Halive. simpl. lia.
+  - intros start Halive. simpl.
+    assert (alive (T start)) as Ha.
+    { specialize (Halive 0). replace (start + 0) with start in Halive by lia. apply Halive. lia. }
+    pose proof (structure_below_cap T Hvalid cap Hcap start Ha) as Hs_bound.
+    assert (cumulative_S T (start + 1) len <= len * cap) as IH.
+    { apply IHlen. intros i Hi.
+      replace (start + 1 + i) with (start + S i) by lia.
+      apply Halive. lia. }
+    lia.
+Qed.
+
+
+Lemma cumulative_I_quadratic_bound : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall start len,
+  (forall i, i < len -> alive (T (start + i)) /\ alive (T (start + i + 1))) ->
+  cumulative_I T start len <= len * cap * cap.
+Proof.
+  intros T Hvalid cap Hcap start len Halive.
+  assert (cumulative_I T start len <= cap * cumulative_S T start len) as H1.
+  { apply cumulative_I_bounded; assumption. }
+  assert (cumulative_S T start len <= len * cap) as H2.
+  { apply cumulative_S_bounded; try assumption.
+    intros i Hi. specialize (Halive i Hi). destruct Halive. assumption. }
+  nia.
+Qed.
+
+
+(* ============================================================ *)
+(* Self-Reflective Systems *)
+(* ============================================================ *)
+
+(* Minimum structure needed to represent a state *)
+Definition reflection_cost (s : State) : nat := structure s.
+
+(* A state s2 "reflects" s1 if s2 has enough structure to encode s1 *)
+Definition reflects (s1 s2 : State) : Prop :=
+  structure s2 >= reflection_cost s1.
+
+(* A self-reflective transition: the next state must reflect the current state *)
+Definition self_reflective_transition (s1 s2 : State) : Prop :=
+  can_transition s1 s2 /\
+  reflects s1 s2.
+
+(* A self-reflective timeline: every transition is self-reflective *)
+Definition self_reflective_timeline (T : Timeline) : Prop :=
+  forall t, self_reflective_transition (T t) (T (t + 1)).
+
+(* Self-reflective timelines are valid timelines *)
+Lemma self_reflective_is_valid : forall T : Timeline,
+  self_reflective_timeline T ->
+  valid_timeline T.
+Proof.
+  intros T Hsr.
+  unfold self_reflective_timeline, self_reflective_transition in Hsr.
+  unfold valid_timeline.
+  intro t.
+  specialize (Hsr t).
+  destruct Hsr as [Htrans _].
+  exact Htrans.
+Qed.
+
+(* Key theorem: self-reflective living transitions must increase structure *)
+Lemma self_reflection_forces_growth : forall s1 s2 : State,
+  self_reflective_transition s1 s2 ->
+  alive s1 -> alive s2 ->
+  structure s2 > structure s1.
+Proof.
+  intros s1 s2 Hsr Ha1 Ha2.
+  unfold self_reflective_transition in Hsr.
+  destruct Hsr as [Htrans Hrefl].
+  unfold reflects, reflection_cost in Hrefl.
+  (* Hrefl: structure s2 >= structure s1 *)
+  (* From can_transition + both alive: structure s1 <> structure s2 *)
+  pose proof (alive_transition_changes s1 s2 Htrans Ha1 Ha2) as Hneq.
+  lia.
+Qed.
+
+(* Corollary: self-reflective systems can't decrease while alive *)
+Lemma self_reflection_no_decrease : forall T : Timeline,
+  self_reflective_timeline T ->
+  forall t, alive (T t) -> alive (T (t + 1)) ->
+  increasing_at T t.
+Proof.
+  intros T Hsr t Ha1 Ha2.
+  unfold increasing_at.
+  unfold self_reflective_timeline in Hsr.
+  specialize (Hsr t).
+  apply (self_reflection_forces_growth (T t) (T (t + 1)) Hsr Ha1 Ha2).
+Qed.
+
+(* Self-reflective systems cannot live beyond cap steps *)
+Theorem self_reflection_finite_life : forall T : Timeline,
+  self_reflective_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall t,
+  alive (T t) ->
+  ~(forall i, i <= cap -> alive (T (t + i))).
+Proof.
+  intros T Hsr cap Hcap t Ha Halive.
+  (* All steps are increasing *)
+  assert (forall i, i < cap -> increasing_at T (t + i)) as Hinc.
+  { intros i Hi.
+    apply self_reflection_no_decrease.
+    - exact Hsr.
+    - apply Halive. lia.
+    - replace (t + i + 1) with (t + (i + 1)) by lia. apply Halive. lia. }
+  (* Build living_sequence *)
+  assert (living_sequence T t cap) as Hliving.
+  { unfold living_sequence. intros i Hi. apply Halive. lia. }
+  (* But we proved can't increase forever *)
+  pose proof (self_reflective_is_valid T Hsr) as Hvalid.
+  apply (cant_increase_forever T Hvalid cap Hcap t cap Ha); try lia.
+  - exact Hliving.
+  - exact Hinc.
+Qed.
+
+
+(* ============================================================ *)
+(* Recursive Self-Reflection and Infinite Regress *)
+(* ============================================================ *)
+
+(* Reflection has overhead: encoding yourself requires at least your size + 1 *)
+Definition reflection_cost_overhead (s : State) : nat := structure s + 1.
+
+Definition reflects_with_overhead (s1 s2 : State) : Prop :=
+  structure s2 >= reflection_cost_overhead s1.
+
+(* n levels of recursive reflection along a timeline *)
+Fixpoint n_levels_reflection (T : Timeline) (start : nat) (n : nat) : Prop :=
+  match n with
+  | 0 => True
+  | S m => reflects_with_overhead (T start) (T (start + 1)) /\ 
+           n_levels_reflection T (start + 1) m
+  end.
+
+(* Each level of reflection forces growth by at least 1 *)
+Lemma reflection_level_grows : forall T : Timeline,
+  forall start,
+  reflects_with_overhead (T start) (T (start + 1)) ->
+  structure (T (start + 1)) >= structure (T start) + 1.
+Proof.
+  intros T start Hrefl.
+  unfold reflects_with_overhead, reflection_cost_overhead in Hrefl.
+  lia.
+Qed.
+
+(* n levels of reflection means structure grows by at least n *)
+Lemma n_reflections_adds_n : forall T : Timeline,
+  forall start n,
+  n_levels_reflection T start n ->
+  structure (T (start + n)) >= structure (T start) + n.
+Proof.
+  intros T start n.
+  generalize dependent start.
+  induction n.
+  - intros start _. replace (start + 0) with start by lia. lia.
+  - intros start Hlevels.
+    simpl in Hlevels.
+    destruct Hlevels as [Hrefl Hrest].
+    pose proof (reflection_level_grows T start Hrefl) as Hgrow1.
+    specialize (IHn (start + 1) Hrest).
+    replace (start + S n) with (start + 1 + n) by lia.
+    lia.
+Qed.
+
+(* The depth of recursive reflection is bounded *)
+Theorem reflection_depth_bounded : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall start n,
+  alive (T start) ->
+  alive (T (start + n)) ->
+  n_levels_reflection T start n ->
+  n < cap.
+Proof.
+  intros T Hvalid cap Hcap start n Ha_start Ha_end Hlevels.
+  pose proof (n_reflections_adds_n T start n Hlevels) as Hgrow.
+  pose proof (structure_below_cap T Hvalid cap Hcap (start + n) Ha_end) as Hbound.
+  pose proof (alive_ge_1 (T start) Ha_start) as Hge1.
+  lia.
+Qed.
+
+(* Corollary: infinite regress is impossible *)
+Theorem no_reflection_infinite_regress : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall start,
+  alive (T start) ->
+  ~(forall n, alive (T (start + n)) /\ n_levels_reflection T start n).
+Proof.
+  intros T Hvalid cap Hcap start Ha Hinf.
+  (* Take n = cap, derive contradiction *)
+  specialize (Hinf cap).
+  destruct Hinf as [Ha_cap Hlevels].
+  pose proof (reflection_depth_bounded T Hvalid cap Hcap start cap Ha Ha_cap Hlevels) as Hbound.
+  lia.
+Qed.
