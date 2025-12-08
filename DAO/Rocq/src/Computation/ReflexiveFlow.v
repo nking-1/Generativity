@@ -996,3 +996,51 @@ Proof.
   - apply must_decrease_within_2cap; assumption.
   - apply must_increase_within_2cap; assumption.
 Qed.
+
+
+(* ============================================================ *)
+(* Death Maximizes Information Flow for Large Systems *)
+(* ============================================================ *)
+
+(* For systems occupying more than half their capacity (2*S > cap),
+   the information flow at death exceeds any living increase.
+   
+   Intuition: A large system has little headroom to grow (DS ≤ cap - S - 1),
+   but dying releases all structure at once (DS = S).
+   
+   When S > cap/2, we have S > cap - S - 1, so:
+     I_death = S * S > S * (cap - S - 1) ≥ I_living_increase
+   
+   The brightest flame burns at the moment of extinguishing. *)
+Theorem death_maximizes_I_val : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall t,
+  alive (T t) ->
+  2 * structure (T t) > cap ->
+  approaching_death T t ->
+  forall t', alive (T t') -> alive (T (t' + 1)) ->
+  structure (T t') = structure (T t) ->
+  increasing_at T t' ->
+  I_at T t > I_at T t'.
+Proof.
+  intros T Hvalid cap Hcap t Ha Hbig Hdeath t' Ha' Ha'1 Heq Hinc.
+  pose proof (high_S_limits_DS T Hvalid cap Hcap t' Ha' Ha'1 Hinc) as HDS_inc.
+  pose proof (alive_ge_1 (T t) Ha) as Hge1.
+  assert (DS (T t) (T (t + 1)) = structure (T t)) as HDS_death.
+  { unfold approaching_death in Hdeath. destruct Hdeath as [_ Hd].
+    unfold DS, dead in *. rewrite Hd.
+    destruct (Nat.ltb 0 (structure (T t))) eqn:Hlt2.
+    - lia.
+    - apply Nat.ltb_ge in Hlt2. unfold alive in Ha. lia. }
+  unfold I_at, I_val.
+  rewrite HDS_death.
+  rewrite Heq.
+  rewrite Heq in HDS_inc.
+  assert (DS (T t') (T (t' + 1)) < structure (T t)) as Hkey.
+  {
+    (* 2 * S > cap means S > cap - S, so S > cap - S - 1 >= DS *)
+    lia.
+  }
+  nia.
+Qed.
