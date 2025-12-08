@@ -825,3 +825,174 @@ Proof.
   pose proof (reflection_depth_bounded T Hvalid cap Hcap start cap Ha Ha_cap Hlevels) as Hbound.
   lia.
 Qed.
+
+
+(* This says: to reflect n levels deep while staying alive, you need structure(start) + n < cap.
+Equivalently: maximum reflection depth = cap - structure(start) - 1.
+The gap between your current structure and the capacity ceiling is exactly your budget
+for self-reflection. Every level of introspection costs one unit from that budget. *)
+Theorem reflection_level_requires_capacity : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall start n,
+  alive (T start) ->
+  n_levels_reflection T start n ->
+  (forall i, i <= n -> alive (T (start + i))) ->
+  structure (T start) + n < cap.
+Proof.
+  intros T Hvalid cap Hcap start n Ha Hlevels Halive.
+  pose proof (n_reflections_adds_n T start n Hlevels) as Hgrow.
+  assert (alive (T (start + n))) as Ha_n.
+  { apply Halive. lia. }
+  pose proof (structure_below_cap T Hvalid cap Hcap (start + n) Ha_n) as Hbound.
+  lia.
+Qed.
+
+
+(* Exploring theorems related to original I_max arguments in the paper *)
+Theorem I_val_confined : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall t, alive (T t) -> alive (T (t + 1)) ->
+  1 <= I_at T t /\ I_at T t < cap * cap.
+Proof.
+  intros T Hvalid cap Hcap t Ha1 Ha2.
+  split.
+  - (* Lower bound: I_at T t >= 1 *)
+    unfold I_at, I_val.
+    pose proof (alive_ge_1 (T t) Ha1) as Hs_pos.
+    pose proof (DS_at_least_1 T Hvalid t Ha1 Ha2) as Hds_pos.
+    nia.
+  - (* Upper bound: I_at T t < cap * cap *)
+    pose proof (I_at_bounded T Hvalid t Ha1 Ha2) as Hbnd.
+    unfold max_capacity in Hbnd.
+    unfold bounded_capacity in Hcap.
+    pose proof (Hcap t) as Hcap_t.
+    pose proof (Hcap (t + 1)) as Hcap_t1.
+    assert (Nat.max (capacity (T t)) (capacity (T (t + 1))) <= cap) by lia.
+    nia.
+Qed.
+
+
+Theorem high_S_limits_DS : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall t, alive (T t) -> alive (T (t + 1)) ->
+  increasing_at T t ->
+  DS (T t) (T (t + 1)) <= cap - structure (T t) - 1.
+Proof.
+  intros T Hvalid cap Hcap t Ha1 Ha2 Hinc.
+  unfold increasing_at in Hinc.
+  unfold DS.
+  destruct (Nat.ltb (structure (T (t + 1))) (structure (T t))) eqn:Hlt.
+  - (* Contradiction: increasing but structure decreased *)
+    apply Nat.ltb_lt in Hlt. lia.
+  - (* DS = structure(t+1) - structure(t) *)
+    apply Nat.ltb_ge in Hlt.
+    (* structure(t+1) < capacity(t+1) <= cap *)
+    pose proof (timeline_alive_bounded T Hvalid (t + 1) Ha2) as Hb.
+    unfold bounded in Hb.
+    unfold bounded_capacity in Hcap.
+    pose proof (Hcap (t + 1)) as Hcap_t1.
+    lia.
+Qed.
+
+
+Definition approaching_death (T : Timeline) (t : nat) : Prop :=
+  alive (T t) /\ dead (T (t + 1)).
+
+Theorem final_I_val : forall T : Timeline,
+  valid_timeline T ->
+  forall t, approaching_death T t ->
+  I_at T t = structure (T t) * structure (T t).
+Proof.
+  intros T Hvalid t Happroach.
+  unfold approaching_death in Happroach.
+  destruct Happroach as [Ha Hd].
+  unfold I_at, I_val, DS.
+  unfold dead in Hd.
+  rewrite Hd.
+  (* structure (T (t+1)) = 0, so ltb 0 (structure (T t)) = true since alive *)
+  unfold alive in Ha.
+  destruct (Nat.ltb 0 (structure (T t))) eqn:Hlt.
+  - (* 0 < structure (T t), so DS = structure(t) - 0 = structure(t) *)
+    simpl. lia.
+  - (* Contradiction: alive means structure > 0 *)
+    apply Nat.ltb_ge in Hlt. lia.
+Qed.
+
+
+(* After a drop, I_val is constrained by the lowered structure *)
+Theorem post_drop_I_val_constrained : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall t,
+  alive (T t) -> alive (T (t + 1)) -> alive (T (t + 2)) ->
+  decreasing_at T t ->
+  I_at T (t + 1) < (structure (T t) - 1) * cap.
+Proof.
+  intros T Hvalid cap Hcap t Ha1 Ha2 Ha3 Hdec.
+  unfold decreasing_at in Hdec.
+  replace (t + 2) with (t + 1 + 1) in Ha3 by lia.
+  pose proof (I_val_scales_with_structure T Hvalid cap Hcap (t + 1) Ha2 Ha3) as Hbound.
+  assert (structure (T (t + 1)) < structure (T t)) by lia.
+  assert (structure (T (t + 1)) <= structure (T t) - 1) by lia.
+  nia.
+Qed.
+
+
+(* In 2*cap steps, cannot be all increasing *)
+Theorem must_decrease_within_2cap : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall t,
+  alive (T t) ->
+  (forall i, i <= 2 * cap -> alive (T (t + i))) ->
+  ~(forall i, i < 2 * cap -> increasing_at T (t + i)).
+Proof.
+  intros T Hvalid cap Hcap t Ha Halive Hinc.
+  assert (living_sequence T t cap) as Hliving.
+  { unfold living_sequence. intros i Hi. apply Halive. lia. }
+  assert (forall i, i < cap -> increasing_at T (t + i)) as Hinc_cap.
+  { intros i Hi. apply Hinc. lia. }
+  apply (cant_increase_forever T Hvalid cap Hcap t cap Ha); try lia.
+  - exact Hliving.
+  - exact Hinc_cap.
+Qed.
+
+(* In 2*cap steps, cannot be all decreasing *)
+Theorem must_increase_within_2cap : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall t,
+  alive (T t) ->
+  (forall i, i <= 2 * cap -> alive (T (t + i))) ->
+  ~(forall i, i < 2 * cap -> decreasing_at T (t + i)).
+Proof.
+  intros T Hvalid cap Hcap t Ha Halive Hdec.
+  assert (living_sequence T t (structure (T t))) as Hliving.
+  { unfold living_sequence. intros i Hi. apply Halive. 
+    pose proof (structure_below_cap T Hvalid cap Hcap t Ha). lia. }
+  assert (forall i, i < structure (T t) -> decreasing_at T (t + i)) as Hdec_s.
+  { intros i Hi. apply Hdec.
+    pose proof (structure_below_cap T Hvalid cap Hcap t Ha). lia. }
+  apply (cant_decrease_forever T Hvalid t (structure (T t)) Ha); try lia.
+  - exact Hliving.
+  - exact Hdec_s.
+Qed.
+
+(* Combined: in any 2*cap steps, there must be both increase and decrease *)
+Theorem oscillation_within_2cap : forall T : Timeline,
+  valid_timeline T ->
+  forall cap, bounded_capacity T cap ->
+  forall t,
+  alive (T t) ->
+  (forall i, i <= 2 * cap -> alive (T (t + i))) ->
+  ~(forall i, i < 2 * cap -> increasing_at T (t + i)) /\
+  ~(forall i, i < 2 * cap -> decreasing_at T (t + i)).
+Proof.
+  intros T Hvalid cap Hcap t Ha Halive.
+  split.
+  - apply must_decrease_within_2cap; assumption.
+  - apply must_increase_within_2cap; assumption.
+Qed.
