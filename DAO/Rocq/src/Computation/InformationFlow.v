@@ -1120,6 +1120,93 @@ End SystemConnection.
 
 
 (* ============================================================ *)
+(* Meta-Systems: When I_val is itself a System *)
+(* ============================================================ *)
+
+Section MetaSystem.
+
+  Variable sys : System.
+
+  (* I_val as a function of time *)
+  Definition I_trajectory (t : nat) : nat := I_val sys t.
+
+  (* I_val is bounded below by 1 *)
+  Lemma I_trajectory_lower_bound : forall t : nat, I_trajectory t >= 1.
+  Proof.
+    intro t.
+    unfold I_trajectory.
+    pose proof (I_val_is_positive sys t).
+    lia.
+  Qed.
+
+  (* I_val is bounded above by I_max *)
+  Lemma I_trajectory_upper_bound : forall t : nat, 
+    I_trajectory t < S_max sys * (S_max sys - S_min sys).
+  Proof.
+    intro t.
+    unfold I_trajectory.
+    apply I_val_bounded.
+  Qed.
+
+  (* The hard question: does I_val perpetually change? *)
+  (* This is NOT guaranteed by the System axioms alone. *)
+  (* 
+     Counterexample possibility:
+     structure t = 10, structure (t+1) = 12  => DS = 2, I_val = 20
+     structure (t+1) = 12, structure (t+2) = 8 => DS = 4, I_val = 48
+     structure (t+2) = 8, structure (t+3) = 10 => DS = 2, I_val = 16
+     
+     Could we have I_val t = I_val (t+1)? 
+     That would require S_t * DS_t = S_(t+1) * DS_(t+1)
+     
+     E.g., structure t = 6, structure (t+1) = 4 => DS = 2, I_val = 12
+           structure (t+1) = 4, structure (t+2) = 7 => DS = 3, I_val = 12
+     
+     Yes! I_val can repeat even when structure changes.
+  *)
+
+  (* So we need an additional axiom for meta-systems *)
+  Definition I_perpetual_change : Prop :=
+    forall t : nat, I_trajectory t <> I_trajectory (t + 1).
+
+  (* IF I_val perpetually changes, we can build a meta-system *)
+  (* But we can't use the System record directly because it expects 
+     S_min + 1 < S_max as nats, and our bounds are different *)
+
+  (* Let's define what it means for I_trajectory to behave like a System *)
+  Record IsSystemLike (f : nat -> nat) (lower upper : nat) : Prop := {
+    lower_lt_upper : lower + 1 < upper;
+    value_bounded : forall t : nat, lower < f t < upper;
+    value_changes : forall t : nat, f t <> f (t + 1)
+  }.
+
+  (* The theorem: IF I_val perpetually changes, it's system-like *)
+  Theorem I_val_is_system_like :
+    I_perpetual_change ->
+    IsSystemLike I_trajectory 0 (S_max sys * (S_max sys - S_min sys)).
+  Proof.
+    intro H_perp.
+    constructor.
+    - (* lower + 1 < upper, i.e., 1 < S_max * (S_max - S_min) *)
+      pose proof (valid_bounds_existential sys) as Hv.
+      (* S_min + 1 < S_max means S_max >= S_min + 2 *)
+      (* So S_max - S_min >= 2 *)
+      (* And S_max >= 2 *)
+      (* So S_max * (S_max - S_min) >= 2 * 2 = 4 > 1 *)
+      lia.
+    - (* 0 < I_trajectory t < upper *)
+      intro t.
+      split.
+      + apply I_val_is_positive.
+      + apply I_val_bounded.
+    - (* I_trajectory t <> I_trajectory (t+1) *)
+      exact H_perp.
+  Qed.
+
+End MetaSystem.
+
+
+(* ============================================================ *)
 (* The Meta-Proof: Unprovability Proves Ultimacy                *)
 (* ============================================================ *)
 
