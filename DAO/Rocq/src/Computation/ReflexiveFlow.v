@@ -1044,3 +1044,190 @@ Proof.
   }
   nia.
 Qed.
+
+
+(* ============================================================ *)
+(* Small Systems: Growth Can Beat Death *)
+(* ============================================================ *)
+
+(* First, a pure arithmetic fact: when small, headroom exceeds structure *)
+Lemma headroom_exceeds_structure_when_small : forall cap s : nat,
+  s > 0 ->
+  2 * s < cap ->
+  cap - s - 1 >= s.
+Proof.
+  intros cap s Hs Hsmall.
+  lia.
+Qed.
+
+(* When a system makes a large enough jump, it beats its death I_val *)
+Theorem growth_beats_death_when_small : forall T : Timeline,
+  valid_timeline T ->
+  forall t,
+  alive (T t) -> alive (T (t + 1)) ->
+  DS (T t) (T (t + 1)) >= structure (T t) ->
+  I_at T t >= structure (T t) * structure (T t).
+Proof.
+  intros T Hvalid t Ha1 Ha2 Hbig_jump.
+  unfold I_at, I_val.
+  pose proof (alive_ge_1 (T t) Ha1) as Hge1.
+  nia.
+Qed.
+
+(* The maximum possible I_val for a small increasing system beats death I_val *)
+Theorem small_system_max_I_beats_death : forall cap s : nat,
+  s > 0 ->
+  2 * s < cap ->
+  s * (cap - s - 1) >= s * s.
+Proof.
+  intros cap s Hs Hsmall.
+  nia.
+Qed.
+
+
+(* ============================================================ *)
+(* The Optimal Structure: S ≈ cap/2 Maximizes Living I_val *)
+(* ============================================================ *)
+
+(* The potential I_val for an increasing system at structure s *)
+Definition max_increasing_I_val (cap s : nat) : nat :=
+  s * (cap - s - 1).
+
+(* This is maximized at s = cap/2. We prove it by showing:
+   - It increases as s approaches cap/2 from below
+   - It decreases as s moves away from cap/2 above *)
+
+(* Moving toward cap/2 from below increases potential I_val *)
+Lemma increasing_toward_half_improves : forall cap s : nat,
+  s > 0 ->
+  s + 1 < cap / 2 ->
+  cap > 3 ->
+  max_increasing_I_val cap (s + 1) > max_increasing_I_val cap s.
+Proof.
+  intros cap s Hs Hbelow Hcap.
+  unfold max_increasing_I_val.
+  assert (2 * (cap / 2) <= cap) as Hdiv.
+  { apply Nat.mul_div_le. lia. }
+  assert (2 * (s + 1) < 2 * (cap / 2)) as Hstep.
+  { lia. }
+  assert (2 * (s + 1) <= cap) as Hkey.
+  { lia. }
+  assert (cap - s - 2 > 0) as Hpos.
+  { lia. }
+  nia.
+Qed.
+
+
+(* Moving away from cap/2 above decreases potential I_val *)
+Lemma increasing_past_half_worsens : forall cap s : nat,
+  s >= cap / 2 ->
+  s + 1 < cap ->
+  cap > 2 ->
+  max_increasing_I_val cap (s + 1) < max_increasing_I_val cap s.
+Proof.
+  intros cap s Habove Hbound Hcap.
+  unfold max_increasing_I_val.
+  (* Need: (s+1) * (cap - s - 2) < s * (cap - s - 1) *)
+  (* This holds when cap - s - 2 < s, i.e., cap < 2s + 2 *)
+  assert (cap <= 2 * s + 1) as Hkey.
+  { 
+    pose proof (Nat.div_mod_eq cap 2) as Hdiv.
+    assert (cap mod 2 < 2) as Hmod.
+    { apply Nat.mod_upper_bound. lia. }
+    lia.
+  }
+  nia.
+Qed.
+
+
+(* The sweet spot: structure near cap/2 maximizes living I_val potential *)
+Lemma sweet_spot_beats_extremes : forall cap : nat,
+  cap > 4 ->
+  max_increasing_I_val cap (cap / 2) >= max_increasing_I_val cap 1 /\
+  max_increasing_I_val cap (cap / 2) >= max_increasing_I_val cap (cap - 2).
+Proof.
+  intros cap Hcap.
+  unfold max_increasing_I_val.
+  pose proof (Nat.div_mod_eq cap 2) as Hdiv.
+  assert (cap mod 2 < 2) as Hmod.
+  { apply Nat.mod_upper_bound. lia. }
+  assert (cap / 2 >= 2) as Hhalf_ge.
+  { assert (cap >= 5) by lia.
+    assert (2 * 2 <= cap) by lia.
+    apply Nat.div_le_lower_bound; lia. }
+  (* Key insight: cap - cap/2 - 1 = cap/2 - 1 + cap mod 2 *)
+  assert (cap - cap / 2 - 1 = cap / 2 + cap mod 2 - 1) as Hrewrite.
+  { lia. }
+  split.
+  - (* First part: beats small *)
+    rewrite Hrewrite.
+    (* Need: (cap/2) * (cap/2 + cap mod 2 - 1) >= cap - 2 *)
+    destruct (cap mod 2) eqn:Hparity.
+    + (* Even: cap mod 2 = 0 *)
+      assert (cap = 2 * (cap / 2)) by lia.
+      nia.
+    + (* Odd: cap mod 2 = 1 *)
+      assert (cap = 2 * (cap / 2) + 1) by lia.
+      nia.
+  - (* Second part: beats large *)
+    assert (cap - (cap - 2) - 1 = 1) as Hsimpl by lia.
+    rewrite Hsimpl.
+    rewrite Hrewrite.
+    destruct (cap mod 2) eqn:Hparity.
+    + assert (cap = 2 * (cap / 2)) by lia. nia.
+    + assert (cap = 2 * (cap / 2) + 1) by lia. nia.
+Qed.
+
+
+(* ============================================================ *)
+(* Optimal Lifetime Strategy *)
+(* ============================================================ *)
+
+(* A system maximizes instantaneous I_val by:
+   1. Growing toward cap/2 (each step increases potential)
+   2. Oscillating near cap/2 (staying in the sweet spot)
+   3. Eventually dying (which at S ≈ cap/2 gives I_val ≈ cap²/4)
+   
+   Systems that stay too small waste potential.
+   Systems that grow too large constrain their DS.
+   The middle path optimizes flow. *)
+
+(* At the sweet spot, living I_val potential is approximately cap²/4 *)
+Lemma sweet_spot_I_val_magnitude : forall cap : nat,
+  cap > 4 ->
+  max_increasing_I_val cap (cap / 2) >= (cap * cap) / 8.
+Proof.
+  intros cap Hcap.
+  unfold max_increasing_I_val.
+  pose proof (Nat.div_mod_eq cap 2) as Hdiv.
+  assert (cap mod 2 < 2) as Hmod.
+  { apply Nat.mod_upper_bound. lia. }
+  assert (cap / 2 >= 2) as Hhalf_ge.
+  { assert (2 * 2 <= cap) by lia.
+    apply Nat.div_le_lower_bound; lia. }
+  destruct (cap mod 2) eqn:Hparity.
+  - (* Even case: cap = 2 * (cap / 2) *)
+    assert (cap = 2 * (cap / 2)) as Heven by lia.
+    remember (cap / 2) as h.
+    replace (cap - cap / 2 - 1) with (h - 1) by lia.
+    assert (8 * (h * (h - 1)) >= 4 * h * h) as Hscaled.
+    { nia. }
+    assert (cap * cap = 4 * h * h) as Hcapsq.
+    { rewrite Heven. lia. }
+    rewrite Hcapsq.
+    apply Nat.div_le_upper_bound.
+    + lia.
+    + nia.
+  - (* Odd case: cap = 2 * (cap / 2) + 1 *)
+    assert (cap = 2 * (cap / 2) + 1) as Hodd by lia.
+    remember (cap / 2) as h.
+    replace (cap - h - 1) with h by lia.
+    assert (cap * cap = 4 * h * h + 4 * h + 1) as Hcapsq.
+    { rewrite Hodd. lia. }
+    rewrite Hcapsq.
+    assert ((4 * h * h + 4 * h + 1) / 8 <= h * h) as Hgoal.
+    { apply Nat.div_le_upper_bound.
+      - lia.
+      - nia. }
+    lia.
+Qed.
