@@ -176,7 +176,7 @@ runExecution prog = do
     
     putStrLn "\n📐 INFORMATION FLOW ANALYSIS"
     putStrLn "---------------------"
-    putStrLn $ "   Entropy (S):           " ++ take 8 (show s) ++ " J^2/K^2/s"
+    putStrLn $ "   Entropy (S):           " ++ take 8 (show s) ++ " J/K"
     putStrLn $ "   Entropy Rate (S_dot): " ++ take 6 (show s_dot) ++ " J/K/s"
     putStrLn $ "   Entropy Accel (S_ddot):       " ++ take 6 (show s_ddot) ++ " J/K/s^2"
     putStrLn $ "   Error Flow (I_error):           " ++ take 8 (show information_flow) ++ " J^2/K^2/s"

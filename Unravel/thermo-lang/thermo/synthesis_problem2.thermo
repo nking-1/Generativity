@@ -1,0 +1,21 @@
+// EXPERIMENT 2: Shielded Synthesis
+// What if we shield the synthesis itself?
+
+let reality = [10, 8, 6, 4, 2, 1, 0] in
+
+// Three observers (same as before)
+let alpha = fold(sum, r -> sum + (1000 / r), 0, reality) in
+let beta = fold(sum, r -> shield (1000 / r) recover 0, 0, reality) in
+let gamma = fold(sum, r ->
+    if r < 2
+    then shield (1000 / r) recover 9999
+    else sum + (1000 / r)
+, 0, reality) in
+
+// SHIELDED SYNTHESIS
+let synthesis = shield (alpha + beta + gamma) recover 0 in
+
+let final_entropy = entropy in
+let final_voids = voids in
+
+[synthesis, final_entropy, final_voids, hologram]
