@@ -9,7 +9,7 @@ Standard computing models treat errors as singularities: points where execution 
 
 The framework rests on the classification of mathematical universes into three distinct topoi based on their handling of the Initial Object ($\bot$ or False).
 
-### 1\. Nomega ($N\Omega$): The Vacuous Universe
+### 1\. Void ($N\Omega$): The Vacuous Universe
 
 This represents the Void. It is the empty type.
 

@@ -72,7 +72,7 @@ The relationship between computation and reality has been explored through vario
 
 **DAO**: "Reality must be computational in this specific way" (logical proof from the Everything/Nothing paradox)
 
-**What's proven**: The equivalence of Omega and Nomega forces the existence of omega_veil, which necessarily creates optimization pressures that manifest as computational structure.
+**What's proven**: The equivalence of Omega and Void forces the existence of omega_veil, which necessarily creates optimization pressures that manifest as computational structure.
 
 #### 2. **Impossibility Processing vs. Information Processing**
 

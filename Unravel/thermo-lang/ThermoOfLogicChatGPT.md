@@ -14,7 +14,7 @@ We prove a Noether-like conservation law: **any semantics-preserving program tra
 
 We classify logical “universes” by how they treat the **initial object** (⊥).
 
-## **1. Nomega (NΩ): The Vacuous Universe**
+## **1. Void (NΩ): The Vacuous Universe**
 
 * Logical behavior:
   [

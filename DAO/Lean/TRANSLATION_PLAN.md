@@ -13,8 +13,8 @@ Rocq/src/Core/               →  Lean/DAO/Core/
 ├── AlphaProperties.v       →  ├── AlphaProperties.lean
 ├── ClassicalAlphaType.v    →  ├── ClassicalAlphaType.lean
 ├── ClassicalAlphaProperties.v → ├── ClassicalAlphaProperties.lean
-├── NomegaType.v            →  ├── NomegaType.lean
-├── NomegaProperties.v      →  ├── NomegaProperties.lean
+├── VoidType.v            →  ├── VoidType.lean
+├── VoidProperties.v      →  ├── VoidProperties.lean
 ├── GenerativeType.v        →  ├── GenerativeType.lean
 ├── GenerativeProperties.v  →  ├── GenerativeProperties.lean
 ├── Bridge.v                →  ├── Bridge.lean
@@ -65,7 +65,7 @@ Rocq/src/Metaphysics/       →  Lean/DAO/Metaphysics/
 2. **✅ AlphaType** - Unique impossibility structure  
 3. **✅ omega_veil** - The fundamental boundary predicate
 4. **🔄 Bridge** - Omega contains Alpha simulation
-5. **⏳ NomegaType** - Empty type with triviality proof
+5. **⏳ VoidType** - Empty type with triviality proof
 6. **⏳ GenerativeType** - Temporal dimension for paradox separation
 7. **⏳ Basic Properties** - Fundamental theorems for each type
 

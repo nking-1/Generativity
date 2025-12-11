@@ -4,9 +4,9 @@
 
 * **OmegaType** — an over-complete type where *everything is provable*, collapsing into paradox.
 * **AlphaType** — a consistent but incomplete type that contains *exactly one* impossible predicate (the omega-veil), enabling structured mathematics.
-* **NomegaType** — the dual extreme: absolute emptiness, collapsing into vacuity.
+* **VoidType** — the dual extreme: absolute emptiness, collapsing into vacuity.
 
-From these extremes, DAO develops a logic based not on truth but on **controlled impossibility**, recovering classical and constructive mathematics as emergent phenomena. The name *DAO* is an homage to Daoist metaphysics, which unexpectedly mirrors the mathematical structure uncovered in Omega, Alpha, and Nomega.
+From these extremes, DAO develops a logic based not on truth but on **controlled impossibility**, recovering classical and constructive mathematics as emergent phenomena. The name *DAO* is an homage to Daoist metaphysics, which unexpectedly mirrors the mathematical structure uncovered in Omega, Alpha, and Void.
 
 DAO is fully open source. Please cite the author (Nicholas King) and the Zenodo record if you use it. The framework is currently in pre-release; APIs may change significantly as the theory evolves.
 
@@ -20,7 +20,7 @@ A good place to begin is in `DAO/Rocq/src/Core`:
 
    * See how complete overdetermination leads to immediate contradiction.
 
-2. **NomegaType.v, NomegaProperties.v**
+2. **VoidType.v, VoidProperties.v**
 
    * See how emptiness leads to triviality through vacuity.
 

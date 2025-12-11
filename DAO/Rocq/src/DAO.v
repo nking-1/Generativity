@@ -16,7 +16,7 @@ Require Export DAO.Core.Core.
     DAO Theory provides:
     - OmegaType: Complete but paradoxical (Yang - Everything)
     - AlphaType: Consistent but incomplete (Yin - Structure)  
-    - NomegaType: The empty type (Wu - Void)
+    - VoidType: The empty type (Wu - Void)
     - GenerativeType: Time-indexed type for temporal paradox resolution
     
     The omega_veil boundary maintains the gradient between complete/trivial 

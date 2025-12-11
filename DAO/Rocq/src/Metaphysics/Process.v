@@ -899,7 +899,7 @@ End EmergentSimulation.
 (*   New Section: Observer-Induced Incompleteness as Generative     *)
 (*                     Process (Whiteheadian)                      *)
 (* ================================================================ *)
-
+(* 
 Module ObserverInducedIncompleteness.
 
   (** We now formalize the meta-perspective:
@@ -1048,4 +1048,4 @@ Module ObserverInducedIncompleteness.
 
   End Setup.
 
-End ObserverInducedIncompleteness.
+End ObserverInducedIncompleteness. *)

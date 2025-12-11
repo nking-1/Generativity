@@ -68,7 +68,7 @@ Continuity emerges from optimal boundary navigation. omega_veil creates the esse
 
 ### How Mathematics Creates Reality
 
-1. **Primordial State**: Undifferentiated totality (Everything = Nothing = Omega = Nomega)
+1. **Primordial State**: Undifferentiated totality (Everything = Nothing = Omega = Void)
 
 2. **Gradient Creation**: omega_veil emerges as the unique impossible predicate, creating the first differentiation
 
