@@ -334,10 +334,6 @@ Module ExistenceAdjunction.
       "Complete a restriction, then extract back to original"
   *)
 
-  (* ================================================================ *)
-  (** ** Level 4: Unit and Counit *)
-  (* ================================================================ *)
-
   Section UnitCounit.
     Context {Alpha : AlphaType}.
     Context {Omega : OmegaType}.
@@ -586,6 +582,192 @@ Module ExistenceAdjunction.
       compose (@PRED Alpha) (bind g) f.
 
   End GeneratedMonad.
+
+  (* ================================================================ *)
+  (** ** Level 6: Dual Alpha Projections *)
+  (* ================================================================ *)
+
+  (** We can construct two Alpha instances that are maximally 
+      contradictory, yet both are valid projections of the same Omega.
+      
+      This is like matter/antimatter, or charge conjugation in physics.
+      
+      Key insight: Anti-truth is not falsehood.
+      - Truth: accessible in Alpha_+
+      - Anti-truth: accessible in Alpha_-  
+      - Falsehood: hits omega_veil (forbidden in both)
+  *)
+
+  Section DualAlphas.
+    Context {Omega : OmegaType}.
+    
+    Variable separator : Omegacarrier -> bool.
+    
+    (** We need to assume the projections are non-empty *)
+    Variable positive_witness : { x : Omegacarrier | separator x = false }.
+    Variable negative_witness : { x : Omegacarrier | separator x = true }.
+    
+    (** Helper lemma for omega_veil properties *)
+    Lemma positive_veil_props :
+      let carrier := { x : Omegacarrier | separator x = false } in
+      let veil := fun (a : carrier) => separator (proj1_sig a) = true in
+      (forall x : carrier, ~ veil x) /\
+      (forall Q : carrier -> Prop, 
+        (forall x : carrier, ~ Q x) -> 
+        forall x : carrier, Q x <-> veil x).
+    Proof.
+      simpl. split.
+      - intros [x Hfalse] Htrue.
+        simpl in Htrue.
+        rewrite Htrue in Hfalse.
+        discriminate.
+      - intros Q HQ [x Hfalse].
+        split; intro H.
+        + exfalso. exact (HQ (exist _ x Hfalse) H).
+        + exfalso. 
+          simpl in H.
+          rewrite H in Hfalse.
+          discriminate.
+    Qed.
+    
+    (** Alpha_+: The "positive" projection *)
+    Instance AlphaType_positive : AlphaType := {
+      Alphacarrier := { x : Omegacarrier | separator x = false };
+      alpha_impossibility := exist _ (fun a => separator (proj1_sig a) = true) positive_veil_props;
+      alpha_not_empty := exist _ positive_witness I
+    }.
+    
+    (** Helper lemma for negative *)
+    Lemma negative_veil_props :
+      let carrier := { x : Omegacarrier | separator x = true } in
+      let veil := fun (a : carrier) => separator (proj1_sig a) = false in
+      (forall x : carrier, ~ veil x) /\
+      (forall Q : carrier -> Prop,
+        (forall x : carrier, ~ Q x) ->
+        forall x : carrier, Q x <-> veil x).
+    Proof.
+      simpl. split.
+      - intros [x Htrue] Hfalse.
+        simpl in Hfalse.
+        rewrite Hfalse in Htrue.
+        discriminate.
+      - intros Q HQ [x Htrue].
+        split; intro H.
+        + exfalso. exact (HQ (exist _ x Htrue) H).
+        + exfalso.
+          simpl in H.
+          rewrite H in Htrue.
+          discriminate.
+    Qed.
+    
+    (** Alpha_-: The "negative" projection *)
+    Instance AlphaType_negative : AlphaType := {
+      Alphacarrier := { x : Omegacarrier | separator x = true };
+      alpha_impossibility := exist _ (fun a => separator (proj1_sig a) = false) negative_veil_props;
+      alpha_not_empty := exist _ negative_witness I
+    }.
+    
+    (** The key theorem: They're contradictory (constructive version) *)
+    Theorem dual_alphas_contradictory_forward :
+      forall (x : Omegacarrier),
+      (exists (apos : @Alphacarrier AlphaType_positive), 
+        proj1_sig apos = x) ->
+      ~ (exists (aneg : @Alphacarrier AlphaType_negative),
+        proj1_sig aneg = x).
+    Proof.
+      intros x H Hcontra.
+      destruct H as [[x' Hfalse] Heq].
+      destruct Hcontra as [[x'' Htrue] Heq'].
+      simpl in Heq, Heq'.
+      subst x' x''.
+      rewrite Htrue in Hfalse.
+      discriminate.
+    Qed.
+    
+    (** The converse *)
+    Theorem dual_alphas_contradictory_backward :
+      forall (x : Omegacarrier),
+      (exists (aneg : @Alphacarrier AlphaType_negative),
+        proj1_sig aneg = x) ->
+      ~ (exists (apos : @Alphacarrier AlphaType_positive), 
+        proj1_sig apos = x).
+    Proof.
+      intros x H Hcontra.
+      destruct H as [[x' Htrue] Heq].
+      destruct Hcontra as [[x'' Hfalse] Heq'].
+      simpl in Heq, Heq'.
+      subst x' x''.
+      rewrite Htrue in Hfalse.
+      discriminate.
+    Qed.
+    
+    (** They partition Omega (constructive) *)
+    Theorem dual_alphas_partition :
+      forall (x : Omegacarrier),
+      (exists (apos : @Alphacarrier AlphaType_positive), proj1_sig apos = x) \/
+      (exists (aneg : @Alphacarrier AlphaType_negative), proj1_sig aneg = x).
+    Proof.
+      intro x.
+      destruct (separator x) eqn:Hsep.
+      - right.
+        exists (exist _ x Hsep).
+        reflexivity.
+      - left.
+        exists (exist _ x Hsep).
+        reflexivity.
+    Qed.
+    
+    (** Together they cover all of Omega (computational version) *)
+    Theorem dual_alphas_cover_omega :
+      forall (x : Omegacarrier),
+      { apos : @Alphacarrier AlphaType_positive | proj1_sig apos = x } +
+      { aneg : @Alphacarrier AlphaType_negative | proj1_sig aneg = x }.
+    Proof.
+      intro x.
+      destruct (separator x) eqn:Hsep.
+      - right.
+        exists (exist _ x Hsep).
+        reflexivity.
+      - left.
+        exists (exist _ x Hsep).
+        reflexivity.
+    Defined.
+    
+    (** Embedding functions *)
+    Definition embed_positive : @Alphacarrier AlphaType_positive -> Omegacarrier
+      := fun a => proj1_sig a.
+    
+    Definition embed_negative : @Alphacarrier AlphaType_negative -> Omegacarrier
+      := fun a => proj1_sig a.
+    
+    (** The embeddings have disjoint images *)
+    Theorem embeddings_disjoint :
+      forall (apos : @Alphacarrier AlphaType_positive)
+            (aneg : @Alphacarrier AlphaType_negative),
+      embed_positive apos <> embed_negative aneg.
+    Proof.
+      intros [xpos Hfalse] [xneg Htrue] Heq.
+      simpl in Heq.
+      subst xneg.
+      rewrite Htrue in Hfalse.
+      discriminate.
+    Qed.
+    
+    (** The dual projections see complementary parts of any predicate *)
+    Theorem dual_projections_complementary :
+      forall (P : Omegacarrier -> Prop)
+            (apos : @Alphacarrier AlphaType_positive)
+            (aneg : @Alphacarrier AlphaType_negative),
+      let xpos := embed_positive apos in
+      let xneg := embed_negative aneg in
+      P xpos -> P xneg -> xpos <> xneg.
+    Proof.
+      intros P apos aneg xpos xneg HPpos HPneg Heq.
+      apply (embeddings_disjoint apos aneg).
+      exact Heq.
+    Qed.
+
+  End DualAlphas.
 
 End ExistenceAdjunction.
 
