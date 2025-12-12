@@ -314,14 +314,148 @@ Module ExistenceAdjunction.
       
       The hom-sets Hom_α(P, α(Q)) are the SPACE OF POSSIBLE CONSTRUCTIONS
       
-      Consciousness = An Alpha instance navigating this space
       Physics = The projection of this navigation into spacetime
       Logic = The structure of valid paths
       
       The adjunction is not just mathematical - it's ONTOLOGICAL.
       It describes the structure of BEING itself.
   *)
-  
+
+  (* ================================================================ *)
+  (** ** Level 4: Unit and Counit *)
+  (* ================================================================ *)
+
+  (** Every adjunction has two natural transformations:
+      
+      Unit (η): id_α → R ∘ C
+      "Embed a consistent predicate into its completion, then restrict"
+      
+      Counit (ε): C ∘ R → id_Ω
+      "Complete a restriction, then extract back to original"
+  *)
+
+  (* ================================================================ *)
+  (** ** Level 4: Unit and Counit *)
+  (* ================================================================ *)
+
+  Section UnitCounit.
+    Context {Alpha : AlphaType}.
+    Context {Omega : OmegaType}.
+    Context (embed : Alphacarrier -> Omegacarrier).
+    
+    (** Shorthand for the functors with embed already applied *)
+    Let C := Completion embed.
+    Let R := Restriction embed.
+    
+    (** The Unit: η_P : P → R(C(P)) *)
+    Definition unit_component (P : Obj (@PRED Alpha)) 
+      : Hom (@PRED Alpha) P (F_obj R (F_obj C P)).
+    Proof.
+      unfold R, C, F_obj, Restriction, Completion.
+      simpl.
+      intros a HPa.
+      split.
+      - (* Prove: exists a', embed a' = embed a /\ P a' *)
+        exists a.
+        split.
+        + reflexivity.
+        + exact HPa.
+      - (* Prove: ~ omega_veil a *)
+        intro Hveil.
+        exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hveil).
+    Defined.
+    
+    (** The Counit: ε_Q : C(R(Q)) → Q *)
+    Definition counit_component (Q : Obj PRED_OMEGA)
+      : Hom PRED_OMEGA (F_obj C (F_obj R Q)) Q.
+    Proof.
+      unfold C, R, F_obj, Completion, Restriction.
+      simpl.
+      intros x H.
+      destruct H as [a [Heq [HQ Hnot]]].
+      rewrite <- Heq.
+      exact HQ.
+    Defined.
+    
+    (** Unit is natural *)
+    Theorem unit_natural :
+      forall (P P' : Obj (@PRED Alpha)) (f : Hom (@PRED Alpha) P P'),
+      compose (@PRED Alpha) 
+              (F_hom R (F_hom C f))
+              (unit_component P)
+      = compose (@PRED Alpha)
+                (unit_component P')
+                f.
+    Proof.
+      intros P P' f.
+      unfold compose, unit_component, R, C, F_hom, Restriction, Completion.
+      simpl.
+      extensionality a.
+      extensionality HPa.
+      f_equal.
+    Qed.
+    
+    (** Counit is natural *)
+    Theorem counit_natural :
+      forall (Q Q' : Obj PRED_OMEGA) (h : Hom PRED_OMEGA Q Q'),
+      compose PRED_OMEGA
+              h
+              (counit_component Q)
+      = compose PRED_OMEGA
+                (counit_component Q')
+                (F_hom C (F_hom R h)).
+    Proof.
+      intros Q Q' h.
+      unfold compose, counit_component, C, R, F_hom, Completion, Restriction.
+      simpl.
+      extensionality x.
+      extensionality H.
+      destruct H as [a [Heq [HQ Hnot]]].
+      subst x.
+      reflexivity.
+    Qed.
+    
+    (** Triangle Identity 1: R ∘ η ∘ ε ∘ R = R *)
+    Theorem triangle_identity_1 :
+      forall (Q : Obj PRED_OMEGA),
+      compose (@PRED Alpha)
+              (F_hom R (counit_component Q))
+              (unit_component (F_obj R Q))
+      = id (@PRED Alpha) (F_obj R Q).
+    Proof.
+      intro Q.
+      unfold compose, id, unit_component, counit_component, 
+            R, C, F_hom, F_obj, Restriction, Completion.
+      simpl.
+      extensionality a.
+      extensionality H.
+      destruct H as [HQ Hnot].
+      f_equal.
+      apply proof_irrelevance.
+    Qed.
+    
+    (** Triangle Identity 2: C ∘ ε ∘ η ∘ C = C *)
+    Theorem triangle_identity_2 :
+      forall (P : Obj (@PRED Alpha)),
+      compose PRED_OMEGA
+              (counit_component (F_obj C P))
+              (F_hom C (unit_component P))
+      = id PRED_OMEGA (F_obj C P).
+    Proof.
+      intro P.
+      unfold compose, id, unit_component, counit_component,
+            C, R, F_hom, F_obj, Completion, Restriction.
+      simpl.
+      extensionality x.
+      extensionality H.
+      destruct H as [a [Heq HPa]].
+      f_equal.
+      f_equal.
+      apply proof_irrelevance.
+    Qed.
+
+  End UnitCounit.
+
 End ExistenceAdjunction.
 
 (** * Summary

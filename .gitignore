@@ -183,3 +183,5 @@ DAO/omega_types/haskell/*
 node_modules/
 
 *.sln
+
+.nia.cache
