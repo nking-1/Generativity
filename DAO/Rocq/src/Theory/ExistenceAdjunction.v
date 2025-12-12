@@ -456,6 +456,137 @@ Module ExistenceAdjunction.
 
   End UnitCounit.
 
+  (* ================================================================ *)
+  (** ** Level 5: The Generated Monad *)
+  (* ================================================================ *)
+
+  (** Every adjunction C ⊣ R generates a monad M = R ∘ C.
+      
+      This monad represents:
+      "Complete a predicate, then restrict back to consistency"
+      
+      Computationally: Navigate impossibility by attempting completion
+      and recovering the consistent part.
+  *)
+
+  Section GeneratedMonad.
+    Context {Alpha : AlphaType}.
+    Context {Omega : OmegaType}.
+    Context (embed : Alphacarrier -> Omegacarrier).
+    
+    Let C := Completion embed.
+    Let R := Restriction embed.
+    
+    Definition M : Obj (@PRED Alpha) -> Obj (@PRED Alpha) :=
+      fun P => F_obj R (F_obj C P).
+    
+    Definition M_map {P Q : Obj (@PRED Alpha)} (f : Hom (@PRED Alpha) P Q)
+      : Hom (@PRED Alpha) (M P) (M Q)
+      := F_hom R (F_hom C f).
+    
+    Definition return_ : forall (P : Obj (@PRED Alpha)), 
+                        Hom (@PRED Alpha) P (M P)
+      := unit_component embed.
+    
+    Definition join (P : Obj (@PRED Alpha))
+      : Hom (@PRED Alpha) (M (M P)) (M P).
+    Proof.
+      unfold M.
+      apply (F_hom R).
+      apply (counit_component embed).
+    Defined.
+
+    Lemma R_respects_compose :
+      forall (P Q R_obj : Obj PRED_OMEGA)
+            (f : Hom PRED_OMEGA Q R_obj) (g : Hom PRED_OMEGA P Q),
+      F_hom R (compose PRED_OMEGA f g) = compose (@PRED Alpha) (F_hom R f) (F_hom R g).
+    Proof.
+      intros.
+      unfold R.
+      apply F_compose.
+    Qed.
+    
+    Lemma C_respects_compose :
+      forall (P Q R_obj : Obj (@PRED Alpha))
+            (f : Hom (@PRED Alpha) Q R_obj) (g : Hom (@PRED Alpha) P Q),
+      F_hom C (compose (@PRED Alpha) f g) = compose PRED_OMEGA (F_hom C f) (F_hom C g).
+    Proof.
+      intros.
+      unfold C.
+      apply F_compose.
+    Qed.
+    
+    (** Monad Law 1: Right Unit *)
+    Theorem monad_right_unit :
+      forall (P : Obj (@PRED Alpha)),
+      compose (@PRED Alpha) (join P) (return_ (M P)) = id (@PRED Alpha) (M P).
+    Proof.
+      intro P.
+      unfold join, return_, M.
+      apply (triangle_identity_1 embed (F_obj C P)).
+    Qed.
+    
+    (** Monad Law 2: Left Unit *)
+    Theorem monad_left_unit :
+      forall (P : Obj (@PRED Alpha)),
+      compose (@PRED Alpha) (join P) (M_map (return_ P)) = id (@PRED Alpha) (M P).
+    Proof.
+      intro P.
+      unfold join, M_map, return_, M.
+      rewrite <- R_respects_compose.
+      (* Now we need: compose ... = id (omega level), then F_hom R preserves it *)
+      transitivity (F_hom R (id PRED_OMEGA (F_obj C P))).
+      - (* Prove: F_hom R (compose ...) = F_hom R (id ...) *)
+        f_equal.
+        apply (triangle_identity_2 embed P).
+      - (* Prove: F_hom R (id ...) = id *)
+        unfold C, R.
+        apply F_id.
+    Qed.
+    
+    (** Monad Law 3: Associativity *)
+    Theorem monad_associativity :
+      forall (P : Obj (@PRED Alpha)),
+      compose (@PRED Alpha) (join P) (join (M P))
+      = compose (@PRED Alpha) (join P) (M_map (join P)).
+    Proof.
+      intro P.
+      unfold join, M_map, M.
+      
+      extensionality a.
+      extensionality Ha.
+      
+      unfold compose, counit_component, C, R, F_hom, F_obj, Completion, Restriction.
+      simpl.
+      
+      destruct Ha as [[b [Heq [[c [Heq2 [HPc Hnotc]]] Hnotb]]] Hnota].
+      
+      (* Key move: destruct the equalities to make them compute away *)
+      destruct Heq.   (* Now embed b = embed a becomes reflexivity *)
+      destruct Heq2.  (* Now embed c = embed b becomes reflexivity *)
+      
+      (* Now b and c should simplify to a in the equalities *)
+      simpl.
+      
+      (* Both sides should now be identical *)
+      f_equal.
+    Qed.
+
+    (** Bind operation: lifts P → M(Q) to M(P) → M(Q) *)
+    Definition bind {P Q : Obj (@PRED Alpha)}
+      (f : Hom (@PRED Alpha) P (M Q))
+      : Hom (@PRED Alpha) (M P) (M Q) :=
+      compose (@PRED Alpha) (join Q) (M_map f).
+
+    (** Kleisli composition *)
+    Definition kleisli_compose {P Q R : Obj (@PRED Alpha)}
+      (g : Hom (@PRED Alpha) Q (M R))
+      (f : Hom (@PRED Alpha) P (M Q))
+      : Hom (@PRED Alpha) P (M R) :=
+      compose (@PRED Alpha) (bind g) f.
+
+  End GeneratedMonad.
+
 End ExistenceAdjunction.
 
 (** * Summary
