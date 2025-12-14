@@ -733,7 +733,7 @@ Module WaysOfBeingFalse.
   Module Functions.
     Import NaturalNumbers.
     Import PatternEquivalence.
-    Import ImpossibilityAlgebra.Core. (* For Is_Impossible *)
+    Import ImpossibilityAlgebra.Core.
     
     Section FunctionConstruction.
       Context {Alpha : AlphaType}.
@@ -811,15 +811,15 @@ End WaysOfBeingFalse.
   - False is just False (nothing to say)
   
   Our view:
-  - False has many constructions too!
+  - False has many constructions too
   - Different impossibilities are different mathematical objects
-  - The pattern of impossibility IS the mathematics
+  - The pattern of impossibility is mathematics
   
   Just as constructive mathematics studies different proofs of True,
   we study different constructions of False.
   
-  1/0, 2/0, log(0) are all "undefined" in traditional math.
-  But they're undefined in different ways.
+  1/0, 2/0, log(0) are all "undefined" in traditional math,
+  but they're undefined in different ways.
   These different ways are different mathematical objects.
   
   This framework's view: Mathematics is not only about what's true or false.
@@ -833,7 +833,7 @@ End WaysOfBeingFalse.
   The patterns remain eternally distinct even as they eternally collapse
   to the same source. Distinct, but one.
 
-  This idea is not fundamentally new.
+  This idea is not fundamentally new and relates closely to non-dual philosophies.
   Suggested reading to deepen intuition of this framework:
   - Heart Sutra (Buddhist) - "Form is emptiness, emptiness is form"
   - Mandukya Upanishad (Advaita) - The shortest, most direct exposition of non-duality

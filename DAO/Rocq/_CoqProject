@@ -31,6 +31,7 @@ src/Computation/InformationFlow.v
 
 src/Theory/Cardinality.v
 src/Theory/CategoryTheory.v
+src/Theory/ExistenceAdjunction.v
 
 src/Theory/Impossibility/ImpossibilityAlgebra.v
 src/Theory/Impossibility/ImpossibilityBoundary.v

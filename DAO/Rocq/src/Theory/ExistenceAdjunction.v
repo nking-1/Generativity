@@ -22,7 +22,7 @@ Import BasicCategoryTheory.Core.
 Import BasicCategoryTheory.Constructions.
 Import BasicCategoryTheory.Functors.
 
-(* Import some heavy axioms *)
+(* Import some "heavy" axioms *)
 Require Import Coq.Logic.FunctionalExtensionality.
 Require Import Coq.Logic.ProofIrrelevance.
 
