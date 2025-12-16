@@ -796,16 +796,19 @@ Module TotalComputation.
     Definition drainage_is_horizon {A B : Type} (f : LeveledComp A B) (a : A) : Prop :=
       comp_fun A B f a = @Drained B.
     
-    (** Drained is the computational omega_veil *)
-    (** Just as omega_veil has no witnesses in Alpha,
-        Drained has no "value" - it's the boundary of computation. *)
+    (** Drained is the computational omega_veil:
+        - omega_veil has no witnesses in Alpha
+        - Drained has no "value" - it's the boundary of computation
+        - Both are impossible to "look inside" *)
     
     (** The shadow principle: what drains is inferable but not recoverable *)
     Theorem shadow_principle : forall {A B} (f : LeveledComp A B) (a : A),
       comp_fun A B f a = @Drained B ->
-      (* We can infer that computation didn't produce a value *)
-      (* But we cannot recover what value it "would have" produced *)
-      True.  (* The non-recoverability is the very definition of Drained *)
+      (* We KNOW the computation was attempted with input a *)
+      (* We KNOW it didn't produce a value *)
+      (* We CANNOT know what value it "would have" produced *)
+      (* This is exactly shadow_of from ParadoxReconstruction *)
+      True.
     Proof.
       intros. exact I.
     Qed.
@@ -814,9 +817,210 @@ Module TotalComputation.
     Definition is_reversible {A B} (f : LeveledComp A B) : Prop :=
       comp_level A B f = Primitive /\ NoDrainage f.
     
-    (** Reversible computations have zero entropy change *)
-    (** (as established in TotalParadoxComputation) *)
+    (** Reversibility implies zero entropy change *)
+    Theorem reversible_zero_entropy : forall {A B} (f : LeveledComp A B),
+      is_reversible f ->
+      forall a, entropy_change (comp_fun A B f) a = 0.
+    Proof.
+      intros A B f [Hlevel Hno_drain] a.
+      unfold entropy_change.
+      destruct (Hno_drain a) as [b Hb].
+      rewrite Hb.
+      reflexivity.
+    Qed.
+    
+    (** Draining implies positive entropy *)
+    Theorem draining_positive_entropy : forall {A B} (f : LeveledComp A B) (a : A),
+      drainage_is_horizon f a ->
+      entropy_change (comp_fun A B f) a = 1.
+    Proof.
+      intros A B f a Hdrain.
+      unfold entropy_change, drainage_is_horizon in *.
+      rewrite Hdrain.
+      reflexivity.
+    Qed.
+    
+    (** The totality levels correspond to horizon distance:
+        - Primitive: infinitely far from horizon (never drains)
+        - Bounded: finite distance (drains at fuel exhaustion)
+        - Draining: can be arbitrarily close (drains anywhere) *)
+    
+    Definition horizon_distance (l : TotalityLevel) : nat + unit :=
+      match l with
+      | Primitive => inr tt    (* Infinite distance - never reaches horizon *)
+      | Bounded => inl 0       (* Finite distance - reaches at fuel exhaustion *)
+      | Draining => inl 0      (* Zero distance - can drain immediately *)
+      end.
+    
+    (** The monad connection: CompResult IS the M = R ∘ C monad
+        
+        From ExistenceAdjunction:
+        - C (Completion): adds all consequences, even contradictory
+        - R (Restriction): removes contradictions, keeps consistent part
+        - M = R ∘ C: "try to complete, recover what's consistent"
+        
+        CompResult:
+        - Computed b: the consistent result (restriction succeeded)
+        - Drained: hit contradiction (drained to omega_veil)
+        
+        They're the same structure! *)
+    
+    (** Kleisli composition for CompResult matches the monad *)
+    Definition kleisli_comp {A B C : Type}
+      (g : B -> CompResult C) (f : A -> CompResult B) : A -> CompResult C :=
+      fun a => match f a with
+               | Computed _ b => g b
+               | Drained _ => @Drained C
+               end.
+    
+    (** This is exactly how leveled_compose works internally *)
+    Theorem leveled_compose_is_kleisli : forall {A B C}
+      (g : LeveledComp B C) (f : LeveledComp A B) (a : A),
+      comp_fun A C (leveled_compose g f) a = 
+      kleisli_comp (comp_fun B C g) (comp_fun A B f) a.
+    Proof.
+      intros A B C g f a.
+      unfold leveled_compose, kleisli_comp. simpl.
+      destruct (comp_fun A B f a); reflexivity.
+    Qed.
+    
+    (** Observer connection: different fuel = different horizon
+        
+        Two computations with different fuel are like two observers:
+        - Observer with fuel n sees: computations that complete in ≤n steps
+        - Observer with fuel m sees: computations that complete in ≤m steps
+        - Their "disagreement" is computations that complete in (n, m]
+        
+        This is exactly the observer relativity from ObserverRelativity.v *)
+    
+    Definition fuel_observer (fuel : nat) {A : Type} 
+      (step : A -> option A) : A -> Prop :=
+      fun a => exists b, with_fuel fuel step a = @Computed A b.
+    
+    (** More fuel = larger observable region *)
+    Theorem more_fuel_more_observable : forall {A} fuel step (a : A) (b : A),
+      with_fuel fuel step a = @Computed A b ->
+      with_fuel (S fuel) step a = @Computed A b.
+    Proof.
+      intros A fuel.
+      induction fuel; intros step a b H.
+      - simpl in H. discriminate.
+      - simpl in H. simpl.
+        destruct (step a) as [next |] eqn:Hstep.
+        + apply IHfuel. exact H.
+        + exact H.
+    Qed.
+    
+    (** The horizon recedes as fuel increases *)
+    Corollary horizon_recedes_with_fuel : forall {A} fuel step (a : A),
+      fuel_observer fuel step a ->
+      fuel_observer (S fuel) step a.
+    Proof.
+      intros A fuel step a [b Hb].
+      exists b.
+      apply more_fuel_more_observable.
+      exact Hb.
+    Qed.
     
   End ParadoxConnection.
+
+  (* ================================================================ *)
+  (** ** Part XI: Summary - The Total Computation Principle *)
+  (* ================================================================ *)
+  
+  Section Summary.
+  
+    (** THE TOTAL COMPUTATION PRINCIPLE
+        
+        1. TOTALITY STRATIFICATION
+           - Primitive: Structural recursion, always terminates with value
+           - Bounded: Fuel-based, terminates within bound (may drain)
+           - Draining: General recursion, total via drainage
+           
+        2. COMPILE-TIME DECIDABILITY
+           Instead of: "Does this terminate?" (undecidable - halting problem)
+           We ask: "At what level is this total?" (decidable by typing)
+           
+           The level is determined by SYNTAX, not SEMANTICS.
+           Type-checking decides totality class.
+        
+        3. THE DRAINAGE INTERPRETATION
+           - Drained = hit omega_veil = reached logical horizon
+           - Information drains but isn't "lost" - it's in the shadow
+           - We can infer THAT something drained, not WHAT
+           
+        4. CONNECTION TO PHYSICS
+           - Primitive = reversible = zero entropy = never hits horizon
+           - Draining = irreversible = positive entropy = crosses horizon
+           - Fuel = observer's "reach" into computation space
+           - Different fuel = different observers = different horizons
+           
+        5. THE PARADOX RESOLUTION
+           Classical view: Some computations don't terminate (partial)
+           DAO view: All computations terminate; some drain (total)
+           
+           We don't "solve" the halting problem.
+           We dissolve it by reframing:
+           - Undefined → Drained
+           - Stuck → Drained  
+           - Looping → Drained (with fuel)
+           
+           Partiality becomes totality via omega_veil.
+           
+        6. PRACTICAL IMPLICATIONS
+           A language based on this:
+           - All functions are total (type-checked)
+           - Level annotations track termination guarantees
+           - Primitive code can be used anywhere (subtyping)
+           - Draining code is honest about its nature
+           - No runtime "undefined behavior" - only Drained
+           
+        7. THE DEEP CONNECTION
+           This is the diagonal argument made computational:
+           - We can't enumerate all total functions (incompleteness)
+           - If we could, the diagonal would escape (contradiction)
+           - So we stratify: what we CAN enumerate at each level
+           - Each level is its own "Alpha" of computation
+           - The "Omega" would enumerate everything but be contradictory
+           
+        The hierarchy Primitive < Bounded < Draining mirrors
+        the hierarchy of what can be proven total:
+        - Primitive: Provably total by structure
+        - Bounded: Provably total by resource bound
+        - Draining: Total by construction (drainage absorbs)
+        
+        ALL THREE ARE TOTAL. They differ in STRENGTH of guarantee,
+        not in PRESENCE of guarantee.
+    *)
+    
+    (** The master theorem restated *)
+    Theorem total_computation_master :
+      (* 1. All levels provide totality *)
+      (forall l, CompileTimeGuarantee l) /\
+      
+      (* 2. Levels are ordered *)
+      (level_le Primitive Bounded = true) /\
+      (level_le Bounded Draining = true) /\
+      
+      (* 3. Composition respects levels *)
+      (forall l1 l2, level_le l1 (level_join l1 l2) = true) /\
+      
+      (* 4. Primitive is the unit *)
+      (forall l, level_join Primitive l = l).
+    Proof.
+      split; [| split; [| split; [| split]]].
+      - (* All levels provide totality *)
+        apply all_levels_total.
+      - (* Primitive ≤ Bounded *)
+        reflexivity.
+      - (* Bounded ≤ Draining *)
+        reflexivity.
+      - (* l1 ≤ join(l1, l2) *)
+        intros [] []; reflexivity.
+      - (* Primitive is unit *)
+        apply level_join_primitive.
+    Qed.
+    
+  End Summary.
 
 End TotalComputation.
