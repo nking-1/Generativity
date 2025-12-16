@@ -42,6 +42,14 @@ Module AlphaProperties.
       destruct alpha_not_empty as [x _].
       exists x. exact I.
     Qed.
+
+    (** Alpha is non-empty *)
+    Theorem alpha_has_elements {Alpha : AlphaType} :
+      exists x : Alphacarrier, True.
+    Proof.
+      destruct alpha_not_empty as [x _].
+      exists x. exact I.
+    Qed.
     
   End Core.
 
