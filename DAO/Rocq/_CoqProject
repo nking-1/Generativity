@@ -30,6 +30,7 @@ src/Computation/InformationFlow.v
 src/Computation/ParadoxAutomaton.v
 src/Computation/TotalParadoxComputation.v
 src/Computation/ParadoxReconstruction.v
+src/Computation/ObserverRelativity.v
 # src/Computation/UnravelLang.v
 
 src/Theory/Cardinality.v
