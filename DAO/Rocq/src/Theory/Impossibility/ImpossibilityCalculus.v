@@ -897,19 +897,27 @@ Module ImpossibilityCalculus.
         forall F,
         continuous F ->
         (forall P Q a, F (fun x => P x /\ Q x) a <-> F P a /\ F Q a) ->
+        (forall P a, F P a -> exists a', P a') ->  (* F doesn't create witnesses *)
         forall P, Is_Impossible P -> Is_Impossible (F P).
       Proof.
-        intros F Hcont Hlogic P Himp.
+        intros F Hcont Hlogic Hwitness P Himp.
+        unfold Is_Impossible.
         intro a.
         split.
-        - intro HFPa.
-          (* If F P a holds, we need omega_veil a *)
-          (* Since P is impossible, P a <-> omega_veil a *)
-          assert (forall x, P x <-> omega_veil x) by exact Himp.
-          (* This is complex and would require more machinery *)
-          admit.
-        - intro H. exfalso. exact (AlphaProperties.Core.omega_veil_has_no_witnesses a H).
-      Admitted.
+        - (* F P a -> omega_veil a *)
+          intro HFPa.
+          (* F P has a witness at a, so P must have a witness somewhere *)
+          destruct (Hwitness P a HFPa) as [a' HPa'].
+          (* But P is impossible, so P a' <-> omega_veil a' *)
+          apply Himp in HPa'.
+          (* omega_veil has no witnesses - contradiction *)
+          exfalso.
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a' HPa').
+        - (* omega_veil a -> F P a *)
+          intro Hveil.
+          exfalso.
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hveil).
+      Qed.
       
       (** The space of impossible predicates is "closed" under limits *)
       Theorem impossible_closed_under_limits :
@@ -919,12 +927,24 @@ Module ImpossibilityCalculus.
         Is_Impossible P.
       Proof.
         intros seq P Himp_seq Hconv.
+        unfold Is_Impossible.
         intro a.
-        (* If P has a witness, by convergence seq eventually agrees *)
-        (* But seq consists of impossibles with no witnesses *)
-        (* This leads to contradiction *)
-        admit.
-      Admitted.
+        split.
+        - intro HPa.
+          (* P a holds. By convergence, seq n eventually agrees with P at a. *)
+          destruct (Hconv [a]) as [N HN].
+          specialize (HN N (Nat.le_refl N) a (or_introl eq_refl)).
+          unfold agrees_at in HN.
+          (* HN : seq N a <-> P a *)
+          (* So seq N a holds *)
+          assert (Hseq : seq N a) by (apply HN; exact HPa).
+          (* But seq N is impossible, so seq N a <-> omega_veil a *)
+          specialize (Himp_seq N a).
+          apply Himp_seq. exact Hseq.
+        - intro Hveil.
+          exfalso.
+          exact (AlphaProperties.Core.omega_veil_has_no_witnesses a Hveil).
+      Qed.
       
     End Connections.
   End AlgebraicConnections.

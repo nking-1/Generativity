@@ -52,7 +52,7 @@ Module BoundaryAutomaton.
     (** The canonical impossible state: omega_veil itself *)
     Definition void_state : State := omega_veil.
 
-    (** The canonical trivial state: everything *)
+    (** The canonical trivial state: a proposition true everywhere *)
     Definition full_state : State := fun _ => True.
 
     (** A state is possible if it's not equivalent to omega_veil *)
@@ -85,7 +85,7 @@ Module BoundaryAutomaton.
     (** ** Part 2: The Transition Operators *)
     (* ================================================================ *)
 
-    (** Shorthand for our functors *)
+    (** Shorthand for our functors - see ExistenceAdjunction.v *)
     Let C := Completion embed.
     Let R := Restriction embed.
 
@@ -319,6 +319,9 @@ Module BoundaryAutomaton.
     (** ** Part 5: The Hologram (Accumulated Impossibilities) *)
     (* ================================================================ *)
 
+    (** A HolographicLayer is a predicate that adds a new 'No' to the world. *)
+    Definition HolographicLayer := State.
+
     (** The hologram at step n: all impossibilities discovered so far.
         
         It starts with omega_veil (the primordial boundary) and 
@@ -331,9 +334,64 @@ Module BoundaryAutomaton.
           (t m a /\ ~ t (S m) a)      (* Newly erased *)
       end.
 
-    (** Existence at step n: the complement of the hologram *)
+    (** Metaphysical Note: While the Hologram is a sum (OR) of impossible regions, 
+        the constraint it imposes is a product (AND) of universal negations. *)
+
+    (** Existence at step n: the complement of the hologram.
+        We exist where the Hologram is not. Existence is a hypothesis to be refuted. *)
     Definition existence (t : Trace) (n : nat) : State :=
       fun a => ~ hologram t n a.
+
+    Section PureImpossibilityHologram.
+
+      (** We define P1, P2, and P3 as predicates that ARE impossible.
+          They are not just 'failing' for some x; they are extensionally 
+          equal to the omega_veil. *)
+      Variables P1 P2 P3 : Alphacarrier -> Prop.
+      Hypothesis H1 : Is_Impossible P1.
+      Hypothesis H2 : Is_Impossible P2.
+      Hypothesis H3 : Is_Impossible P3.
+
+      (** The Hologram is the logical sum (OR).
+          Because each component is impossible, the sum is ALSO impossible. *)
+      Definition formal_hologram : State := 
+        fun a => P1 a \/ P2 a \/ P3 a.
+
+      Theorem hologram_is_formally_impossible : 
+        Is_Impossible formal_hologram.
+      Proof.
+        unfold Is_Impossible, formal_hologram.
+        intro a.
+        split.
+        - (* If any part of the hologram holds, omega_veil holds *)
+          intros [HP1 | [HP2 | HP3]].
+          + apply H1. exact HP1.
+          + apply H2. exact HP2.
+          + apply H3. exact HP3.
+        - (* If omega_veil holds, the hologram (vacuously) holds *)
+          intro Hov. left. apply H1. exact Hov.
+      Qed.
+
+      (** Existence as the Refutation:
+          Existence a <-> (P1 a \/ P2 a \/ P3 a -> False) *)
+      Definition existence_state : State := 
+        fun a => ~ (formal_hologram a).
+
+      (** The De Morgan unfolding:
+          Existence is the product of the refutations of each veil. *)
+      Theorem existence_refutes_all_veils :
+        forall a, existence_state a <-> (P1 a -> False) /\ (P2 a -> False) /\ (P3 a -> False).
+      Proof.
+        intros a. unfold existence_state, formal_hologram.
+        split.
+        - intro Hneg. repeat split; intro HP; apply Hneg; auto.
+        - intros [Hn1 [Hn2 Hn3]] [HP1 | [HP2 | HP3]].
+          + exact (Hn1 HP1).
+          + exact (Hn2 HP2).
+          + exact (Hn3 HP3).
+      Qed.
+
+    End PureImpossibilityHologram.
 
     (** The hologram only grows *)
     Theorem hologram_monotone :
@@ -388,6 +446,42 @@ Module BoundaryAutomaton.
       rewrite Hfollows in Hta.
       apply (evolve_excludes_veil (t n) a Hta).
     Qed.
+
+    Section ExistenceRefutation.
+      (** Helper to provide a generic layers function for the trial *)
+      Variable layers : nat -> HolographicLayer.
+      Variable t : Trace.
+
+      (** The TRIAL:
+          If you give me a witness 'a' that satisfies the Hologram, 
+          I derive a contradiction. *)
+      Definition trial (n : nat) (a : Alphacarrier) : Prop :=
+        hologram t n a -> False.
+
+      (** THEOREM: existence_is_the_trial *)
+      Theorem existence_is_the_trial :
+        forall n a, 
+        existence t n a <-> trial n a.
+      Proof.
+        intros n a. reflexivity.
+      Qed.
+
+      (** METAPHYSICAL CORE: The "Hypothetical Witness" Theorem. *)
+      Theorem survivor_refutes_the_veil :
+        forall n a,
+        existence t n a -> 
+        forall (P_n : State),
+        Is_Impossible P_n ->
+        (P_n a -> False).
+      Proof.
+        intros n a Hex P_n Himp HPa.
+        apply Himp in HPa.
+        (* We use the general property that existence excludes the primordial veil *)
+        apply existence_excludes_veil in Hex.
+        exact (Hex HPa).
+      Qed.
+
+    End ExistenceRefutation.
 
     (* ================================================================ *)
     (** ** Part 6: Halting and Termination *)
