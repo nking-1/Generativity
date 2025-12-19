@@ -17,9 +17,6 @@
 Require Import DAO.Core.AlphaType.
 Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.AlphaProperties.
-Require Import DAO.Theory.Impossibility.ImpossibilityAlgebra.
-Require Import DAO.Theory.Impossibility.ParadoxNumbers.
-Require Import DAO.Theory.Impossibility.FalseThermodynamics.
 Require Import Coq.Lists.List.
 Require Import Coq.Init.Nat.
 Require Import Lia.
@@ -27,9 +24,6 @@ Import ListNotations.
 
 Module ParadoxAutomaton.
   
-  Import ImpossibilityAlgebra.Core.
-  Import ParadoxNumbers.ParadoxNaturals.
-  Import FalseThermodynamics.
 
   (* ================================================================ *)
   (** ** Part I: The Alphabet - What We Read *)

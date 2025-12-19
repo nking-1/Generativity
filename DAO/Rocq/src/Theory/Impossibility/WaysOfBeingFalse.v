@@ -813,7 +813,7 @@ End WaysOfBeingFalse.
   Our view:
   - False has many constructions too
   - Different impossibilities are different mathematical objects
-  - The pattern of impossibility is mathematics
+  - The pattern of impossibility has mathematical content
   
   Just as constructive mathematics studies different proofs of True,
   we study different constructions of False.
