@@ -415,9 +415,12 @@ Module BoundaryGame.
     (** ** Part 11: Society as Cooperative Survival *)
     (* ================================================================ *)
 
-    (** Formalizes the origin of Society as "Cooperative Survival".
+    (** Formalizes the origin of "Society" as "Cooperative Survival".
         Multiple agents combine their restrictive power to defend 
-        a larger shared hypothesis than any individual could maintain. *)
+        a larger shared hypothesis than any individual could maintain.
+        NOTE: This does not mean the math needs to be anthropomorphized.
+        A "Society" is just different things in existence cooperating as
+        a larger system. They work together to refute non-existence. *)
 
     (** A Society is a collection of individual strategies working together. *)
     Definition Society := list ProponentStrategy.
@@ -680,41 +683,6 @@ Module BoundaryGame.
         exists m. split; [exact Hin |].
         subst h. exact Ha.
     Qed.
-
-    (* ---------------------------------------------------------------- *)
-    (** *** Philosophical Summary *)
-    (* ---------------------------------------------------------------- *)
-
-    (** THE ORIGIN OF SOCIETY:
-        
-        1. INDIVIDUAL LIMITATION
-           - Each agent has finite defensive capacity
-           - Each agent accumulates their own hologram of "No's"
-           - Existence is constantly threatened by new challenges
-        
-        2. THE COOPERATIVE INSIGHT  
-           - Defenses compose via DISJUNCTION (any member can save all)
-           - Holograms compose via DISJUNCTION (any member's "No" applies to all)
-           - But existence composes via CONJUNCTION (must satisfy all constraints)
-        
-        3. THE TRADE-OFF
-           - Join: Gain access to collective defense
-           - Cost: Inherit collective constraints
-           - Worth it when: defense gain > constraint cost
-        
-        4. COHERENCE REQUIREMENT
-           - Society only works if shared existence is non-empty
-           - Conflicting members destroy the social fabric
-           - The "social contract" is the coherence condition
-        
-        5. CULTURAL MEMORY
-           - The shared hologram persists across generations
-           - "Tradition" = inherited impossibilities
-           - "Progress" = discovering the hologram was too conservative
-        
-        SOCIETY EXISTS BECAUSE COLLECTIVE DEFENSE GROWS FASTER THAN
-        COLLECTIVE CONSTRAINT. WE SURVIVE TOGETHER WHAT WE CANNOT
-        SURVIVE ALONE. *)
 
   End GameDefinition.
 
