@@ -1,10 +1,10 @@
-\documentclass[12pt]{report}   % or 'report'
+\documentclass[12pt]{report}
 
 % Unicode and font support
 \usepackage{fontspec}
 \usepackage{xeCJK}
 \setmainfont{Times New Roman}  % English text in Times
-\setCJKmainfont{Noto Sans CJK SC}  % Chinese characters in Noto Sans
+\setCJKmainfont{Noto Sans SC}  % Chinese text in Noto Sans SC
 
 % Required Packages
 \usepackage{graphicx} % Required for inserting images
@@ -41,7 +41,7 @@
 }
 
 
-% Add numbering within sections for theorems (optional but helpful)
+% Add numbering within sections for theorems
 \numberwithin{theorem}{section}
 \numberwithin{definition}{section}
 \numberwithin{lemma}{section}
@@ -122,14 +122,38 @@
 
 \begin{document}
 
-\title{Nothing, the Boundary and Everything}
+\title{Nothing, the Impossible, and Everything}
 \author{Nicholas King \\ \href{mailto:research@celetris.com}{research@celetris.com}}
-\date{August 2025}
+\date{January 2026}
 
 \maketitle
 
-% \title{Nothing, the Boundary and Everything}
-\part{Math Foundations}
+% \tableofcontents
+% \newpage
+
+% Preface (unnumbered chapter)
+\chapter*{Preface}
+% \addcontentsline{toc}{chapter}{Preface}  % Adds it to table of contents
+
+\subsection*{Introduction}
+This paper presents a study of mathematical logic built on impossibility. The theory is developed from first principles
+and formalized in the Rocq proof assistant. The paper aims to describe the core concepts and theorems in an accessible
+and intuitive manner, while the Rocq code base is the definitive source of truth for all proofs. All theorems presented
+in the paper have a formalized counterpart in Rocq. References to the relevant Rocq files are provided throughout the text.
+
+\subsection*{Prerequisites}
+A general understanding of the following topics is recommended to fully grasp the material:
+\begin{itemize}
+    \item Type theory and dependent types
+    \item Intuitionistic logic
+    \item Category theory basics (e.g., categories, adjunctions, monads, Yoneda lemma)
+\end{itemize}
+
+The theory is built upon type theory and intuitionistic logic. Category theory appears later in the development to analyze
+the structures that emerge from the main types defined in the theory. The theory aims to be fully constructive wherever possible,
+with classical logic only used when relevant and justified.
+
+
 \chapter{Initial Questions}
 \section{What If Everything?}
 
@@ -141,19 +165,34 @@ We formalize this notion by defining OmegaType ($\Omega$) as a type where every 
 A type $\Omega$ is an \emph{OmegaType} if:
 $$\forall P : \Omega \to \textup{Prop}, \quad \exists x : \Omega, \quad P(x)$$
 
-That is, for any property $P$ we can define over $\Omega$, there exists at least one element of $\Omega$ that satisfies $P$.
+That is, for any proposition $P$ on $\Omega$, there exists at least one element of $\Omega$ that satisfies $P$.
 \end{definition}
 
-\coqlink{app:omegatype-def}
-
-Most mathematicians would immediately recognize that this axiom leads to paradoxes. If \textit{every} proposition has a witness, then contradictory propositions must also have witnesses. But sometimes, it's worthwhile to break things and see what happens. Omega represents a strange, alien realm in mathematics. Whereas we are accustomed to operating within the safe confines of consistency and certainty, Omega is a space where anything goes, including paradoxes. Maybe this is not a bug, but a feature: Omega's completeness means it must contain witnesses for \textit{every} possible proposition, even contradictory ones. Let's follow this thread and see where it takes us.
+This definition immediately leads to paradoxes. If \textit{every} proposition has a witness, then contradictory propositions must also have witnesses. Whereas we are accustomed to operating within the safe confines of consistency and certainty, Omega is a space where anything goes, including paradoxes. Perhaps this is not a bug, but a feature: Omega's completeness means it must contain witnesses for \textit{every} possible proposition, even contradictory ones. Let's follow this thread and see where it takes us.
 
 \subsubsection{Code Reference}
 Comprehensive proof of this section is contained in \textbf{OmegaType.v} and \textbf{OmegaProperties.v}.
 
+\subsubsection{Analysis of OmegaType Implementation}
+We will not always discuss the Rocq implementation details in the main text, but it is worth noting how OmegaType is represented in Rocq without breaking the consistency of the overall system. This will illuminate how we can work with paradoxical types constructively.
+
+\begin{lstlisting}[language=Coq]
+(* OmegaType.v: a type where every proposition has a witness. *)
+(* We wrap the type so we can analyze its properties using contexts,
+   which avoids trivializing the entire framework. *)
+
+Class OmegaType := {
+  Omegacarrier : Type;
+  omega_completeness : forall (P : Omegacarrier -> Prop), 
+    exists x : Omegacarrier, P x
+}.
+\end{lstlisting}
+
+Notice that OmegaType is a class that wraps a carrier type along with the omega completeness property. By encapsuling the carrier type this way, we can treat it as a hypothetical and reason about it with a layer of abstraction. This allows us to explore its paradoxical properties without collapsing the entire type theory into triviality. This carrier type composition pattern will appear repeatedly throughout the theory.
+
 \subsection{Omega Contains Paradoxes}
 
-Omega's completeness comes with an immediate consequence--every predicate has a paradoxical witness:
+Omega's completeness comes with an immediate consequence: every predicate has a paradoxical witness:
 
 \begin{theorem}[Omega Contains Paradoxes]\label{thm:omega-paradoxes}
 For any predicate $P : \Omega \to \textup{Prop}$, there exists $x \in \Omega$ such that $P(x) \wedge \neg P(x)$.
@@ -175,8 +214,6 @@ By omega-completeness, every predicate has a witness:
 \end{align}
 
 Therefore, Omega contains paradoxical witnesses for every predicate. \end{proof}
-
-\coqproof{app:omega-paradoxes}
 
 \subsection{Omega Contains the Liar Paradox}
 
@@ -205,9 +242,6 @@ Let $x$ be such a witness. By definition of $\text{liar\_pred}(x)$:
 Therefore we have both the required $x$ and $P$.
 \end{proof}
 
-\coqproof{app:omega-liar}
-
-We construct this by asking Omega for a witness to the property of being a liar paradox itself. The proof shows that Omega contains not just simple contradictions, but the full complexity of self-referential paradox.
 
 \subsection{Completeness Is Equivalent to Contradiction}
 
