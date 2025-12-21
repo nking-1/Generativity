@@ -1,6 +1,8 @@
 (** * ParadoxAutomaton.v
     
     Finite Paradox Automata: Processing paradoxes through drainage.
+    This file defines a finite automaton that reads paradox symbols
+    and determines how they "drain" to omega_veil or remain in Alpha.
     
     Core Insight:
     Alpha doesn't get "built up" - it's what remains when contradictions
