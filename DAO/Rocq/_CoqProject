@@ -37,8 +37,8 @@ src/Computation/BoundaryAutomaton.v
 
 src/Theory/Cardinality.v
 src/Theory/CategoryTheory.v
-src/Theory/ExistenceAdjunction.v
-src/Theory/ExistenceComonad.v
+src/Theory/ConsistencyAdjunction.v
+src/Theory/ConsistencyComonad.v
 
 src/Theory/Impossibility/ImpossibilityAlgebra.v
 src/Theory/Impossibility/ImpossibilityBoundary.v

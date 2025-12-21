@@ -23,9 +23,6 @@ Module PureImpossibilitySymmetry.
     Context {Alpha : AlphaType}.
 
     (** We need decidability for action computation *)
-    (* Note - we *have* proven that AlphaType's predicates can be undecidable, so this hypothesis 
-       is being a bit generous. *)
-    (* What if classical systems are decidable, quantum undecidable? *)
     Hypothesis impossible_decidable : forall P, {Is_Impossible P} + {~ Is_Impossible P}.
 
     (** We need decidable equality for computational purposes *)
@@ -269,8 +266,6 @@ Module PureImpossibilitySymmetry.
           left.
           exact HPa.
         + intro Hom.
-          (* We need to show P a from omega_veil a *)
-          (* We know (P ∨ epsilon) is impossible *)
           assert (P a \/ epsilon a) as [HPa | Heps].
           { apply HP. exact Hom. }
           * exact HPa.

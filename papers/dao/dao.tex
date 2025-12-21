@@ -478,7 +478,7 @@ Whether we have everything (Omega) or nothing (Nomega), we arrive at triviality.
 
 \section{Accepting That Something Must Be Impossible}
 
-We have seen that absolute completeness (Omega) leads to triviality through paradox, while absolute emptiness (Nomega) leads to triviality through vacuity. Useful logic must lie somewhere between these extremes.
+We have seen that absolute completeness (Omega) leads to triviality through paradox, while absolute emptiness (Void) leads to triviality through vacuity. Useful logic must lie somewhere between these extremes.
 
 Although it is desirable to know everything, we must humble ourselves and accept that it is impossible. Consistency requires incompleteness. However, we may be able to choose our incompleteness carefully, making the minimal sacrifice necessary for consistency while retaining maximum expressive power.
 
@@ -498,14 +498,14 @@ Notice the logical duality between our four core types. Very interestingly, the 
 \text{OmegaType}: &\quad \forall P, \exists x, P(x) \quad \text{(every proposition has a witness)} \\
 \text{AlphaType}: &\quad \exists P, \forall x, \neg P(x) \quad \text{(something is impossible)} \\
 \text{AbstractAlphaType}: &\quad \forall x, False \implies False \quad \text{(it is impossible that everything is impossible)} \\
-\text{NomegaType}: &\quad \forall x, False \quad \text{(there are no witnesses)}
+\text{VoidType}: &\quad \forall x, False \quad \text{(there are no witnesses)}
 \end{align}
 
 We call the impossible predicate the \textbf{omega veil}. It represents the boundary between consistent reality and the paradoxical completeness of Omega. It is Alpha's concession to incompleteness, an acceptance that something must be impossible.
 
 The structure of AlphaType ensures that:
 \begin{enumerate}
-\item There exists at least one element (avoiding Nomega's emptiness)
+\item There exists at least one element (avoiding Void's emptiness)
 \item There exist impossible predicates (avoiding Omega's paradoxes)
 \item All other impossible predicates are extensionally equal to this unique one (which we will prove rigorously)
 \end{enumerate}
@@ -5568,5 +5568,3 @@ End MetaphysicsViaOuroboros.
 % \end{proof}
 
 % \coqproof{app:necessarily-ternary}
-
-% This reveals something profound: binary thinking is literally impossible for any consistent system sophisticated enough to recognize its own limitations. The law of excluded middle is not a universal logical principle but a local phenomenon, valid only within isolated contexts that ignore the broader mathematical universe.

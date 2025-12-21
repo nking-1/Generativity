@@ -261,13 +261,10 @@ Module FalseThermodynamics.
     
   End TimeEvolution.
   
-  (* ================================================================ *)
-  (** ** Part V: The Deep Unity *)
-  
-  Section DeepUnity.
+  Section EntropyLaws.
     Context {Alpha : AlphaType}.
     
-    Theorem physics_from_first_construction :
+    Theorem entropy_laws :
       (* Starting from BaseVeil with depth POne *)
       path_depth BaseVeil = POne ->
       (* We get: *)
@@ -296,7 +293,7 @@ Module FalseThermodynamics.
         apply entropy_arrow_of_time.
     Qed.
     
-  End DeepUnity.
+  End EntropyLaws.
 
   (* ================================================================ *)
   (** ** Part VI: Mixing Entropy and Information Erasure *)
@@ -304,7 +301,7 @@ Module FalseThermodynamics.
   Section MixingEntropy.
     Context {Alpha : AlphaType}.
     
-    (** Mixing two paradoxes ALWAYS increases entropy by at least 1 *)
+    (** Mixing two paradoxes increases entropy by at least 1 *)
     Theorem mixing_increases_entropy :
       forall p1 p2 : ParadoxPath,
       path_depth (Compose p1 p2) = add (path_depth p1) (path_depth p2).
@@ -319,7 +316,6 @@ Module FalseThermodynamics.
     Proof.
       intro p.
       simpl.
-      (* add (path_depth p) POne = PS (path_depth p) *)
       induction (path_depth p).
       - reflexivity.
       - simpl. f_equal. exact IHp0.
@@ -331,7 +327,7 @@ Module FalseThermodynamics.
       (* "Erasing" by self-contradiction increases entropy by exactly 1 *)
       false_depth (self_interact W) = PS (false_depth W).
     Proof.
-      intro W. reflexivity.  (* Already proven as strong_irreversibility *)
+      intro W. reflexivity.
     Qed.
     
     (** The Mixing Law: Value + Void = Void with increased entropy *)
@@ -350,7 +346,6 @@ Module FalseThermodynamics.
       intro W.
       unfold mix_value_void.
       simpl.
-      (* add POne (false_depth W) = PS (false_depth W) *)
       induction (false_depth W).
       - reflexivity.
       - simpl. f_equal.
@@ -368,8 +363,6 @@ Module FalseThermodynamics.
       simpl in H1.
       rewrite H3 in H1.
       rewrite <- H2 in H1.
-      (* Now H1 says: add (path_depth p1) POne = path_depth p1 *)
-      (* But add n POne = PS n, which is never equal to n *)
       clear H2 H3 p.
       induction (path_depth p1).
       - simpl in H1. discriminate.

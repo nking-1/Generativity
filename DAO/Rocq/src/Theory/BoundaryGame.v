@@ -408,8 +408,7 @@ Module BoundaryGame.
            - Terminal state: Hologram covers all of Alpha
            - Proponent has nowhere to go
            - The game ends
-        
-        EXISTENCE IS A GAME WE ARE WINNING (for now). *)
+        *)
 
     (* ================================================================ *)
     (** ** Part 11: Society as Cooperative Survival *)

@@ -449,19 +449,20 @@ Module WaysOfBeingFalse.
   End IntensionalityOfFalse.
 
   (* ================================================================ *)
-  (** ** The Intensionality Axiom *)
+  (** ** Pattern Equivalence - A Notion of Equality *)
   (* ================================================================ *)
   
-  Module IntensionalFoundation.
+  Module PatternEquivalence.
     Import Core.
     Import ConstructionsOfFalse.
     Import IntensionalityOfFalse.
+    Import ImpossibilityAlgebra.Core.
 
     Section IntensionalFoundationAlpha.
       Context {Alpha : AlphaType}.
     
       (** The fundamental axiom: different constructions are distinguishable *)
-      Axiom number_patterns_distinct : forall n m : nat,
+      Local Axiom number_patterns_distinct : forall n m : nat,
         n <> m -> div_by_zero_pattern n <> div_by_zero_pattern m.
       
       (** This gives us pattern injectivity *)
@@ -473,23 +474,6 @@ Module WaysOfBeingFalse.
         exfalso. apply (number_patterns_distinct n m n0 H).
       Qed.
 
-    End IntensionalFoundationAlpha.
-    
-  End IntensionalFoundation.
-  
-  (* ================================================================ *)
-  (** ** Pattern Equivalence - Our Notion of Equality *)
-  (* ================================================================ *)
-
-  Module PatternEquivalence.
-    Import Core.
-    Import ConstructionsOfFalse.
-    Import IntensionalFoundation.
-    Import ImpossibilityAlgebra.Core.
-    
-    Section Equivalence.
-      Context {Alpha : AlphaType}.
-      
       (** Patterns are equivalent if they're both impossible and extensionally equal *)
       Definition pattern_equiv (P Q : Alphacarrier -> Prop) : Prop :=
         Is_Impossible P /\ Is_Impossible Q /\ 
@@ -535,8 +519,7 @@ Module WaysOfBeingFalse.
               lia.
         - apply number_patterns_distinct. auto.
       Qed.
-      
-    End Equivalence.
+    End IntensionalFoundationAlpha.
   End PatternEquivalence.
 
 
@@ -692,7 +675,7 @@ Module WaysOfBeingFalse.
       Qed.
       
       (** But they're all distinct! *)
-      Axiom nat_patterns_distinct : forall n m,
+      Local Axiom nat_patterns_distinct : forall n m,
         n <> m -> nat_as_pattern n <> nat_as_pattern m.
       
       (** Arithmetic operations *)

@@ -1,10 +1,10 @@
-(** * ExistenceAdjunction.v
+(** * ConsistencyAdjunction.v
     
-    The Fundamental Adjunction of Existence:
+    The Fundamental Adjunction of Consistency:
     Ω ⊣ α (Completion ⊣ Restriction)
     
     Core Insight:
-    Reality exists in the adjunction between:
+    Consistency exists in the adjunction between:
     - Omega: Complete (all witnesses exist) but Contradictory
     - Alpha: Consistent (no contradictions) but Incomplete
     
@@ -26,7 +26,7 @@ Import BasicCategoryTheory.Functors.
 Require Import Coq.Logic.FunctionalExtensionality.
 Require Import Coq.Logic.ProofIrrelevance.
 
-Module ExistenceAdjunction.
+Module ConsistencyAdjunction.
 
   (* ================================================================ *)
   (** ** Level 0: The Fundamental Categories *)
@@ -769,29 +769,4 @@ Module ExistenceAdjunction.
 
   End DualAlphas.
 
-End ExistenceAdjunction.
-
-(** * Summary
-    
-    We proved:
-    
-    Ω ⊣ α  (Completion is left adjoint to Restriction)
-    
-    This formalizes the fundamental tension:
-    - Omega: Complete but contradictory (explosion)
-    - Alpha: Consistent but incomplete (Gödel)
-    - Reality: The adjunction between them
-    
-    Key insights:
-    1. You cannot be both complete and consistent
-    2. Existence requires choosing Alpha (consistency over completeness)
-    3. But Alpha is defined by its relationship to Omega (the adjunction)
-    4. Therefore: To exist is to be incomplete but consistent,
-                  always in tension with completeness
-    
-    This is why:
-    - Observers have different light cones (different Alpha instances)
-    - Understanding requires synthesis (combining Alpha instances)
-    - Totality is asymptotic (approaching Omega without reaching it)
-    - Being is relational (defined by the adjunction)
-*)
+End ConsistencyAdjunction.

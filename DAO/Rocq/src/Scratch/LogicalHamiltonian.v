@@ -17,7 +17,7 @@ Require Import DAO.Core.OmegaType.
 Require Import DAO.Core.AlphaProperties.
 Require Import DAO.Theory.ExistenceAdjunction.
 Require Import DAO.Theory.ExistenceComonad.
-Require Import DAO.Theory.Computation.BoundaryAutomaton.
+Require Import DAO.Computation.BoundaryAutomaton.
 Require Import DAO.Theory.Impossibility.ParadoxNumbers.
 Require Import DAO.Theory.Impossibility.FalseThermodynamics.
 

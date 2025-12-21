@@ -1619,57 +1619,6 @@ Module BoundaryClassification.
         exfalso.
         apply (BN.(boundary_zero_not_succ) a H).
     Qed.
-    
-    (* ============================================================== *)
-    (** *** Summary Theorems *)
-    (* ============================================================== *)
-
-    (** All standard arithmetic laws are stable *)
-    Theorem arithmetic_laws_stable :
-      forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN)
-            (BNM : BoundaryNatWithMul BN BNA),
-      (* Commutativity *)
-      (@Is_Impossible (BoundaryNat_is_AlphaType BN)
-        (fun x => exists y : BN.(carrier), BNA.(add) x y <> BNA.(add) y x)) /\
-      (@Is_Impossible (BoundaryNat_is_AlphaType BN)
-        (fun x => exists y : BN.(carrier), BNM.(mul) x y <> BNM.(mul) y x)) /\
-      (* Associativity *)
-      (@Is_Impossible (BoundaryNat_is_AlphaType BN)
-        (fun x => exists y z : BN.(carrier), BNA.(add) (BNA.(add) x y) z <> 
-                              BNA.(add) x (BNA.(add) y z))) /\
-      (@Is_Impossible (BoundaryNat_is_AlphaType BN)
-        (fun x => exists y z : BN.(carrier), BNM.(mul) (BNM.(mul) x y) z <> 
-                              BNM.(mul) x (BNM.(mul) y z))) /\
-      (* Distributivity *)
-      (@Is_Impossible (BoundaryNat_is_AlphaType BN)
-        (fun x => exists y z : BN.(carrier), BNM.(mul) x (BNA.(add) y z) <> 
-                              BNA.(add) (BNM.(mul) x y) (BNM.(mul) x z))).
-    Proof.
-      intros BN BNA BNM.
-      split. { apply addition_commutativity_stable. }
-      split. { apply multiplication_commutativity_stable. }
-      split. { apply addition_associativity_stable. }
-      split. { apply multiplication_associativity_stable. }
-      apply left_distributivity_stable.
-    Qed.
-
-    (** Mathematics exists in stable truth *)
-    Theorem mathematics_is_stable_truth :
-      forall (BN : BoundaryNat) (BNA : BoundaryNatWithAdd BN),
-      (* Direct truth exists *)
-      (@Is_Possible (BoundaryNat_is_AlphaType BN) (fun x => x = x)) /\
-      (* Boundaries exist (direct impossibility) *)
-      (@Is_Impossible (BoundaryNat_is_AlphaType BN) 
-        (fun x => BN.(zero) = BN.(succ) x)) /\
-      (* Stable truths exist (arithmetic laws) *)
-      (@Is_Impossible (BoundaryNat_is_AlphaType BN)
-        (fun x => exists y : BN.(carrier), BNA.(add) x y <> BNA.(add) y x)).
-    Proof.
-      intros BN BNA.
-      split. { apply equality_possible. }
-      split. { apply zero_equals_succ_impossible. }
-      apply addition_commutativity_stable.
-    Qed.
 
   End PropertyClassification.
 

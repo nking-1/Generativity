@@ -688,66 +688,6 @@ Module BoundaryAutomaton.
 
     (** The automaton finds W-coalgebraic fixed points *)
     (** States that evolve without change are exactly W-coalgebras *)
-
-    (* ================================================================ *)
-    (** ** Part 10: Summary Theorems *)
-    (* ================================================================ *)
-
-    (** The Fundamental Theorem of the Boundary Automaton *)
-    (* Theorem boundary_automaton_fundamental :
-      (* 1. Evolution is via the monad *)
-      (forall S, evolve S = M embed S) /\
-      
-      (* 2. Step is double evolution *)
-      (forall S, step S = evolve (evolve S)) /\
-      
-      (* 3. Hologram only grows *)
-      (forall t n a, hologram t n a -> hologram t (S n) a) /\
-      
-      (* 4. Existence only shrinks *)
-      (forall t n a, existence t (S n) a -> existence t n a) /\
-      
-      (* 5. Halting is permanent *)
-      (forall t n, 
-        follows_evolve t -> 
-        halts_at t n -> 
-        halts_at t (S n)) /\
-      
-      (* 6. omega_veil is always in the hologram *)
-      (forall t n a, omega_veil a -> hologram t n a).
-    Proof.
-      repeat split.
-      - apply evolve_is_M.
-      - apply step_is_M_squared.
-      - apply hologram_monotone.
-      - apply existence_antitone.
-      - apply halting_permanent.
-      - apply veil_always_in_hologram.
-    Qed. *)
-
-    (** Existence is computation that avoids contradiction *)
-    (* Theorem existence_is_computation :
-      forall t,
-      follows_evolve t ->
-      (* A point exists at time n iff it's not in the hologram *)
-      (forall n a, existence t n a <-> ~ hologram t n a) /\
-      (* Existence at n implies existence at all m < n *)
-      (forall n m a, m <= n -> existence t n a -> existence t m a) /\
-      (* The veiled never exist *)
-      (forall n a, omega_veil a -> ~ existence t n a).
-    Proof.
-      intros t Hfollows.
-      repeat split.
-      - (* Definition of existence *)
-        intros n' a'. reflexivity.
-      - (* Past from present *)
-        apply past_from_present.
-      - (* Veiled don't exist *)
-        intros n a Hveil Hex.
-        apply Hex.
-        apply veil_always_in_hologram.
-        exact Hveil.
-    Qed. *)
   
   End StateSpace.
 
