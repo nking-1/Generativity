@@ -91,7 +91,7 @@ Module VoidProperties.
   Module EmptyTypeFunctions.
 
     (** A minimal axiom: functions from empty types are equal.
-        This is much weaker than full functional extensionality. *)
+        This is weaker than full functional extensionality. *)
     Local Axiom empty_function_ext : 
       forall {A B : Type} (empty : A -> False),
       forall (f g : A -> B), f = g.

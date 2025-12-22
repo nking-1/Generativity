@@ -9,6 +9,7 @@ Require Import Stdlib.Vectors.Fin.
 Require Import PeanoNat.
 Import ListNotations.
 
+(* Classical logic - todo: Use Coq's builtin *)
 Axiom classic : forall P : Prop, P \/ ~ P.
 
 (* ============================================================ *)

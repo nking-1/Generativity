@@ -139,18 +139,18 @@
 This paper presents a study of mathematical logic built on impossibility. The theory is developed from first principles
 and formalized in the Rocq proof assistant. The paper aims to describe the core concepts and theorems in an accessible
 and intuitive manner, while the Rocq code base is the definitive source of truth for all proofs. All theorems presented
-in the paper have a formalized counterpart in Rocq. References to the relevant Rocq files are provided throughout the text.
+in the paper have a formalized counterpart in Rocq. References to the relevant Rocq proofs are provided throughout the text.
 
 \subsection*{Prerequisites}
 A general understanding of the following topics is recommended to fully grasp the material:
 \begin{itemize}
     \item Type theory and dependent types
     \item Intuitionistic logic
-    \item Category theory basics (e.g., categories, adjunctions, monads, Yoneda lemma)
+    \item Category theory fundamentals (e.g., categories, adjunctions, monads, Yoneda lemma)
 \end{itemize}
 
-The theory is built upon type theory and intuitionistic logic. Category theory appears later in the development to analyze
-the structures that emerge from the main types defined in the theory. The theory aims to be fully constructive wherever possible,
+This work is formalized in type theory and intuitionistic logic. Category theory appears later in the development to analyze
+the structures that emerge from the main types defined in the theory. This work aims to be fully constructive wherever possible,
 with classical logic only used when relevant and justified.
 
 
@@ -168,7 +168,7 @@ $$\forall P : \Omega \to \textup{Prop}, \quad \exists x : \Omega, \quad P(x)$$
 That is, for any proposition $P$ on $\Omega$, there exists at least one element of $\Omega$ that satisfies $P$.
 \end{definition}
 
-This definition immediately leads to paradoxes. If \textit{every} proposition has a witness, then contradictory propositions must also have witnesses. Whereas we are accustomed to operating within the safe confines of consistency and certainty, Omega is a space where anything goes, including paradoxes. Perhaps this is not a bug, but a feature: Omega's completeness means it must contain witnesses for \textit{every} possible proposition, even contradictory ones. Let's follow this thread and see where it takes us.
+This definition immediately leads to paradoxes. If \textit{every} proposition has a witness, then contradictory propositions must also have witnesses. Intentionally introducing a paradoxical definition might seem rather unorthodox, but analyzing the extremes that break logic will inform us about how to introduce consistency later on. Let's follow this thread and see where it takes us.
 
 \subsubsection{Code Reference}
 Comprehensive proof of this section is contained in \textbf{OmegaType.v} and \textbf{OmegaProperties.v}.
@@ -188,7 +188,7 @@ Class OmegaType := {
 }.
 \end{lstlisting}
 
-Notice that OmegaType is a class that wraps a carrier type along with the omega completeness property. By encapsuling the carrier type this way, we can treat it as a hypothetical and reason about it with a layer of abstraction. This allows us to explore its paradoxical properties without collapsing the entire type theory into triviality. This carrier type composition pattern will appear repeatedly throughout the theory.
+Notice that OmegaType is a class that wraps a carrier type along with specifying its \textit{omega completeness} property. By encapsuling the carrier type this way, we can treat it as a hypothetical and reason about it with a layer of abstraction. This allows us to explore its paradoxical properties without collapsing the entire type theory into triviality. An instance of OmegaType need not exist (i.e. OmegaType need not be inhabited), but we can still reason about propositions over OmegaType. Similar to how category theory does not analyze the internal contents of objects but instead focuses on morphisms between objects, in this theory, we will focus on logical propositions on types but rarely focus on the actual content of the inhabitants.
 
 \subsection{Omega Contains Paradoxes}
 
